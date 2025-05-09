@@ -20,6 +20,12 @@ const Dashboard: React.FC = () => {
   
   if (!user) return null;
   
+  // Get the user name from user_metadata or fallback to email
+  const userName = user.user_metadata?.full_name || 
+                  user.user_metadata?.name || 
+                  user.email?.split('@')[0] || 
+                  'User';
+  
   const featuredRooms = rooms.slice(0, 3);
   
   return (
@@ -28,7 +34,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-8 mb-8 text-white">
           <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h1>
+              <h1 className="text-3xl font-bold mb-2">Welcome, {userName}!</h1>
               <p className="text-white/90 mb-4">What would you like to do today?</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
