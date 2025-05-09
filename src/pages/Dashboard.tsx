@@ -1,0 +1,106 @@
+
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { useRooms } from '@/context/RoomContext';
+import Layout from '@/components/Layout';
+import RoomCard from '@/components/RoomCard';
+import { Button } from '@/components/ui/button';
+
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { rooms } = useRooms();
+  
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+  
+  if (!user) return null;
+  
+  const featuredRooms = rooms.slice(0, 3);
+  
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-8 mb-8 text-white">
+          <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h1>
+              <p className="text-white/90 mb-4">What would you like to do today?</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  onClick={() => navigate('/find-room')}
+                  className="bg-white text-primary hover:bg-gray-100"
+                >
+                  Find a Room
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={() => navigate('/list-room')}
+                  className="border-white text-white hover:bg-white/20"
+                >
+                  List Your Room
+                </Button>
+              </div>
+            </div>
+            <img 
+              src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=300&auto=format" 
+              alt="Room illustration" 
+              className="hidden md:block w-64 h-auto rounded-lg shadow-lg" 
+            />
+          </div>
+        </div>
+        
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Featured Rooms</h2>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/find-room')}
+              className="text-primary"
+            >
+              View all
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredRooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Quick Tips</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="font-medium mb-2">Looking for a room?</h3>
+              <p className="text-sm text-gray-500">
+                Use filters to narrow down your search and find the perfect match for your needs.
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="font-medium mb-2">Have a room to rent?</h3>
+              <p className="text-sm text-gray-500">
+                Add clear photos and detailed descriptions to attract more potential tenants.
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="font-medium mb-2">Safety First</h3>
+              <p className="text-sm text-gray-500">
+                Always verify details and communicate clearly before finalizing any arrangements.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default Dashboard;
