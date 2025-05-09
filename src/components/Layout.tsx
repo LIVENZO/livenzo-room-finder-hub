@@ -21,6 +21,12 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Extract user display name and avatar from user object
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || 'User';
+  const userEmail = user?.email || '';
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -42,16 +48,16 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={userAvatar} alt={userName} />
+                      <AvatarFallback>{userInitial}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <p className="font-medium">{userName}</p>
+                      <p className="text-sm text-muted-foreground">{userEmail}</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />

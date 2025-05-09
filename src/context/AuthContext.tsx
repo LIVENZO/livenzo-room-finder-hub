@@ -1,63 +1,89 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'sonner';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (provider: string) => void;
   logout: () => void;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('livenzo_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsLoading(false);
+
+        if (event === 'SIGNED_IN') {
+          toast.success("Successfully signed in!");
+        } else if (event === 'SIGNED_OUT') {
+          toast.info("You've been signed out.");
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (provider: string) => {
+  const login = async (provider: string) => {
     setIsLoading(true);
     
-    // Simulate Google login - in a real app we would use OAuth
-    setTimeout(() => {
-      const mockUser = {
-        id: 'user_' + Math.random().toString(36).substring(2, 9),
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + Math.random(),
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('livenzo_user', JSON.stringify(mockUser));
+    try {
+      if (provider === 'google') {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`
+          }
+        });
+        
+        if (error) {
+          toast.error(`Error signing in: ${error.message}`);
+          setIsLoading(false);
+        }
+      } else {
+        toast.error("Unsupported authentication provider");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      toast.error(`Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsLoading(false);
-      toast.success("Successfully logged in!");
-    }, 1000);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('livenzo_user');
-    toast.info("You've been logged out.");
+  const logout = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(`Error signing out: ${error.message}`);
+    }
+    setIsLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, session, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
