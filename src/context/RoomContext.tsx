@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +12,7 @@ export interface Room {
     wifi: boolean;
     gender: 'any' | 'male' | 'female';
     bathroom: boolean;
+    roomType: 'single' | 'sharing';
   };
   ownerId: string;
   ownerPhone: string;
@@ -25,6 +25,7 @@ export interface RoomFilters {
   wifi?: boolean;
   gender?: 'any' | 'male' | 'female';
   bathroom?: boolean;
+  roomType?: 'single' | 'sharing';
 }
 
 interface RoomContextType {
@@ -45,12 +46,13 @@ const sampleRooms: Room[] = [
     title: 'Cozy Single Room in Downtown',
     description: 'Comfortable single room with natural lighting and close to amenities.',
     images: ['https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=500&auto=format'],
-    price: 450,
-    location: 'New York, NY',
+    price: 30000,
+    location: 'New Delhi, India',
     facilities: {
       wifi: true,
       gender: 'any',
       bathroom: true,
+      roomType: 'single',
     },
     ownerId: 'owner1',
     ownerPhone: '555-123-4567',
@@ -61,12 +63,13 @@ const sampleRooms: Room[] = [
     title: 'Modern Studio for Students',
     description: 'Perfect for students, close to university with study area.',
     images: ['https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=500&auto=format'],
-    price: 380,
-    location: 'Boston, MA',
+    price: 25000,
+    location: 'Mumbai, India',
     facilities: {
       wifi: true,
       gender: 'male',
       bathroom: false,
+      roomType: 'sharing',
     },
     ownerId: 'owner2',
     ownerPhone: '555-987-6543',
@@ -77,12 +80,13 @@ const sampleRooms: Room[] = [
     title: 'Luxury Room with Mountain View',
     description: 'Spacious room with private balcony overlooking mountains.',
     images: ['https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=500&auto=format'],
-    price: 650,
-    location: 'Denver, CO',
+    price: 45000,
+    location: 'Bangalore, India',
     facilities: {
       wifi: true,
       gender: 'female',
       bathroom: true,
+      roomType: 'single',
     },
     ownerId: 'owner3',
     ownerPhone: '555-456-7890',
@@ -93,12 +97,13 @@ const sampleRooms: Room[] = [
     title: 'Budget Friendly Room Near City Center',
     description: 'Affordable room with shared amenities in a vibrant neighborhood.',
     images: ['https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=500&auto=format'],
-    price: 320,
-    location: 'Chicago, IL',
+    price: 18000,
+    location: 'Hyderabad, India',
     facilities: {
       wifi: false,
       gender: 'any',
       bathroom: false,
+      roomType: 'sharing',
     },
     ownerId: 'owner4',
     ownerPhone: '555-789-0123',
@@ -148,6 +153,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (filters.bathroom !== undefined) {
       result = result.filter(room => room.facilities.bathroom === filters.bathroom);
+    }
+    
+    if (filters.roomType) {
+      result = result.filter(room => room.facilities.roomType === filters.roomType);
     }
     
     setFilteredRooms(result);

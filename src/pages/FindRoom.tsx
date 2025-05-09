@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +25,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -63,7 +66,7 @@ const FindRoom: React.FC = () => {
   
   if (!user) return null;
   
-  const maxPriceValue = tempFilters.maxPrice || 1000;
+  const maxPriceValue = tempFilters.maxPrice || 50000;
   
   return (
     <Layout>
@@ -107,7 +110,7 @@ const FindRoom: React.FC = () => {
                   <div className="space-y-2">
                     <Label>Budget (Monthly Rent)</Label>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm">Max: ${maxPriceValue}</span>
+                      <span className="text-sm">Max: ₹{maxPriceValue}</span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -118,9 +121,9 @@ const FindRoom: React.FC = () => {
                     </div>
                     <Slider
                       value={[maxPriceValue]}
-                      min={100}
-                      max={2000}
-                      step={50}
+                      min={5000}
+                      max={100000}
+                      step={5000}
                       onValueChange={(values) => setTempFilters({ ...tempFilters, maxPrice: values[0] })}
                     />
                   </div>
@@ -147,6 +150,30 @@ const FindRoom: React.FC = () => {
                     </Select>
                   </div>
                   
+                  <div className="space-y-2">
+                    <Label>Room Type</Label>
+                    <RadioGroup 
+                      value={tempFilters.roomType || ''} 
+                      onValueChange={(value) => 
+                        setTempFilters({ ...tempFilters, roomType: value ? value as 'single' | 'sharing' : undefined })
+                      }
+                      className="flex items-center space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="single" id="mobile-single" />
+                        <Label htmlFor="mobile-single">Single</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="sharing" id="mobile-sharing" />
+                        <Label htmlFor="mobile-sharing">Sharing</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="" id="mobile-any-room" />
+                        <Label htmlFor="mobile-any-room">Any</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="mobile-wifi"
@@ -166,7 +193,7 @@ const FindRoom: React.FC = () => {
                         setTempFilters({ ...tempFilters, bathroom: checked ? true : undefined })
                       }
                     />
-                    <Label htmlFor="mobile-bathroom">Private Bathroom</Label>
+                    <Label htmlFor="mobile-bathroom">Connected Bathroom</Label>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-2 mt-8">
@@ -192,7 +219,7 @@ const FindRoom: React.FC = () => {
                 <div className="space-y-2">
                   <Label>Budget (Monthly Rent)</Label>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm">Max: ${maxPriceValue}</span>
+                    <span className="text-sm">Max: ₹{maxPriceValue}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -203,9 +230,9 @@ const FindRoom: React.FC = () => {
                   </div>
                   <Slider
                     value={[maxPriceValue]}
-                    min={100}
-                    max={2000}
-                    step={50}
+                    min={5000}
+                    max={100000}
+                    step={5000}
                     onValueChange={(values) => setTempFilters({ ...tempFilters, maxPrice: values[0] })}
                   />
                 </div>
@@ -232,6 +259,29 @@ const FindRoom: React.FC = () => {
                   </Select>
                 </div>
                 
+                <div className="space-y-2">
+                  <Label>Room Type</Label>
+                  <RadioGroup 
+                    value={tempFilters.roomType || ''} 
+                    onValueChange={(value) => 
+                      setTempFilters({ ...tempFilters, roomType: value ? value as 'single' | 'sharing' : undefined })
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="single" id="single" />
+                      <Label htmlFor="single">Single</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <RadioGroupItem value="sharing" id="sharing" />
+                      <Label htmlFor="sharing">Sharing</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <RadioGroupItem value="" id="any-room" />
+                      <Label htmlFor="any-room">Any</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="wifi"
@@ -251,7 +301,7 @@ const FindRoom: React.FC = () => {
                       setTempFilters({ ...tempFilters, bathroom: checked ? true : undefined })
                     }
                   />
-                  <Label htmlFor="bathroom">Private Bathroom</Label>
+                  <Label htmlFor="bathroom">Connected Bathroom</Label>
                 </div>
                 
                 <div className="flex flex-col gap-2 pt-4">

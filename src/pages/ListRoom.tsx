@@ -24,6 +24,10 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 
 const ListRoom: React.FC = () => {
   const { user } = useAuth();
@@ -38,6 +42,7 @@ const ListRoom: React.FC = () => {
   const [wifi, setWifi] = useState(false);
   const [bathroom, setBathroom] = useState(false);
   const [gender, setGender] = useState<'any' | 'male' | 'female'>('any');
+  const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
   
   // This would be replaced with actual image uploads in a real app
   const [images] = useState([
@@ -69,6 +74,7 @@ const ListRoom: React.FC = () => {
         wifi,
         gender,
         bathroom,
+        roomType,
       },
       ownerId: user!.id,
       ownerPhone: phone,
@@ -120,7 +126,7 @@ const ListRoom: React.FC = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="text-base">Monthly Rent ($) *</Label>
+                  <Label htmlFor="price" className="text-base">Monthly Rent (₹) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -188,6 +194,24 @@ const ListRoom: React.FC = () => {
                   </Select>
                 </div>
                 
+                <div className="space-y-2">
+                  <Label className="text-sm">Room Type</Label>
+                  <RadioGroup
+                    value={roomType}
+                    onValueChange={(value: 'single' | 'sharing') => setRoomType(value)}
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="single" id="list-single" />
+                      <Label htmlFor="list-single">Single Room</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="sharing" id="list-sharing" />
+                      <Label htmlFor="list-sharing">Sharing Room</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
                 <div className="flex items-center justify-between">
                   <Label htmlFor="wifi-switch" className="cursor-pointer">WiFi Included</Label>
                   <Switch
@@ -198,7 +222,7 @@ const ListRoom: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="bathroom-switch" className="cursor-pointer">Private Bathroom</Label>
+                  <Label htmlFor="bathroom-switch" className="cursor-pointer">Connected Bathroom</Label>
                   <Switch
                     id="bathroom-switch"
                     checked={bathroom}

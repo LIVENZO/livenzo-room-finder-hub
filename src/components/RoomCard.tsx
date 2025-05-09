@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Wifi, DollarSign, Bath, User, Users } from 'lucide-react';
+import { MapPin, Wifi, Bath, User, Users, BedSingle, BedDouble } from 'lucide-react';
 import { Room } from '@/context/RoomContext';
 
 interface RoomCardProps {
@@ -14,9 +14,9 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   const navigate = useNavigate();
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       maximumFractionDigits: 0,
     }).format(price);
   };
@@ -40,6 +40,17 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         return 'Girls only';
       default:
         return 'Any gender';
+    }
+  };
+  
+  const getRoomTypeIcon = () => {
+    switch (room.facilities.roomType) {
+      case 'single':
+        return <BedSingle className="h-4 w-4 mr-1" />;
+      case 'sharing':
+        return <BedDouble className="h-4 w-4 mr-1" />;
+      default:
+        return <BedSingle className="h-4 w-4 mr-1" />;
     }
   };
 
@@ -66,6 +77,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex flex-wrap gap-2">
+        <Badge variant="outline" className="flex items-center">
+          {getRoomTypeIcon()}
+          {room.facilities.roomType === 'single' ? 'Single' : 'Sharing'}
+        </Badge>
         {room.facilities.wifi && (
           <Badge variant="outline" className="flex items-center">
             <Wifi className="h-4 w-4 mr-1" />
@@ -79,7 +94,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         {room.facilities.bathroom && (
           <Badge variant="outline" className="flex items-center">
             <Bath className="h-4 w-4 mr-1" />
-            Private Bathroom
+            Connected Bathroom
           </Badge>
         )}
       </CardFooter>
