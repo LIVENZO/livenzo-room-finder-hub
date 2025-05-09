@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Upload, ImagePlus, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
+import { toast } from 'sonner';
 
 const ListRoom: React.FC = () => {
   const { user } = useAuth();
@@ -44,23 +46,78 @@ const ListRoom: React.FC = () => {
   const [gender, setGender] = useState<'any' | 'male' | 'female'>('any');
   const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
   
-  // This would be replaced with actual image uploads in a real app
-  const [images] = useState([
-    'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=500&auto=format',
-    'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=500&auto=format'
-  ]);
+  // State for uploaded images
+  const [images, setImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
   useEffect(() => {
     if (!user) {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Check if we're not exceeding the max number of images
+    if (uploadedFiles.length + files.length > 5) {
+      toast.error("You can upload maximum 5 images");
+      return;
+    }
+
+    // Create new arrays to store the updated files and preview URLs
+    const newUploadedFiles: File[] = [...uploadedFiles];
+    const newImages: string[] = [...images];
+
+    // Process each file
+    Array.from(files).forEach(file => {
+      // Only process image files
+      if (!file.type.match('image.*')) {
+        toast.error(`${file.name} is not an image file`);
+        return;
+      }
+
+      // Create a URL for the image preview
+      const imageUrl = URL.createObjectURL(file);
+      newImages.push(imageUrl);
+      newUploadedFiles.push(file);
+    });
+
+    // Update state with new files and previews
+    setImages(newImages);
+    setUploadedFiles(newUploadedFiles);
+    
+    // Reset the file input
+    e.target.value = '';
+  };
+
+  // Remove an image from the upload list
+  const removeImage = (index: number) => {
+    const newImages = [...images];
+    const newUploadedFiles = [...uploadedFiles];
+    
+    // Release the object URL to avoid memory leaks
+    URL.revokeObjectURL(newImages[index]);
+    
+    newImages.splice(index, 1);
+    newUploadedFiles.splice(index, 1);
+    
+    setImages(newImages);
+    setUploadedFiles(newUploadedFiles);
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title || !description || !price || !location || !phone) {
-      alert('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    if (images.length === 0) {
+      toast.error('Please upload at least one photo of the room.');
       return;
     }
     
@@ -151,26 +208,43 @@ const ListRoom: React.FC = () => {
               </div>
               
               <div className="space-y-4">
-                <Label className="text-base">Room Photos</Label>
+                <Label className="text-base">Room Photos *</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {images.map((image, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden">
+                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-gray-100 border">
                       <img 
                         src={image} 
                         alt={`Room ${idx + 1}`} 
                         className="w-full h-full object-cover"
                       />
+                      <button 
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-black bg-opacity-50 rounded-full p-1"
+                        aria-label="Remove image"
+                      >
+                        <X className="h-4 w-4 text-white" />
+                      </button>
                     </div>
                   ))}
-                  <div className="border-2 border-dashed rounded-md flex items-center justify-center aspect-square bg-gray-50 text-gray-500">
-                    <div className="text-center p-2">
-                      <p className="text-xs">Upload Photo</p>
-                      <p className="text-xs">(Coming Soon)</p>
-                    </div>
-                  </div>
+                  
+                  {images.length < 5 && (
+                    <label className="border-2 border-dashed rounded-md flex flex-col items-center justify-center aspect-square bg-gray-50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors">
+                      <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        multiple={true}
+                      />
+                      <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
+                      <span className="text-sm font-medium">Upload Photo</span>
+                      <span className="text-xs text-gray-400">{images.length}/5</span>
+                    </label>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500">
-                  Note: In this demo, sample photos are used. In a real app, you would be able to upload your own photos.
+                  Upload up to 5 photos of your room. First photo will be used as the main image.
                 </p>
               </div>
               
@@ -267,3 +341,4 @@ const ListRoom: React.FC = () => {
 };
 
 export default ListRoom;
+
