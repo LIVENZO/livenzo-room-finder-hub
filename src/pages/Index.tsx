@@ -17,6 +17,7 @@ const Index: React.FC = () => {
   }, [user, navigate]);
   
   const handleLogin = () => {
+    console.log("Login button clicked");
     login('google');
   };
   

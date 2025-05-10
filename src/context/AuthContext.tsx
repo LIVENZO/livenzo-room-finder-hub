@@ -52,10 +52,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       if (provider === 'google') {
-        const { error } = await supabase.auth.signInWithOAuth({
+        console.log("Starting Google authentication...");
+        // Get the current URL for proper redirection
+        const redirectUrl = `${window.location.origin}/dashboard`;
+        console.log(`Redirect URL: ${redirectUrl}`);
+        
+        const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/dashboard`,
+            redirectTo: redirectUrl,
             queryParams: {
               access_type: 'offline',
               prompt: 'consent',
@@ -64,9 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         if (error) {
-          console.error("Google auth error:", error);
+          console.error("Google auth error details:", error);
           toast.error(`Error signing in: ${error.message}`);
           setIsLoading(false);
+        } else {
+          console.log("Auth request successful:", data);
+          // The redirect will happen automatically
         }
       } else {
         toast.error("Unsupported authentication provider");
@@ -83,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
+      console.error("Logout error:", error);
       toast.error(`Error signing out: ${error.message}`);
     }
     setIsLoading(false);
