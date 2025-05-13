@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Loader2, Send } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from "@/integrations/supabase/client";
 
 const Chats = () => {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ const Chats = () => {
     const loadConversations = async () => {
       setLoading(true);
       const userConversations = await fetchUserConversations(user.id);
-      setConversations(userConversations);
+      setConversations(userConversations as { room_id: string; last_message: ChatMessage }[]);
       setLoading(false);
       
       if (roomId && !activeRoom) {

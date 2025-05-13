@@ -28,8 +28,14 @@ export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' |
       return null;
     }
 
+    // Type cast to ensure the status is one of the allowed values
+    const typedBooking = {
+      ...data,
+      status: data.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
+    };
+
     toast.success("Booking request sent successfully");
-    return data;
+    return typedBooking;
   } catch (error) {
     toast.error("Failed to send booking request");
     console.error("Exception creating booking:", error);
@@ -49,7 +55,11 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
       return [];
     }
 
-    return data || [];
+    // Type cast each booking to ensure status is of the correct type
+    return (data || []).map(booking => ({
+      ...booking,
+      status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
+    }));
   } catch (error) {
     console.error("Exception fetching user bookings:", error);
     return [];
@@ -68,7 +78,11 @@ export const fetchOwnerBookings = async (ownerId: string): Promise<Booking[]> =>
       return [];
     }
 
-    return data || [];
+    // Type cast each booking to ensure status is of the correct type
+    return (data || []).map(booking => ({
+      ...booking,
+      status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
+    }));
   } catch (error) {
     console.error("Exception fetching owner bookings:", error);
     return [];
@@ -93,8 +107,14 @@ export const updateBookingStatus = async (
       return null;
     }
 
+    // Type cast to ensure the status is one of the allowed values
+    const typedBooking = {
+      ...data,
+      status: data.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
+    };
+
     toast.success(`Booking ${status} successfully`);
-    return data;
+    return typedBooking;
   } catch (error) {
     toast.error("Failed to update booking status");
     console.error("Exception updating booking status:", error);

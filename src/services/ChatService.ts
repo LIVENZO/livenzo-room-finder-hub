@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -45,15 +44,10 @@ export const fetchRoomMessages = async (
   roomId: string
 ): Promise<ChatMessage[]> => {
   try {
+    // First, let's fetch all messages for the room
     const { data, error } = await supabase
       .from("chat_messages")
-      .select(`
-        *,
-        sender:sender_id(
-          full_name:user_profiles!inner(full_name),
-          avatar_url:user_profiles!inner(avatar_url)
-        )
-      `)
+      .select("*")
       .eq("room_id", roomId)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order("created_at");
@@ -63,7 +57,25 @@ export const fetchRoomMessages = async (
       return [];
     }
 
-    return data || [];
+    // Then, get user info for each message sender
+    const messages: ChatMessage[] = [];
+    
+    for (const msg of data || []) {
+      // Get sender profile info
+      const { data: senderData } = await supabase
+        .from("user_profiles")
+        .select("full_name, avatar_url")
+        .eq("id", msg.sender_id)
+        .single();
+        
+      messages.push({
+        ...msg,
+        sender: senderData as { full_name: string, avatar_url: string } || 
+                { full_name: 'Unknown', avatar_url: '' }
+      });
+    }
+
+    return messages;
   } catch (error) {
     console.error("Exception fetching room messages:", error);
     return [];
@@ -92,32 +104,40 @@ export const fetchUserConversations = async (
     const uniqueRoomIds = [...new Set(rooms.map(r => r.room_id))];
     
     // For each room, fetch the latest message
-    const conversations = await Promise.all(
-      uniqueRoomIds.map(async (roomId) => {
-        const { data: messages, error: msgError } = await supabase
-          .from("chat_messages")
-          .select(`
-            *,
-            sender:sender_id(
-              full_name:user_profiles!inner(full_name),
-              avatar_url:user_profiles!inner(avatar_url)
-            )
-          `)
-          .eq("room_id", roomId)
-          .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-          .order("created_at", { ascending: false })
-          .limit(1);
-          
-        if (msgError || !messages || messages.length === 0) {
-          console.error("Error fetching messages for room:", roomId, msgError);
-          return null;
-        }
-        
-        return { room_id: roomId, last_message: messages[0] };
-      })
-    );
+    const conversations: { room_id: string; last_message: ChatMessage }[] = [];
     
-    return conversations.filter(c => c !== null) as { room_id: string; last_message: ChatMessage }[];
+    for (const roomId of uniqueRoomIds) {
+      const { data: messages, error: msgError } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+          
+      if (msgError || !messages || messages.length === 0) {
+        console.error("Error fetching messages for room:", roomId, msgError);
+        continue;
+      }
+      
+      // Get sender profile info
+      const { data: senderData } = await supabase
+        .from("user_profiles")
+        .select("full_name, avatar_url")
+        .eq("id", messages[0].sender_id)
+        .single();
+      
+      conversations.push({ 
+        room_id: roomId, 
+        last_message: {
+          ...messages[0],
+          sender: senderData as { full_name: string, avatar_url: string } || 
+                  { full_name: 'Unknown', avatar_url: '' }
+        }
+      });
+    }
+    
+    return conversations;
   } catch (error) {
     console.error("Exception fetching conversations:", error);
     return [];

@@ -33,7 +33,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 };
 
 export const createOrUpdateUserProfile = async (
-  profile: Partial<UserProfile>
+  profile: Partial<UserProfile> & { id: string }
 ): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase

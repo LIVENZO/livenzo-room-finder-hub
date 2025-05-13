@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
@@ -10,12 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRoom } from '@/context/RoomContext';
+import { useRooms } from '@/context/RoomContext';
 
 const Bookings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { rooms } = useRoom();
+  const { rooms } = useRooms();
   
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [ownerBookings, setOwnerBookings] = useState<Booking[]>([]);

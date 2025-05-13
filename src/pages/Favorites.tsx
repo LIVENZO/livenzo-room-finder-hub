@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { useRoom } from '@/context/RoomContext';
+import { useRooms } from '@/context/RoomContext';
 import { fetchUserFavorites } from '@/services/FavoriteService';
 import RoomCard from '@/components/RoomCard';
 import { Loader2 } from 'lucide-react';
@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 const Favorites = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { rooms } = useRoom();
+  const { rooms } = useRooms();
   
   const [loading, setLoading] = useState(true);
   const [favoriteRoomIds, setFavoriteRoomIds] = useState<string[]>([]);
