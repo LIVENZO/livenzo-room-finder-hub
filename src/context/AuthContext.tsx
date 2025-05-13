@@ -20,9 +20,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   useEffect(() => {
+    console.log("AuthProvider initializing");
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
@@ -37,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoading(false);
@@ -54,11 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (provider === 'google') {
         console.log("Starting Google authentication...");
         
-        // Get the current URL for proper redirection
-        // Use production URL to avoid localhost issues
-        const redirectUrl = window.location.hostname.includes('localhost') 
-          ? `${window.location.origin}/dashboard` 
-          : `${window.location.origin}/dashboard`;
+        // Use window.location.origin for proper redirection
+        const redirectUrl = `${window.location.origin}/dashboard`;
           
         console.log(`Redirect URL: ${redirectUrl}`);
         

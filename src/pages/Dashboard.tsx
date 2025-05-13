@@ -1,22 +1,44 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
 import Layout from '@/components/Layout';
 import RoomCard from '@/components/RoomCard';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { rooms } = useRooms();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   useEffect(() => {
-    if (!user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
+    // Add a slight delay to handle potential race conditions with auth state
+    const redirectTimer = setTimeout(() => {
+      if (!isLoading && !user) {
+        console.log("No user found after loading, redirecting to login");
+        setIsRedirecting(true);
+        navigate('/');
+      }
+    }, 1000);
+    
+    return () => clearTimeout(redirectTimer);
+  }, [user, isLoading, navigate]);
+  
+  if (isLoading || isRedirecting) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-gray-500">Loading your dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   
   if (!user) return null;
   

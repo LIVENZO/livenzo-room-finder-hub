@@ -11,8 +11,12 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Check if we have a user session and redirect if needed
     if (user) {
+      console.log("User detected, navigating to dashboard:", user.email);
       navigate('/dashboard');
+    } else {
+      console.log("No user detected on index page");
     }
   }, [user, navigate]);
   
