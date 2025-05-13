@@ -1,0 +1,241 @@
+
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserProfile, createOrUpdateUserProfile, fetchUserProfile, uploadProfilePicture } from '@/services/UserProfileService';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, Upload } from 'lucide-react';
+
+const Profile = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  const [formValues, setFormValues] = useState({
+    fullName: '',
+    phone: '',
+    bio: '',
+  });
+  
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+    
+    const loadProfile = async () => {
+      setLoading(true);
+      const userProfile = await fetchUserProfile(user.id);
+      setLoading(false);
+      
+      if (userProfile) {
+        setProfile(userProfile);
+        setFormValues({
+          fullName: userProfile.full_name || '',
+          phone: userProfile.phone || '',
+          bio: userProfile.bio || '',
+        });
+      } else {
+        // Create a new profile with basic details
+        const newProfile = {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+        };
+        
+        setProfile(newProfile as UserProfile);
+        setFormValues({
+          fullName: newProfile.full_name || '',
+          phone: '',
+          bio: '',
+        });
+      }
+    };
+    
+    loadProfile();
+  }, [user, navigate]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormValues(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleSave = async () => {
+    if (!user || !profile) return;
+    
+    setSaving(true);
+    
+    const updatedProfile = await createOrUpdateUserProfile({
+      id: user.id,
+      full_name: formValues.fullName,
+      phone: formValues.phone,
+      bio: formValues.bio,
+      avatar_url: profile.avatar_url,
+    });
+    
+    setSaving(false);
+    
+    if (updatedProfile) {
+      setProfile(updatedProfile);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    }
+  };
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setUploadingImage(true);
+    
+    const imageUrl = await uploadProfilePicture(file, user.id);
+    
+    if (imageUrl) {
+      setProfile(prev => prev ? { ...prev, avatar_url: imageUrl } : null);
+      
+      // Update the profile with the new image URL
+      await createOrUpdateUserProfile({
+        id: user.id,
+        avatar_url: imageUrl,
+      });
+      
+      toast({
+        title: "Image uploaded",
+        description: "Your profile picture has been updated",
+      });
+    }
+    
+    setUploadingImage(false);
+  };
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container max-w-4xl py-10 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+  
+  return (
+    <Layout>
+      <div className="container max-w-4xl py-10">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Profile</CardTitle>
+            <CardDescription>
+              Update your personal information and how you appear to others
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+              <div className="flex flex-col items-center gap-2">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback>
+                    {profile?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="relative">
+                  <input
+                    id="picture"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => document.getElementById('picture')?.click()}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" /> Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-3 w-3 mr-1" /> Change Picture
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="w-full space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="fullName">Name</Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    value={formValues.fullName}
+                    onChange={handleInputChange}
+                    placeholder="Your full name"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formValues.phone}
+                    onChange={handleInputChange}
+                    placeholder="Your phone number"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="bio">About You</Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                value={formValues.bio}
+                onChange={handleInputChange}
+                placeholder="Tell others a bit about yourself"
+                rows={4}
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </Layout>
+  );
+};
+
+export default Profile;
