@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (provider: string) => void;
   logout: () => void;
   session: Session | null;
+  isGuestMode: boolean;
+  enterAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(false);
   
   useEffect(() => {
     console.log("AuthProvider initializing");
@@ -32,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (event === 'SIGNED_IN') {
           toast.success("Successfully signed in!");
+          setIsGuestMode(false);
         } else if (event === 'SIGNED_OUT') {
           toast.info("You've been signed out.");
         }
@@ -50,6 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  const enterAsGuest = () => {
+    console.log("Entering as guest");
+    setIsGuestMode(true);
+    setIsLoading(false);
+    toast.info("You are browsing as a guest. Some features will be limited.");
+  };
 
   const login = async (provider: string) => {
     setIsLoading(true);
@@ -94,6 +105,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    if (isGuestMode) {
+      setIsGuestMode(false);
+      toast.info("You've exited guest mode.");
+      return;
+    }
+    
     setIsLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -104,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, session, isLoading, login, logout, isGuestMode, enterAsGuest }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,7 +7,7 @@ import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
 
 const Index: React.FC = () => {
-  const { user, login, isLoading } = useAuth();
+  const { user, login, isLoading, enterAsGuest } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -23,6 +23,12 @@ const Index: React.FC = () => {
   const handleLogin = () => {
     console.log("Login button clicked");
     login('google');
+  };
+  
+  const handleGuestAccess = () => {
+    console.log("Guest access button clicked");
+    enterAsGuest();
+    navigate('/dashboard');
   };
   
   return (
@@ -72,6 +78,24 @@ const Index: React.FC = () => {
                   Sign in with Google
                 </>
               )}
+            </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Or</span>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleGuestAccess} 
+              variant="outline" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              Continue as Guest
             </Button>
             
             <div className="text-sm text-gray-500">

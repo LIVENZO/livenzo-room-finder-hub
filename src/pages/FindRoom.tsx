@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/radio-group";
 
 const FindRoom: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isGuestMode } = useAuth();
   const navigate = useNavigate();
   const { filteredRooms, filters, setFilters, isLoading } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
@@ -39,10 +39,11 @@ const FindRoom: React.FC = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   useEffect(() => {
-    if (!user) {
+    // Allow access if user is logged in or in guest mode
+    if (!user && !isGuestMode) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, isGuestMode, navigate]);
   
   useEffect(() => {
     setTempFilters(filters);
@@ -64,7 +65,7 @@ const FindRoom: React.FC = () => {
     setTempFilters({});
   };
   
-  if (!user) return null;
+  if (!user && !isGuestMode) return null;
   
   const maxPriceValue = tempFilters.maxPrice || 50000;
   

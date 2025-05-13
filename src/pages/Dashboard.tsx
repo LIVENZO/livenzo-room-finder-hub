@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isGuestMode } = useAuth();
   const navigate = useNavigate();
   const { rooms } = useRooms();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -17,15 +17,15 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     // Add a slight delay to handle potential race conditions with auth state
     const redirectTimer = setTimeout(() => {
-      if (!isLoading && !user) {
-        console.log("No user found after loading, redirecting to login");
+      if (!isLoading && !user && !isGuestMode) {
+        console.log("No user found after loading and not in guest mode, redirecting to login");
         setIsRedirecting(true);
         navigate('/');
       }
     }, 1000);
     
     return () => clearTimeout(redirectTimer);
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isGuestMode, navigate]);
   
   if (isLoading || isRedirecting) {
     return (
@@ -40,13 +40,16 @@ const Dashboard: React.FC = () => {
     );
   }
   
-  if (!user) return null;
-  
-  // Get the user name from user_metadata or fallback to email
-  const userName = user.user_metadata?.full_name || 
-                  user.user_metadata?.name || 
-                  user.email?.split('@')[0] || 
-                  'User';
+  // Get the user name for personalized greeting or use guest greeting
+  let greeting = "Welcome, Guest!";
+  if (user) {
+    // Get the user name from user_metadata or fallback to email
+    const userName = user.user_metadata?.full_name || 
+                    user.user_metadata?.name || 
+                    user.email?.split('@')[0] || 
+                    'User';
+    greeting = `Welcome, ${userName}!`;
+  }
   
   const featuredRooms = rooms.slice(0, 3);
   
@@ -56,7 +59,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-8 mb-8 text-white">
           <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Welcome, {userName}!</h1>
+              <h1 className="text-3xl font-bold mb-2">{greeting}</h1>
               <p className="text-white/90 mb-4">What would you like to do today?</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
