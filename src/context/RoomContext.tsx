@@ -1,36 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
-
-export interface Room {
-  id: string;
-  title: string;
-  description: string;
-  images: string[];
-  price: number;
-  location: string;
-  facilities: {
-    wifi?: boolean;
-    bathroom?: boolean;
-    gender?: 'male' | 'female' | 'any';
-    roomType?: 'single' | 'sharing';
-  };
-  ownerId: string;
-  ownerPhone: string;
-  available?: boolean;
-  createdAt?: string;
-}
-
-export interface RoomFilters {
-  location?: string;
-  maxPrice?: number;
-  wifi?: boolean;
-  bathroom?: boolean;
-  gender?: 'male' | 'female';
-  roomType?: 'single' | 'sharing';
-}
+import { Room, RoomFilters } from '@/types/room';
+import { 
+  fetchRooms as fetchRoomsService,
+  addRoomService,
+  updateRoomService,
+  deleteRoomService,
+  updateRoomAvailabilityService
+} from '@/services/roomService';
+import { useRoomFilters } from '@/hooks/useRoomFilters';
 
 interface RoomContextType {
   rooms: Room[];
@@ -51,46 +31,19 @@ const RoomContext = createContext<RoomContextType | undefined>(undefined);
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [filters, setFilters] = useState<RoomFilters>({});
-  const { user, isGuestMode, userRole } = useAuth();
+  const { user } = useAuth();
+  const { filters, setFilters, filteredRooms } = useRoomFilters(rooms);
 
   // Fetch rooms from Supabase
   useEffect(() => {
     setIsLoading(true);
-    fetchRooms();
+    loadRooms();
   }, [user]);
 
-  const fetchRooms = async () => {
+  const loadRooms = async () => {
     try {
-      console.log('Fetching rooms...');
-      const { data, error } = await supabase.rpc('get_rooms');
-      
-      if (error) {
-        console.error('Error fetching rooms:', error);
-        toast.error('Failed to fetch rooms');
-      } else {
-        console.log('Rooms fetched:', data);
-        if (data) {
-          // Map Supabase data to Room interface
-          const fetchedRooms = data.map((room: any) => ({
-            id: room.id,
-            title: room.title,
-            description: room.description,
-            images: room.images,
-            price: room.price,
-            location: room.location,
-            facilities: room.facilities,
-            ownerId: room.owner_id,
-            ownerPhone: room.owner_phone,
-            available: room.available,
-            createdAt: room.created_at
-          }));
-          setRooms(fetchedRooms);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-      toast.error('Failed to fetch rooms');
+      const fetchedRooms = await fetchRoomsService();
+      setRooms(fetchedRooms);
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +51,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Add a new room
   const addRoom = async (room: Omit<Room, 'id' | 'createdAt'>) => {
-    if (!user && !isGuestMode) {
+    if (!user) {
       toast.error('You must be logged in to list a room');
       return;
     }
@@ -106,45 +59,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      const roomData = {
-        title: room.title,
-        description: room.description,
-        images: room.images,
-        price: room.price,
-        location: room.location,
-        facilities: room.facilities,
-        owner_id: room.ownerId,
-        owner_phone: room.ownerPhone,
-        available: true
-      };
+      const newRoom = await addRoomService(room);
       
-      const { data, error } = await supabase.rpc('insert_room', { room_data: roomData });
-      
-      if (error) {
-        console.error('Error adding room:', error);
-        toast.error('Failed to list room');
-      } else if (data) {
-        // Convert the returned data to our Room interface
-        const newRoom: Room = {
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          images: data.images,
-          price: data.price,
-          location: data.location,
-          facilities: data.facilities,
-          ownerId: data.owner_id,
-          ownerPhone: data.owner_phone,
-          available: data.available,
-          createdAt: data.created_at
-        };
-        
+      if (newRoom) {
         setRooms(prev => [...prev, newRoom]);
         toast.success('Room listed successfully');
       }
-    } catch (error) {
-      console.error('Error adding room:', error);
-      toast.error('Failed to list room');
     } finally {
       setIsLoading(false);
     }
@@ -155,54 +75,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Map Room interface updates to database column names
-      const dbUpdates: Record<string, any> = {};
+      const updatedRoom = await updateRoomService(id, updates);
       
-      if (updates.title) dbUpdates.title = updates.title;
-      if (updates.description) dbUpdates.description = updates.description;
-      if (updates.images) dbUpdates.images = updates.images;
-      if (updates.price !== undefined) dbUpdates.price = updates.price;
-      if (updates.location) dbUpdates.location = updates.location;
-      if (updates.facilities) dbUpdates.facilities = updates.facilities;
-      if (updates.ownerPhone) dbUpdates.owner_phone = updates.ownerPhone;
-      if (updates.available !== undefined) dbUpdates.available = updates.available;
-      
-      const { data, error } = await supabase
-        .from('rooms')
-        .update(dbUpdates)
-        .eq('id', id)
-        .select();
-      
-      if (error) {
-        console.error('Error updating room:', error);
-        toast.error('Failed to update room');
-      } else if (data && data[0]) {
-        // Update room in state
-        setRooms(prev => 
-          prev.map(room => 
-            room.id === id 
-              ? {
-                  id: data[0].id,
-                  title: data[0].title,
-                  description: data[0].description,
-                  images: data[0].images,
-                  price: data[0].price,
-                  location: data[0].location,
-                  facilities: data[0].facilities,
-                  ownerId: data[0].owner_id,
-                  ownerPhone: data[0].owner_phone,
-                  available: data[0].available,
-                  createdAt: data[0].created_at
-                }
-              : room
-          )
-        );
-        
+      if (updatedRoom) {
+        setRooms(prev => prev.map(room => room.id === id ? updatedRoom : room));
         toast.success('Room updated successfully');
       }
-    } catch (error) {
-      console.error('Error updating room:', error);
-      toast.error('Failed to update room');
     } finally {
       setIsLoading(false);
     }
@@ -213,23 +91,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Delete room from Supabase
-      const { error } = await supabase
-        .from('rooms')
-        .delete()
-        .eq('id', id);
+      const success = await deleteRoomService(id);
       
-      if (error) {
-        console.error('Error deleting room:', error);
-        toast.error('Failed to delete room');
-      } else {
-        // Remove room from state
+      if (success) {
         setRooms(prev => prev.filter(room => room.id !== id));
         toast.success('Room deleted successfully');
       }
-    } catch (error) {
-      console.error('Error deleting room:', error);
-      toast.error('Failed to delete room');
     } finally {
       setIsLoading(false);
     }
@@ -242,79 +109,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Get rooms owned by the current user
   const getUserRooms = () => {
-    if (!user && !isGuestMode) return [];
+    if (!user) return [];
     
-    const userId = user ? user.id : 'guest';
+    const userId = user.id;
     return rooms.filter(room => room.ownerId === userId);
   };
-
-  // Filter rooms based on user criteria
-  const filteredRooms = React.useMemo(() => {
-    return rooms.filter(room => {
-      // Filter by location
-      if (filters.location && !room.location.toLowerCase().includes(filters.location.toLowerCase())) {
-        return false;
-      }
-      
-      // Filter by max price
-      if (filters.maxPrice && room.price > filters.maxPrice) {
-        return false;
-      }
-      
-      // Filter by wifi
-      if (filters.wifi && !room.facilities.wifi) {
-        return false;
-      }
-      
-      // Filter by bathroom
-      if (filters.bathroom && !room.facilities.bathroom) {
-        return false;
-      }
-      
-      // Filter by gender preference
-      if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) {
-        return false;
-      }
-      
-      // Filter by room type
-      if (filters.roomType && room.facilities.roomType !== filters.roomType) {
-        return false;
-      }
-      
-      // Filter out unavailable rooms
-      if (room.available === false) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [rooms, filters]);
 
   // Update room availability
   const updateRoomAvailability = async (id: string, available: boolean) => {
     try {
-      const { error } = await supabase.rpc('update_room_availability', { 
-        room_id: id,
-        is_available: available
-      });
+      const success = await updateRoomAvailabilityService(id, available);
       
-      if (error) {
-        console.error('Error updating room availability:', error);
-        toast.error('Failed to update room availability');
-        return Promise.reject(error);
+      if (success) {
+        // Update local state
+        setRooms(prev => prev.map(room => 
+          room.id === id ? { ...room, available } : room
+        ));
       }
-      
-      // Update local state
-      setRooms(prev => prev.map(room => 
-        room.id === id ? { ...room, available } : room
-      ));
-      
-      toast.success(`Room ${available ? 'marked as available' : 'marked as unavailable'}`);
-      return Promise.resolve();
     } catch (error) {
       console.error('Error updating room availability:', error);
       toast.error('Failed to update room availability');
-      return Promise.reject(error);
     }
   };
 
