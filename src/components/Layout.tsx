@@ -35,7 +35,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isGuestMode, logout, userRole } = useAuth();
+  const { user, logout, userRole } = useAuth();
   const isMobile = useIsMobile();
   
   const handleLogout = () => {
@@ -147,7 +147,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
                   <Separator className="my-2" />
                   <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
                     <LogOut size={20} />
-                    {isGuestMode ? "Exit Guest Mode" : "Logout"}
+                    Logout
                   </Button>
                 </div>
               </SheetContent>
@@ -185,7 +185,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
             <Separator className="my-2" />
             <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
               <LogOut size={20} />
-              {isGuestMode ? "Exit Guest Mode" : "Logout"}
+              Logout
             </Button>
           </div>
         </aside>

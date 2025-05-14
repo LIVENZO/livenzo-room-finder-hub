@@ -10,8 +10,6 @@ interface AuthContextType {
   login: (provider: string) => void;
   logout: () => void;
   session: Session | null;
-  isGuestMode: boolean;
-  enterAsGuest: () => void;
   userRole: string | null;
 }
 
@@ -21,7 +19,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isGuestMode, setIsGuestMode] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   
   useEffect(() => {
@@ -40,7 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const storedRole = localStorage.getItem('userRole');
           setUserRole(storedRole);
           toast.success("Successfully signed in!");
-          setIsGuestMode(false);
         } else if (event === 'SIGNED_OUT') {
           setUserRole(null);
           toast.info("You've been signed out.");
@@ -67,18 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
-
-  const enterAsGuest = () => {
-    console.log("Entering as guest");
-    setIsGuestMode(true);
-    setIsLoading(false);
-    
-    // Get the user role from localStorage when entering as guest
-    const storedRole = localStorage.getItem('userRole');
-    setUserRole(storedRole);
-    
-    toast.info("You are browsing as a guest. Some features will be limited.");
-  };
 
   const login = async (provider: string) => {
     setIsLoading(true);
@@ -123,14 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (isGuestMode) {
-      setIsGuestMode(false);
-      setUserRole(null);
-      localStorage.removeItem('userRole');
-      toast.info("You've exited guest mode.");
-      return;
-    }
-    
     setIsLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -148,8 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading, 
       login, 
       logout, 
-      isGuestMode, 
-      enterAsGuest, 
       userRole 
     }}>
       {children}
