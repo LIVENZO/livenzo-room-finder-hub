@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -9,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Upload, ImagePlus, X } from 'lucide-react';
+import { Upload, ImagePlus, X, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,6 +29,7 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const ListRoom: React.FC = () => {
   const { user } = useAuth();
@@ -45,13 +45,14 @@ const ListRoom: React.FC = () => {
   const [bathroom, setBathroom] = useState(false);
   const [gender, setGender] = useState<'any' | 'male' | 'female'>('any');
   const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
+  const [isUploading, setIsUploading] = useState(false);
   
   // State for uploaded images
   const [images, setImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
   useEffect(() => {
-    if (!user) {
+    if (!user && !localStorage.getItem('guest_mode')) {
       navigate('/');
     }
   }, [user, navigate]);
@@ -108,7 +109,47 @@ const ListRoom: React.FC = () => {
     setUploadedFiles(newUploadedFiles);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // Upload images to Supabase Storage
+  const uploadImagesToSupabase = async (): Promise<string[]> => {
+    if (!uploadedFiles.length) return [];
+    
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${user ? user.id : 'guest'}/${fileName}`;
+        
+        // Upload the file to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('avatars') // Using avatars bucket until rooms bucket is set up
+          .upload(filePath, file);
+        
+        if (error) {
+          console.error('Error uploading image to Supabase:', error);
+          // Fall back to the object URL for now
+          uploadedUrls.push(images[i]);
+        } else {
+          // Get the public URL
+          const { data: publicUrlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+          
+          uploadedUrls.push(publicUrlData.publicUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error in uploadImagesToSupabase:', error);
+      // If there's an error, fall back to the object URLs
+      return images;
+    }
+    
+    return uploadedUrls.length ? uploadedUrls : images;
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title || !description || !price || !location || !phone) {
@@ -121,24 +162,38 @@ const ListRoom: React.FC = () => {
       return;
     }
     
-    const newRoom: Omit<Room, 'id' | 'createdAt'> = {
-      title,
-      description,
-      images,
-      price: parseInt(price),
-      location,
-      facilities: {
-        wifi,
-        gender,
-        bathroom,
-        roomType,
-      },
-      ownerId: user!.id,
-      ownerPhone: phone,
-    };
+    setIsUploading(true);
     
-    addRoom(newRoom);
-    navigate('/dashboard');
+    try {
+      // Upload images to Supabase Storage if the user is authenticated
+      const imageUrls = user 
+        ? await uploadImagesToSupabase() 
+        : images; // Use local URLs for guests
+      
+      const newRoom: Omit<Room, 'id' | 'createdAt'> = {
+        title,
+        description,
+        images: imageUrls,
+        price: parseInt(price),
+        location,
+        facilities: {
+          wifi,
+          gender,
+          bathroom,
+          roomType,
+        },
+        ownerId: user ? user.id : 'guest',
+        ownerPhone: phone,
+      };
+      
+      await addRoom(newRoom);
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Error in handleSubmit:', error);
+      toast.error(`Failed to list room: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsUploading(false);
+    }
   };
   
   if (!user) return null;
@@ -329,8 +384,14 @@ const ListRoom: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full sm:w-auto"
+                disabled={isUploading}
               >
-                List Room
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : "List Room"}
               </Button>
             </CardFooter>
           </form>
@@ -341,4 +402,3 @@ const ListRoom: React.FC = () => {
 };
 
 export default ListRoom;
-

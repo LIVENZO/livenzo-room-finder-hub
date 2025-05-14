@@ -4,3 +4,5 @@ project_id = "naoqigivttgpkfwpzcgg"
 [storage]
 [storage.avatars]
 public = true
+[storage.rooms]
+public = true

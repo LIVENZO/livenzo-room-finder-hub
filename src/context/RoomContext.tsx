@@ -1,5 +1,8 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
 
 export interface Room {
   id: string;
@@ -33,7 +36,7 @@ interface RoomContextType {
   filteredRooms: Room[];
   filters: RoomFilters;
   setFilters: (filters: RoomFilters) => void;
-  addRoom: (room: Omit<Room, 'id' | 'createdAt'>) => void;
+  addRoom: (room: Omit<Room, 'id' | 'createdAt'>) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -116,17 +119,73 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
   const [filters, setFilters] = useState<RoomFilters>({});
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Initialize with sample data
+  // Fetch rooms from Supabase
   useEffect(() => {
-    const savedRooms = localStorage.getItem('livenzo_rooms');
-    if (savedRooms) {
-      setRooms(JSON.parse(savedRooms));
-    } else {
-      setRooms(sampleRooms);
-      localStorage.setItem('livenzo_rooms', JSON.stringify(sampleRooms));
+    async function fetchRooms() {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('rooms')
+          .select('*');
+        
+        if (error) {
+          console.error('Error fetching rooms:', error);
+          toast.error('Failed to fetch rooms');
+          
+          // Fall back to sample data or cached data
+          const savedRooms = localStorage.getItem('livenzo_rooms');
+          if (savedRooms) {
+            setRooms(JSON.parse(savedRooms));
+          } else {
+            setRooms(sampleRooms);
+            localStorage.setItem('livenzo_rooms', JSON.stringify(sampleRooms));
+          }
+        } else {
+          // Transform data from Supabase format to our Room interface
+          const formattedRooms: Room[] = data.map((room: any) => ({
+            id: room.id,
+            title: room.title,
+            description: room.description,
+            images: room.images,
+            price: room.price,
+            location: room.location,
+            facilities: room.facilities,
+            ownerId: room.owner_id,
+            ownerPhone: room.owner_phone,
+            createdAt: room.created_at
+          }));
+          
+          if (formattedRooms.length > 0) {
+            setRooms(formattedRooms);
+            
+            // Update localStorage cache
+            localStorage.setItem('livenzo_rooms', JSON.stringify(formattedRooms));
+          } else {
+            // If no data in Supabase yet, use sample data
+            const savedRooms = localStorage.getItem('livenzo_rooms');
+            if (savedRooms) {
+              setRooms(JSON.parse(savedRooms));
+            } else {
+              setRooms(sampleRooms);
+              localStorage.setItem('livenzo_rooms', JSON.stringify(sampleRooms));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetching rooms:', error);
+        toast.error('Failed to fetch rooms');
+        
+        // Fall back to sample data
+        setRooms(sampleRooms);
+        localStorage.setItem('livenzo_rooms', JSON.stringify(sampleRooms));
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+
+    fetchRooms();
   }, []);
 
   // Apply filters whenever rooms or filters change
@@ -162,17 +221,75 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setFilteredRooms(result);
   }, [rooms, filters]);
 
-  const addRoom = (roomData: Omit<Room, 'id' | 'createdAt'>) => {
-    const newRoom: Room = {
-      ...roomData,
-      id: 'room_' + Math.random().toString(36).substring(2, 9),
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    
-    const updatedRooms = [...rooms, newRoom];
-    setRooms(updatedRooms);
-    localStorage.setItem('livenzo_rooms', JSON.stringify(updatedRooms));
-    toast.success("Room listed successfully!");
+  const addRoom = async (roomData: Omit<Room, 'id' | 'createdAt'>) => {
+    try {
+      // Convert the room data to match the Supabase schema
+      const supabaseRoomData = {
+        title: roomData.title,
+        description: roomData.description,
+        images: roomData.images,
+        price: roomData.price,
+        location: roomData.location,
+        facilities: roomData.facilities,
+        owner_id: roomData.ownerId,
+        owner_phone: roomData.ownerPhone,
+      };
+      
+      // If user is authenticated, save to Supabase
+      if (user) {
+        const { data, error } = await supabase
+          .from('rooms')
+          .insert(supabaseRoomData)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error adding room to Supabase:', error);
+          toast.error("Failed to list room: " + error.message);
+          return;
+        }
+        
+        // Transform the returned data to match our Room interface
+        const newRoom: Room = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          images: data.images,
+          price: data.price,
+          location: data.location,
+          facilities: data.facilities,
+          ownerId: data.owner_id,
+          ownerPhone: data.owner_phone,
+          createdAt: data.created_at
+        };
+        
+        // Update local state
+        setRooms(prevRooms => [...prevRooms, newRoom]);
+        
+        // Update localStorage cache
+        localStorage.setItem('livenzo_rooms', JSON.stringify([...rooms, newRoom]));
+        
+        toast.success("Room listed successfully!");
+      } else {
+        // If not authenticated, just use local storage
+        const newRoom: Room = {
+          ...roomData,
+          id: 'local_' + Math.random().toString(36).substring(2, 9),
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        
+        const updatedRooms = [...rooms, newRoom];
+        setRooms(updatedRooms);
+        localStorage.setItem('livenzo_rooms', JSON.stringify(updatedRooms));
+        toast.success("Room listed successfully (locally)!");
+        toast.info("Sign in to save your listings permanently.", {
+          duration: 5000
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in addRoom:', error);
+      toast.error(`Failed to list room: ${error.message || 'Unknown error'}`);
+    }
   };
 
   return (
