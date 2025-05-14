@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Room, useRooms } from '@/context/RoomContext';
 import { 
@@ -25,6 +25,17 @@ import {
   Loader2
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface RoomManagementCardProps {
   room: Room;
@@ -38,12 +49,19 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
   setUpdatingRoom 
 }) => {
   const navigate = useNavigate();
-  const { updateRoomAvailability } = useRooms();
+  const { updateRoomAvailability, deleteRoom } = useRooms();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAvailabilityChange = async (available: boolean) => {
     setUpdatingRoom(room.id);
     await updateRoomAvailability(room.id, available);
     setUpdatingRoom(null);
+  };
+
+  const handleDeleteRoom = async () => {
+    setIsDeleting(true);
+    await deleteRoom(room.id);
+    setIsDeleting(false);
   };
 
   return (
@@ -142,12 +160,35 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
           >
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button 
-            variant="destructive" 
-            size="sm"
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-1" />
+                )}
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your room listing
+                  and remove it from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteRoom}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardFooter>
     </Card>

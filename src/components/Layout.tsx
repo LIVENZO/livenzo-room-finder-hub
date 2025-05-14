@@ -1,31 +1,31 @@
 
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { 
-  Home, 
-  LogOut, 
-  User, 
-  Heart, 
-  Calendar, 
-  MessageSquare, 
-  Bell,
+  Home,
+  Search,
+  PlusSquare,
+  Heart,
+  Calendar,
+  MessageSquare,
+  User,
+  LogOut,
   Menu,
-  X 
+  X,
 } from 'lucide-react';
-import { Badge } from './ui/badge';
-import { useState, useEffect } from 'react';
-import { getUnreadMessageCount } from '@/services/ChatService';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
+import { useAuth } from '@/context/AuthContext';
+import { useMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -33,228 +33,171 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const { user, isGuestMode, logout, userRole } = useAuth();
+  const isMobile = useMobile();
   
-  // Extract user display name and avatar from user object
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || 'User';
-  const userEmail = user?.email || '';
-  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
-  const userInitial = userName.charAt(0).toUpperCase();
-
-  // Check for unread messages periodically
-  useEffect(() => {
-    if (!user) return;
-
-    const checkUnreadMessages = async () => {
-      const count = await getUnreadMessageCount(user.id);
-      setUnreadCount(count);
-    };
-
-    // Check immediately
-    checkUnreadMessages();
-
-    // Then check every minute
-    const interval = setInterval(checkUnreadMessages, 60000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+  
+  // Navigation items
+  const navItems = [
+    {
+      label: 'Home',
+      icon: <Home size={20} />,
+      href: '/dashboard',
+      show: true,
+    },
+    {
+      label: 'Find Room',
+      icon: <Search size={20} />,
+      href: '/find-room',
+      show: userRole !== 'owner',
+    },
+    {
+      label: 'List Room',
+      icon: <PlusSquare size={20} />,
+      href: '/list-room',
+      show: true,
+    },
+    {
+      label: 'My Listings',
+      icon: <PlusSquare size={20} />,
+      href: '/my-listings',
+      show: userRole === 'owner',
+    },
+    {
+      label: 'Favorites',
+      icon: <Heart size={20} />,
+      href: '/favorites',
+      show: userRole !== 'owner',
+    },
+    {
+      label: 'Bookings',
+      icon: <Calendar size={20} />,
+      href: '/bookings',
+      show: userRole !== 'owner',
+    },
+    {
+      label: 'Messages',
+      icon: <MessageSquare size={20} />,
+      href: '/chats',
+      show: true,
+    },
+    {
+      label: 'Profile',
+      icon: <User size={20} />,
+      href: '/profile',
+      show: true,
+    },
+  ];
+  
+  const filteredNavItems = navItems.filter(item => item.show);
 
-  const NavLinks = () => (
-    <>
-      <Link 
-        to="/dashboard" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <Home className="mr-2 h-4 w-4" />
-        <span>Dashboard</span>
-      </Link>
-      <Link 
-        to="/find-room" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <span>Find Rooms</span>
-      </Link>
-      <Link 
-        to="/list-room" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <span>List Your Room</span>
-      </Link>
-      <Link 
-        to="/favorites" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <Heart className="mr-2 h-4 w-4" />
-        <span>Favorites</span>
-      </Link>
-      <Link 
-        to="/bookings" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <Calendar className="mr-2 h-4 w-4" />
-        <span>Bookings</span>
-      </Link>
-      <Link 
-        to="/chats" 
-        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
-      >
-        <MessageSquare className="mr-2 h-4 w-4" />
-        <span>Messages</span>
-        {unreadCount > 0 && (
-          <Badge className="ml-2 bg-primary">{unreadCount}</Badge>
-        )}
-      </Link>
-    </>
-  );
-
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
+  // Render nothing if hideNav is true
+  if (hideNav) {
+    return <>{children}</>;
+  }
+  
   return (
-    <div className="min-h-screen flex flex-col">
-      {!hideNav && (
-        <header className="bg-white border-b py-4 px-4 md:px-6 sticky top-0 z-10">
-          <div className="container max-w-7xl mx-auto flex justify-between items-center">
-            <div 
-              className="flex items-center space-x-2 cursor-pointer" 
+    <div className="flex flex-col min-h-screen">
+      {/* Mobile navigation */}
+      {isMobile && (
+        <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b py-3 px-4">
+          <div className="flex justify-between items-center">
+            <h1 
+              className="text-xl font-bold text-primary cursor-pointer"
               onClick={() => navigate('/dashboard')}
             >
-              <div className="bg-primary rounded-full p-2">
-                <Home className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-primary">Livenzo</span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link to="/find-room" className="text-gray-600 hover:text-primary">Find Rooms</Link>
-              <Link to="/list-room" className="text-gray-600 hover:text-primary">List Your Room</Link>
-              
-              {user && (
-                <>
-                  <Link to="/favorites" className="text-gray-600 hover:text-primary">
-                    <Heart className="h-5 w-5" />
-                  </Link>
-                  <Link to="/bookings" className="text-gray-600 hover:text-primary">
-                    <Calendar className="h-5 w-5" />
-                  </Link>
-                  <Link to="/chats" className="text-gray-600 hover:text-primary relative">
-                    <MessageSquare className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <Badge 
-                        className="absolute -top-2 -right-2 h-4 min-w-4 flex items-center justify-center p-0 text-xs"
-                      >
-                        {unreadCount}
-                      </Badge>
-                    )}
-                  </Link>
-                </>
-              )}
-            </div>
-            
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={userAvatar} alt={userName} />
-                      <AvatarFallback>{userInitial}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{userName}</p>
-                      <p className="text-sm text-muted-foreground">{userEmail}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="h-4 w-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
-                    <Heart className="h-4 w-4 mr-2" />
-                    Favorites
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/bookings')}>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Bookings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/chats')}>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Messages
-                    {unreadCount > 0 && (
-                      <Badge className="ml-2">{unreadCount}</Badge>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-600 cursor-pointer"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button onClick={() => navigate('/')}>Sign In</Button>
-            )}
-
-            {/* Mobile menu button */}
+              Livenzo
+            </h1>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon">
+                  <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left">
-                <div className="py-4 space-y-4">
-                  <div className="flex items-center space-x-2 mb-6">
-                    <div className="bg-primary rounded-full p-2">
-                      <Home className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-xl font-bold text-primary">Livenzo</span>
-                  </div>
-                  
-                  {user ? (
-                    <div className="flex flex-col space-y-1">
-                      <NavLinks />
-                      <Link 
-                        to="/profile" 
-                        className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100"
+              <SheetContent side="left" className="w-[240px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left text-primary">Livenzo</SheetTitle>
+                </SheetHeader>
+                <div className="mt-8 flex flex-col gap-2">
+                  {filteredNavItems.map((item) => (
+                    <SheetClose key={item.href} asChild>
+                      <Button
+                        variant={isActive(item.href) ? "secondary" : "ghost"}
+                        className={cn(
+                          "justify-start gap-2",
+                          isActive(item.href) && "bg-primary/10"
+                        )}
+                        onClick={() => navigate(item.href)}
                       >
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center px-4 py-2 text-red-600 rounded-md hover:bg-gray-100 mt-4 w-full text-left"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                      </button>
-                    </div>
-                  ) : (
-                    <Button onClick={() => navigate('/')} className="w-full">Sign In</Button>
-                  )}
+                        {item.icon}
+                        {item.label}
+                      </Button>
+                    </SheetClose>
+                  ))}
+                  <Separator className="my-2" />
+                  <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
+                    <LogOut size={20} />
+                    {isGuestMode ? "Exit Guest Mode" : "Logout"}
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </header>
       )}
-      <main className="flex-1">{children}</main>
+      
+      {/* Desktop sidebar */}
+      {!isMobile && (
+        <aside className="fixed top-0 left-0 bottom-0 w-[240px] z-40 bg-white border-r">
+          <div className="p-4">
+            <h1 
+              className="text-xl font-bold text-primary cursor-pointer"
+              onClick={() => navigate('/dashboard')}
+            >
+              Livenzo
+            </h1>
+          </div>
+          <div className="p-2 mt-2 flex flex-col gap-1">
+            {filteredNavItems.map((item) => (
+              <Button
+                key={item.href}
+                variant={isActive(item.href) ? "secondary" : "ghost"}
+                className={cn(
+                  "justify-start gap-2",
+                  isActive(item.href) && "bg-primary/10"
+                )}
+                onClick={() => navigate(item.href)}
+              >
+                {item.icon}
+                {item.label}
+              </Button>
+            ))}
+            <Separator className="my-2" />
+            <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
+              <LogOut size={20} />
+              {isGuestMode ? "Exit Guest Mode" : "Logout"}
+            </Button>
+          </div>
+        </aside>
+      )}
+      
+      {/* Main content */}
+      <main className={cn(
+        "flex-1 bg-gray-50",
+        isMobile ? "pt-16 pb-16" : "ml-[240px]"
+      )}>
+        {children}
+      </main>
     </div>
   );
 };

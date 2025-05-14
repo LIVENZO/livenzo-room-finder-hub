@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user, isLoading, isGuestMode } = useAuth();
+  const { user, isLoading, isGuestMode, userRole } = useAuth();
   const navigate = useNavigate();
-  const { rooms } = useRooms();
+  const { rooms, getUserRooms } = useRooms();
   const [isRedirecting, setIsRedirecting] = useState(false);
   
   useEffect(() => {
@@ -51,7 +51,8 @@ const Dashboard: React.FC = () => {
     greeting = `Welcome, ${userName}!`;
   }
   
-  const featuredRooms = rooms.slice(0, 3);
+  // Get featured rooms based on user role
+  const featuredRooms = userRole === 'owner' ? getUserRooms().slice(0, 3) : rooms.slice(0, 3);
   
   return (
     <Layout>
@@ -60,24 +61,51 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">{greeting}</h1>
-              <p className="text-white/90 mb-4">What would you like to do today?</p>
+              <p className="text-white/90 mb-4">
+                {userRole === 'owner' 
+                  ? 'Manage your properties and list new rooms.' 
+                  : 'Find your perfect room or list a new one.'}
+              </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="secondary" 
-                  size="lg" 
-                  onClick={() => navigate('/find-room')}
-                  className="bg-white text-primary hover:bg-gray-100"
-                >
-                  Find a Room
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={() => navigate('/list-room')}
-                  className="border-white text-white hover:bg-white/20"
-                >
-                  List Your Room
-                </Button>
+                {userRole === 'owner' ? (
+                  <>
+                    <Button 
+                      variant="secondary" 
+                      size="lg" 
+                      onClick={() => navigate('/list-room')}
+                      className="bg-white text-primary hover:bg-gray-100"
+                    >
+                      List Your Room
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => navigate('/my-listings')}
+                      className="border-white text-white hover:bg-white/20"
+                    >
+                      View Your Listings
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="secondary" 
+                      size="lg" 
+                      onClick={() => navigate('/find-room')}
+                      className="bg-white text-primary hover:bg-gray-100"
+                    >
+                      Find a Room
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => navigate('/list-room')}
+                      className="border-white text-white hover:bg-white/20"
+                    >
+                      List Your Room
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             <img 
@@ -90,43 +118,83 @@ const Dashboard: React.FC = () => {
         
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Featured Rooms</h2>
+            <h2 className="text-2xl font-bold">
+              {userRole === 'owner' ? 'Your Listed Rooms' : 'Featured Rooms'}
+            </h2>
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/find-room')}
+              onClick={() => navigate(userRole === 'owner' ? '/my-listings' : '/find-room')}
               className="text-primary"
             >
               View all
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredRooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
+          {featuredRooms.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredRooms.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-gray-50 rounded-xl">
+              <p className="text-gray-600 mb-4">
+                {userRole === 'owner' 
+                  ? "You haven't listed any rooms yet" 
+                  : "No featured rooms available at the moment"}
+              </p>
+              <Button onClick={() => navigate('/list-room')}>
+                {userRole === 'owner' ? 'List Your First Room' : 'Be the First to List a Room'}
+              </Button>
+            </div>
+          )}
         </div>
         
         <div className="bg-gray-50 rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">Quick Tips</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="font-medium mb-2">Looking for a room?</h3>
-              <p className="text-sm text-gray-500">
-                Use filters to narrow down your search and find the perfect match for your needs.
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="font-medium mb-2">Have a room to rent?</h3>
-              <p className="text-sm text-gray-500">
-                Add clear photos and detailed descriptions to attract more potential tenants.
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="font-medium mb-2">Safety First</h3>
-              <p className="text-sm text-gray-500">
-                Always verify details and communicate clearly before finalizing any arrangements.
-              </p>
-            </div>
+            {userRole === 'owner' ? (
+              <>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Add Clear Photos</h3>
+                  <p className="text-sm text-gray-500">
+                    Upload high-quality photos to showcase your property and attract more potential tenants.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Detailed Description</h3>
+                  <p className="text-sm text-gray-500">
+                    Provide comprehensive details about your property, including amenities and nearby facilities.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Manage Listings</h3>
+                  <p className="text-sm text-gray-500">
+                    Keep your listings updated and mark them as unavailable when rented out.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Looking for a room?</h3>
+                  <p className="text-sm text-gray-500">
+                    Use filters to narrow down your search and find the perfect match for your needs.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Have a room to rent?</h3>
+                  <p className="text-sm text-gray-500">
+                    Add clear photos and detailed descriptions to attract more potential tenants.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h3 className="font-medium mb-2">Safety First</h3>
+                  <p className="text-sm text-gray-500">
+                    Always verify details and communicate clearly before finalizing any arrangements.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
