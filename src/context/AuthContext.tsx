@@ -12,6 +12,7 @@ interface AuthContextType {
   session: Session | null;
   isGuestMode: boolean;
   enterAsGuest: () => void;
+  userRole: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isGuestMode, setIsGuestMode] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   useEffect(() => {
     console.log("AuthProvider initializing");
@@ -34,9 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
+          // Get the user role from localStorage when signing in
+          const storedRole = localStorage.getItem('userRole');
+          setUserRole(storedRole);
           toast.success("Successfully signed in!");
           setIsGuestMode(false);
         } else if (event === 'SIGNED_OUT') {
+          setUserRole(null);
           toast.info("You've been signed out.");
         }
       }
@@ -47,6 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Initial session check:", currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      
+      // Check for stored role on initial load
+      const storedRole = localStorage.getItem('userRole');
+      if (storedRole) {
+        setUserRole(storedRole);
+      }
+      
       setIsLoading(false);
     });
 
@@ -59,6 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Entering as guest");
     setIsGuestMode(true);
     setIsLoading(false);
+    
+    // Get the user role from localStorage when entering as guest
+    const storedRole = localStorage.getItem('userRole');
+    setUserRole(storedRole);
+    
     toast.info("You are browsing as a guest. Some features will be limited.");
   };
 
@@ -107,6 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     if (isGuestMode) {
       setIsGuestMode(false);
+      setUserRole(null);
+      localStorage.removeItem('userRole');
       toast.info("You've exited guest mode.");
       return;
     }
@@ -117,11 +137,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Logout error:", error);
       toast.error(`Error signing out: ${error.message}`);
     }
+    localStorage.removeItem('userRole');
     setIsLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, login, logout, isGuestMode, enterAsGuest }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      login, 
+      logout, 
+      isGuestMode, 
+      enterAsGuest, 
+      userRole 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 const Index: React.FC = () => {
   const { user, login, isLoading, enterAsGuest } = useAuth();
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string>('renter');
   
   useEffect(() => {
     // Check if we have a user session and redirect if needed
@@ -21,12 +23,15 @@ const Index: React.FC = () => {
   }, [user, navigate]);
   
   const handleLogin = () => {
-    console.log("Login button clicked");
+    console.log("Login button clicked with role:", userRole);
+    // Store the selected role in localStorage to be used after authentication
+    localStorage.setItem('userRole', userRole);
     login('google');
   };
   
   const handleGuestAccess = () => {
     console.log("Guest access button clicked");
+    localStorage.setItem('userRole', userRole);
     enterAsGuest();
     navigate('/dashboard');
   };
@@ -46,6 +51,24 @@ const Index: React.FC = () => {
               <p className="text-gray-500">
                 Connect with room owners or find tenants for your property.
               </p>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="font-medium text-gray-700">I am a:</p>
+              <RadioGroup 
+                value={userRole} 
+                onValueChange={setUserRole} 
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-gray-50">
+                  <RadioGroupItem value="owner" id="owner" />
+                  <label htmlFor="owner" className="w-full cursor-pointer">Property Owner</label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-gray-50">
+                  <RadioGroupItem value="renter" id="renter" />
+                  <label htmlFor="renter" className="w-full cursor-pointer">Renter</label>
+                </div>
+              </RadioGroup>
             </div>
             
             <Button 
