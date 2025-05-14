@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Bookings from "./pages/Bookings";
 import Chats from "./pages/Chats";
+import MyListings from "./pages/MyListings";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/bookings" element={<Bookings />} />
               <Route path="/chats" element={<Chats />} />
               <Route path="/chats/:roomId" element={<Chats />} />
+              <Route path="/my-listings" element={<MyListings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
