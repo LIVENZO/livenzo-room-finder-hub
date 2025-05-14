@@ -1,4 +1,5 @@
 
+
 -- This file is for reference only, not for direct execution
 
 -- Create function to get all rooms
@@ -57,3 +58,4 @@ BEGIN
   WHERE id = room_id AND owner_id = auth.uid();
 END;
 $$;
+

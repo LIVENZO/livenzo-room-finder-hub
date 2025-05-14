@@ -349,6 +349,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rooms: {
+        Row: {
+          available: boolean
+          created_at: string
+          description: string
+          facilities: Json
+          id: string
+          images: string[] | null
+          location: string
+          owner_id: string
+          owner_phone: string
+          price: number
+          title: string
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          description: string
+          facilities?: Json
+          id?: string
+          images?: string[] | null
+          location: string
+          owner_id: string
+          owner_phone: string
+          price: number
+          title: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          description?: string
+          facilities?: Json
+          id?: string
+          images?: string[] | null
+          location?: string
+          owner_id?: string
+          owner_phone?: string
+          price?: number
+          title?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null

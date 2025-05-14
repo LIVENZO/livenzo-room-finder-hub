@@ -23,9 +23,21 @@ export interface Room {
   createdAt?: string;
 }
 
+export interface RoomFilters {
+  location?: string;
+  maxPrice?: number;
+  wifi?: boolean;
+  bathroom?: boolean;
+  gender?: 'male' | 'female';
+  roomType?: 'single' | 'sharing';
+}
+
 interface RoomContextType {
   rooms: Room[];
   isLoading: boolean;
+  filters: RoomFilters;
+  filteredRooms: Room[];
+  setFilters: (filters: RoomFilters) => void;
   addRoom: (room: Omit<Room, 'id' | 'createdAt'>) => Promise<void>;
   updateRoom: (id: string, updates: Partial<Room>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
@@ -39,6 +51,7 @@ const RoomContext = createContext<RoomContextType | undefined>(undefined);
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [filters, setFilters] = useState<RoomFilters>({});
   const { user, isGuestMode, userRole } = useAuth();
 
   // Fetch rooms from Supabase
@@ -50,11 +63,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchRooms = async () => {
     try {
       console.log('Fetching rooms...');
-      // Using a direct untyped query to avoid TS errors with the new table
-      // that doesn't have TypeScript definitions yet
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('*') as { data: any[], error: any };
+      const { data, error } = await supabase.rpc('get_rooms');
       
       if (error) {
         console.error('Error fetching rooms:', error);
@@ -97,38 +106,37 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Using a direct untyped query to avoid TS errors
-      const { data, error } = await supabase
-        .from('rooms')
-        .insert({
-          title: room.title,
-          description: room.description,
-          images: room.images,
-          price: room.price,
-          location: room.location,
-          facilities: room.facilities,
-          owner_id: room.ownerId,
-          owner_phone: room.ownerPhone,
-          available: true
-        })
-        .select() as { data: any[], error: any };
+      const roomData = {
+        title: room.title,
+        description: room.description,
+        images: room.images,
+        price: room.price,
+        location: room.location,
+        facilities: room.facilities,
+        owner_id: room.ownerId,
+        owner_phone: room.ownerPhone,
+        available: true
+      };
+      
+      const { data, error } = await supabase.rpc('insert_room', { room_data: roomData });
       
       if (error) {
         console.error('Error adding room:', error);
         toast.error('Failed to list room');
-      } else if (data && data[0]) {
+      } else if (data) {
+        // Convert the returned data to our Room interface
         const newRoom: Room = {
-          id: data[0].id,
-          title: data[0].title,
-          description: data[0].description,
-          images: data[0].images,
-          price: data[0].price,
-          location: data[0].location,
-          facilities: data[0].facilities,
-          ownerId: data[0].owner_id,
-          ownerPhone: data[0].owner_phone,
-          available: data[0].available,
-          createdAt: data[0].created_at
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          images: data.images,
+          price: data.price,
+          location: data.location,
+          facilities: data.facilities,
+          ownerId: data.owner_id,
+          ownerPhone: data.owner_phone,
+          available: data.available,
+          createdAt: data.created_at
         };
         
         setRooms(prev => [...prev, newRoom]);
@@ -148,7 +156,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Map Room interface updates to database column names
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, any> = {};
       
       if (updates.title) dbUpdates.title = updates.title;
       if (updates.description) dbUpdates.description = updates.description;
@@ -159,12 +167,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (updates.ownerPhone) dbUpdates.owner_phone = updates.ownerPhone;
       if (updates.available !== undefined) dbUpdates.available = updates.available;
       
-      // Using a direct untyped query to avoid TS errors
       const { data, error } = await supabase
         .from('rooms')
         .update(dbUpdates)
         .eq('id', id)
-        .select() as { data: any[], error: any };
+        .select();
       
       if (error) {
         console.error('Error updating room:', error);
@@ -241,9 +248,74 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return rooms.filter(room => room.ownerId === userId);
   };
 
+  // Filter rooms based on user criteria
+  const filteredRooms = React.useMemo(() => {
+    return rooms.filter(room => {
+      // Filter by location
+      if (filters.location && !room.location.toLowerCase().includes(filters.location.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by max price
+      if (filters.maxPrice && room.price > filters.maxPrice) {
+        return false;
+      }
+      
+      // Filter by wifi
+      if (filters.wifi && !room.facilities.wifi) {
+        return false;
+      }
+      
+      // Filter by bathroom
+      if (filters.bathroom && !room.facilities.bathroom) {
+        return false;
+      }
+      
+      // Filter by gender preference
+      if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) {
+        return false;
+      }
+      
+      // Filter by room type
+      if (filters.roomType && room.facilities.roomType !== filters.roomType) {
+        return false;
+      }
+      
+      // Filter out unavailable rooms
+      if (room.available === false) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [rooms, filters]);
+
   // Update room availability
   const updateRoomAvailability = async (id: string, available: boolean) => {
-    return updateRoom(id, { available });
+    try {
+      const { error } = await supabase.rpc('update_room_availability', { 
+        room_id: id,
+        is_available: available
+      });
+      
+      if (error) {
+        console.error('Error updating room availability:', error);
+        toast.error('Failed to update room availability');
+        return Promise.reject(error);
+      }
+      
+      // Update local state
+      setRooms(prev => prev.map(room => 
+        room.id === id ? { ...room, available } : room
+      ));
+      
+      toast.success(`Room ${available ? 'marked as available' : 'marked as unavailable'}`);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error updating room availability:', error);
+      toast.error('Failed to update room availability');
+      return Promise.reject(error);
+    }
   };
 
   return (
@@ -251,6 +323,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         rooms,
         isLoading,
+        filters,
+        filteredRooms,
+        setFilters,
         addRoom,
         updateRoom,
         deleteRoom,
