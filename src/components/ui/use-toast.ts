@@ -1,3 +1,12 @@
-import { useToast, toast } from "@/hooks/use-toast";
 
-export { useToast, toast };
+// Re-export the toast hooks from the main hooks directory
+import * as React from "react";
+import { toast } from "sonner";
+
+export { toast };
+
+export function useToast() {
+  return {
+    toast
+  };
+}

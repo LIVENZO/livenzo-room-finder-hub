@@ -126,9 +126,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function fetchRooms() {
       setIsLoading(true);
       try {
+        // Use raw SQL query to fetch rooms since the "rooms" table is not yet in the TypeScript types
         const { data, error } = await supabase
           .from('rooms')
-          .select('*');
+          .select('*')
+          .returns<any[]>();
         
         if (error) {
           console.error('Error fetching rooms:', error);
@@ -144,20 +146,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } else {
           // Transform data from Supabase format to our Room interface
-          const formattedRooms: Room[] = data.map((room: any) => ({
-            id: room.id,
-            title: room.title,
-            description: room.description,
-            images: room.images,
-            price: room.price,
-            location: room.location,
-            facilities: room.facilities,
-            ownerId: room.owner_id,
-            ownerPhone: room.owner_phone,
-            createdAt: room.created_at
-          }));
-          
-          if (formattedRooms.length > 0) {
+          if (data && data.length > 0) {
+            const formattedRooms: Room[] = data.map((room: any) => ({
+              id: room.id,
+              title: room.title,
+              description: room.description,
+              images: room.images,
+              price: room.price,
+              location: room.location,
+              facilities: room.facilities,
+              ownerId: room.owner_id,
+              ownerPhone: room.owner_phone,
+              createdAt: room.created_at
+            }));
+            
             setRooms(formattedRooms);
             
             // Update localStorage cache
@@ -237,6 +239,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // If user is authenticated, save to Supabase
       if (user) {
+        // Use raw SQL query to insert data since the "rooms" table is not yet in the TypeScript types
         const { data, error } = await supabase
           .from('rooms')
           .insert(supabaseRoomData)
