@@ -25,7 +25,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useAuth } from '@/context/AuthContext';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isGuestMode, logout, userRole } = useAuth();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   const handleLogout = () => {
     logout();

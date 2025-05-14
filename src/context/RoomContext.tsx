@@ -50,9 +50,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchRooms = async () => {
     try {
       console.log('Fetching rooms...');
+      // Using a direct untyped query to avoid TS errors with the new table
+      // that doesn't have TypeScript definitions yet
       const { data, error } = await supabase
         .from('rooms')
-        .select('*');
+        .select('*') as { data: any[], error: any };
       
       if (error) {
         console.error('Error fetching rooms:', error);
@@ -61,7 +63,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Rooms fetched:', data);
         if (data) {
           // Map Supabase data to Room interface
-          const fetchedRooms = data.map((room) => ({
+          const fetchedRooms = data.map((room: any) => ({
             id: room.id,
             title: room.title,
             description: room.description,
@@ -95,7 +97,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Insert room into Supabase
+      // Using a direct untyped query to avoid TS errors
       const { data, error } = await supabase
         .from('rooms')
         .insert({
@@ -109,25 +111,24 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
           owner_phone: room.ownerPhone,
           available: true
         })
-        .select()
-        .single();
+        .select() as { data: any[], error: any };
       
       if (error) {
         console.error('Error adding room:', error);
         toast.error('Failed to list room');
-      } else if (data) {
+      } else if (data && data[0]) {
         const newRoom: Room = {
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          images: data.images,
-          price: data.price,
-          location: data.location,
-          facilities: data.facilities,
-          ownerId: data.owner_id,
-          ownerPhone: data.owner_phone,
-          available: data.available,
-          createdAt: data.created_at
+          id: data[0].id,
+          title: data[0].title,
+          description: data[0].description,
+          images: data[0].images,
+          price: data[0].price,
+          location: data[0].location,
+          facilities: data[0].facilities,
+          ownerId: data[0].owner_id,
+          ownerPhone: data[0].owner_phone,
+          available: data[0].available,
+          createdAt: data[0].created_at
         };
         
         setRooms(prev => [...prev, newRoom]);
@@ -158,34 +159,33 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (updates.ownerPhone) dbUpdates.owner_phone = updates.ownerPhone;
       if (updates.available !== undefined) dbUpdates.available = updates.available;
       
-      // Update room in Supabase
+      // Using a direct untyped query to avoid TS errors
       const { data, error } = await supabase
         .from('rooms')
         .update(dbUpdates)
         .eq('id', id)
-        .select()
-        .single();
+        .select() as { data: any[], error: any };
       
       if (error) {
         console.error('Error updating room:', error);
         toast.error('Failed to update room');
-      } else if (data) {
+      } else if (data && data[0]) {
         // Update room in state
         setRooms(prev => 
           prev.map(room => 
             room.id === id 
               ? {
-                  id: data.id,
-                  title: data.title,
-                  description: data.description,
-                  images: data.images,
-                  price: data.price,
-                  location: data.location,
-                  facilities: data.facilities,
-                  ownerId: data.owner_id,
-                  ownerPhone: data.owner_phone,
-                  available: data.available,
-                  createdAt: data.created_at
+                  id: data[0].id,
+                  title: data[0].title,
+                  description: data[0].description,
+                  images: data[0].images,
+                  price: data[0].price,
+                  location: data[0].location,
+                  facilities: data[0].facilities,
+                  ownerId: data[0].owner_id,
+                  ownerPhone: data[0].owner_phone,
+                  available: data[0].available,
+                  createdAt: data[0].created_at
                 }
               : room
           )
