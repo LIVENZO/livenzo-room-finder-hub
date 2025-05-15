@@ -26,10 +26,10 @@ export const fetchRooms = async (): Promise<Room[]> => {
           price: room.price,
           location: room.location,
           facilities: room.facilities ? {
-            wifi: room.facilities.wifi,
-            bathroom: room.facilities.bathroom,
-            gender: room.facilities.gender,
-            roomType: room.facilities.roomType
+            wifi: Boolean(room.facilities.wifi),
+            bathroom: Boolean(room.facilities.bathroom),
+            gender: room.facilities.gender as 'male' | 'female' | 'any',
+            roomType: room.facilities.roomType as 'single' | 'sharing'
           } : {},
           ownerId: room.owner_id,
           ownerPhone: room.owner_phone,
@@ -120,23 +120,24 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
       return null;
     } else if (data && data[0]) {
       // Return updated room
+      const roomData = data[0];
       return {
-        id: data[0].id,
-        title: data[0].title,
-        description: data[0].description,
-        images: data[0].images || [],
-        price: data[0].price,
-        location: data[0].location,
-        facilities: data[0].facilities ? {
-          wifi: data[0].facilities.wifi,
-          bathroom: data[0].facilities.bathroom,
-          gender: data[0].facilities.gender,
-          roomType: data[0].facilities.roomType
+        id: roomData.id,
+        title: roomData.title,
+        description: roomData.description,
+        images: roomData.images || [],
+        price: roomData.price,
+        location: roomData.location,
+        facilities: roomData.facilities ? {
+          wifi: Boolean(roomData.facilities.wifi),
+          bathroom: Boolean(roomData.facilities.bathroom),
+          gender: roomData.facilities.gender as 'male' | 'female' | 'any',
+          roomType: roomData.facilities.roomType as 'single' | 'sharing'
         } : {},
-        ownerId: data[0].owner_id,
-        ownerPhone: data[0].owner_phone,
-        available: data[0].available,
-        createdAt: data[0].created_at
+        ownerId: roomData.owner_id,
+        ownerPhone: roomData.owner_phone,
+        available: roomData.available,
+        createdAt: roomData.created_at
       };
     }
     return null;
