@@ -31,13 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Handle auth state changes
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log("User signed in or token refreshed, updating session state");
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
           // Get the user role from localStorage when signing in
           const storedRole = localStorage.getItem('userRole');
-          console.log("User role from storage:", storedRole);
           setUserRole(storedRole);
           
           // Show success message after a short delay to ensure UI is responsive
@@ -47,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }, 500);
           }
         } else if (event === 'SIGNED_OUT') {
-          console.log("User signed out, clearing session state");
           setSession(null);
           setUser(null);
           setUserRole(null);
@@ -61,23 +58,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     const checkSession = async () => {
       try {
-        console.log("Checking for existing session...");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", currentSession?.user?.email || "No session found");
+        console.log("Initial session check:", currentSession?.user?.email);
         
         if (currentSession) {
-          console.log("Existing session found, updating state");
           setSession(currentSession);
           setUser(currentSession.user);
           
           // Check for stored role on initial load
           const storedRole = localStorage.getItem('userRole');
           if (storedRole) {
-            console.log("Setting user role from localStorage:", storedRole);
             setUserRole(storedRole);
           }
-        } else {
-          console.log("No existing session found");
         }
       } catch (error) {
         console.error("Error checking session:", error);
@@ -122,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           toast.error(`Error signing in: ${error.message}`);
           setIsLoading(false);
         } else {
-          console.log("Auth request successful, redirecting:", data);
+          console.log("Auth request successful:", data);
           // No need to set loading to false here as the page will redirect
         }
       } else {
