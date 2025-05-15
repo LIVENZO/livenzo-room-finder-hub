@@ -52,6 +52,7 @@ export type Database = {
           message: string
           read: boolean | null
           receiver_id: string
+          relationship_id: string | null
           room_id: string
           sender_id: string
         }
@@ -61,6 +62,7 @@ export type Database = {
           message: string
           read?: boolean | null
           receiver_id: string
+          relationship_id?: string | null
           room_id: string
           sender_id: string
         }
@@ -70,58 +72,69 @@ export type Database = {
           message?: string
           read?: boolean | null
           receiver_id?: string
+          relationship_id?: string | null
           room_id?: string
           sender_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
+          comments: string | null
           created_at: string
-          document_type: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
           file_path: string
+          file_size: number
+          file_type: string
           id: string
-          property_id: string
-          renter_id: string
+          relationship_id: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          comments?: string | null
           created_at?: string
-          document_type: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
           file_path: string
+          file_size: number
+          file_type: string
           id?: string
-          property_id: string
-          renter_id: string
+          relationship_id: string
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          comments?: string | null
           created_at?: string
-          document_type?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
           file_path?: string
+          file_size?: number
+          file_type?: string
           id?: string
-          property_id?: string
-          renter_id?: string
+          relationship_id?: string
           status?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "documents_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "documents_relationship_id_fkey"
+            columns: ["relationship_id"]
             isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_renter_id_fkey"
-            columns: ["renter_id"]
-            isOneToOne: false
-            referencedRelation: "renters"
+            referencedRelation: "relationships"
             referencedColumns: ["id"]
           },
         ]
@@ -287,6 +300,36 @@ export type Database = {
         }
         Relationships: []
       }
+      relationships: {
+        Row: {
+          chat_room_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          renter_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          chat_room_id?: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          renter_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          chat_room_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          renter_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       renters: {
         Row: {
           created_at: string
@@ -426,10 +469,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_room_availability_for_owner: {
+        Args: { room_id: string; is_available: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      document_type:
+        | "id_proof"
+        | "rental_agreement"
+        | "utility_bill"
+        | "income_proof"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -544,6 +595,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      document_type: [
+        "id_proof",
+        "rental_agreement",
+        "utility_bill",
+        "income_proof",
+        "other",
+      ],
+    },
   },
 } as const

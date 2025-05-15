@@ -1,67 +1,68 @@
 
-import { Room } from '@/types/room';
 import { supabase } from '@/integrations/supabase/client';
+import { Room } from '@/types/room';
+import { parseFacilities, mapDbRoomToRoom } from '@/utils/roomUtils';
 import { toast } from 'sonner';
-import { mapDbRoomToRoom } from '@/utils/roomUtils';
 
-// Update an existing room
+// Update a room's details
 export const updateRoomService = async (id: string, updates: Partial<Room>): Promise<Room | null> => {
   try {
-    // Map the Room type updates to the database schema structure
-    const dbUpdates: any = {};
+    // Convert the room object to DB format
+    const roomDbUpdates: any = { ...updates };
     
-    if (updates.title) dbUpdates.title = updates.title;
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.images) dbUpdates.images = updates.images;
-    if (updates.price !== undefined) dbUpdates.price = updates.price;
-    if (updates.location) dbUpdates.location = updates.location;
-    if (updates.facilities) dbUpdates.facilities = updates.facilities;
-    if (updates.ownerId) dbUpdates.owner_id = updates.ownerId;
-    if (updates.ownerPhone) dbUpdates.owner_phone = updates.ownerPhone;
-    if (updates.available !== undefined) dbUpdates.available = updates.available;
+    // Handle special fields
+    if (updates.facilities) {
+      roomDbUpdates.facilities = updates.facilities;
+    }
     
+    // Exclude any non-DB fields
+    delete roomDbUpdates.id;
+    delete roomDbUpdates.createdAt;
+    
+    // Update the room
     const { data, error } = await supabase
       .from('rooms')
-      .update(dbUpdates)
+      .update(roomDbUpdates)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
     
     if (error) {
       console.error('Error updating room:', error);
-      toast.error(`Error updating room: ${error.message}`);
+      toast.error('Failed to update room');
       return null;
     }
     
-    // Map the database response back to the Room type
+    // Map the DB response to our Room type
     return mapDbRoomToRoom(data);
-    
   } catch (error) {
-    console.error('Error in updateRoomService:', error);
-    toast.error(`Failed to update room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Unexpected error in updateRoomService:', error);
+    toast.error('An unexpected error occurred');
     return null;
   }
 };
 
-// Update room availability
-export const updateRoomAvailabilityService = async (id: string, available: boolean): Promise<boolean> => {
+// Update a room's availability using the specialized function
+export const updateRoomAvailabilityService = async (roomId: string, available: boolean): Promise<boolean> => {
   try {
+    // Use our database function to update availability
     const { error } = await supabase
-      .from('rooms')
-      .update({ available })
-      .eq('id', id);
+      .rpc('update_room_availability', {
+        room_id: roomId,
+        is_available: available
+      });
     
     if (error) {
       console.error('Error updating room availability:', error);
-      toast.error(`Error updating availability: ${error.message}`);
+      toast.error('Failed to update room availability');
       return false;
     }
     
+    toast.success(`Room ${available ? 'marked as available' : 'marked as unavailable'}`);
     return true;
-    
   } catch (error) {
-    console.error('Error in updateRoomAvailabilityService:', error);
-    toast.error(`Failed to update availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Unexpected error in updateRoomAvailabilityService:', error);
+    toast.error('An unexpected error occurred');
     return false;
   }
 };

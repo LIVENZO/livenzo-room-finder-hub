@@ -6,6 +6,8 @@ project_id = "naoqigivttgpkfwpzcgg"
 public = true
 [storage.rooms]
 public = true
+[storage.documents]
+public = false
 
 [auth.external.google]
 enabled = true
