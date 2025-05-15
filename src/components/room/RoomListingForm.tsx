@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { uploadImagesToStorage } from '@/services/imageUploadService';
 import RoomBasicInfo from './RoomFormSections/RoomBasicInfo';
 import RoomDescription from './RoomFormSections/RoomDescription';
 import RoomPriceLocation from './RoomFormSections/RoomPriceLocation';
@@ -39,46 +39,6 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const [images, setImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
-  // Upload images to Supabase Storage
-  const uploadImagesToSupabase = async (): Promise<string[]> => {
-    if (!uploadedFiles.length) return [];
-    
-    const uploadedUrls: string[] = [];
-    
-    try {
-      for (let i = 0; i < uploadedFiles.length; i++) {
-        const file = uploadedFiles[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `${userId ? userId : 'guest'}/${fileName}`;
-        
-        // Upload the file to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('avatars') // Using avatars bucket until rooms bucket is set up
-          .upload(filePath, file);
-        
-        if (error) {
-          console.error('Error uploading image to Supabase:', error);
-          // Fall back to the object URL for now
-          uploadedUrls.push(images[i]);
-        } else {
-          // Get the public URL
-          const { data: publicUrlData } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
-          
-          uploadedUrls.push(publicUrlData.publicUrl);
-        }
-      }
-    } catch (error) {
-      console.error('Error in uploadImagesToSupabase:', error);
-      // If there's an error, fall back to the object URLs
-      return images;
-    }
-    
-    return uploadedUrls.length ? uploadedUrls : images;
-  };
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,8 +57,14 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
     try {
       // Upload images to Supabase Storage if the user is authenticated
       const imageUrls = userId 
-        ? await uploadImagesToSupabase() 
+        ? await uploadImagesToStorage(uploadedFiles, userId) 
         : images; // Use local URLs for guests
+      
+      if (userId && imageUrls.length === 0 && uploadedFiles.length > 0) {
+        toast.error('Failed to upload images. Please try again.');
+        setIsUploading(false);
+        return;
+      }
       
       const newRoom: Omit<Room, 'id' | 'createdAt'> = {
         title,

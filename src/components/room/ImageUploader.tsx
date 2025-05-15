@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ImagePlus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { createImagePreviews, revokeImagePreviews } from '@/services/imageUploadService';
 
 interface ImageUploaderProps {
   images: string[];
@@ -29,26 +30,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Create new arrays to store the updated files and preview URLs
-    const newUploadedFiles: File[] = [...uploadedFiles];
-    const newImages: string[] = [...images];
-
-    // Process each file
-    Array.from(files).forEach(file => {
-      // Only process image files
+    // Filter out non-image files
+    const validImageFiles = Array.from(files).filter(file => {
       if (!file.type.match('image.*')) {
         toast.error(`${file.name} is not an image file`);
-        return;
+        return false;
       }
-
-      // Create a URL for the image preview
-      const imageUrl = URL.createObjectURL(file);
-      newImages.push(imageUrl);
-      newUploadedFiles.push(file);
+      return true;
     });
 
+    if (validImageFiles.length === 0) return;
+
+    // Create new arrays to store the updated files and preview URLs
+    const newUploadedFiles = [...uploadedFiles, ...validImageFiles];
+    
+    // Generate preview URLs for the new images
+    const newImageUrls = createImagePreviews(validImageFiles);
+    const updatedImages = [...images, ...newImageUrls];
+    
     // Update state with new files and previews
-    setImages(newImages);
+    setImages(updatedImages);
     setUploadedFiles(newUploadedFiles);
     
     // Reset the file input
@@ -60,8 +61,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const newImages = [...images];
     const newUploadedFiles = [...uploadedFiles];
     
-    // Release the object URL to avoid memory leaks
-    URL.revokeObjectURL(newImages[index]);
+    // Release the object URL to avoid memory leaks if it's a blob URL
+    if (newImages[index].startsWith('blob:')) {
+      revokeImagePreviews([newImages[index]]);
+    }
     
     newImages.splice(index, 1);
     newUploadedFiles.splice(index, 1);
