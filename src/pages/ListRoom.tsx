@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useRooms, Room } from '@/context/RoomContext';
+import { useRooms } from '@/context/RoomContext';
+import { Room } from '@/types/room';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

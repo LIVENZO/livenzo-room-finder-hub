@@ -160,3 +160,6 @@ export const useRooms = () => {
   }
   return context;
 };
+
+// Export the Room type from this file for backward compatibility
+export type { Room };

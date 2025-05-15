@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Room } from '@/types/room';
@@ -79,7 +78,12 @@ export const addRoomService = async (room: Omit<Room, 'id' | 'createdAt'>): Prom
         images: data.images || [],
         price: data.price,
         location: data.location,
-        facilities: data.facilities,
+        facilities: data.facilities ? {
+          wifi: Boolean(data.facilities.wifi),
+          bathroom: Boolean(data.facilities.bathroom),
+          gender: data.facilities.gender as 'male' | 'female' | 'any',
+          roomType: data.facilities.roomType as 'single' | 'sharing'
+        } : {},
         ownerId: data.owner_id,
         ownerPhone: data.owner_phone,
         available: data.available,
