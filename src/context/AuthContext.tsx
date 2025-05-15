@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkSession = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", currentSession?.user?.email);
+        console.log("Initial session check:", currentSession?.user?.email || "No session found");
         
         if (currentSession) {
           setSession(currentSession);

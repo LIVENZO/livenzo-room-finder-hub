@@ -22,10 +22,17 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
+        // Store the user role if it wasn't already set during login
+        if (!localStorage.getItem('userRole')) {
+          localStorage.setItem('userRole', userRole);
+          console.log("Setting default user role:", userRole);
+        }
+        
         // Add a small delay to ensure everything is loaded properly
         const timer = setTimeout(() => {
           navigate('/dashboard');
-          toast.success(`Welcome, ${user.email?.split('@')[0] || 'User'}!`);
+          const userName = user.email?.split('@')[0] || 'User';
+          toast.success(`Welcome, ${userName}!`);
         }, 500);
         
         return () => clearTimeout(timer);
@@ -39,7 +46,7 @@ const Index: React.FC = () => {
     if (!isLoading) {
       checkAuth();
     }
-  }, [user, session, navigate, isLoading]);
+  }, [user, session, navigate, isLoading, userRole]);
   
   const handleLogin = () => {
     console.log("Login button clicked with role:", userRole);
