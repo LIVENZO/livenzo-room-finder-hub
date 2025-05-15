@@ -121,6 +121,8 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
     } else if (data && data[0]) {
       // Return updated room
       const roomData = data[0];
+      const facilities = roomData.facilities as any;
+      
       return {
         id: roomData.id,
         title: roomData.title,
@@ -128,11 +130,11 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
         images: roomData.images || [],
         price: roomData.price,
         location: roomData.location,
-        facilities: roomData.facilities ? {
-          wifi: Boolean(roomData.facilities.wifi),
-          bathroom: Boolean(roomData.facilities.bathroom),
-          gender: roomData.facilities.gender as 'male' | 'female' | 'any',
-          roomType: roomData.facilities.roomType as 'single' | 'sharing'
+        facilities: facilities ? {
+          wifi: Boolean(facilities.wifi),
+          bathroom: Boolean(facilities.bathroom),
+          gender: facilities.gender as 'male' | 'female' | 'any',
+          roomType: facilities.roomType as 'single' | 'sharing'
         } : {},
         ownerId: roomData.owner_id,
         ownerPhone: roomData.owner_phone,
