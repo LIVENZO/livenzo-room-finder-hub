@@ -13,6 +13,7 @@ interface AuthContextType {
   userRole: string | null;
   isOwner: boolean;
   currentUser: User | null;
+  canChangeRole: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -23,7 +24,8 @@ export const AuthContext = createContext<AuthContextType>({
   session: null,
   userRole: null,
   isOwner: false,
-  currentUser: null
+  currentUser: null,
+  canChangeRole: true
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -31,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [canChangeRole, setCanChangeRole] = useState<boolean>(true);
   
   // Derived properties
   const isOwner = userRole === 'owner';
@@ -49,9 +52,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
-          // Get the user role from localStorage when signing in
-          const storedRole = localStorage.getItem('userRole');
-          setUserRole(storedRole);
+          if (currentSession?.user) {
+            // Check if this user already has a role stored in localStorage
+            const storedUserRoles = localStorage.getItem('userRoles');
+            const userRolesMap = storedUserRoles ? JSON.parse(storedUserRoles) : {};
+            const userEmail = currentSession.user.email;
+            
+            if (userEmail) {
+              // If we have a stored role for this email
+              if (userRolesMap[userEmail]) {
+                const existingRole = userRolesMap[userEmail];
+                setUserRole(existingRole);
+                localStorage.setItem('userRole', existingRole);
+                setCanChangeRole(false);
+                
+                // Inform the user if the selected role doesn't match their stored role
+                const selectedRole = localStorage.getItem('selectedRole');
+                if (selectedRole && selectedRole !== existingRole) {
+                  setTimeout(() => {
+                    toast.warning(`You previously signed in as a ${existingRole}. Role selection has been locked to ${existingRole}.`);
+                  }, 1000);
+                }
+              } else {
+                // First time this user is signing in
+                const selectedRole = localStorage.getItem('selectedRole') || 'renter';
+                setUserRole(selectedRole);
+                
+                // Store this email with its role
+                userRolesMap[userEmail] = selectedRole;
+                localStorage.setItem('userRoles', JSON.stringify(userRolesMap));
+                localStorage.setItem('userRole', selectedRole);
+                setCanChangeRole(false);
+              }
+            }
+          }
           
           // Show success message after a short delay to ensure UI is responsive
           if (event === 'SIGNED_IN') {
@@ -63,6 +97,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(null);
           setUser(null);
           setUserRole(null);
+          setCanChangeRole(true);
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('selectedRole');
           toast.info("You've been signed out.");
         }
         
@@ -80,10 +117,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(currentSession);
           setUser(currentSession.user);
           
-          // Check for stored role on initial load
-          const storedRole = localStorage.getItem('userRole');
-          if (storedRole) {
-            setUserRole(storedRole);
+          // Check for stored roles
+          if (currentSession.user.email) {
+            const storedUserRoles = localStorage.getItem('userRoles');
+            const userRolesMap = storedUserRoles ? JSON.parse(storedUserRoles) : {};
+            
+            if (userRolesMap[currentSession.user.email]) {
+              // User has a role already
+              const existingRole = userRolesMap[currentSession.user.email];
+              setUserRole(existingRole);
+              localStorage.setItem('userRole', existingRole);
+              setCanChangeRole(false);
+            } else {
+              // Check for stored role on initial load
+              const storedRole = localStorage.getItem('userRole');
+              if (storedRole) {
+                setUserRole(storedRole);
+                setCanChangeRole(false);
+              }
+            }
           }
         }
       } catch (error) {
@@ -152,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(`Error signing out: ${error.message}`);
       } else {
         localStorage.removeItem('userRole');
+        // Note: We don't remove userRoles mapping to preserve role association
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -171,7 +224,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout, 
       userRole,
       isOwner,
-      currentUser
+      currentUser,
+      canChangeRole
     }}>
       {children}
     </AuthContext.Provider>

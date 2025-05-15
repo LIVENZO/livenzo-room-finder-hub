@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Index: React.FC = () => {
-  const { user, login, isLoading, session } = useAuth();
+  const { user, login, isLoading, session, canChangeRole } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
@@ -51,7 +51,7 @@ const Index: React.FC = () => {
   const handleLogin = () => {
     console.log("Login button clicked with role:", userRole);
     // Store the selected role in localStorage to be used after authentication
-    localStorage.setItem('userRole', userRole);
+    localStorage.setItem('selectedRole', userRole);
     toast.info("Redirecting to Google sign-in...");
     login('google');
   };
@@ -100,6 +100,7 @@ const Index: React.FC = () => {
                 value={userRole} 
                 onValueChange={setUserRole} 
                 className="flex flex-col space-y-2"
+                disabled={!canChangeRole}
               >
                 <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-gray-50">
                   <RadioGroupItem value="owner" id="owner" />
@@ -110,6 +111,12 @@ const Index: React.FC = () => {
                   <label htmlFor="renter" className="w-full cursor-pointer">Renter</label>
                 </div>
               </RadioGroup>
+              
+              {!canChangeRole && (
+                <div className="text-amber-600 text-sm mt-2 bg-amber-50 p-2 rounded-md">
+                  Your role is locked to your Google account. To change roles, please sign in with a different Google account.
+                </div>
+              )}
             </div>
             
             <Button 
