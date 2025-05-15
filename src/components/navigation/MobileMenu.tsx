@@ -46,7 +46,7 @@ const MobileMenu: React.FC = () => {
               onClick={() => navigate(item.href)}
             >
               {item.icon}
-              {item.label}
+              {item.label || item.title}
             </Button>
           </SheetClose>
         ))}

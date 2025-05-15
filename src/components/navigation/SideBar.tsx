@@ -45,7 +45,7 @@ const SideBar: React.FC = () => {
             onClick={() => navigate(item.href)}
           >
             {item.icon}
-            {item.label}
+            {item.label || item.title}
           </Button>
         ))}
         <Separator className="my-2" />

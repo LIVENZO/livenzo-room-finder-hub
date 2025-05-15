@@ -11,15 +11,30 @@ interface AuthContextType {
   logout: () => void;
   session: Session | null;
   userRole: string | null;
+  isOwner: boolean;
+  currentUser: User | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isLoading: true,
+  login: () => {},
+  logout: () => {},
+  session: null,
+  userRole: null,
+  isOwner: false,
+  currentUser: null
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // Derived properties
+  const isOwner = userRole === 'owner';
+  const currentUser = user;
   
   useEffect(() => {
     console.log("AuthProvider initializing");
@@ -154,7 +169,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading, 
       login, 
       logout, 
-      userRole 
+      userRole,
+      isOwner,
+      currentUser
     }}>
       {children}
     </AuthContext.Provider>

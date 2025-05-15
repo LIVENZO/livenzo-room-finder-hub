@@ -49,10 +49,7 @@ export const fetchOwnerRelationships = async (userId: string): Promise<Relations
       .from("relationships")
       .select(`
         *,
-        renter:renter_id(
-          full_name:user_profiles!user_id(full_name),
-          avatar_url:user_profiles!user_id(avatar_url)
-        )
+        renter:profiles!renter_id(full_name, avatar_url)
       `)
       .eq("owner_id", userId);
 
@@ -81,10 +78,7 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
       .from("relationships")
       .select(`
         *,
-        owner:owner_id(
-          full_name:user_profiles!user_id(full_name),
-          avatar_url:user_profiles!user_id(avatar_url)
-        )
+        owner:profiles!owner_id(full_name, avatar_url)
       `)
       .eq("renter_id", userId);
 
