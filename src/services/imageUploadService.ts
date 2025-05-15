@@ -30,7 +30,7 @@ export const uploadImagesToStorage = async (
         .upload(filePath, file);
       
       if (error) {
-        console.error('Error uploading image to Supabase:', error);
+        console.error('Error uploading file to Supabase:', error);
         toast.error(`Failed to upload ${file.name}: ${error.message}`);
         continue;
       }
@@ -44,7 +44,7 @@ export const uploadImagesToStorage = async (
     }
   } catch (error) {
     console.error('Error in uploadImagesToStorage:', error);
-    toast.error('An unexpected error occurred during image upload');
+    toast.error('An unexpected error occurred during file upload');
   }
   
   return uploadedUrls;

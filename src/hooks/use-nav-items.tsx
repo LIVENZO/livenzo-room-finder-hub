@@ -1,72 +1,74 @@
 
-import React from 'react';
-import {
-  Home,
-  Search,
-  PlusSquare,
-  Heart,
-  Calendar,
-  MessageSquare,
-  User,
-} from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import React from "react";
+import { Home, Search, PlusCircle, User, Heart, BookMarked, MessageSquare, List, Users } from "lucide-react";
 
-export const useNavItems = () => {
-  const { userRole } = useAuth();
-  
-  // Navigation items
-  const navItems = [
+export type NavItem = {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  ownerOnly?: boolean;
+  renterOnly?: boolean;
+  visitorOnly?: boolean;
+  hideOnMobile?: boolean;
+  showNotificationBadge?: boolean;
+};
+
+const useNavItems = (unreadMessageCount: number = 0) => {
+  const navItems: NavItem[] = [
     {
-      label: 'Home',
-      icon: <Home size={20} />,
-      href: '/dashboard',
-      show: true,
+      title: "Home",
+      href: "/dashboard",
+      icon: <Home className="h-4 w-4" />,
     },
     {
-      label: 'Find Room',
-      icon: <Search size={20} />,
-      href: '/find-room',
-      show: userRole !== 'owner',
+      title: "Find Room",
+      href: "/find-room",
+      icon: <Search className="h-4 w-4" />,
+      renterOnly: true,
     },
     {
-      label: 'List Room',
-      icon: <PlusSquare size={20} />,
-      href: '/list-room',
-      show: true,
+      title: "List Room",
+      href: "/list-room",
+      icon: <PlusCircle className="h-4 w-4" />,
+      ownerOnly: true,
+      hideOnMobile: true,
     },
     {
-      label: 'My Listings',
-      icon: <PlusSquare size={20} />,
-      href: '/my-listings',
-      show: userRole === 'owner',
+      title: "My Listings",
+      href: "/my-listings",
+      icon: <List className="h-4 w-4" />,
+      ownerOnly: true,
     },
     {
-      label: 'Favorites',
-      icon: <Heart size={20} />,
-      href: '/favorites',
-      show: userRole !== 'owner',
+      title: "Connections",
+      href: "/connections",
+      icon: <Users className="h-4 w-4" />,
     },
     {
-      label: 'Bookings',
-      icon: <Calendar size={20} />,
-      href: '/bookings',
-      show: userRole !== 'owner',
+      title: "Favorites",
+      href: "/favorites",
+      icon: <Heart className="h-4 w-4" />,
+      renterOnly: true,
     },
     {
-      label: 'Messages',
-      icon: <MessageSquare size={20} />,
-      href: '/chats',
-      show: true,
+      title: "Bookings",
+      href: "/bookings",
+      icon: <BookMarked className="h-4 w-4" />,
     },
     {
-      label: 'Profile',
-      icon: <User size={20} />,
-      href: '/profile',
-      show: true,
+      title: "Messages",
+      href: "/chats",
+      icon: <MessageSquare className="h-4 w-4" />,
+      showNotificationBadge: unreadMessageCount > 0,
+    },
+    {
+      title: "Profile",
+      href: "/profile",
+      icon: <User className="h-4 w-4" />,
     },
   ];
-  
-  const filteredNavItems = navItems.filter(item => item.show);
 
-  return { navItems, filteredNavItems };
+  return navItems;
 };
+
+export default useNavItems;
