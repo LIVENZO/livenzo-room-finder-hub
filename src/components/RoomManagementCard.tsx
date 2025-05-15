@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Room, useRooms } from '@/context/RoomContext';
+import { Room } from '@/types/room';
+import { useRooms } from '@/context/RoomContext';
 import { 
   Card, 
   CardContent, 

@@ -25,7 +25,12 @@ export const fetchRooms = async (): Promise<Room[]> => {
           images: room.images || [],
           price: room.price,
           location: room.location,
-          facilities: room.facilities,
+          facilities: room.facilities ? {
+            wifi: room.facilities.wifi,
+            bathroom: room.facilities.bathroom,
+            gender: room.facilities.gender,
+            roomType: room.facilities.roomType
+          } : {},
           ownerId: room.owner_id,
           ownerPhone: room.owner_phone,
           available: room.available,
@@ -122,7 +127,12 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
         images: data[0].images || [],
         price: data[0].price,
         location: data[0].location,
-        facilities: data[0].facilities,
+        facilities: data[0].facilities ? {
+          wifi: data[0].facilities.wifi,
+          bathroom: data[0].facilities.bathroom,
+          gender: data[0].facilities.gender,
+          roomType: data[0].facilities.roomType
+        } : {},
         ownerId: data[0].owner_id,
         ownerPhone: data[0].owner_phone,
         available: data[0].available,

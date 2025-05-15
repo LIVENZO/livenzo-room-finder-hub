@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Wifi, Bath, User, Users, BedSingle, BedDouble } from 'lucide-react';
-import { Room } from '@/context/RoomContext';
+import { Room } from '@/types/room';
 
 interface RoomCardProps {
   room: Room;
