@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Upload, ImagePlus, X, Loader2 } from 'lucide-react';
+import { Upload, ImagePlus, X, Loader2, AlertCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,11 +29,15 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const ListRoom: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { addRoom } = useRooms();
   
@@ -54,10 +57,17 @@ const ListRoom: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
   useEffect(() => {
-    if (!user && !localStorage.getItem('guest_mode')) {
+    // Redirect if not logged in or not a property owner
+    if (!user) {
       navigate('/');
+      return;
     }
-  }, [user, navigate]);
+    
+    if (userRole !== 'owner') {
+      toast.error('Only property owners can list rooms');
+      navigate('/dashboard');
+    }
+  }, [user, userRole, navigate]);
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,12 +208,22 @@ const ListRoom: React.FC = () => {
     }
   };
   
-  if (!user) return null;
+  // If not logged in or loading, return null
+  if (!user || userRole !== 'owner') return null;
   
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold mb-6">List Your Room</h1>
+        
+        {userRole !== 'owner' && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Only property owners can list rooms. Please sign out and sign in again as a property owner.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Card>
           <form onSubmit={handleSubmit}>
@@ -386,7 +406,7 @@ const ListRoom: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full sm:w-auto"
-                disabled={isUploading}
+                disabled={isUploading || userRole !== 'owner'}
               >
                 {isUploading ? (
                   <>
