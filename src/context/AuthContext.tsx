@@ -26,11 +26,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
         
         // Handle auth state changes
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
@@ -39,17 +39,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole(storedRole);
           
           // Show success message after a short delay to ensure UI is responsive
-          setTimeout(() => {
-            toast.success("Successfully signed in!");
-          }, 500);
+          if (event === 'SIGNED_IN') {
+            setTimeout(() => {
+              toast.success("Successfully signed in!");
+            }, 500);
+          }
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
           setUserRole(null);
           toast.info("You've been signed out.");
-        } else if (event === 'TOKEN_REFRESHED') {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
         }
         
         setIsLoading(false);
@@ -57,22 +56,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Initial session check:", currentSession?.user?.email);
-      
-      if (currentSession) {
-        setSession(currentSession);
-        setUser(currentSession.user);
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Initial session check:", currentSession?.user?.email);
         
-        // Check for stored role on initial load
-        const storedRole = localStorage.getItem('userRole');
-        if (storedRole) {
-          setUserRole(storedRole);
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Check for stored role on initial load
+          const storedRole = localStorage.getItem('userRole');
+          if (storedRole) {
+            setUserRole(storedRole);
+          }
         }
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    });
+    };
+    
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
@@ -86,8 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (provider === 'google') {
         console.log("Starting Google authentication...");
         
-        // Use window.location.origin for proper redirection
-        const redirectUrl = `${window.location.origin}/dashboard`;
+        // Use current origin for proper redirection
+        const origin = window.location.origin;
+        const redirectUrl = `${origin}/dashboard`;
           
         console.log(`Redirect URL: ${redirectUrl}`);
         

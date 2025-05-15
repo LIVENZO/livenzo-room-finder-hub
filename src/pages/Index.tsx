@@ -6,32 +6,40 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 const Index: React.FC = () => {
-  const { user, login, isLoading } = useAuth();
+  const { user, login, isLoading, session } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
   
   useEffect(() => {
-    // Check if we have a user session and redirect if needed
-    if (user) {
-      console.log("User detected, navigating to dashboard:", user.email);
-      setIsRedirecting(true);
-      // Add a small delay to ensure everything is loaded properly
-      const timer = setTimeout(() => {
-        navigate('/dashboard');
-        toast.success(`Welcome back, ${user.email?.split('@')[0] || 'User'}!`);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
-      console.log("No user detected on index page");
-      setCheckingSession(false);
+    const checkAuth = async () => {
+      // Check if we have a user session and redirect if needed
+      if (session && user) {
+        console.log("User detected on index page, navigating to dashboard:", user.email);
+        setIsRedirecting(true);
+        
+        // Add a small delay to ensure everything is loaded properly
+        const timer = setTimeout(() => {
+          navigate('/dashboard');
+          toast.success(`Welcome, ${user.email?.split('@')[0] || 'User'}!`);
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      } else {
+        console.log("No user detected on index page");
+        setCheckingSession(false);
+      }
+    };
+    
+    // Only run the check if we're done with initial loading
+    if (!isLoading) {
+      checkAuth();
     }
-  }, [user, navigate]);
+  }, [user, session, navigate, isLoading]);
   
   const handleLogin = () => {
     console.log("Login button clicked with role:", userRole);
@@ -42,7 +50,7 @@ const Index: React.FC = () => {
   };
   
   // Show a loading state while checking for existing session
-  if (checkingSession || isLoading || isRedirecting) {
+  if (isLoading || checkingSession || isRedirecting) {
     return (
       <Layout hideNav>
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">

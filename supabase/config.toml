@@ -6,3 +6,8 @@ project_id = "naoqigivttgpkfwpzcgg"
 public = true
 [storage.rooms]
 public = true
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
