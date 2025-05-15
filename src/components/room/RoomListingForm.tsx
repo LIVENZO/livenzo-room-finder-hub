@@ -1,30 +1,18 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRooms } from '@/context/RoomContext';
 import { Room } from '@/types/room';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { CardContent, CardFooter } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
-import {
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import RoomBasicInfo from './RoomFormSections/RoomBasicInfo';
+import RoomDescription from './RoomFormSections/RoomDescription';
+import RoomPriceLocation from './RoomFormSections/RoomPriceLocation';
+import RoomFacilities from './RoomFormSections/RoomFacilities';
+import RoomContact from './RoomFormSections/RoomContact';
 import ImageUploader from './ImageUploader';
 
 interface RoomListingFormProps {
@@ -141,54 +129,16 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   return (
     <form onSubmit={handleSubmit}>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title" className="text-base">Room Title *</Label>
-          <Input
-            id="title"
-            placeholder="E.g., Cozy Single Room in Downtown"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
+        <RoomBasicInfo title={title} setTitle={setTitle} />
         
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-base">Description *</Label>
-          <Textarea
-            id="description"
-            placeholder="Describe your room in detail (amenities, surroundings, rules, etc.)"
-            rows={5}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
+        <RoomDescription description={description} setDescription={setDescription} />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="price" className="text-base">Monthly Rent (₹) *</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              placeholder="Enter monthly rent"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-base">Location *</Label>
-            <Input
-              id="location"
-              placeholder="City, State"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            />
-          </div>
-        </div>
+        <RoomPriceLocation 
+          price={price} 
+          setPrice={setPrice} 
+          location={location} 
+          setLocation={setLocation} 
+        />
         
         <ImageUploader 
           images={images} 
@@ -197,73 +147,18 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           setUploadedFiles={setUploadedFiles} 
         />
         
-        <div className="space-y-4">
-          <h3 className="font-medium">Facilities</h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="gender" className="text-sm">Gender Preference</Label>
-            <Select 
-              value={gender}
-              onValueChange={(value: 'any' | 'male' | 'female') => setGender(value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Any Gender</SelectItem>
-                <SelectItem value="male">Boys Only</SelectItem>
-                <SelectItem value="female">Girls Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-sm">Room Type</Label>
-            <RadioGroup
-              value={roomType}
-              onValueChange={(value: 'single' | 'sharing') => setRoomType(value)}
-              className="flex flex-col space-y-1"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="single" id="list-single" />
-                <Label htmlFor="list-single">Single Room</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sharing" id="list-sharing" />
-                <Label htmlFor="list-sharing">Sharing Room</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="wifi-switch" className="cursor-pointer">WiFi Included</Label>
-            <Switch
-              id="wifi-switch"
-              checked={wifi}
-              onCheckedChange={setWifi}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="bathroom-switch" className="cursor-pointer">Connected Bathroom</Label>
-            <Switch
-              id="bathroom-switch"
-              checked={bathroom}
-              onCheckedChange={setBathroom}
-            />
-          </div>
-        </div>
+        <RoomFacilities 
+          gender={gender} 
+          setGender={setGender}
+          roomType={roomType} 
+          setRoomType={setRoomType} 
+          wifi={wifi} 
+          setWifi={setWifi}
+          bathroom={bathroom} 
+          setBathroom={setBathroom} 
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-base">Contact Phone Number *</Label>
-          <Input
-            id="phone"
-            placeholder="Your phone number for inquiries"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-          />
-        </div>
+        <RoomContact phone={phone} setPhone={setPhone} />
       </CardContent>
       
       <CardFooter className="flex flex-col sm:flex-row gap-2">

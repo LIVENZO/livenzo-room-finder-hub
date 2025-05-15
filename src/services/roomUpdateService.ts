@@ -47,7 +47,7 @@ export const updateRoomAvailabilityService = async (roomId: string, available: b
   try {
     // Use our database function to update availability
     const { error } = await supabase
-      .rpc('update_room_availability', {
+      .rpc('update_room_availability_for_owner', {
         room_id: roomId,
         is_available: available
       });
