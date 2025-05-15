@@ -45,26 +45,39 @@ export const fetchRelationship = async (relationshipId: string): Promise<Relatio
 // Fetch relationships where current user is owner
 export const fetchOwnerRelationships = async (userId: string): Promise<Relationship[]> => {
   try {
-    const { data, error } = await supabase
+    // First, fetch the relationships
+    const { data: relationshipsData, error: relationshipsError } = await supabase
       .from("relationships")
-      .select(`
-        *,
-        renter:profiles!renter_id(full_name, avatar_url)
-      `)
+      .select("*")
       .eq("owner_id", userId);
-
-    if (error) {
-      console.error("Error fetching owner relationships:", error);
+    
+    if (relationshipsError) {
+      console.error("Error fetching owner relationships:", relationshipsError);
       return [];
     }
+    
+    // Then fetch the profiles separately and join them manually
+    const relationships = relationshipsData as Relationship[];
+    const enrichedRelationships = await Promise.all(
+      relationships.map(async (relationship) => {
+        // Fetch renter profile
+        const { data: renterProfile } = await supabase
+          .from("user_profiles")
+          .select("full_name, avatar_url")
+          .eq("id", relationship.renter_id)
+          .single();
+          
+        return {
+          ...relationship,
+          renter: {
+            full_name: renterProfile?.full_name || 'Unknown User',
+            avatar_url: renterProfile?.avatar_url || '',
+          }
+        };
+      })
+    );
 
-    return data.map(item => ({
-      ...item,
-      renter: {
-        full_name: item.renter?.full_name || 'Unknown User',
-        avatar_url: item.renter?.avatar_url || '',
-      }
-    })) as Relationship[];
+    return enrichedRelationships;
   } catch (error) {
     console.error("Exception fetching owner relationships:", error);
     return [];
@@ -74,26 +87,39 @@ export const fetchOwnerRelationships = async (userId: string): Promise<Relations
 // Fetch relationships where current user is renter
 export const fetchRenterRelationships = async (userId: string): Promise<Relationship[]> => {
   try {
-    const { data, error } = await supabase
+    // First, fetch the relationships
+    const { data: relationshipsData, error: relationshipsError } = await supabase
       .from("relationships")
-      .select(`
-        *,
-        owner:profiles!owner_id(full_name, avatar_url)
-      `)
+      .select("*")
       .eq("renter_id", userId);
-
-    if (error) {
-      console.error("Error fetching renter relationships:", error);
+    
+    if (relationshipsError) {
+      console.error("Error fetching renter relationships:", relationshipsError);
       return [];
     }
+    
+    // Then fetch the profiles separately and join them manually
+    const relationships = relationshipsData as Relationship[];
+    const enrichedRelationships = await Promise.all(
+      relationships.map(async (relationship) => {
+        // Fetch owner profile
+        const { data: ownerProfile } = await supabase
+          .from("user_profiles")
+          .select("full_name, avatar_url")
+          .eq("id", relationship.owner_id)
+          .single();
+          
+        return {
+          ...relationship,
+          owner: {
+            full_name: ownerProfile?.full_name || 'Unknown User',
+            avatar_url: ownerProfile?.avatar_url || '',
+          }
+        };
+      })
+    );
 
-    return data.map(item => ({
-      ...item,
-      owner: {
-        full_name: item.owner?.full_name || 'Unknown User',
-        avatar_url: item.owner?.avatar_url || '',
-      }
-    })) as Relationship[];
+    return enrichedRelationships;
   } catch (error) {
     console.error("Exception fetching renter relationships:", error);
     return [];
