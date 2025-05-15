@@ -161,5 +161,5 @@ export const useRooms = () => {
   return context;
 };
 
-// Export the Room type from this file for backward compatibility
-export type { Room };
+// Export the Room type from types/room
+export type { Room } from '@/types/room';

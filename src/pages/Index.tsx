@@ -7,21 +7,25 @@ import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const Index: React.FC = () => {
   const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
+  const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
   
   useEffect(() => {
     // Check if we have a user session and redirect if needed
     if (user) {
       console.log("User detected, navigating to dashboard:", user.email);
+      setIsRedirecting(true);
       // Add a small delay to ensure everything is loaded properly
       const timer = setTimeout(() => {
         navigate('/dashboard');
-      }, 300);
+        toast.success(`Welcome back, ${user.email?.split('@')[0] || 'User'}!`);
+      }, 500);
       return () => clearTimeout(timer);
     } else {
       console.log("No user detected on index page");
@@ -33,21 +37,24 @@ const Index: React.FC = () => {
     console.log("Login button clicked with role:", userRole);
     // Store the selected role in localStorage to be used after authentication
     localStorage.setItem('userRole', userRole);
+    toast.info("Redirecting to Google sign-in...");
     login('google');
   };
   
   // Show a loading state while checking for existing session
-  if (checkingSession && isLoading) {
+  if (checkingSession || isLoading || isRedirecting) {
     return (
       <Layout hideNav>
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
           <div className="max-w-md w-full mx-auto text-center space-y-8">
-            <Skeleton className="h-12 w-36 mx-auto" />
-            <Skeleton className="h-6 w-64 mx-auto" />
-            <div className="bg-white/50 p-8 rounded-xl shadow-lg space-y-6">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-12 w-full" />
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-primary">Livenzo</h1>
+              <p className="text-xl text-gray-600">
+                {isRedirecting ? "Redirecting to dashboard..." : "Loading..."}
+              </p>
+            </div>
+            <div className="bg-white/50 p-8 rounded-xl shadow-lg space-y-6 flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           </div>
         </div>

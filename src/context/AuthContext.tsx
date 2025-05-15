@@ -135,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Logout error:", error);
       toast.error(`Error signing out: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
+      // Set loading to false here to ensure UI is updated even if there's an error
       setIsLoading(false);
     }
   };
