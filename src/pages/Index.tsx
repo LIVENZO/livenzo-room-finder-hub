@@ -20,12 +20,22 @@ const Index: React.FC = () => {
       // Check if we have a user session and redirect if needed
       if (session && user) {
         console.log("User detected on index page, navigating to dashboard:", user.email);
+        
+        // Set redirecting state to show loading UI
         setIsRedirecting(true);
+        
+        // Store the user role if it wasn't already set during login
+        if (!localStorage.getItem('userRole')) {
+          localStorage.setItem('userRole', userRole);
+          console.log("Setting default user role:", userRole);
+        }
         
         // Add a small delay to ensure everything is loaded properly
         const timer = setTimeout(() => {
           navigate('/dashboard');
-          toast.success(`Welcome, ${user.email?.split('@')[0] || 'User'}!`);
+          const userName = user.email?.split('@')[0] || 'User';
+          toast.success(`Welcome, ${userName}!`);
+          console.log("Navigation to dashboard complete");
         }, 500);
         
         return () => clearTimeout(timer);
@@ -37,9 +47,10 @@ const Index: React.FC = () => {
     
     // Only run the check if we're done with initial loading
     if (!isLoading) {
+      console.log("Initial loading complete, checking authentication");
       checkAuth();
     }
-  }, [user, session, navigate, isLoading]);
+  }, [user, session, navigate, isLoading, userRole]);
   
   const handleLogin = () => {
     console.log("Login button clicked with role:", userRole);
