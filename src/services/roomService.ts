@@ -24,12 +24,7 @@ export const fetchRooms = async (): Promise<Room[]> => {
           images: room.images || [],
           price: room.price,
           location: room.location,
-          facilities: room.facilities ? {
-            wifi: Boolean(room.facilities.wifi),
-            bathroom: Boolean(room.facilities.bathroom),
-            gender: room.facilities.gender as 'male' | 'female' | 'any',
-            roomType: room.facilities.roomType as 'single' | 'sharing'
-          } : {},
+          facilities: parseFacilities(room.facilities),
           ownerId: room.owner_id,
           ownerPhone: room.owner_phone,
           available: room.available,
@@ -78,12 +73,7 @@ export const addRoomService = async (room: Omit<Room, 'id' | 'createdAt'>): Prom
         images: data.images || [],
         price: data.price,
         location: data.location,
-        facilities: data.facilities ? {
-          wifi: Boolean(data.facilities.wifi),
-          bathroom: Boolean(data.facilities.bathroom),
-          gender: data.facilities.gender as 'male' | 'female' | 'any',
-          roomType: data.facilities.roomType as 'single' | 'sharing'
-        } : {},
+        facilities: parseFacilities(data.facilities),
         ownerId: data.owner_id,
         ownerPhone: data.owner_phone,
         available: data.available,
@@ -125,7 +115,6 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
     } else if (data && data[0]) {
       // Return updated room
       const roomData = data[0];
-      const facilities = roomData.facilities as any;
       
       return {
         id: roomData.id,
@@ -134,12 +123,7 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
         images: roomData.images || [],
         price: roomData.price,
         location: roomData.location,
-        facilities: facilities ? {
-          wifi: Boolean(facilities.wifi),
-          bathroom: Boolean(facilities.bathroom),
-          gender: facilities.gender as 'male' | 'female' | 'any',
-          roomType: facilities.roomType as 'single' | 'sharing'
-        } : {},
+        facilities: parseFacilities(roomData.facilities),
         ownerId: roomData.owner_id,
         ownerPhone: roomData.owner_phone,
         available: roomData.available,
@@ -153,6 +137,24 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
     return null;
   }
 };
+
+// Helper function to safely parse facilities JSON
+function parseFacilities(facilities: any): Room['facilities'] {
+  if (!facilities) return {};
+  
+  // Handle if facilities is an object
+  if (typeof facilities === 'object' && !Array.isArray(facilities)) {
+    return {
+      wifi: Boolean(facilities.wifi),
+      bathroom: Boolean(facilities.bathroom),
+      gender: (facilities.gender as 'male' | 'female' | 'any') || 'any',
+      roomType: (facilities.roomType as 'single' | 'sharing') || 'single'
+    };
+  }
+  
+  // Default empty facilities
+  return {};
+}
 
 export const deleteRoomService = async (id: string): Promise<boolean> => {
   try {
