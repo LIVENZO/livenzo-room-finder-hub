@@ -28,32 +28,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
-
+        
+        // Handle auth state changes
         if (event === 'SIGNED_IN') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
           // Get the user role from localStorage when signing in
           const storedRole = localStorage.getItem('userRole');
           setUserRole(storedRole);
-          toast.success("Successfully signed in!");
+          
+          // Show success message after a short delay to ensure UI is responsive
+          setTimeout(() => {
+            toast.success("Successfully signed in!");
+          }, 500);
         } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
           setUserRole(null);
           toast.info("You've been signed out.");
+        } else if (event === 'TOKEN_REFRESHED') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
         }
+        
+        setIsLoading(false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.log("Initial session check:", currentSession?.user?.email);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
       
-      // Check for stored role on initial load
-      const storedRole = localStorage.getItem('userRole');
-      if (storedRole) {
-        setUserRole(storedRole);
+      if (currentSession) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        
+        // Check for stored role on initial load
+        const storedRole = localStorage.getItem('userRole');
+        if (storedRole) {
+          setUserRole(storedRole);
+        }
       }
       
       setIsLoading(false);
@@ -93,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsLoading(false);
         } else {
           console.log("Auth request successful:", data);
-          // No need to do anything else, the redirect will happen automatically
+          // No need to set loading to false here as the page will redirect
         }
       } else {
         toast.error("Unsupported authentication provider");
@@ -108,13 +123,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        toast.error(`Error signing out: ${error.message}`);
+      } else {
+        localStorage.removeItem('userRole');
+      }
+    } catch (error) {
       console.error("Logout error:", error);
-      toast.error(`Error signing out: ${error.message}`);
+      toast.error(`Error signing out: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
     }
-    localStorage.removeItem('userRole');
-    setIsLoading(false);
   };
 
   return (

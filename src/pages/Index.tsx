@@ -6,19 +6,26 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index: React.FC = () => {
   const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
+  const [checkingSession, setCheckingSession] = useState<boolean>(true);
   
   useEffect(() => {
     // Check if we have a user session and redirect if needed
     if (user) {
       console.log("User detected, navigating to dashboard:", user.email);
-      navigate('/dashboard');
+      // Add a small delay to ensure everything is loaded properly
+      const timer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 300);
+      return () => clearTimeout(timer);
     } else {
       console.log("No user detected on index page");
+      setCheckingSession(false);
     }
   }, [user, navigate]);
   
@@ -28,6 +35,25 @@ const Index: React.FC = () => {
     localStorage.setItem('userRole', userRole);
     login('google');
   };
+  
+  // Show a loading state while checking for existing session
+  if (checkingSession && isLoading) {
+    return (
+      <Layout hideNav>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+          <div className="max-w-md w-full mx-auto text-center space-y-8">
+            <Skeleton className="h-12 w-36 mx-auto" />
+            <Skeleton className="h-6 w-64 mx-auto" />
+            <div className="bg-white/50 p-8 rounded-xl shadow-lg space-y-6">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout hideNav>
