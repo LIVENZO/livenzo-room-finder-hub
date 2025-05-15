@@ -5,15 +5,15 @@ import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
 // Helper function to safely parse JSON facilities
-const parseFacilities = (facilitiesJson: any) => {
+const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
   try {
     // If it's already an object, return it
     if (facilitiesJson && typeof facilitiesJson === 'object' && !Array.isArray(facilitiesJson)) {
       return {
         wifi: Boolean(facilitiesJson.wifi),
         bathroom: Boolean(facilitiesJson.bathroom),
-        gender: String(facilitiesJson.gender || 'any'),
-        roomType: String(facilitiesJson.roomType || 'single')
+        gender: (facilitiesJson.gender || 'any') as 'male' | 'female' | 'any',
+        roomType: (facilitiesJson.roomType || 'single') as 'single' | 'sharing'
       };
     }
     
@@ -24,8 +24,8 @@ const parseFacilities = (facilitiesJson: any) => {
         return {
           wifi: Boolean(parsed.wifi),
           bathroom: Boolean(parsed.bathroom),
-          gender: String(parsed.gender || 'any'),
-          roomType: String(parsed.roomType || 'single')
+          gender: (parsed.gender || 'any') as 'male' | 'female' | 'any',
+          roomType: (parsed.roomType || 'single') as 'single' | 'sharing'
         };
       } catch (e) {
         console.error('Error parsing facilities JSON:', e);
@@ -70,9 +70,17 @@ export const fetchRooms = async (): Promise<Room[]> => {
     
     // Map and transform the data to ensure proper typing
     return data ? data.map(room => ({
-      ...room,
-      facilities: parseFacilities(room.facilities),
+      id: room.id,
+      title: room.title,
+      description: room.description,
+      images: room.images || [],
       price: Number(room.price),
+      location: room.location,
+      facilities: parseFacilities(room.facilities),
+      ownerId: room.owner_id,
+      ownerPhone: room.owner_phone,
+      available: room.available,
+      createdAt: room.created_at
     })) : [];
     
   } catch (error) {
@@ -85,15 +93,24 @@ export const fetchRooms = async (): Promise<Room[]> => {
 // Add a new room
 export const addRoomService = async (room: Omit<Room, 'id' | 'createdAt'>): Promise<Room | null> => {
   try {
-    const newRoom = {
-      ...room,
+    // Map the Room type to the database schema structure
+    const newRoomData = {
       id: uuidv4(),
-      createdAt: new Date().toISOString(),
+      title: room.title,
+      description: room.description,
+      images: room.images,
+      price: room.price,
+      location: room.location,
+      facilities: room.facilities,
+      owner_id: room.ownerId,
+      owner_phone: room.ownerPhone,
+      available: room.available !== undefined ? room.available : true,
+      created_at: new Date().toISOString()
     };
     
     const { data, error } = await supabase
       .from('rooms')
-      .insert([newRoom])
+      .insert([newRoomData])
       .select()
       .single();
     
@@ -103,10 +120,19 @@ export const addRoomService = async (room: Omit<Room, 'id' | 'createdAt'>): Prom
       return null;
     }
     
+    // Map the database response back to the Room type
     return {
-      ...data,
-      facilities: parseFacilities(data.facilities),
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      images: data.images || [],
       price: Number(data.price),
+      location: data.location,
+      facilities: parseFacilities(data.facilities),
+      ownerId: data.owner_id,
+      ownerPhone: data.owner_phone,
+      available: data.available,
+      createdAt: data.created_at
     };
     
   } catch (error) {
@@ -119,9 +145,22 @@ export const addRoomService = async (room: Omit<Room, 'id' | 'createdAt'>): Prom
 // Update an existing room
 export const updateRoomService = async (id: string, updates: Partial<Room>): Promise<Room | null> => {
   try {
+    // Map the Room type updates to the database schema structure
+    const dbUpdates: any = {};
+    
+    if (updates.title) dbUpdates.title = updates.title;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.images) dbUpdates.images = updates.images;
+    if (updates.price !== undefined) dbUpdates.price = updates.price;
+    if (updates.location) dbUpdates.location = updates.location;
+    if (updates.facilities) dbUpdates.facilities = updates.facilities;
+    if (updates.ownerId) dbUpdates.owner_id = updates.ownerId;
+    if (updates.ownerPhone) dbUpdates.owner_phone = updates.ownerPhone;
+    if (updates.available !== undefined) dbUpdates.available = updates.available;
+    
     const { data, error } = await supabase
       .from('rooms')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -132,10 +171,19 @@ export const updateRoomService = async (id: string, updates: Partial<Room>): Pro
       return null;
     }
     
+    // Map the database response back to the Room type
     return {
-      ...data,
-      facilities: parseFacilities(data.facilities),
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      images: data.images || [],
       price: Number(data.price),
+      location: data.location,
+      facilities: parseFacilities(data.facilities),
+      ownerId: data.owner_id,
+      ownerPhone: data.owner_phone,
+      available: data.available,
+      createdAt: data.created_at
     };
     
   } catch (error) {
