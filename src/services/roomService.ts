@@ -58,7 +58,7 @@ export const fetchRooms = async (): Promise<Room[]> => {
     const { data, error } = await supabase
       .from('rooms')
       .select('*')
-      .order('createdAt', { ascending: false });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching rooms:', error);
