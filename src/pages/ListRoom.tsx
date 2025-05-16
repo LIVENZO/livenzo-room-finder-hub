@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
@@ -12,6 +12,7 @@ import RoomListingForm from '@/components/room/RoomListingForm';
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     // Redirect if not logged in or not a property owner
@@ -24,6 +25,28 @@ const ListRoom: React.FC = () => {
       toast.error('Only property owners can list rooms');
       navigate('/dashboard');
     }
+    
+    // Check if Supabase storage is initialized properly
+    const checkStorage = async () => {
+      try {
+        const { data: supabase } = await import('@/integrations/supabase/client');
+        const { data: buckets } = await supabase.storage.listBuckets();
+        
+        console.log("Available storage buckets:", buckets);
+        
+        const roomsBucketExists = buckets?.some(bucket => bucket.name === 'rooms');
+        
+        if (!roomsBucketExists) {
+          console.error("The 'rooms' storage bucket is not configured in Supabase");
+          setError("Storage configuration issue. Please contact support.");
+        }
+      } catch (err) {
+        console.error("Error checking Supabase storage:", err);
+        setError("Error connecting to storage service. Please try again later.");
+      }
+    };
+    
+    checkStorage();
   }, [user, userRole, navigate]);
   
   // If not logged in or loading, return null
@@ -40,6 +63,13 @@ const ListRoom: React.FC = () => {
             <AlertDescription>
               Only property owners can list rooms. Please sign out and sign in again as a property owner.
             </AlertDescription>
+          </Alert>
+        )}
+        
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
         

@@ -34,6 +34,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const [gender, setGender] = useState<'any' | 'male' | 'female'>('any');
   const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   // State for uploaded images
   const [images, setImages] = useState<string[]>([]);
@@ -41,6 +42,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploadError(null);
     
     if (!title || !description || !price || !location || !phone) {
       toast.error('Please fill in all required fields.');
@@ -55,12 +57,19 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
     setIsUploading(true);
     
     try {
+      console.log("Starting room listing submission process");
+      console.log("User ID:", userId);
+      console.log("Number of images to upload:", uploadedFiles.length);
+      
       // Upload images to Supabase Storage if the user is authenticated
       const imageUrls = userId 
-        ? await uploadImagesToStorage(uploadedFiles, userId) 
+        ? await uploadImagesToStorage(uploadedFiles, userId, 'rooms') 
         : images; // Use local URLs for guests
       
+      console.log("Image upload results:", imageUrls);
+      
       if (userId && imageUrls.length === 0 && uploadedFiles.length > 0) {
+        setUploadError('Failed to upload images. Please try again.');
         toast.error('Failed to upload images. Please try again.');
         setIsUploading(false);
         return;
@@ -82,10 +91,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
         ownerPhone: phone,
       };
       
+      console.log("Submitting room data:", newRoom);
       await addRoom(newRoom);
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error in handleSubmit:', error);
+      setUploadError('Failed to list room. Please try again.');
       toast.error(`Failed to list room: ${error.message || 'Unknown error'}`);
     } finally {
       setIsUploading(false);
@@ -112,6 +123,10 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           uploadedFiles={uploadedFiles} 
           setUploadedFiles={setUploadedFiles} 
         />
+        
+        {uploadError && (
+          <div className="text-sm text-red-500">{uploadError}</div>
+        )}
         
         <RoomFacilities 
           gender={gender} 

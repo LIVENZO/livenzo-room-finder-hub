@@ -6,23 +6,37 @@ import { toast } from 'sonner';
  * Uploads images to Supabase storage and returns their public URLs
  * @param files - Array of files to upload
  * @param userId - User ID used to organize files in storage
- * @param bucket - Storage bucket name (default: 'avatars')
+ * @param bucket - Storage bucket name (default: 'rooms')
  * @returns Array of public URLs for the uploaded images
  */
 export const uploadImagesToStorage = async (
   files: File[], 
   userId: string,
-  bucket: string = 'avatars'
+  bucket: string = 'rooms'
 ): Promise<string[]> => {
   if (!files.length) return [];
   
   const uploadedUrls: string[] = [];
   
   try {
+    // Check if bucket exists, if not log a clear error
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(b => b.name === bucket);
+    
+    if (!bucketExists) {
+      console.error(`Bucket "${bucket}" does not exist in Supabase storage`);
+      toast.error(`Storage configuration issue. Please contact support.`);
+      return [];
+    }
+
+    console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${userId}`);
+    
     for (const file of files) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${userId ? userId : 'guest'}/${fileName}`;
+      
+      console.log(`Uploading file: ${file.name} as ${filePath}`);
       
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
@@ -40,14 +54,18 @@ export const uploadImagesToStorage = async (
         .from(bucket)
         .getPublicUrl(filePath);
       
-      uploadedUrls.push(publicUrlData.publicUrl);
+      if (publicUrlData && publicUrlData.publicUrl) {
+        console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
+        uploadedUrls.push(publicUrlData.publicUrl);
+      }
     }
+
+    return uploadedUrls;
   } catch (error) {
     console.error('Error in uploadImagesToStorage:', error);
     toast.error('An unexpected error occurred during file upload');
+    return [];
   }
-  
-  return uploadedUrls;
 };
 
 /**
