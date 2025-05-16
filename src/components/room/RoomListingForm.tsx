@@ -62,17 +62,21 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       console.log("Number of images to upload:", uploadedFiles.length);
       
       // Upload images to Supabase Storage if the user is authenticated
-      const imageUrls = userId 
-        ? await uploadImagesToStorage(uploadedFiles, userId, 'rooms') 
-        : images; // Use local URLs for guests
+      let imageUrls: string[] = [];
       
-      console.log("Image upload results:", imageUrls);
-      
-      if (userId && imageUrls.length === 0 && uploadedFiles.length > 0) {
-        setUploadError('Failed to upload images. Please try again.');
-        toast.error('Failed to upload images. Please try again.');
-        setIsUploading(false);
-        return;
+      if (userId && uploadedFiles.length > 0) {
+        imageUrls = await uploadImagesToStorage(uploadedFiles, userId, 'rooms');
+        console.log("Image upload results:", imageUrls);
+        
+        if (imageUrls.length === 0) {
+          setUploadError('Failed to upload images. Please check your permissions or try again later.');
+          toast.error('Failed to upload images. Please try again.');
+          setIsUploading(false);
+          return;
+        }
+      } else {
+        // Use local URLs for guests or if no files were uploaded
+        imageUrls = images;
       }
       
       const newRoom: Omit<Room, 'id' | 'createdAt'> = {
@@ -93,6 +97,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       
       console.log("Submitting room data:", newRoom);
       await addRoom(newRoom);
+      toast.success('Room listed successfully!');
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error in handleSubmit:', error);
@@ -125,7 +130,9 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
         />
         
         {uploadError && (
-          <div className="text-sm text-red-500">{uploadError}</div>
+          <div className="text-sm text-red-500 p-2 bg-red-50 rounded border border-red-200">
+            {uploadError}
+          </div>
         )}
         
         <RoomFacilities 

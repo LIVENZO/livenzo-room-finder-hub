@@ -33,7 +33,15 @@ export const uploadImagesToStorage = async (
       
       if (createError) {
         console.error(`Error creating "${bucket}" bucket:`, createError);
-        toast.error(`Storage configuration issue. Please try again later.`);
+        
+        // Check if it's an RLS policy violation
+        if (createError.message.includes('row-level security')) {
+          console.error('Row level security policy is preventing bucket creation');
+          toast.error(`Cannot access storage. Please ensure you're logged in with the correct permissions.`);
+        } else {
+          toast.error(`Storage configuration issue. Please try again later.`);
+        }
+        
         return [];
       }
       
@@ -56,7 +64,15 @@ export const uploadImagesToStorage = async (
       
       if (error) {
         console.error('Error uploading file to Supabase:', error);
-        toast.error(`Failed to upload ${file.name}: ${error.message}`);
+        
+        // More specific error messages based on error type
+        if (error.message.includes('row-level security')) {
+          toast.error(`Permission denied: You might not have access to upload files.`);
+        } else if (error.message.includes('size exceeds')) {
+          toast.error(`File "${file.name}" exceeds the maximum size limit.`);
+        } else {
+          toast.error(`Failed to upload ${file.name}: ${error.message}`);
+        }
         continue;
       }
       
