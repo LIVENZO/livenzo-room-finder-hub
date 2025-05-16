@@ -19,14 +19,25 @@ export const uploadImagesToStorage = async (
   const uploadedUrls: string[] = [];
   
   try {
-    // Check if bucket exists, if not log a clear error
+    // Check if bucket exists, if not create it
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === bucket);
     
     if (!bucketExists) {
-      console.error(`Bucket "${bucket}" does not exist in Supabase storage`);
-      toast.error(`Storage configuration issue. Please contact support.`);
-      return [];
+      console.log(`Bucket "${bucket}" does not exist, attempting to create it`);
+      
+      const { error: createError } = await supabase.storage.createBucket(bucket, {
+        public: true,
+        fileSizeLimit: 10485760 // 10MB limit
+      });
+      
+      if (createError) {
+        console.error(`Error creating "${bucket}" bucket:`, createError);
+        toast.error(`Storage configuration issue. Please try again later.`);
+        return [];
+      }
+      
+      console.log(`Created "${bucket}" bucket successfully`);
     }
 
     console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${userId}`);

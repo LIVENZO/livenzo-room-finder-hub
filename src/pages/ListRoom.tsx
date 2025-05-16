@@ -14,6 +14,7 @@ const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [bucketReady, setBucketReady] = useState<boolean>(false);
   
   useEffect(() => {
     // Redirect if not logged in or not a property owner
@@ -39,7 +40,28 @@ const ListRoom: React.FC = () => {
         
         if (!roomsBucketExists) {
           console.error("The 'rooms' storage bucket is not configured in Supabase");
-          setError("Storage configuration issue. Please contact support.");
+          
+          // Create rooms bucket if it doesn't exist
+          try {
+            const { data, error: createError } = await supabase.storage.createBucket('rooms', {
+              public: true,
+              fileSizeLimit: 10485760 // 10MB limit
+            });
+            
+            if (createError) {
+              console.error("Error creating 'rooms' bucket:", createError);
+              setError("Storage configuration issue. Please contact support.");
+            } else {
+              console.log("Created 'rooms' bucket successfully");
+              setBucketReady(true);
+            }
+          } catch (createErr) {
+            console.error("Failed to create 'rooms' bucket:", createErr);
+            setError("Storage configuration issue. Please contact support.");
+          }
+        } else {
+          console.log("'rooms' bucket exists");
+          setBucketReady(true);
         }
       } catch (err) {
         console.error("Error checking Supabase storage:", err);
