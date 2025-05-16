@@ -132,6 +132,22 @@ export const createRelationshipRequest = async (
   renterId: string
 ): Promise<Relationship | null> => {
   try {
+    // Check if a relationship already exists
+    const { data: existingRelationship, error: checkError } = await supabase
+      .from("relationships")
+      .select("*")
+      .or(`owner_id.eq.${ownerId},renter_id.eq.${renterId}`)
+      .or(`owner_id.eq.${renterId},renter_id.eq.${ownerId}`);
+      
+    if (checkError) {
+      console.error("Error checking existing relationship:", checkError);
+    }
+    
+    if (existingRelationship && existingRelationship.length > 0) {
+      toast.error("You already have a relationship with this owner");
+      return null;
+    }
+    
     // Generate a unique room ID for chat
     const chatRoomId = uuidv4();
     
@@ -147,12 +163,8 @@ export const createRelationshipRequest = async (
       .single();
 
     if (error) {
-      if (error.code === '23505') {
-        toast.error("You already have a relationship with this owner");
-      } else {
-        toast.error("Failed to send connection request");
-        console.error("Error creating relationship:", error);
-      }
+      toast.error("Failed to send connection request");
+      console.error("Error creating relationship:", error);
       return null;
     }
 

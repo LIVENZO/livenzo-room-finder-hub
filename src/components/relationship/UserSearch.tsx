@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { findUserById, createRelationshipRequest } from '@/services/RelationshipService';
-import { User, Search, X, CheckCircle } from 'lucide-react';
+import { User, Search, X, CheckCircle, InfoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -17,6 +17,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
   const [requestSent, setRequestSent] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,17 +28,21 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     }
     
     setIsSearching(true);
+    setRequestError(null);
     
     try {
       const user = await findUserById(searchId.trim());
       if (user) {
+        console.log("Found user:", user);
         setFoundUser(user);
       } else {
         toast.error("Owner not found. Make sure you have the correct ID");
+        setRequestError("Owner not found. Double check the ID and try again.");
       }
     } catch (error) {
+      console.error("Search error:", error);
       toast.error("Failed to search for owner");
-      console.error(error);
+      setRequestError("Search failed. Please try again later.");
     } finally {
       setIsSearching(false);
     }
@@ -47,12 +52,19 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     if (!foundUser) return;
     
     try {
-      await createRelationshipRequest(foundUser.id, currentUserId);
-      setRequestSent(true);
-      toast.success(`Connection request sent to ${foundUser.full_name || 'owner'}`);
+      console.log("Sending connection request from", currentUserId, "to", foundUser.id);
+      const response = await createRelationshipRequest(foundUser.id, currentUserId);
+      
+      if (response) {
+        setRequestSent(true);
+        toast.success(`Connection request sent to ${foundUser.full_name || 'owner'}`);
+      } else {
+        setRequestError("Failed to send request. You may already have a connection with this owner.");
+      }
     } catch (error) {
-      console.error("Error connecting with user:", error);
+      console.error("Connection error:", error);
       toast.error("Failed to send connection request");
+      setRequestError("Connection request failed. Please try again later.");
     }
   };
 
@@ -60,6 +72,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     setFoundUser(null);
     setSearchId('');
     setRequestSent(false);
+    setRequestError(null);
   };
 
   return (
@@ -95,6 +108,13 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
           </Button>
         </form>
 
+        {requestError && (
+          <div className="p-3 mb-4 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
+            <InfoIcon className="h-4 w-4" />
+            <span>{requestError}</span>
+          </div>
+        )}
+
         {foundUser && (
           <div className="mt-4">
             <div className="flex items-center gap-3 p-3 border rounded-md">
@@ -106,7 +126,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
               </Avatar>
               <div className="flex-1">
                 <p className="font-medium">{foundUser.full_name || 'Unknown owner'}</p>
-                <p className="text-xs text-gray-500">{foundUser.id}</p>
+                <p className="text-xs text-gray-500">ID: {foundUser.id}</p>
               </div>
               {requestSent && (
                 <CheckCircle className="h-5 w-5 text-green-500" />
