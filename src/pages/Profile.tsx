@@ -11,12 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserProfile, createOrUpdateUserProfile, fetchUserProfile, uploadProfilePicture } from '@/services/UserProfileService';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, userRole, isOwner } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +93,7 @@ const Profile = () => {
     
     if (updatedProfile) {
       setProfile(updatedProfile);
-      toast({
+      uiToast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
       });
@@ -116,13 +117,20 @@ const Profile = () => {
         avatar_url: imageUrl,
       });
       
-      toast({
+      uiToast({
         title: "Image uploaded",
         description: "Your profile picture has been updated",
       });
     }
     
     setUploadingImage(false);
+  };
+
+  const copyUserIdToClipboard = () => {
+    if (user) {
+      navigator.clipboard.writeText(user.id);
+      toast.success("User ID copied to clipboard");
+    }
   };
   
   if (loading) {
@@ -206,6 +214,31 @@ const Profile = () => {
                     placeholder="Your phone number"
                   />
                 </div>
+
+                {isOwner && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="userId">Your User ID (for renters to find you)</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="userId"
+                        value={user?.id || ''}
+                        readOnly
+                        className="bg-gray-50 font-mono text-sm"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={copyUserIdToClipboard}
+                        title="Copy ID to clipboard"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Share this ID with potential renters so they can connect with you
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             

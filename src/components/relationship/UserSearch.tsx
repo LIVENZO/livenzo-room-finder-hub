@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { findUserById, createRelationshipRequest } from '@/services/RelationshipService';
-import { User, Search, X } from 'lucide-react';
+import { User, Search, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -16,12 +16,13 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [searchId, setSearchId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
+  const [requestSent, setRequestSent] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!searchId.trim()) {
-      toast.error("Please enter a valid user ID");
+      toast.error("Please enter a valid owner ID");
       return;
     }
     
@@ -32,10 +33,10 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
       if (user) {
         setFoundUser(user);
       } else {
-        toast.error("User not found");
+        toast.error("Owner not found. Make sure you have the correct ID");
       }
     } catch (error) {
-      toast.error("Failed to search for user");
+      toast.error("Failed to search for owner");
       console.error(error);
     } finally {
       setIsSearching(false);
@@ -47,16 +48,18 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     
     try {
       await createRelationshipRequest(foundUser.id, currentUserId);
-      setFoundUser(null);
-      setSearchId('');
+      setRequestSent(true);
+      toast.success(`Connection request sent to ${foundUser.full_name || 'owner'}`);
     } catch (error) {
       console.error("Error connecting with user:", error);
+      toast.error("Failed to send connection request");
     }
   };
 
   const clearSearch = () => {
     setFoundUser(null);
     setSearchId('');
+    setRequestSent(false);
   };
 
   return (
@@ -64,7 +67,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
       <CardHeader>
         <CardTitle className="text-xl">Find an Owner</CardTitle>
         <CardDescription>
-          Search for an owner by their ID to connect
+          Ask the property owner for their ID and enter it below to connect
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -101,15 +104,18 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
                   <User className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-medium">{foundUser.full_name || 'Unknown user'}</p>
+              <div className="flex-1">
+                <p className="font-medium">{foundUser.full_name || 'Unknown owner'}</p>
                 <p className="text-xs text-gray-500">{foundUser.id}</p>
               </div>
+              {requestSent && (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              )}
             </div>
           </div>
         )}
       </CardContent>
-      {foundUser && (
+      {foundUser && !requestSent && (
         <CardFooter>
           <Button 
             onClick={handleConnect} 
