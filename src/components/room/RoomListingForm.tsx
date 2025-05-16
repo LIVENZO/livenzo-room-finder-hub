@@ -35,6 +35,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   
   // State for uploaded images
   const [images, setImages] = useState<string[]>([]);
@@ -43,6 +44,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploadError(null);
+    setUploadProgress(null);
     
     if (!title || !description || !price || !location || !phone) {
       toast.error('Please fill in all required fields.');
@@ -65,19 +67,27 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       let imageUrls: string[] = [];
       
       if (userId && uploadedFiles.length > 0) {
+        setUploadProgress('Uploading images...');
         imageUrls = await uploadImagesToStorage(uploadedFiles, userId, 'rooms');
         console.log("Image upload results:", imageUrls);
         
         if (imageUrls.length === 0) {
-          setUploadError('Failed to upload images. Please check your permissions or try again later.');
-          toast.error('Failed to upload images. Please try again.');
+          setUploadError('Failed to upload images. Storage permission issue detected. Please try again later or contact support.');
+          toast.error('Image upload failed. Check storage permissions.');
           setIsUploading(false);
+          setUploadProgress(null);
           return;
+        }
+        
+        if (imageUrls.length < uploadedFiles.length) {
+          toast.warning(`Only ${imageUrls.length} of ${uploadedFiles.length} images were uploaded successfully. Continuing with available images.`);
         }
       } else {
         // Use local URLs for guests or if no files were uploaded
         imageUrls = images;
       }
+      
+      setUploadProgress('Creating room listing...');
       
       const newRoom: Omit<Room, 'id' | 'createdAt'> = {
         title,
@@ -101,10 +111,11 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error in handleSubmit:', error);
-      setUploadError('Failed to list room. Please try again.');
-      toast.error(`Failed to list room: ${error.message || 'Unknown error'}`);
+      setUploadError(`Failed to list room: ${error.message || 'Unknown error'}`);
+      toast.error(`Room listing failed: ${error.message || 'Unknown error'}`);
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
     }
   };
   
@@ -132,6 +143,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
         {uploadError && (
           <div className="text-sm text-red-500 p-2 bg-red-50 rounded border border-red-200">
             {uploadError}
+          </div>
+        )}
+        
+        {uploadProgress && (
+          <div className="text-sm text-blue-500 p-2 bg-blue-50 rounded border border-blue-200">
+            {uploadProgress}
           </div>
         )}
         
@@ -166,7 +183,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
+              {uploadProgress || 'Uploading...'}
             </>
           ) : "List Room"}
         </Button>

@@ -31,33 +31,50 @@ const ListRoom: React.FC = () => {
     // Check if Supabase storage is initialized properly
     const checkStorage = async () => {
       try {
-        // Fixed: Import and use supabase directly, not destructuring data from the import
-        const { data: buckets } = await supabase.storage.listBuckets();
+        // Check if storage is available
+        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+        
+        if (bucketError) {
+          console.error("Error accessing storage:", bucketError);
+          // Check if it's a permissions issue
+          if (bucketError.message.includes('permission') || bucketError.message.includes('policy')) {
+            setError("Storage permission issue. Please ensure you have the correct permissions.");
+            toast.error("Storage permission denied. Please log out and log back in.");
+          } else {
+            setError("Storage configuration issue. Please try again later.");
+          }
+          return;
+        }
         
         console.log("Available storage buckets:", buckets);
         
         const roomsBucketExists = buckets?.some(bucket => bucket.name === 'rooms');
         
         if (!roomsBucketExists) {
-          console.error("The 'rooms' storage bucket is not configured in Supabase");
+          console.log("The 'rooms' storage bucket is not configured in Supabase. Creating it now.");
           
           // Create rooms bucket if it doesn't exist
-          try {
-            const { data, error: createError } = await supabase.storage.createBucket('rooms', {
-              public: true,
-              fileSizeLimit: 10485760 // 10MB limit
-            });
+          const { data, error: createError } = await supabase.storage.createBucket('rooms', {
+            public: true,
+            fileSizeLimit: 10485760 // 10MB limit
+          });
+          
+          if (createError) {
+            console.error("Error creating 'rooms' bucket:", createError);
             
-            if (createError) {
-              console.error("Error creating 'rooms' bucket:", createError);
-              setError("Storage configuration issue. Please contact support.");
+            if (createError.message.includes('row-level security') || createError.message.includes('permission')) {
+              setError("Storage permission denied. Please ensure you're logged in with the right account.");
+              toast.error("Storage permission denied. Please try logging out and back in.");
             } else {
-              console.log("Created 'rooms' bucket successfully");
-              setBucketReady(true);
+              setError("Storage configuration issue. Please try again later.");
             }
-          } catch (createErr) {
-            console.error("Failed to create 'rooms' bucket:", createErr);
-            setError("Storage configuration issue. Please contact support.");
+          } else {
+            console.log("Created 'rooms' bucket successfully");
+            
+            // Ensure the bucket is public
+            await supabase.storage.updateBucket('rooms', { public: true });
+            
+            setBucketReady(true);
           }
         } else {
           console.log("'rooms' bucket exists");

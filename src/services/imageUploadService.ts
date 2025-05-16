@@ -19,7 +19,7 @@ export const uploadImagesToStorage = async (
   const uploadedUrls: string[] = [];
   
   try {
-    // Check if bucket exists, if not create it
+    // Check if bucket exists, if not create it with public access
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === bucket);
     
@@ -27,17 +27,16 @@ export const uploadImagesToStorage = async (
       console.log(`Bucket "${bucket}" does not exist, attempting to create it`);
       
       const { error: createError } = await supabase.storage.createBucket(bucket, {
-        public: true,
+        public: true,  // Make sure bucket is public
         fileSizeLimit: 10485760 // 10MB limit
       });
       
       if (createError) {
         console.error(`Error creating "${bucket}" bucket:`, createError);
         
-        // Check if it's an RLS policy violation
         if (createError.message.includes('row-level security')) {
           console.error('Row level security policy is preventing bucket creation');
-          toast.error(`Cannot access storage. Please ensure you're logged in with the correct permissions.`);
+          toast.error(`Storage permission denied. Please check your account permissions.`);
         } else {
           toast.error(`Storage configuration issue. Please try again later.`);
         }
@@ -45,7 +44,24 @@ export const uploadImagesToStorage = async (
         return [];
       }
       
-      console.log(`Created "${bucket}" bucket successfully`);
+      // Set bucket to public after creation to ensure it's accessible
+      const { error: updateError } = await supabase.storage.updateBucket(bucket, {
+        public: true
+      });
+      
+      if (updateError) {
+        console.error(`Error setting bucket "${bucket}" to public:`, updateError);
+      } else {
+        console.log(`Created "${bucket}" bucket successfully and set to public`);
+      }
+    }
+
+    // Get and create policy if needed
+    try {
+      const { data: policies } = await supabase.rpc('get_policies_for_bucket', { bucket_name: bucket });
+      console.log(`Storage policies for ${bucket}:`, policies);
+    } catch (e) {
+      console.log('Unable to check bucket policies:', e);
     }
 
     console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${userId}`);
@@ -60,14 +76,17 @@ export const uploadImagesToStorage = async (
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true // Allow overwriting
+        });
       
       if (error) {
         console.error('Error uploading file to Supabase:', error);
         
         // More specific error messages based on error type
         if (error.message.includes('row-level security')) {
-          toast.error(`Permission denied: You might not have access to upload files.`);
+          toast.error(`Storage access denied. Please check your permissions.`);
         } else if (error.message.includes('size exceeds')) {
           toast.error(`File "${file.name}" exceeds the maximum size limit.`);
         } else {
