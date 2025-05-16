@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import RoomListingForm from '@/components/room/RoomListingForm';
+import { supabase } from '@/integrations/supabase/client';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -29,7 +30,7 @@ const ListRoom: React.FC = () => {
     // Check if Supabase storage is initialized properly
     const checkStorage = async () => {
       try {
-        const { data: supabase } = await import('@/integrations/supabase/client');
+        // Fixed: Import and use supabase directly, not destructuring data from the import
         const { data: buckets } = await supabase.storage.listBuckets();
         
         console.log("Available storage buckets:", buckets);
