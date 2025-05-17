@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { createImagePreviews, revokeImagePreviews } from '@/services/imageUploadService';
 
@@ -11,16 +11,23 @@ interface ImageUploaderProps {
   setImages: React.Dispatch<React.SetStateAction<string[]>>;
   uploadedFiles: File[];
   setUploadedFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  disabled?: boolean;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
   images, 
   setImages, 
   uploadedFiles, 
-  setUploadedFiles 
+  setUploadedFiles,
+  disabled = false
 }) => {
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) {
+      toast.error("Please log in to upload images");
+      return;
+    }
+    
     const files = e.target.files;
     if (!files) return;
 
@@ -89,6 +96,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               onClick={() => removeImage(idx)}
               className="absolute top-1 right-1 bg-black bg-opacity-50 rounded-full p-1"
               aria-label="Remove image"
+              disabled={disabled}
             >
               <X className="h-4 w-4 text-white" />
             </button>
@@ -96,22 +104,39 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         ))}
         
         {images.length < 5 && (
-          <label className="border-2 border-dashed rounded-md flex flex-col items-center justify-center aspect-square bg-gray-50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors">
+          <label 
+            className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center aspect-square text-gray-500 transition-colors ${
+              disabled 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'
+            }`}
+          >
             <Input 
               type="file" 
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
               multiple={true}
+              disabled={disabled}
             />
-            <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
-            <span className="text-sm font-medium">Upload Photo</span>
-            <span className="text-xs text-gray-400">{images.length}/5</span>
+            {disabled ? (
+              <>
+                <Lock className="h-8 w-8 mb-2 text-gray-400" />
+                <span className="text-sm font-medium">Login Required</span>
+              </>
+            ) : (
+              <>
+                <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
+                <span className="text-sm font-medium">Upload Photo</span>
+                <span className="text-xs text-gray-400">{images.length}/5</span>
+              </>
+            )}
           </label>
         )}
       </div>
       <p className="text-xs text-gray-500">
         Upload up to 5 photos of your room. First photo will be used as the main image.
+        {disabled && " (You must be logged in with storage access to upload)"}
       </p>
     </div>
   );

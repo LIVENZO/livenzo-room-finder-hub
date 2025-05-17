@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRooms } from '@/context/RoomContext';
@@ -19,9 +20,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface RoomListingFormProps {
   userId: string;
   userRole: string;
+  storageReady?: boolean;
+  isCheckingStorage?: boolean;
 }
 
-const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) => {
+const RoomListingForm: React.FC<RoomListingFormProps> = ({ 
+  userId, 
+  userRole,
+  storageReady = false,
+  isCheckingStorage = false
+}) => {
   const navigate = useNavigate();
   const { addRoom } = useRooms();
   const { session } = useAuth();
@@ -41,42 +49,10 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
-  const [storageAccessible, setStorageAccessible] = useState<boolean | null>(null);
   
   // State for uploaded images
   const [images, setImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  
-  // Check storage access when session changes
-  useEffect(() => {
-    const checkStorageAccess = async () => {
-      if (!session) {
-        setStorageAccessible(false);
-        return;
-      }
-      
-      try {
-        const hasAccess = await testStorageAccess('rooms');
-        setStorageAccessible(hasAccess);
-        
-        if (!hasAccess) {
-          setUploadError('Storage access not available. Please ensure you are logged in with the correct permissions.');
-        } else {
-          setUploadError(null);
-        }
-      } catch (error) {
-        console.error('Error checking storage access:', error);
-        setStorageAccessible(false);
-        setUploadError('Failed to verify storage access. Please ensure you are logged in.');
-      }
-    };
-    
-    if (session) {
-      checkStorageAccess();
-    } else {
-      setStorageAccessible(false);
-    }
-  }, [session]);
   
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -100,6 +76,16 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       console.error('Authentication required for image upload. No active session.');
       setUploadError('Authentication required. Please log in and try again.');
       return;
+    }
+    
+    // Check storage access again right before upload
+    if (!storageReady && session) {
+      const hasAccess = await testStorageAccess('rooms');
+      if (!hasAccess) {
+        toast.error('Storage access is not available. Please log out and log in again.');
+        setUploadError('Storage access denied. Please try logging out and back in.');
+        return;
+      }
     }
     
     setIsUploading(true);
@@ -184,11 +170,20 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           </Alert>
         )}
         
-        {session && storageAccessible === false && (
+        {session && isCheckingStorage && (
+          <Alert variant="default" className="mb-2 border-blue-400 bg-blue-50 dark:bg-blue-900/20">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+            <AlertDescription>
+              Checking storage access...
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {session && !isCheckingStorage && !storageReady && (
           <Alert variant="destructive" className="mb-2">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Storage access is not available. Your session may have expired. Try logging out and back in.
+              Storage access is not available. Please log out and log in again to refresh your session.
             </AlertDescription>
           </Alert>
         )}
@@ -209,6 +204,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           setImages={setImages} 
           uploadedFiles={uploadedFiles} 
           setUploadedFiles={setUploadedFiles} 
+          disabled={!session || (!storageReady && !isCheckingStorage)}
         />
         
         {uploadError && (
@@ -249,7 +245,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
         <Button 
           type="submit" 
           className="w-full sm:w-auto"
-          disabled={isUploading || userRole !== 'owner' || !session}
+          disabled={isUploading || userRole !== 'owner' || !session || (!storageReady && !isCheckingStorage)}
         >
           {isUploading ? (
             <>

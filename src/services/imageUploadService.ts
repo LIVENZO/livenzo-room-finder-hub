@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -20,15 +19,12 @@ export const uploadImagesToStorage = async (
   
   try {
     // Get the current session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error('Error getting session:', sessionError);
-      toast.error('Authentication error. Please log in again.');
-      return [];
-    }
-    
+    const { data: sessionData } = await supabase.auth.getSession();
     const session = sessionData.session;
+    
+    // Always log the current authentication state
+    console.log(`Upload attempt with ${session ? 'authenticated' : 'unauthenticated'} session`);
+    console.log(`User ID for upload: ${userId}`);
     
     // Check if user is authenticated (except for guest users which should be handled separately)
     if (!session && userId !== 'guest') {
@@ -36,13 +32,6 @@ export const uploadImagesToStorage = async (
       toast.error('Authentication required. Please log in and try again.');
       return [];
     }
-    
-    // Ensure we use the authenticated user ID when available
-    const effectiveUserId = session?.user?.id || userId;
-    
-    // Log the current authentication state
-    console.log(`Upload attempt with ${session ? 'authenticated' : 'unauthenticated'} session`);
-    console.log(`User ID for upload: ${effectiveUserId}`);
     
     // Check if bucket exists and create it if it doesn't
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
@@ -84,15 +73,13 @@ export const uploadImagesToStorage = async (
         return [];
       }
       
-      // Set bucket to public
-      const { error: updateError } = await supabase.storage.updateBucket(bucket, { public: true });
-      if (updateError) {
-        console.error(`Error updating "${bucket}" bucket to public:`, updateError);
-      } else {
-        console.log(`Successfully set "${bucket}" bucket to public`);
-      }
+      // Allow time for the bucket to be created and indexed
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-
+    
+    // If we get here, ensure we use the authenticated user ID when available
+    const effectiveUserId = session?.user?.id || userId;
+    
     // Log upload attempt
     console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${effectiveUserId}`);
     
@@ -174,19 +161,15 @@ export const revokeImagePreviews = (urls: string[]): void => {
 export const testStorageAccess = async (bucketName: string = 'rooms'): Promise<boolean> => {
   try {
     // Get the current session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (sessionError || !sessionData.session) {
+    if (!sessionData.session) {
       console.error('No active session for storage access test');
       return false;
     }
     
     const session = sessionData.session;
     const userId = session.user.id;
-    
-    // Try to upload a tiny test file to confirm access
-    const testPath = `${userId}/access-test-${Date.now()}.txt`;
-    const testContent = new Blob(['test'], { type: 'text/plain' });
     
     // Check bucket existence first
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
@@ -209,9 +192,15 @@ export const testStorageAccess = async (bucketName: string = 'rooms'): Promise<b
         console.error(`Error creating "${bucketName}" bucket:`, createError);
         return false;
       }
+      
+      // Allow time for the bucket to be created and indexed
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    // Test upload
+    // Try to upload a tiny test file to confirm access
+    const testContent = new Blob(['test'], { type: 'text/plain' });
+    const testPath = `${userId}/access-test-${Date.now()}.txt`;
+    
     const { error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(testPath, testContent, { upsert: true });

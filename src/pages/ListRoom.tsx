@@ -16,6 +16,7 @@ const ListRoom: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [storageReady, setStorageReady] = useState<boolean>(false);
+  const [isCheckingStorage, setIsCheckingStorage] = useState<boolean>(true);
   
   useEffect(() => {
     // Redirect if not logged in or not a property owner
@@ -34,10 +35,22 @@ const ListRoom: React.FC = () => {
     // Check if Supabase storage is accessible
     const checkStorageAccess = async () => {
       try {
+        setIsCheckingStorage(true);
         console.log("Checking storage access with session:", session ? "exists" : "none");
         
         if (!session) {
           setError("No active session. Please log in to upload images.");
+          setStorageReady(false);
+          return;
+        }
+        
+        // Re-authenticate to ensure session is fresh
+        const { data: refreshData, error: refreshError } = await supabase.auth.getSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error("Session refresh error:", refreshError);
+          setError("Your session may have expired. Please log out and log in again.");
+          setStorageReady(false);
           return;
         }
         
@@ -45,7 +58,8 @@ const ListRoom: React.FC = () => {
         const hasAccess = await testStorageAccess('rooms');
         
         if (!hasAccess) {
-          setError("Storage access denied. Please check if you are logged in.");
+          setError("Storage access denied. Please log out and log in again to refresh your permissions.");
+          setStorageReady(false);
           return;
         }
         
@@ -54,6 +68,9 @@ const ListRoom: React.FC = () => {
       } catch (err) {
         console.error("Error checking Supabase storage:", err);
         setError("Error connecting to storage service. Please try again later.");
+        setStorageReady(false);
+      } finally {
+        setIsCheckingStorage(false);
       }
     };
     
@@ -62,6 +79,8 @@ const ListRoom: React.FC = () => {
     } else {
       console.warn("No active session for storage permission check");
       setError("Please ensure you are logged in to upload images.");
+      setIsCheckingStorage(false);
+      setStorageReady(false);
     }
   }, [user, userRole, navigate, session]);
   
@@ -98,6 +117,15 @@ const ListRoom: React.FC = () => {
           </Alert>
         )}
         
+        {!error && session && storageReady && (
+          <Alert variant="default" className="mb-6 border-green-400 bg-green-50 dark:bg-green-900/20">
+            <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription>
+              Storage access is ready. You can upload images for your room listing.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Card>
           <CardHeader>
             <CardTitle>Room Details</CardTitle>
@@ -106,7 +134,12 @@ const ListRoom: React.FC = () => {
             </CardDescription>
           </CardHeader>
           
-          <RoomListingForm userId={user?.id || 'guest'} userRole={userRole || 'guest'} />
+          <RoomListingForm 
+            userId={user?.id || 'guest'} 
+            userRole={userRole || 'guest'} 
+            storageReady={storageReady}
+            isCheckingStorage={isCheckingStorage}
+          />
         </Card>
       </div>
     </Layout>
