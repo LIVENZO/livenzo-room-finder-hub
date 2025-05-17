@@ -10,14 +10,12 @@ import { RoomProvider } from "./context/RoomContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import FindRoom from "./pages/FindRoom";
-import ListRoom from "./pages/ListRoom";
 import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Bookings from "./pages/Bookings";
 import Chats from "./pages/Chats";
-import MyListings from "./pages/MyListings";
 import Connections from "./pages/Connections";
 
 const queryClient = new QueryClient();
@@ -34,14 +32,12 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/find-room" element={<FindRoom />} />
-              <Route path="/list-room" element={<ListRoom />} />
               <Route path="/room/:id" element={<RoomDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/bookings" element={<Bookings />} />
               <Route path="/chats" element={<Chats />} />
               <Route path="/chats/:roomId" element={<Chats />} />
-              <Route path="/my-listings" element={<MyListings />} />
               <Route path="/connections" element={<Connections />} />
               <Route path="/connections/:relationshipId" element={<Connections />} />
               <Route path="*" element={<NotFound />} />
