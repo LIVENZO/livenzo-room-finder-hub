@@ -14,6 +14,7 @@ import RoomPriceLocation from './RoomFormSections/RoomPriceLocation';
 import RoomFacilities from './RoomFormSections/RoomFacilities';
 import RoomContact from './RoomFormSections/RoomContact';
 import ImageUploader from './ImageUploader';
+import { useAuth } from '@/context/AuthContext';
 
 interface RoomListingFormProps {
   userId: string;
@@ -23,6 +24,7 @@ interface RoomListingFormProps {
 const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) => {
   const navigate = useNavigate();
   const { addRoom } = useRooms();
+  const { session } = useAuth();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -56,6 +58,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       return;
     }
     
+    // Check if user is authenticated for uploads
+    if (!session && userId !== 'guest') {
+      toast.error('You must be logged in to list a room with images.');
+      return;
+    }
+    
     setIsUploading(true);
     
     try {
@@ -63,17 +71,17 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       console.log("User ID:", userId);
       console.log("Number of images to upload:", uploadedFiles.length);
       
-      // Upload images to Supabase Storage if the user is authenticated
+      // Upload images to Supabase Storage
       let imageUrls: string[] = [];
       
-      if (userId && uploadedFiles.length > 0) {
+      if (uploadedFiles.length > 0) {
         setUploadProgress('Uploading images...');
         imageUrls = await uploadImagesToStorage(uploadedFiles, userId, 'rooms');
         console.log("Image upload results:", imageUrls);
         
         if (imageUrls.length === 0) {
-          setUploadError('Failed to upload images. Storage permission issue detected. Please try again later or contact support.');
-          toast.error('Image upload failed. Check storage permissions.');
+          setUploadError('Failed to upload images. Please check your permissions or try again later.');
+          toast.error('Image upload failed. Please ensure you are logged in.');
           setIsUploading(false);
           setUploadProgress(null);
           return;
@@ -101,8 +109,9 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           bathroom,
           roomType,
         },
-        ownerId: userId ? userId : 'guest',
+        ownerId: userId,
         ownerPhone: phone,
+        available: true
       };
       
       console.log("Submitting room data:", newRoom);

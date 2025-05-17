@@ -11,14 +11,15 @@ import RoomListingForm from '@/components/room/RoomListingForm';
 import { supabase } from '@/integrations/supabase/client';
 
 const ListRoom: React.FC = () => {
-  const { user, userRole } = useAuth();
+  const { user, userRole, session } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [bucketReady, setBucketReady] = useState<boolean>(false);
+  const [storageReady, setStorageReady] = useState<boolean>(false);
   
   useEffect(() => {
     // Redirect if not logged in or not a property owner
-    if (!user) {
+    if (!user && !localStorage.getItem('guest_mode')) {
+      toast.error('Please log in to list rooms');
       navigate('/');
       return;
     }
@@ -26,71 +27,74 @@ const ListRoom: React.FC = () => {
     if (userRole !== 'owner') {
       toast.error('Only property owners can list rooms');
       navigate('/dashboard');
+      return;
     }
     
-    // Check if Supabase storage is initialized properly
-    const checkStorage = async () => {
+    // Check if Supabase storage is accessible
+    const checkStorageAccess = async () => {
       try {
-        // Check if storage is available
+        // Check if storage is available by listing buckets
         const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
         
         if (bucketError) {
           console.error("Error accessing storage:", bucketError);
-          // Check if it's a permissions issue
+          
           if (bucketError.message.includes('permission') || bucketError.message.includes('policy')) {
-            setError("Storage permission issue. Please ensure you have the correct permissions.");
-            toast.error("Storage permission denied. Please log out and log back in.");
+            setError("Storage permission issue. Please ensure you're logged in with the correct permissions.");
+            return;
           } else {
-            setError("Storage configuration issue. Please try again later.");
+            setError("Storage service unavailable. Please try again later.");
+            return;
+          }
+        }
+        
+        // Check if the rooms bucket exists
+        const roomsBucket = buckets?.find(b => b.name === 'rooms');
+        
+        if (!roomsBucket) {
+          console.log("The 'rooms' bucket is not found. It will be created when uploading.");
+        } else {
+          console.log("'rooms' bucket exists and is accessible");
+        }
+        
+        // Verify we can access the bucket with a test operation
+        const testPath = `${user?.id || 'test'}/test-permissions.txt`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('rooms')
+          .upload(testPath, new Blob(['test']), {
+            upsert: true
+          });
+          
+        if (uploadError) {
+          console.error("Error testing storage permissions:", uploadError);
+          
+          if (uploadError.message.includes('row-level security') || 
+              uploadError.message.includes('permission denied')) {
+            setError("Storage permission denied. Please log out and log back in to refresh your session.");
+          } else {
+            setError("Unable to access storage. Please try again later.");
           }
           return;
         }
         
-        console.log("Available storage buckets:", buckets);
+        // Clean up the test file
+        await supabase.storage.from('rooms').remove([testPath]);
         
-        const roomsBucketExists = buckets?.some(bucket => bucket.name === 'rooms');
-        
-        if (!roomsBucketExists) {
-          console.log("The 'rooms' storage bucket is not configured in Supabase. Creating it now.");
-          
-          // Create rooms bucket if it doesn't exist
-          const { data, error: createError } = await supabase.storage.createBucket('rooms', {
-            public: true,
-            fileSizeLimit: 10485760 // 10MB limit
-          });
-          
-          if (createError) {
-            console.error("Error creating 'rooms' bucket:", createError);
-            
-            if (createError.message.includes('row-level security') || createError.message.includes('permission')) {
-              setError("Storage permission denied. Please ensure you're logged in with the right account.");
-              toast.error("Storage permission denied. Please try logging out and back in.");
-            } else {
-              setError("Storage configuration issue. Please try again later.");
-            }
-          } else {
-            console.log("Created 'rooms' bucket successfully");
-            
-            // Ensure the bucket is public
-            await supabase.storage.updateBucket('rooms', { public: true });
-            
-            setBucketReady(true);
-          }
-        } else {
-          console.log("'rooms' bucket exists");
-          setBucketReady(true);
-        }
+        setStorageReady(true);
       } catch (err) {
         console.error("Error checking Supabase storage:", err);
         setError("Error connecting to storage service. Please try again later.");
       }
     };
     
-    checkStorage();
-  }, [user, userRole, navigate]);
+    if (session) {
+      checkStorageAccess();
+    }
+  }, [user, userRole, navigate, session]);
   
   // If not logged in or loading, return null
-  if (!user || userRole !== 'owner') return null;
+  if (!user && !localStorage.getItem('guest_mode')) return null;
   
   return (
     <Layout>
@@ -121,7 +125,7 @@ const ListRoom: React.FC = () => {
             </CardDescription>
           </CardHeader>
           
-          <RoomListingForm userId={user.id} userRole={userRole} />
+          <RoomListingForm userId={user?.id || 'guest'} userRole={userRole || 'guest'} />
         </Card>
       </div>
     </Layout>

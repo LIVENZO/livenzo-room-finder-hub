@@ -19,54 +19,54 @@ export const uploadImagesToStorage = async (
   const uploadedUrls: string[] = [];
   
   try {
-    // Check if bucket exists, if not create it with public access
-    const { data: buckets } = await supabase.storage.listBuckets();
+    // Verify authenticated session
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session;
+    
+    if (!session && userId !== 'guest') {
+      console.error('No active session found. User must be authenticated.');
+      toast.error('Authentication required. Please log in and try again.');
+      return [];
+    }
+    
+    // Check if bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+      toast.error('Unable to access storage. Please try again later.');
+      return [];
+    }
+    
     const bucketExists = buckets?.some(b => b.name === bucket);
     
     if (!bucketExists) {
       console.log(`Bucket "${bucket}" does not exist, attempting to create it`);
       
+      // Try to create the bucket if it doesn't exist
       const { error: createError } = await supabase.storage.createBucket(bucket, {
-        public: true,  // Make sure bucket is public
+        public: true,
         fileSizeLimit: 10485760 // 10MB limit
       });
       
       if (createError) {
         console.error(`Error creating "${bucket}" bucket:`, createError);
         
-        if (createError.message.includes('row-level security')) {
-          console.error('Row level security policy is preventing bucket creation');
-          toast.error(`Storage permission denied. Please check your account permissions.`);
+        if (createError.message.includes('row-level security') || 
+            createError.message.includes('permission denied')) {
+          toast.error('Storage access denied. Please check if you are logged in.');
         } else {
-          toast.error(`Storage configuration issue. Please try again later.`);
+          toast.error('Unable to configure storage. Please try again later.');
         }
         
         return [];
       }
       
-      // Set bucket to public after creation to ensure it's accessible
-      const { error: updateError } = await supabase.storage.updateBucket(bucket, {
-        public: true
-      });
-      
-      if (updateError) {
-        console.error(`Error setting bucket "${bucket}" to public:`, updateError);
-      } else {
-        console.log(`Created "${bucket}" bucket successfully and set to public`);
-      }
+      // Set bucket to public
+      await supabase.storage.updateBucket(bucket, { public: true });
     }
 
-    // Check bucket policies - using a try/catch since this function might not exist
-    try {
-      // Remove the typed RPC call that's causing the error
-      console.log(`Checking storage policies for ${bucket} bucket`);
-      
-      // Instead of using RPC, we'll just log that we're checking policies
-      // This avoids the TypeScript error with unknown RPC functions
-    } catch (e) {
-      console.log('Unable to check bucket policies:', e);
-    }
-
+    // Log upload attempt
     console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${userId}`);
     
     for (const file of files) {
@@ -87,13 +87,13 @@ export const uploadImagesToStorage = async (
       if (error) {
         console.error('Error uploading file to Supabase:', error);
         
-        // More specific error messages based on error type
-        if (error.message.includes('row-level security')) {
-          toast.error(`Storage access denied. Please check your permissions.`);
+        if (error.message.includes('row-level security') || 
+            error.message.includes('permission denied')) {
+          toast.error('Access denied. Make sure you are logged in with the right account.');
         } else if (error.message.includes('size exceeds')) {
           toast.error(`File "${file.name}" exceeds the maximum size limit.`);
         } else {
-          toast.error(`Failed to upload ${file.name}: ${error.message}`);
+          toast.error(`Failed to upload ${file.name}`);
         }
         continue;
       }
