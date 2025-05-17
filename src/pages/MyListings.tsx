@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +7,7 @@ import { Room } from '@/types/room';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import RoomList from '@/components/dashboard/RoomList';
+import { parseFacilities } from '@/utils/roomUtils';
 
 const MyListings: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -59,12 +59,7 @@ const MyListings: React.FC = () => {
         images: Array.isArray(room.images) ? room.images : [],
         price: Number(room.price),
         location: room.location,
-        facilities: {
-          wifi: room.facilities?.wifi || false,
-          bathroom: room.facilities?.bathroom || false,
-          gender: room.facilities?.gender || 'any',
-          roomType: room.facilities?.roomType || 'single'
-        },
+        facilities: parseFacilities(room.facilities),
         ownerId: room.owner_id,
         ownerPhone: room.owner_phone,
         available: room.available,
