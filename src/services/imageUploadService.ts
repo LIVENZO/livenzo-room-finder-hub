@@ -19,22 +19,33 @@ export const uploadImagesToStorage = async (
   const uploadedUrls: string[] = [];
   
   try {
-    // Verify authenticated session
+    // Get the current session
     const { data: sessionData } = await supabase.auth.getSession();
     const session = sessionData.session;
     
+    // Check if user is authenticated (except for guest users which should be handled separately)
     if (!session && userId !== 'guest') {
       console.error('No active session found. User must be authenticated.');
       toast.error('Authentication required. Please log in and try again.');
       return [];
     }
     
+    // Log the current authentication state
+    console.log(`Upload attempt with ${session ? 'authenticated' : 'unauthenticated'} session`);
+    console.log(`User ID for upload: ${userId}`);
+    
     // Check if bucket exists
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
       console.error('Error listing buckets:', bucketsError);
-      toast.error('Unable to access storage. Please try again later.');
+      
+      if (bucketsError.message.includes('not authorized') || bucketsError.message.includes('permission denied')) {
+        toast.error('Storage access denied. Please check if you are logged in.');
+      } else {
+        toast.error('Unable to access storage. Please try again later.');
+      }
+      
       return [];
     }
     
@@ -53,8 +64,9 @@ export const uploadImagesToStorage = async (
         console.error(`Error creating "${bucket}" bucket:`, createError);
         
         if (createError.message.includes('row-level security') || 
-            createError.message.includes('permission denied')) {
-          toast.error('Storage access denied. Please check if you are logged in.');
+            createError.message.includes('permission denied') ||
+            createError.message.includes('not authorized')) {
+          toast.error('Storage access denied. Please make sure you are logged in with the right permissions.');
         } else {
           toast.error('Unable to configure storage. Please try again later.');
         }
@@ -72,7 +84,7 @@ export const uploadImagesToStorage = async (
     for (const file of files) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${userId ? userId : 'guest'}/${fileName}`;
+      const filePath = `${userId || 'guest'}/${fileName}`;
       
       console.log(`Uploading file: ${file.name} as ${filePath}`);
       
@@ -88,7 +100,8 @@ export const uploadImagesToStorage = async (
         console.error('Error uploading file to Supabase:', error);
         
         if (error.message.includes('row-level security') || 
-            error.message.includes('permission denied')) {
+            error.message.includes('permission denied') ||
+            error.message.includes('not authorized')) {
           toast.error('Access denied. Make sure you are logged in with the right account.');
         } else if (error.message.includes('size exceeds')) {
           toast.error(`File "${file.name}" exceeds the maximum size limit.`);

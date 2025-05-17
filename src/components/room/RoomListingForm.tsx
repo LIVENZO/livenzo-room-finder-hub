@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRooms } from '@/context/RoomContext';
 import { Room } from '@/types/room';
@@ -26,6 +26,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const { addRoom } = useRooms();
   const { session } = useAuth();
   
+  // Form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -35,19 +36,37 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
   const [bathroom, setBathroom] = useState(false);
   const [gender, setGender] = useState<'any' | 'male' | 'female'>('any');
   const [roomType, setRoomType] = useState<'single' | 'sharing'>('single');
+  
+  // Upload states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   
   // State for uploaded images
   const [images, setImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Verify authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!session && userId !== 'guest') {
+        console.warn('No active session detected in RoomListingForm');
+      } else {
+        console.log('Session detected in RoomListingForm:', session?.user?.id);
+      }
+      setAuthChecked(true);
+    };
+    
+    checkAuth();
+  }, [session, userId]);
+  
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setUploadError(null);
     setUploadProgress(null);
     
+    // Form validation
     if (!title || !description || !price || !location || !phone) {
       toast.error('Please fill in all required fields.');
       return;
@@ -61,6 +80,8 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
     // Check if user is authenticated for uploads
     if (!session && userId !== 'guest') {
       toast.error('You must be logged in to list a room with images.');
+      console.error('Authentication required for image upload. No active session.');
+      setUploadError('Authentication required. Please log in and try again.');
       return;
     }
     
@@ -69,6 +90,7 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
     try {
       console.log("Starting room listing submission process");
       console.log("User ID:", userId);
+      console.log("Session user ID:", session?.user?.id);
       console.log("Number of images to upload:", uploadedFiles.length);
       
       // Upload images to Supabase Storage
@@ -76,7 +98,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
       
       if (uploadedFiles.length > 0) {
         setUploadProgress('Uploading images...');
-        imageUrls = await uploadImagesToStorage(uploadedFiles, userId, 'rooms');
+        
+        // Use the authenticated user ID if available, or the provided userId if not
+        const effectiveUserId = session?.user?.id || userId;
+        console.log("Using effective user ID for upload:", effectiveUserId);
+        
+        imageUrls = await uploadImagesToStorage(uploadedFiles, effectiveUserId, 'rooms');
         console.log("Image upload results:", imageUrls);
         
         if (imageUrls.length === 0) {
@@ -148,6 +175,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({ userId, userRole }) =
           uploadedFiles={uploadedFiles} 
           setUploadedFiles={setUploadedFiles} 
         />
+        
+        {!session && userId !== 'guest' && (
+          <div className="text-sm text-amber-500 p-2 bg-amber-50 rounded border border-amber-200">
+            Warning: You need to be logged in to upload images. Please log in before proceeding.
+          </div>
+        )}
         
         {uploadError && (
           <div className="text-sm text-red-500 p-2 bg-red-50 rounded border border-red-200">

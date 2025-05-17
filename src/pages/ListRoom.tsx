@@ -33,6 +33,8 @@ const ListRoom: React.FC = () => {
     // Check if Supabase storage is accessible
     const checkStorageAccess = async () => {
       try {
+        console.log("Checking storage access with session:", session ? "exists" : "none");
+        
         // Check if storage is available by listing buckets
         const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
         
@@ -48,38 +50,61 @@ const ListRoom: React.FC = () => {
           }
         }
         
+        console.log("Successfully accessed storage buckets:", buckets?.length);
+        
         // Check if the rooms bucket exists
         const roomsBucket = buckets?.find(b => b.name === 'rooms');
         
         if (!roomsBucket) {
           console.log("The 'rooms' bucket is not found. It will be created when uploading.");
+          
+          // Attempt to create the bucket now
+          const { error: createError } = await supabase.storage.createBucket('rooms', { 
+            public: true,
+            fileSizeLimit: 10485760 // 10MB
+          });
+          
+          if (createError) {
+            console.error("Error creating rooms bucket:", createError);
+            if (createError.message.includes('permission') || createError.message.includes('policy')) {
+              setError("Unable to create storage bucket. Please ensure you're logged in.");
+              return;
+            }
+          } else {
+            console.log("Successfully created 'rooms' bucket");
+          }
         } else {
           console.log("'rooms' bucket exists and is accessible");
         }
         
         // Verify we can access the bucket with a test operation
-        const testPath = `${user?.id || 'test'}/test-permissions.txt`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('rooms')
-          .upload(testPath, new Blob(['test']), {
-            upsert: true
-          });
+        if (session?.user?.id) {
+          const testPath = `${session.user.id}/test-permissions.txt`;
           
-        if (uploadError) {
-          console.error("Error testing storage permissions:", uploadError);
-          
-          if (uploadError.message.includes('row-level security') || 
-              uploadError.message.includes('permission denied')) {
-            setError("Storage permission denied. Please log out and log back in to refresh your session.");
-          } else {
-            setError("Unable to access storage. Please try again later.");
+          const { error: uploadError } = await supabase.storage
+            .from('rooms')
+            .upload(testPath, new Blob(['test']), {
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error("Error testing storage permissions:", uploadError);
+            
+            if (uploadError.message.includes('row-level security') || 
+                uploadError.message.includes('permission denied')) {
+              setError("Storage permission denied. Please log out and log back in to refresh your session.");
+            } else {
+              setError("Unable to access storage. Please try again later.");
+            }
+            return;
           }
-          return;
+          
+          // Clean up the test file
+          await supabase.storage.from('rooms').remove([testPath]);
+          console.log("Storage permission test successful");
+        } else {
+          console.warn("No user ID available for storage permission test");
         }
-        
-        // Clean up the test file
-        await supabase.storage.from('rooms').remove([testPath]);
         
         setStorageReady(true);
       } catch (err) {
@@ -90,6 +115,9 @@ const ListRoom: React.FC = () => {
     
     if (session) {
       checkStorageAccess();
+    } else {
+      console.warn("No active session for storage permission check");
+      setError("Please ensure you are logged in to upload images.");
     }
   }, [user, userRole, navigate, session]);
   
@@ -106,6 +134,15 @@ const ListRoom: React.FC = () => {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Only property owners can list rooms. Please sign out and sign in again as a property owner.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {!session && (
+          <Alert variant="warning" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You need to be logged in to upload images. Please log in before proceeding.
             </AlertDescription>
           </Alert>
         )}
