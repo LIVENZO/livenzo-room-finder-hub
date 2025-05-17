@@ -59,11 +59,18 @@ const MyListings: React.FC = () => {
         images: Array.isArray(room.images) ? room.images : [],
         price: Number(room.price),
         location: room.location,
-        facilities: room.facilities,
+        facilities: {
+          wifi: room.facilities?.wifi || false,
+          bathroom: room.facilities?.bathroom || false,
+          gender: room.facilities?.gender || 'any',
+          roomType: room.facilities?.roomType || 'single'
+        },
         ownerId: room.owner_id,
         ownerPhone: room.owner_phone,
         available: room.available,
         createdAt: room.created_at,
+        house_no: room.house_no,
+        house_name: room.house_name
       }));
       
       setRooms(mappedRooms);
