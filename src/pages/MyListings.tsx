@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth'; // Updated import
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus } from 'lucide-react';
 import { Room } from '@/types/room';

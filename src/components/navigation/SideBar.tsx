@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth'; // Updated import
 import { useNavItems } from '@/hooks/use-nav-items';
 
 const SideBar: React.FC = () => {

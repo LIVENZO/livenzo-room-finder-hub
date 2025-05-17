@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Home, Search, User, Heart, BookMarked, MessageSquare, Users, Plus, List } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth"; // Updated import
 
 export type NavItem = {
   title: string;

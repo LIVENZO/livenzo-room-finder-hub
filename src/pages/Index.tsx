@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth'; // Updated import
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
