@@ -139,8 +139,8 @@ const ListRoom: React.FC = () => {
         )}
         
         {!session && (
-          <Alert variant="warning" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant="default" className="mb-6 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
+            <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             <AlertDescription>
               You need to be logged in to upload images. Please log in before proceeding.
             </AlertDescription>
