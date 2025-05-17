@@ -9,6 +9,7 @@ import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import RoomListingForm from '@/components/room/RoomListingForm';
 import { supabase } from '@/integrations/supabase/client';
+import { testStorageAccess } from '@/services/imageUploadService';
 
 const ListRoom: React.FC = () => {
   const { user, userRole, session } = useAuth();
@@ -35,78 +36,21 @@ const ListRoom: React.FC = () => {
       try {
         console.log("Checking storage access with session:", session ? "exists" : "none");
         
-        // Check if storage is available by listing buckets
-        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-        
-        if (bucketError) {
-          console.error("Error accessing storage:", bucketError);
-          
-          if (bucketError.message.includes('permission') || bucketError.message.includes('policy')) {
-            setError("Storage permission issue. Please ensure you're logged in with the correct permissions.");
-            return;
-          } else {
-            setError("Storage service unavailable. Please try again later.");
-            return;
-          }
+        if (!session) {
+          setError("No active session. Please log in to upload images.");
+          return;
         }
         
-        console.log("Successfully accessed storage buckets:", buckets?.length);
+        // Test storage access
+        const hasAccess = await testStorageAccess('rooms');
         
-        // Check if the rooms bucket exists
-        const roomsBucket = buckets?.find(b => b.name === 'rooms');
-        
-        if (!roomsBucket) {
-          console.log("The 'rooms' bucket is not found. It will be created when uploading.");
-          
-          // Attempt to create the bucket now
-          const { error: createError } = await supabase.storage.createBucket('rooms', { 
-            public: true,
-            fileSizeLimit: 10485760 // 10MB
-          });
-          
-          if (createError) {
-            console.error("Error creating rooms bucket:", createError);
-            if (createError.message.includes('permission') || createError.message.includes('policy')) {
-              setError("Unable to create storage bucket. Please ensure you're logged in.");
-              return;
-            }
-          } else {
-            console.log("Successfully created 'rooms' bucket");
-          }
-        } else {
-          console.log("'rooms' bucket exists and is accessible");
-        }
-        
-        // Verify we can access the bucket with a test operation
-        if (session?.user?.id) {
-          const testPath = `${session.user.id}/test-permissions.txt`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('rooms')
-            .upload(testPath, new Blob(['test']), {
-              upsert: true
-            });
-            
-          if (uploadError) {
-            console.error("Error testing storage permissions:", uploadError);
-            
-            if (uploadError.message.includes('row-level security') || 
-                uploadError.message.includes('permission denied')) {
-              setError("Storage permission denied. Please log out and log back in to refresh your session.");
-            } else {
-              setError("Unable to access storage. Please try again later.");
-            }
-            return;
-          }
-          
-          // Clean up the test file
-          await supabase.storage.from('rooms').remove([testPath]);
-          console.log("Storage permission test successful");
-        } else {
-          console.warn("No user ID available for storage permission test");
+        if (!hasAccess) {
+          setError("Storage access denied. Please check if you are logged in.");
+          return;
         }
         
         setStorageReady(true);
+        setError(null);
       } catch (err) {
         console.error("Error checking Supabase storage:", err);
         setError("Error connecting to storage service. Please try again later.");

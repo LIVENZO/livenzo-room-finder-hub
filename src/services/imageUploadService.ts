@@ -20,7 +20,14 @@ export const uploadImagesToStorage = async (
   
   try {
     // Get the current session
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      toast.error('Authentication error. Please log in again.');
+      return [];
+    }
+    
     const session = sessionData.session;
     
     // Check if user is authenticated (except for guest users which should be handled separately)
@@ -30,11 +37,14 @@ export const uploadImagesToStorage = async (
       return [];
     }
     
+    // Ensure we use the authenticated user ID when available
+    const effectiveUserId = session?.user?.id || userId;
+    
     // Log the current authentication state
     console.log(`Upload attempt with ${session ? 'authenticated' : 'unauthenticated'} session`);
-    console.log(`User ID for upload: ${userId}`);
+    console.log(`User ID for upload: ${effectiveUserId}`);
     
-    // Check if bucket exists
+    // Check if bucket exists and create it if it doesn't
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
@@ -75,20 +85,25 @@ export const uploadImagesToStorage = async (
       }
       
       // Set bucket to public
-      await supabase.storage.updateBucket(bucket, { public: true });
+      const { error: updateError } = await supabase.storage.updateBucket(bucket, { public: true });
+      if (updateError) {
+        console.error(`Error updating "${bucket}" bucket to public:`, updateError);
+      } else {
+        console.log(`Successfully set "${bucket}" bucket to public`);
+      }
     }
 
     // Log upload attempt
-    console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${userId}`);
+    console.log(`Uploading ${files.length} files to ${bucket} bucket for user ${effectiveUserId}`);
     
     for (const file of files) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${userId || 'guest'}/${fileName}`;
+      const filePath = `${effectiveUserId}/${fileName}`;
       
       console.log(`Uploading file: ${file.name} as ${filePath}`);
       
-      // Upload the file to Supabase Storage
+      // Upload the file to Supabase Storage with the authenticated session
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
@@ -102,11 +117,11 @@ export const uploadImagesToStorage = async (
         if (error.message.includes('row-level security') || 
             error.message.includes('permission denied') ||
             error.message.includes('not authorized')) {
-          toast.error('Access denied. Make sure you are logged in with the right account.');
+          toast.error('Storage access denied. Please make sure you are logged in.');
         } else if (error.message.includes('size exceeds')) {
           toast.error(`File "${file.name}" exceeds the maximum size limit.`);
         } else {
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`Failed to upload ${file.name}: ${error.message}`);
         }
         continue;
       }
@@ -149,4 +164,70 @@ export const revokeImagePreviews = (urls: string[]): void => {
       URL.revokeObjectURL(url);
     }
   });
+};
+
+/**
+ * Tests if the storage service is accessible with current session
+ * @param bucketName - The bucket name to test access for
+ * @returns A boolean indicating whether storage is accessible
+ */
+export const testStorageAccess = async (bucketName: string = 'rooms'): Promise<boolean> => {
+  try {
+    // Get the current session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      console.error('No active session for storage access test');
+      return false;
+    }
+    
+    const session = sessionData.session;
+    const userId = session.user.id;
+    
+    // Try to upload a tiny test file to confirm access
+    const testPath = `${userId}/access-test-${Date.now()}.txt`;
+    const testContent = new Blob(['test'], { type: 'text/plain' });
+    
+    // Check bucket existence first
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+      return false;
+    }
+    
+    const bucketExists = buckets?.some(b => b.name === bucketName);
+    
+    if (!bucketExists) {
+      // Create the bucket if it doesn't exist
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 10485760 // 10MB limit
+      });
+      
+      if (createError) {
+        console.error(`Error creating "${bucketName}" bucket:`, createError);
+        return false;
+      }
+    }
+    
+    // Test upload
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(testPath, testContent, { upsert: true });
+      
+    if (uploadError) {
+      console.error('Storage access test failed:', uploadError);
+      return false;
+    }
+    
+    // Cleanup test file
+    await supabase.storage.from(bucketName).remove([testPath]);
+    
+    console.log('Storage access test successful');
+    return true;
+  } catch (error) {
+    console.error('Storage access test error:', error);
+    return false;
+  }
 };
