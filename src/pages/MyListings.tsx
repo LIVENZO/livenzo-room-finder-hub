@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -52,22 +53,34 @@ const MyListings: React.FC = () => {
       }
       
       // Map database response to Room type
-      const mappedRooms: Room[] = data.map(room => ({
-        id: room.id,
-        title: room.title,
-        description: room.description,
-        images: Array.isArray(room.images) ? room.images : [],
-        price: Number(room.price),
-        location: room.location,
-        facilities: parseFacilities(room.facilities),
-        ownerId: room.owner_id,
-        ownerPhone: room.owner_phone,
-        available: room.available,
-        createdAt: room.created_at,
-        // Only set optional fields if they exist in the database record
-        house_no: room.house_no || undefined,
-        house_name: room.house_name || undefined
-      }));
+      const mappedRooms: Room[] = data.map(room => {
+        // Create the base room object with required properties
+        const roomObj: Room = {
+          id: room.id,
+          title: room.title,
+          description: room.description,
+          images: Array.isArray(room.images) ? room.images : [],
+          price: Number(room.price),
+          location: room.location,
+          facilities: parseFacilities(room.facilities),
+          ownerId: room.owner_id,
+          ownerPhone: room.owner_phone,
+          available: room.available,
+          createdAt: room.created_at
+        };
+        
+        // Add optional properties only if they exist in the database record
+        // TypeScript safe way to handle potentially missing properties
+        if ('house_no' in room && room.house_no) {
+          roomObj.house_no = room.house_no;
+        }
+        
+        if ('house_name' in room && room.house_name) {
+          roomObj.house_name = room.house_name;
+        }
+        
+        return roomObj;
+      });
       
       setRooms(mappedRooms);
     } catch (error) {
