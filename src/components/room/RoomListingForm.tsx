@@ -1,21 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useRooms } from '@/context/RoomContext';
-import { Room } from '@/types/room';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { uploadImagesToStorage, testStorageAccess } from '@/services/imageUploadService';
+import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { CardContent } from '@/components/ui/card';
 import RoomBasicInfo from './RoomFormSections/RoomBasicInfo';
 import RoomDescription from './RoomFormSections/RoomDescription';
 import RoomPriceLocation from './RoomFormSections/RoomPriceLocation';
 import RoomFacilities from './RoomFormSections/RoomFacilities';
 import RoomContact from './RoomFormSections/RoomContact';
 import ImageUploader from './ImageUploader';
-import { useAuth } from '@/context/AuthContext';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import FormAlerts from './RoomFormSections/FormAlerts';
+import FormActions from './RoomFormSections/FormActions';
+import FormSubmissionHandler from './RoomFormSections/FormSubmissionHandler';
 
 interface RoomListingFormProps {
   userId: string;
@@ -30,8 +25,6 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({
   storageReady = false,
   isCheckingStorage = false
 }) => {
-  const navigate = useNavigate();
-  const { addRoom } = useRooms();
   const { session } = useAuth();
   
   // Form fields
@@ -54,139 +47,36 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   
-  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setUploadError(null);
-    setUploadProgress(null);
-    
-    // Form validation
-    if (!title || !description || !price || !location || !phone) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
-
-    if (images.length === 0) {
-      toast.error('Please upload at least one photo of the room.');
-      return;
-    }
-    
-    // Check if user is authenticated for uploads
-    if (!session && userId !== 'guest') {
-      toast.error('You must be logged in to list a room with images.');
-      console.error('Authentication required for image upload. No active session.');
-      setUploadError('Authentication required. Please log in and try again.');
-      return;
-    }
-    
-    // Check storage access again right before upload
-    if (!storageReady && session) {
-      const hasAccess = await testStorageAccess('rooms');
-      if (!hasAccess) {
-        toast.error('Storage access is not available. Please log out and log in again.');
-        setUploadError('Storage access denied. Please try logging out and back in.');
-        return;
-      }
-    }
-    
-    setIsUploading(true);
-    
-    try {
-      console.log("Starting room listing submission process");
-      console.log("User ID:", userId);
-      console.log("Session user ID:", session?.user?.id);
-      console.log("Number of images to upload:", uploadedFiles.length);
-      
-      // Upload images to Supabase Storage
-      let imageUrls: string[] = [];
-      
-      if (uploadedFiles.length > 0) {
-        setUploadProgress('Uploading images...');
-        
-        // Use the authenticated user ID if available, or the provided userId if not
-        const effectiveUserId = session?.user?.id || userId;
-        console.log("Using effective user ID for upload:", effectiveUserId);
-        
-        imageUrls = await uploadImagesToStorage(uploadedFiles, effectiveUserId, 'rooms');
-        console.log("Image upload results:", imageUrls);
-        
-        if (imageUrls.length === 0 && uploadedFiles.length > 0) {
-          setUploadError('Failed to upload images. Please check your permissions or try again later.');
-          toast.error('Image upload failed. Please ensure you are logged in.');
-          setIsUploading(false);
-          setUploadProgress(null);
-          return;
-        }
-        
-        if (imageUrls.length < uploadedFiles.length) {
-          toast.warning(`Only ${imageUrls.length} of ${uploadedFiles.length} images were uploaded successfully. Continuing with available images.`);
-        }
-      } else {
-        // Use local URLs for guests or if no files were uploaded
-        imageUrls = images;
-      }
-      
-      setUploadProgress('Creating room listing...');
-      
-      const newRoom: Omit<Room, 'id' | 'createdAt'> = {
-        title,
-        description,
-        images: imageUrls,
-        price: parseInt(price),
-        location,
-        facilities: {
-          wifi,
-          gender,
-          bathroom,
-          roomType,
-        },
-        ownerId: session?.user?.id || userId,
-        ownerPhone: phone,
-        available: true
-      };
-      
-      console.log("Submitting room data:", newRoom);
-      await addRoom(newRoom);
-      toast.success('Room listed successfully!');
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Error in handleSubmit:', error);
-      setUploadError(`Failed to list room: ${error.message || 'Unknown error'}`);
-      toast.error(`Room listing failed: ${error.message || 'Unknown error'}`);
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(null);
-    }
-  };
+  const isFormDisabled = userRole !== 'owner' || !session || (!storageReady && !isCheckingStorage);
   
   return (
-    <form onSubmit={handleSubmit}>
+    <FormSubmissionHandler
+      title={title}
+      description={description}
+      price={price}
+      location={location}
+      phone={phone}
+      wifi={wifi}
+      bathroom={bathroom}
+      gender={gender}
+      roomType={roomType}
+      images={images}
+      uploadedFiles={uploadedFiles}
+      userId={userId}
+      session={session}
+      storageReady={storageReady}
+      setIsUploading={setIsUploading}
+      setUploadError={setUploadError}
+      setUploadProgress={setUploadProgress}
+    >
       <CardContent className="space-y-6">
-        {!session && (
-          <Alert variant="destructive" className="mb-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You must be logged in to upload images and list rooms. Please log in before proceeding.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {session && isCheckingStorage && (
-          <Alert variant="default" className="mb-2 border-blue-400 bg-blue-50 dark:bg-blue-900/20">
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-            <AlertDescription>
-              Checking storage access...
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {session && !isCheckingStorage && !storageReady && (
-          <Alert variant="destructive" className="mb-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Storage access is not available. Please log out and log in again to refresh your session.
-            </AlertDescription>
-          </Alert>
-        )}
+        <FormAlerts 
+          session={session}
+          isCheckingStorage={isCheckingStorage}
+          storageReady={storageReady}
+          uploadError={uploadError}
+          uploadProgress={uploadProgress}
+        />
       
         <RoomBasicInfo title={title} setTitle={setTitle} />
         
@@ -207,18 +97,6 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({
           disabled={!session || (!storageReady && !isCheckingStorage)}
         />
         
-        {uploadError && (
-          <div className="text-sm text-red-500 p-2 bg-red-50 rounded border border-red-200">
-            {uploadError}
-          </div>
-        )}
-        
-        {uploadProgress && (
-          <div className="text-sm text-blue-500 p-2 bg-blue-50 rounded border border-blue-200">
-            {uploadProgress}
-          </div>
-        )}
-        
         <RoomFacilities 
           gender={gender} 
           setGender={setGender}
@@ -233,29 +111,12 @@ const RoomListingForm: React.FC<RoomListingFormProps> = ({
         <RoomContact phone={phone} setPhone={setPhone} />
       </CardContent>
       
-      <CardFooter className="flex flex-col sm:flex-row gap-2">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => navigate('/dashboard')}
-          className="w-full sm:w-auto"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          className="w-full sm:w-auto"
-          disabled={isUploading || userRole !== 'owner' || !session || (!storageReady && !isCheckingStorage)}
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {uploadProgress || 'Uploading...'}
-            </>
-          ) : "List Room"}
-        </Button>
-      </CardFooter>
-    </form>
+      <FormActions 
+        isUploading={isUploading}
+        isDisabled={isFormDisabled}
+        uploadProgress={uploadProgress}
+      />
+    </FormSubmissionHandler>
   );
 };
 
