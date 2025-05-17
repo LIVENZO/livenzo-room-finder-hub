@@ -70,13 +70,13 @@ const MyListings: React.FC = () => {
         };
         
         // Add optional properties only if they exist in the database record
-        // TypeScript safe way to handle potentially missing properties
-        if ('house_no' in room && room.house_no) {
-          roomObj.house_no = room.house_no;
+        // Ensure proper type handling with string type conversion
+        if ('house_no' in room && room.house_no !== null) {
+          roomObj.house_no = String(room.house_no);
         }
         
-        if ('house_name' in room && room.house_name) {
-          roomObj.house_name = room.house_name;
+        if ('house_name' in room && room.house_name !== null) {
+          roomObj.house_name = String(room.house_name);
         }
         
         return roomObj;
