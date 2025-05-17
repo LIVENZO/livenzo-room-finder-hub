@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import RoomListingForm from '@/components/room/RoomListingForm';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,15 +19,19 @@ const ListRoom: React.FC = () => {
   const [isCheckingStorage, setIsCheckingStorage] = useState<boolean>(true);
   
   useEffect(() => {
-    // Redirect if not logged in or not a property owner
-    if (!user && !localStorage.getItem('guest_mode')) {
-      toast.error('Please log in to list rooms');
+    // Redirect if not logged in
+    if (!user) {
+      toast.error('Please log in to list rooms', {
+        description: 'You need to be logged in as a property owner'
+      });
       navigate('/');
       return;
     }
     
     if (userRole !== 'owner') {
-      toast.error('Only property owners can list rooms');
+      toast.error('Only property owners can list rooms', {
+        description: 'Please switch to a property owner account'
+      });
       navigate('/dashboard');
       return;
     }
@@ -39,22 +43,23 @@ const ListRoom: React.FC = () => {
         console.log("Checking storage access with session:", session ? "exists" : "none");
         
         if (!session) {
-          setError("No active session. Please log in to upload images.");
+          setError("No active session found. Please log in again.");
           setStorageReady(false);
           return;
         }
         
-        // Re-authenticate to ensure session is fresh
-        const { data: refreshData, error: refreshError } = await supabase.auth.getSession();
+        // First try to refresh the session
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError || !refreshData.session) {
           console.error("Session refresh error:", refreshError);
-          setError("Your session may have expired. Please log out and log in again.");
+          setError("Your session has expired. Please log out and log in again.");
           setStorageReady(false);
           return;
         }
         
-        // Test storage access
+        // Test storage access with the refreshed session
+        console.log("Testing storage access with refreshed session");
         const hasAccess = await testStorageAccess('rooms');
         
         if (!hasAccess) {
@@ -63,6 +68,7 @@ const ListRoom: React.FC = () => {
           return;
         }
         
+        console.log("Storage access test successful");
         setStorageReady(true);
         setError(null);
       } catch (err) {
@@ -78,14 +84,14 @@ const ListRoom: React.FC = () => {
       checkStorageAccess();
     } else {
       console.warn("No active session for storage permission check");
-      setError("Please ensure you are logged in to upload images.");
+      setError("Please log in again to ensure you have proper permissions.");
       setIsCheckingStorage(false);
       setStorageReady(false);
     }
   }, [user, userRole, navigate, session]);
   
-  // If not logged in or loading, return null
-  if (!user && !localStorage.getItem('guest_mode')) return null;
+  // If not logged in, return null
+  if (!user) return null;
   
   return (
     <Layout>
@@ -102,8 +108,8 @@ const ListRoom: React.FC = () => {
         )}
         
         {!session && (
-          <Alert variant="default" className="mb-6 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
-            <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               You need to be logged in to upload images. Please log in before proceeding.
             </AlertDescription>
@@ -119,9 +125,9 @@ const ListRoom: React.FC = () => {
         
         {!error && session && storageReady && (
           <Alert variant="default" className="mb-6 border-green-400 bg-green-50 dark:bg-green-900/20">
-            <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
             <AlertDescription>
-              Storage access is ready. You can upload images for your room listing.
+              All systems ready! You can now list your room with images.
             </AlertDescription>
           </Alert>
         )}
@@ -130,7 +136,7 @@ const ListRoom: React.FC = () => {
           <CardHeader>
             <CardTitle>Room Details</CardTitle>
             <CardDescription>
-              Provide detailed information about the room you want to list.
+              Provide details about your room to attract potential renters. Add photos to increase visibility.
             </CardDescription>
           </CardHeader>
           
