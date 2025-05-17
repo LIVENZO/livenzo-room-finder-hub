@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UsersIcon } from 'lucide-react';
+import { UsersIcon, SearchIcon } from 'lucide-react';
 
 const RenterDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,10 @@ const RenterDashboard: React.FC = () => {
         Browse available rooms to find your perfect match.
       </p>
       <div className="flex flex-col sm:flex-row justify-center gap-4">
-        <Button onClick={() => navigate('/find-room')}>Find a Room</Button>
+        <Button onClick={() => navigate('/find-room')} className="flex items-center gap-2">
+          <SearchIcon className="h-4 w-4" />
+          Find a Room
+        </Button>
         <Button 
           onClick={() => navigate('/connections')}
           variant="outline"

@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
+import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   useEffect(() => {
     // Redirect if not logged in
@@ -26,7 +27,7 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold">Dashboard</h1>
         </div>
         
-        <RenterDashboard />
+        {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
       </div>
     </Layout>
   );

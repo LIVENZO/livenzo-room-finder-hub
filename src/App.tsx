@@ -17,6 +17,8 @@ import Favorites from "./pages/Favorites";
 import Bookings from "./pages/Bookings";
 import Chats from "./pages/Chats";
 import Connections from "./pages/Connections";
+import ListRoom from "./pages/ListRoom";
+import MyListings from "./pages/MyListings";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ const App = () => (
               <Route path="/chats/:roomId" element={<Chats />} />
               <Route path="/connections" element={<Connections />} />
               <Route path="/connections/:relationshipId" element={<Connections />} />
+              <Route path="/list-room" element={<ListRoom />} />
+              <Route path="/my-listings" element={<MyListings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

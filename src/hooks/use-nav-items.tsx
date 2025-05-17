@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Home, Search, User, Heart, BookMarked, MessageSquare, Users } from "lucide-react";
+import { Home, Search, User, Heart, BookMarked, MessageSquare, Users, Plus, List } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export type NavItem = {
@@ -31,6 +31,20 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       icon: <Search className="h-4 w-4" />,
       renterOnly: true,
       label: "Find Room",
+    },
+    {
+      title: "List Room",
+      href: "/list-room",
+      icon: <Plus className="h-4 w-4" />,
+      ownerOnly: true,
+      label: "List Room",
+    },
+    {
+      title: "My Listings",
+      href: "/my-listings",
+      icon: <List className="h-4 w-4" />,
+      ownerOnly: true,
+      label: "My Listings",
     },
     {
       title: "Connections",

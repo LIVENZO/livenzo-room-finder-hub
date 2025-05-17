@@ -16,6 +16,8 @@ export interface Room {
   ownerPhone: string;
   available?: boolean;
   createdAt?: string;
+  house_no?: string;
+  house_name?: string;
 }
 
 export interface RoomFilters {
