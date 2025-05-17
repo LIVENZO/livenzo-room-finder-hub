@@ -64,8 +64,9 @@ const MyListings: React.FC = () => {
         ownerPhone: room.owner_phone,
         available: room.available,
         createdAt: room.created_at,
-        house_no: room.house_no,
-        house_name: room.house_name
+        // Only set optional fields if they exist in the database record
+        house_no: room.house_no || undefined,
+        house_name: room.house_name || undefined
       }));
       
       setRooms(mappedRooms);
