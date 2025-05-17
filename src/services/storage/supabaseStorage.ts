@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -46,10 +45,15 @@ export const uploadImagesToStorage = async (
       return [];
     }
     
-    // Ensure the bucket exists
-    const bucketExists = await ensureBucketExists(bucket);
+    // Create the bucket if it doesn't exist
+    const { error: bucketError } = await supabase.storage.createBucket(bucket, {
+      public: true,
+      fileSizeLimit: 10485760 // 10MB limit
+    });
     
-    if (!bucketExists) {
+    // If there's an error and it's not because the bucket already exists, show an error
+    if (bucketError && !bucketError.message.includes('already exists')) {
+      console.error('Error creating bucket:', bucketError);
       toast.error('Storage setup failed', {
         description: 'Unable to configure storage. Please try again later'
       });
@@ -137,44 +141,21 @@ export const uploadImagesToStorage = async (
   }
 };
 
-/**
- * Ensures the bucket exists, creates it if it doesn't
- * @param bucketName - The name of the bucket to check/create
- * @returns Boolean indicating success
- */
+// This function is no longer needed since we're creating buckets directly in the upload function
+// but we'll keep it here in case it's used elsewhere in the code
 async function ensureBucketExists(bucketName: string): Promise<boolean> {
   try {
-    // Check if bucket exists
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('Error listing buckets:', listError);
-      return false;
-    }
-    
-    const bucketExists = buckets?.some(b => b.name === bucketName);
-    
-    if (bucketExists) {
-      return true;
-    }
-    
-    // Bucket doesn't exist, try to create it
-    console.log(`Bucket "${bucketName}" not found, creating it`);
-    
-    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+    // Create the bucket directly (Supabase will handle if it already exists)
+    const { error } = await supabase.storage.createBucket(bucketName, {
       public: true,
       fileSizeLimit: 10485760 // 10MB limit
     });
     
-    if (createError) {
-      console.error(`Error creating bucket "${bucketName}":`, createError);
+    // If there's an error and it's not because the bucket already exists, return false
+    if (error && !error.message.includes('already exists')) {
+      console.error(`Error creating bucket "${bucketName}":`, error);
       return false;
     }
-    
-    console.log(`Bucket "${bucketName}" created successfully`);
-    
-    // Allow time for the bucket to be created
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
     return true;
   } catch (error) {
