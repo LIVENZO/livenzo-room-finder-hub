@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Layout from '@/components/Layout';
-import { uploadImagesToStorage } from '@/services/imageUploadService';
+import { uploadImagesToStorage } from '@/services/storage';
 import { 
   Form, 
   FormControl, 

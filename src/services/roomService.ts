@@ -21,7 +21,9 @@ export const createRoom = async (roomData: Partial<Room>, imageUrls: string[]): 
         owner_id: roomData.ownerId,
         owner_phone: roomData.ownerPhone,
         images: imageUrls,
-        available: true
+        available: true,
+        house_name: roomData.house_name || null,
+        house_no: roomData.house_no || null
       })
       .select()
       .single();
@@ -53,7 +55,9 @@ export const updateRoom = async (id: string, updates: Partial<Room>): Promise<Ro
         facilities: updates.facilities,
         owner_phone: updates.ownerPhone,
         images: updates.images,
-        available: updates.available
+        available: updates.available,
+        house_name: updates.house_name || null,
+        house_no: updates.house_no || null
       })
       .eq('id', id)
       .select()

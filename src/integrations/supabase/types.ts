@@ -398,6 +398,8 @@ export type Database = {
           created_at: string
           description: string
           facilities: Json
+          house_name: string | null
+          house_no: string | null
           id: string
           images: string[] | null
           location: string
@@ -411,6 +413,8 @@ export type Database = {
           created_at?: string
           description: string
           facilities?: Json
+          house_name?: string | null
+          house_no?: string | null
           id?: string
           images?: string[] | null
           location: string
@@ -424,6 +428,8 @@ export type Database = {
           created_at?: string
           description?: string
           facilities?: Json
+          house_name?: string | null
+          house_no?: string | null
           id?: string
           images?: string[] | null
           location?: string
