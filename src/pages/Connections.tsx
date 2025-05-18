@@ -26,6 +26,7 @@ const Connections = () => {
   const [selectedRelationship, setSelectedRelationship] = useState<Relationship | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [loading, setLoading] = useState<boolean>(false);
   
   const fetchRelationships = async () => {
     if (!currentUser?.id) {
@@ -34,9 +35,21 @@ const Connections = () => {
       return;
     }
     
+    setLoading(true);
+    
     try {
-      const owner = await fetchOwnerRelationships(currentUser.id);
-      const renter = await fetchRenterRelationships(currentUser.id);
+      console.log("Fetching relationships for user:", currentUser.id, "isOwner:", isOwner);
+      
+      let owner: Relationship[] = [];
+      let renter: Relationship[] = [];
+      
+      if (isOwner) {
+        owner = await fetchOwnerRelationships(currentUser.id);
+        console.log("Owner relationships:", owner);
+      } else {
+        renter = await fetchRenterRelationships(currentUser.id);
+        console.log("Renter relationships:", renter);
+      }
       
       setOwnerRelationships(owner);
       setRenterRelationships(renter);
@@ -52,6 +65,9 @@ const Connections = () => {
       }
     } catch (error) {
       console.error("Error fetching relationships:", error);
+      toast.error("Failed to load connections");
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -65,8 +81,16 @@ const Connections = () => {
   };
   
   useEffect(() => {
-    fetchRelationships();
-  }, [currentUser, relationshipId]);
+    if (currentUser?.id) {
+      fetchRelationships();
+    }
+  }, [currentUser, isOwner]);
+  
+  useEffect(() => {
+    if (relationshipId && currentUser?.id) {
+      fetchRelationships();
+    }
+  }, [relationshipId]);
   
   const handleRelationshipSelect = (relationship: Relationship) => {
     setSelectedRelationship(relationship);
@@ -114,6 +138,7 @@ const Connections = () => {
                 renterRelationships={renterRelationships}
                 onStatusChange={fetchRelationships}
                 isOwner={isOwner}
+                isLoading={loading}
               />
             </>
           ) : (

@@ -56,6 +56,8 @@ export const fetchOwnerRelationships = async (userId: string): Promise<Relations
       return [];
     }
     
+    console.log("Owner relationships fetched:", relationshipsData?.length || 0);
+    
     // Then fetch the profiles separately and join them manually
     const relationships = relationshipsData as Relationship[];
     const enrichedRelationships = await Promise.all(
@@ -98,6 +100,8 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
       return [];
     }
     
+    console.log("Renter relationships fetched:", relationshipsData?.length || 0);
+    
     // Then fetch the profiles separately and join them manually
     const relationships = relationshipsData as Relationship[];
     const enrichedRelationships = await Promise.all(
@@ -136,17 +140,21 @@ export const createRelationshipRequest = async (
     const { data: existingRelationship, error: checkError } = await supabase
       .from("relationships")
       .select("*")
-      .or(`owner_id.eq.${ownerId},renter_id.eq.${renterId}`)
-      .or(`owner_id.eq.${renterId},renter_id.eq.${ownerId}`);
+      .or(`and(owner_id.eq.${ownerId},renter_id.eq.${renterId})`)
+      .single();
       
-    if (checkError) {
+    if (checkError && !checkError.message.includes('No rows found')) {
       console.error("Error checking existing relationship:", checkError);
+      toast.error("Failed to check existing relationships");
+      return null;
     }
     
-    if (existingRelationship && existingRelationship.length > 0) {
+    if (existingRelationship) {
       toast.error("You already have a relationship with this owner");
       return null;
     }
+    
+    console.log("Creating relationship request from renter:", renterId, "to owner:", ownerId);
     
     // Generate a unique room ID for chat
     const chatRoomId = uuidv4();
@@ -168,6 +176,7 @@ export const createRelationshipRequest = async (
       return null;
     }
 
+    console.log("Relationship request created successfully:", data);
     toast.success("Connection request sent successfully");
     return data as Relationship;
   } catch (error) {
