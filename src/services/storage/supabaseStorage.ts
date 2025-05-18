@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -41,21 +42,6 @@ export const uploadImagesToStorage = async (
       console.error('Session user ID does not match provided user ID');
       toast.error('Authentication mismatch', {
         description: 'Please refresh the page and try again'
-      });
-      return [];
-    }
-    
-    // Create the bucket if it doesn't exist
-    const { error: bucketError } = await supabase.storage.createBucket(bucket, {
-      public: true,
-      fileSizeLimit: 10485760 // 10MB limit
-    });
-    
-    // If there's an error and it's not because the bucket already exists, show an error
-    if (bucketError && !bucketError.message.includes('already exists')) {
-      console.error('Error creating bucket:', bucketError);
-      toast.error('Storage setup failed', {
-        description: 'Unable to configure storage. Please try again later'
       });
       return [];
     }
@@ -140,26 +126,3 @@ export const uploadImagesToStorage = async (
     return [];
   }
 };
-
-// This function is no longer needed since we're creating buckets directly in the upload function
-// but we'll keep it here in case it's used elsewhere in the code
-async function ensureBucketExists(bucketName: string): Promise<boolean> {
-  try {
-    // Create the bucket directly (Supabase will handle if it already exists)
-    const { error } = await supabase.storage.createBucket(bucketName, {
-      public: true,
-      fileSizeLimit: 10485760 // 10MB limit
-    });
-    
-    // If there's an error and it's not because the bucket already exists, return false
-    if (error && !error.message.includes('already exists')) {
-      console.error(`Error creating bucket "${bucketName}":`, error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error in ensureBucketExists:', error);
-    return false;
-  }
-}

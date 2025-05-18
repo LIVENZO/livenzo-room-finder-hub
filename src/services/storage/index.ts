@@ -1,5 +1,5 @@
 
-// Export all storage-related functions from this index file
+// Re-export the storage functions
 export { uploadImagesToStorage } from './supabaseStorage';
 export { createImagePreviews, revokeImagePreviews } from './imagePreview';
 export { testStorageAccess } from './storageTest';
