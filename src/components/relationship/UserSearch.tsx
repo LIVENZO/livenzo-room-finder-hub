@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { findUserById, createRelationshipRequest } from '@/services/RelationshipService';
+import { findUserById, createRelationshipRequest } from '@/services/relationship';
 import { User, Search, X, CheckCircle, InfoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

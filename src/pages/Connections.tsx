@@ -10,7 +10,7 @@ import {
   fetchOwnerRelationships, 
   fetchRenterRelationships, 
   type Relationship 
-} from '@/services/RelationshipService';
+} from '@/services/relationship';
 import { fetchDocumentsForRelationship, type Document } from '@/services/DocumentService';
 import { AuthContext } from '@/context/AuthContext';
 import { toast } from 'sonner';
