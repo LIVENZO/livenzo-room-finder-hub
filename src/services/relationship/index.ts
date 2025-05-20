@@ -4,10 +4,16 @@ export type { Relationship, UserProfile } from "@/types/relationship";
 
 // Re-export all functions
 export { 
-  fetchRelationship,
-  fetchOwnerRelationships,
+  fetchRelationship 
+} from "./fetchSingleRelationship";
+
+export {
+  fetchOwnerRelationships 
+} from "./fetchOwnerRelationships";
+
+export {
   fetchRenterRelationships 
-} from "./fetchRelationships";
+} from "./fetchRenterRelationships";
 
 export {
   createRelationshipRequest,
