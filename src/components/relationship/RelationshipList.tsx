@@ -15,6 +15,7 @@ interface RelationshipListProps {
   onStatusChange?: () => void;
   isOwner: boolean;
   isLoading?: boolean;
+  onRelationshipSelect?: (relationship: Relationship) => void;
 }
 
 const RelationshipList: React.FC<RelationshipListProps> = ({ 
@@ -22,7 +23,8 @@ const RelationshipList: React.FC<RelationshipListProps> = ({
   renterRelationships, 
   onStatusChange,
   isOwner,
-  isLoading = false
+  isLoading = false,
+  onRelationshipSelect
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>(isOwner ? 'received' : 'sent');
@@ -50,6 +52,12 @@ const RelationshipList: React.FC<RelationshipListProps> = ({
   
   const openChat = (roomId: string) => {
     navigate(`/chats/${roomId}`);
+  };
+  
+  const handleSelectRelationship = (relationship: Relationship) => {
+    if (onRelationshipSelect) {
+      onRelationshipSelect(relationship);
+    }
   };
 
   const pendingOwnerRelationships = ownerRelationships.filter(r => r.status === 'pending');
@@ -91,12 +99,14 @@ const RelationshipList: React.FC<RelationshipListProps> = ({
               onAccept={handleAccept}
               onDecline={handleDecline}
               onChatOpen={openChat}
+              onSelect={handleSelectRelationship}
               isLoading={isLoading}
             />
           ) : (
             <RenterConnectionTabs
               renterRelationships={renterRelationships}
               onChatOpen={openChat}
+              onSelect={handleSelectRelationship}
               isLoading={isLoading}
             />
           )}

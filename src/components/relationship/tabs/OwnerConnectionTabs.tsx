@@ -12,6 +12,7 @@ interface OwnerConnectionTabsProps {
   onAccept: (relationshipId: string) => Promise<void>;
   onDecline: (relationshipId: string) => Promise<void>;
   onChatOpen: (roomId: string) => void;
+  onSelect?: (relationship: Relationship) => void;
   isLoading: boolean;
 }
 
@@ -21,10 +22,17 @@ const OwnerConnectionTabs: React.FC<OwnerConnectionTabsProps> = ({
   onAccept,
   onDecline,
   onChatOpen,
+  onSelect,
   isLoading,
 }) => {
   const pendingOwnerRelationships = ownerRelationships.filter(r => r.status === 'pending');
   const activeOwnerRelationships = ownerRelationships.filter(r => r.status === 'accepted');
+  
+  const handleCardClick = (relationship: Relationship) => {
+    if (onSelect && relationship.status === 'accepted') {
+      onSelect(relationship);
+    }
+  };
   
   return (
     <>
@@ -64,12 +72,17 @@ const OwnerConnectionTabs: React.FC<OwnerConnectionTabsProps> = ({
           </div>
         ) : (
           activeOwnerRelationships.map(relationship => (
-            <ActiveConnectionCard
+            <div 
               key={relationship.id}
-              relationship={relationship}
-              isOwner={true}
-              onChatOpen={onChatOpen}
-            />
+              onClick={() => handleCardClick(relationship)}
+              className={onSelect ? "cursor-pointer" : ""}
+            >
+              <ActiveConnectionCard
+                relationship={relationship}
+                isOwner={true}
+                onChatOpen={onChatOpen}
+              />
+            </div>
           ))
         )}
       </TabsContent>

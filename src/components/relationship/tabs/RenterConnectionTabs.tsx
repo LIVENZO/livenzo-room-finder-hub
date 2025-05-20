@@ -9,16 +9,24 @@ import ActiveConnectionCard from '../cards/ActiveConnectionCard';
 interface RenterConnectionTabsProps {
   renterRelationships: Relationship[];
   onChatOpen: (roomId: string) => void;
+  onSelect?: (relationship: Relationship) => void;
   isLoading: boolean;
 }
 
 const RenterConnectionTabs: React.FC<RenterConnectionTabsProps> = ({
   renterRelationships,
   onChatOpen,
+  onSelect,
   isLoading,
 }) => {
   const pendingRenterRelationships = renterRelationships.filter(r => r.status === 'pending');
   const activeRenterRelationships = renterRelationships.filter(r => r.status === 'accepted');
+  
+  const handleCardClick = (relationship: Relationship) => {
+    if (onSelect && relationship.status === 'accepted') {
+      onSelect(relationship);
+    }
+  };
   
   return (
     <>
@@ -56,12 +64,18 @@ const RenterConnectionTabs: React.FC<RenterConnectionTabsProps> = ({
           </div>
         ) : (
           activeRenterRelationships.map(relationship => (
-            <ActiveConnectionCard
+            <div 
               key={relationship.id}
-              relationship={relationship}
-              isOwner={false}
-              onChatOpen={onChatOpen}
-            />
+              onClick={() => handleCardClick(relationship)}
+              className={onSelect ? "cursor-pointer" : ""}
+            >
+              <ActiveConnectionCard
+                key={relationship.id}
+                relationship={relationship}
+                isOwner={false}
+                onChatOpen={onChatOpen}
+              />
+            </div>
           ))
         )}
       </TabsContent>
