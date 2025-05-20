@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { updateRelationshipStatus, type Relationship } from '@/services/relationship';
+import { updateRelationshipStatus } from '@/services/relationship';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import OwnerConnectionTabs from './tabs/OwnerConnectionTabs';
 import RenterConnectionTabs from './tabs/RenterConnectionTabs';
+import { Relationship } from '@/types/relationship';
 
 interface RelationshipListProps {
   ownerRelationships: Relationship[];

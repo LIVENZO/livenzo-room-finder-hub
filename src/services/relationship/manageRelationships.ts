@@ -14,7 +14,7 @@ export const createRelationshipRequest = async (
     const { data: existingRelationship, error: checkError } = await supabase
       .from("relationships")
       .select("*")
-      .or(`owner_id.eq.${ownerId},and(renter_id.eq.${renterId})`)
+      .or(`and(owner_id.eq.${ownerId},renter_id.eq.${renterId}),and(owner_id.eq.${renterId},renter_id.eq.${ownerId})`)
       .single();
       
     if (checkError && !checkError.message.includes('No rows found')) {
