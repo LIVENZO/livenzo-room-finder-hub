@@ -3,7 +3,9 @@ import { useState, useMemo } from 'react';
 import { Room, RoomFilters } from '@/types/room';
 
 export const useRoomFilters = (rooms: Room[]) => {
-  const [filters, setFilters] = useState<RoomFilters>({});
+  const [filters, setFilters] = useState<RoomFilters>({
+    maxPrice: 10000 // Set default max price to 10000
+  });
 
   // Filter rooms based on user criteria
   const filteredRooms = useMemo(() => {

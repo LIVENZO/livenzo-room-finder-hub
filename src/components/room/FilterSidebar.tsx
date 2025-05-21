@@ -30,7 +30,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   resetFilters, 
   applyFilters 
 }) => {
-  const maxPriceValue = tempFilters.maxPrice || 50000;
+  const maxPriceValue = tempFilters.maxPrice || 10000;
 
   return (
     <div className="bg-white rounded-lg border p-4 shadow-sm">
@@ -51,9 +51,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </div>
           <Slider
             value={[maxPriceValue]}
-            min={5000}
-            max={100000}
-            step={5000}
+            min={500}
+            max={50000}
+            step={500}
             onValueChange={(values) => setTempFilters({ ...tempFilters, maxPrice: values[0] })}
           />
         </div>

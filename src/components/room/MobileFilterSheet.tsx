@@ -43,7 +43,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
   resetFilters,
   applyFilters,
 }) => {
-  const maxPriceValue = tempFilters.maxPrice || 50000;
+  const maxPriceValue = tempFilters.maxPrice || 10000;
   
   return (
     <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
@@ -74,9 +74,9 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
             </div>
             <Slider
               value={[maxPriceValue]}
-              min={5000}
-              max={100000}
-              step={5000}
+              min={500}
+              max={50000}
+              step={500}
               onValueChange={(values) => setTempFilters({ ...tempFilters, maxPrice: values[0] })}
             />
           </div>
