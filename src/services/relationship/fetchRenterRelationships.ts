@@ -5,6 +5,8 @@ import { Relationship } from "@/types/relationship";
 // Fetch relationships where current user is renter
 export const fetchRenterRelationships = async (userId: string): Promise<Relationship[]> => {
   try {
+    console.log("Fetching renter relationships for userId:", userId);
+    
     // First, fetch the relationships
     const { data: relationshipsData, error: relationshipsError } = await supabase
       .from("relationships")
@@ -16,7 +18,7 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
       return [];
     }
     
-    console.log("Renter relationships fetched:", relationshipsData?.length || 0);
+    console.log("Renter relationships fetched:", relationshipsData?.length || 0, relationshipsData);
     
     // Then fetch the profiles separately and join them manually
     const relationships = relationshipsData as Relationship[];
@@ -39,6 +41,7 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
       })
     );
 
+    console.log("Enriched renter relationships:", enrichedRelationships);
     return enrichedRelationships;
   } catch (error) {
     console.error("Exception fetching renter relationships:", error);

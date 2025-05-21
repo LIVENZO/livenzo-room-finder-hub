@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { AuthContext } from '@/context/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -23,6 +23,13 @@ const Connections = () => {
     handleDocumentUploaded,
     handleBack
   } = useRelationships(currentUser?.id, isOwner || false, relationshipId);
+  
+  // Force refresh when component mounts
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchRelationships();
+    }
+  }, []);
   
   if (!currentUser?.id) {
     return (

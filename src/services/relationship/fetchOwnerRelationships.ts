@@ -5,6 +5,8 @@ import { Relationship } from "@/types/relationship";
 // Fetch relationships where current user is owner
 export const fetchOwnerRelationships = async (userId: string): Promise<Relationship[]> => {
   try {
+    console.log("Fetching owner relationships for userId:", userId);
+    
     // First, fetch the relationships
     const { data: relationshipsData, error: relationshipsError } = await supabase
       .from("relationships")
@@ -39,6 +41,7 @@ export const fetchOwnerRelationships = async (userId: string): Promise<Relations
       })
     );
 
+    console.log("Enriched owner relationships:", enrichedRelationships);
     return enrichedRelationships;
   } catch (error) {
     console.error("Exception fetching owner relationships:", error);

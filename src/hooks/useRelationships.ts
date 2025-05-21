@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { 
   fetchOwnerRelationships, 
   fetchRenterRelationships,
+  fetchRelationship,
   type Relationship
 } from '@/services/relationship';
 import { fetchDocumentsForRelationship, type Document } from '@/services/DocumentService';
@@ -34,10 +35,10 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
       
       if (isOwner) {
         owner = await fetchOwnerRelationships(userId);
-        console.log("Owner relationships:", owner);
+        console.log("Owner relationships loaded:", owner.length);
       } else {
         renter = await fetchRenterRelationships(userId);
-        console.log("Renter relationships:", renter);
+        console.log("Renter relationships loaded:", renter.length);
       }
       
       setOwnerRelationships(owner);
@@ -49,6 +50,14 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
         if (relationship) {
           setSelectedRelationship(relationship);
           await loadDocuments(relationshipId);
+        } else if (relationshipId) {
+          // If relationship ID is provided but not found in the loaded relationships,
+          // try to fetch it directly
+          const fetchedRelationship = await fetchRelationship(relationshipId);
+          if (fetchedRelationship) {
+            setSelectedRelationship(fetchedRelationship);
+            await loadDocuments(relationshipId);
+          }
         }
       }
     } catch (error) {
@@ -71,6 +80,8 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
   const handleRelationshipSelect = (relationship: Relationship) => {
     setSelectedRelationship(relationship);
     loadDocuments(relationship.id);
+    // Update URL to include the relationship ID for direct linking
+    navigate(`/connections/${relationship.id}`, { replace: true });
   };
   
   const handleDocumentUploaded = async () => {
@@ -82,6 +93,8 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
   const handleBack = () => {
     setSelectedRelationship(null);
     setDocuments([]);
+    // Remove relationship ID from URL
+    navigate('/connections', { replace: true });
   };
   
   useEffect(() => {
@@ -89,12 +102,6 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
       fetchRelationships();
     }
   }, [userId, isOwner]);
-  
-  useEffect(() => {
-    if (relationshipId && userId) {
-      fetchRelationships();
-    }
-  }, [relationshipId]);
   
   return {
     ownerRelationships,
