@@ -12,7 +12,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole,
     isOwner,
     currentUser,
-    canChangeRole
+    canChangeRole,
+    setUserRole
   } = useAuthState();
   
   const {
@@ -24,6 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Combined loading state
   const isLoading = authStateLoading || authMethodsLoading;
+  
+  // Debug provider state
+  React.useEffect(() => {
+    console.log("AuthProvider state:", { 
+      user: user?.email, 
+      sessionActive: !!session, 
+      isLoading, 
+      userRole 
+    });
+  }, [user, session, isLoading, userRole]);
   
   return (
     <AuthContext.Provider value={{ 

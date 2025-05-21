@@ -58,6 +58,13 @@ export function useAuthState() {
       
       if (currentSession?.user) {
         setupUserRole(currentSession.user);
+        
+        // Navigate to dashboard if not already there
+        const currentPath = window.location.pathname;
+        if (currentPath === '/' || currentPath === '/index.html') {
+          console.log("Redirecting to dashboard after authentication");
+          window.location.href = '/dashboard';
+        }
       }
       
       // Show success message after a short delay to ensure UI is responsive
@@ -105,8 +112,20 @@ export function useAuthState() {
             if (storedRole) {
               setUserRole(storedRole);
               setCanChangeRole(false);
+              
+              // Also save this to the user roles map
+              storeUserRole(currentSession.user.email, storedRole);
             }
           }
+        }
+        
+        // Check if we need to redirect to dashboard
+        const currentPath = window.location.pathname;
+        if (currentPath === '/' || currentPath === '/index.html') {
+          console.log("Redirecting to dashboard after session check");
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500);
         }
       }
     } catch (error) {

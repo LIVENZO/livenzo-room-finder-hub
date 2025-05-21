@@ -9,7 +9,36 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(
+  SUPABASE_URL, 
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'implicit'
+    }
+  }
+);
 
 // Set up real-time subscription
 supabase.channel('public:chat_messages').subscribe();
+
+// Debug auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth event:', event, session?.user?.email);
+});
+
+// Initialize session
+(async () => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error('Error getting session:', error);
+  } else if (data.session) {
+    console.log('Initial session loaded:', data.session.user.email);
+  } else {
+    console.log('No session found');
+  }
+})();

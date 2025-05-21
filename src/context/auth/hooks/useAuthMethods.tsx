@@ -13,9 +13,14 @@ export function useAuthMethods() {
       if (provider === 'google') {
         console.log("Starting Google authentication...");
         
-        // Use current origin for proper redirection
+        // Get the current origin and ensure it's correctly formatted
         const origin = window.location.origin;
-        const redirectUrl = `${origin}/dashboard`;
+        let redirectUrl = `${origin}/dashboard`;
+        
+        // If we're on the Lovable preview domain, ensure we're using the full URL
+        if (origin.includes('lovable.app')) {
+          redirectUrl = `${origin}/dashboard`;
+        }
           
         console.log(`Redirect URL: ${redirectUrl}`);
         
@@ -26,7 +31,8 @@ export function useAuthMethods() {
             queryParams: {
               access_type: 'offline',
               prompt: 'consent',
-            }
+            },
+            skipBrowserRedirect: false // Ensure browser redirection happens
           }
         });
         
@@ -35,8 +41,8 @@ export function useAuthMethods() {
           toast.error(`Error signing in: ${error.message}`);
           setIsLoading(false);
         } else {
-          console.log("Auth request successful:", data);
-          // No need to set loading to false here as the page will redirect
+          console.log("Auth request successful, redirecting...", data);
+          // No need to set loading to false as the page will redirect
         }
       } else {
         toast.error("Unsupported authentication provider");
