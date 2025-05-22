@@ -24,6 +24,7 @@ export const createRelationshipRequest = async (
     }
     
     if (existingRelationship) {
+      console.log("Existing relationship found:", existingRelationship);
       toast.error("You already have a relationship with this owner");
       return null;
     }

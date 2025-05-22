@@ -1,16 +1,17 @@
 
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { AuthContext } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { useNavigate, useParams } from 'react-router-dom';
 import ConnectionOverview from '@/components/relationship/ConnectionOverview';
 import ConnectionDetails from '@/components/relationship/ConnectionDetails';
 import { useRelationships } from '@/hooks/useRelationships';
 
 const Connections = () => {
-  const { currentUser, isOwner } = useContext(AuthContext);
+  const { user, userRole, isLoading } = useAuth();
   const navigate = useNavigate();
   const { relationshipId } = useParams<{ relationshipId: string }>();
+  const isOwner = userRole === 'owner';
   
   const {
     ownerRelationships,
@@ -22,16 +23,29 @@ const Connections = () => {
     handleRelationshipSelect,
     handleDocumentUploaded,
     handleBack
-  } = useRelationships(currentUser?.id, isOwner || false, relationshipId);
+  } = useRelationships(user?.id, isOwner || false, relationshipId);
   
   // Force refresh when component mounts
   useEffect(() => {
-    if (currentUser?.id) {
+    if (user?.id) {
+      console.log("Connections page: Fetching relationships for user:", user.id);
       fetchRelationships();
     }
-  }, []);
+  }, [user?.id, fetchRelationships]);
   
-  if (!currentUser?.id) {
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto py-8 px-4">
+          <div className="text-center p-8">
+            <p className="text-lg">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!user?.id) {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto py-8 px-4">
@@ -54,7 +68,7 @@ const Connections = () => {
         <div className="grid grid-cols-1 gap-8">
           {!selectedRelationship ? (
             <ConnectionOverview
-              currentUserId={currentUser.id}
+              currentUserId={user.id}
               isOwner={isOwner || false}
               ownerRelationships={ownerRelationships}
               renterRelationships={renterRelationships}

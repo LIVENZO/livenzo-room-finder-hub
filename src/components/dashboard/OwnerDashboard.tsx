@@ -2,9 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, List, Loader2 } from 'lucide-react';
+import { Plus, List, Loader2, UsersIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
+import { fetchOwnerRelationships } from '@/services/relationship';
+import { Relationship } from '@/types/relationship';
+import { Badge } from '@/components/ui/badge';
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +15,8 @@ const OwnerDashboard: React.FC = () => {
   
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingConnections, setPendingConnections] = useState(0);
+  const [loadingConnections, setLoadingConnections] = useState(true);
   
   useEffect(() => {
     if (!user) return;
@@ -35,8 +40,23 @@ const OwnerDashboard: React.FC = () => {
         setIsLoading(false);
       }
     };
+
+    const fetchConnectionRequests = async () => {
+      setLoadingConnections(true);
+      try {
+        const relationships = await fetchOwnerRelationships(user.id);
+        const pending = relationships.filter(r => r.status === 'pending').length;
+        setPendingConnections(pending);
+        console.log(`Found ${pending} pending connection requests`);
+      } catch (error) {
+        console.error('Error fetching connection requests:', error);
+      } finally {
+        setLoadingConnections(false);
+      }
+    };
     
     fetchListingsCount();
+    fetchConnectionRequests();
   }, [user]);
   
   return (
@@ -77,17 +97,34 @@ const OwnerDashboard: React.FC = () => {
           </div>
           
           <div className="bg-white p-6 rounded-lg border">
-            <h4 className="font-medium mb-1">Add New Listing</h4>
-            <p className="text-sm text-gray-500 mb-4">
-              Create a new room listing to attract potential renters.
-            </p>
-            <Button 
-              className="w-full"
-              onClick={() => navigate('/list-room')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              List a New Room
-            </Button>
+            <h4 className="font-medium mb-1">Connection Requests</h4>
+            {loadingConnections ? (
+              <div className="flex justify-center my-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center mb-4">
+                  <p className="text-3xl font-bold">{pendingConnections}</p>
+                  {pendingConnections > 0 && (
+                    <Badge variant="destructive" className="ml-2">New</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  {pendingConnections === 0 
+                    ? "No pending connection requests." 
+                    : `You have ${pendingConnections} pending connection ${pendingConnections === 1 ? 'request' : 'requests'}.`}
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate('/connections')}
+                >
+                  <UsersIcon className="h-4 w-4 mr-2" />
+                  Manage Connections
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

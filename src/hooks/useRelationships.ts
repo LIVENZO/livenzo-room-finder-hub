@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   fetchOwnerRelationships, 
   fetchRenterRelationships,
@@ -18,7 +18,7 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   
-  const fetchRelationships = async () => {
+  const fetchRelationships = useCallback(async () => {
     if (!userId) {
       toast.error("Please login to manage connections");
       navigate('/');
@@ -66,7 +66,7 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, isOwner, relationshipId, navigate]);
   
   const loadDocuments = async (relId: string) => {
     try {
@@ -101,7 +101,7 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
     if (userId) {
       fetchRelationships();
     }
-  }, [userId, isOwner]);
+  }, [userId, fetchRelationships]);
   
   return {
     ownerRelationships,
