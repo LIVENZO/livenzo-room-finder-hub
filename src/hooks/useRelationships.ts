@@ -57,6 +57,10 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
           if (fetchedRelationship) {
             setSelectedRelationship(fetchedRelationship);
             await loadDocuments(relationshipId);
+          } else {
+            // If we still can't find the relationship, it might not exist or user might not have access
+            toast.error("Relationship not found or you don't have access to it");
+            navigate('/connections');
           }
         }
       }

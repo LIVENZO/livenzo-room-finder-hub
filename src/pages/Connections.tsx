@@ -25,13 +25,16 @@ const Connections = () => {
     handleBack
   } = useRelationships(user?.id, isOwner || false, relationshipId);
   
-  // Force refresh when component mounts
+  // Force refresh when component mounts or user changes
   useEffect(() => {
     if (user?.id) {
       console.log("Connections page: Fetching relationships for user:", user.id);
       fetchRelationships();
+    } else if (!isLoading) {
+      // If not loading and no user, redirect to login
+      navigate('/');
     }
-  }, [user?.id, fetchRelationships]);
+  }, [user?.id, fetchRelationships, isLoading, navigate]);
   
   if (isLoading) {
     return (

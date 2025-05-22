@@ -10,21 +10,21 @@ export const createRelationshipRequest = async (
   renterId: string
 ): Promise<Relationship | null> => {
   try {
-    // Check if a relationship already exists
-    const { data: existingRelationship, error: checkError } = await supabase
+    // Check if a relationship already exists between these users
+    const { data: existingRelationships, error: checkError } = await supabase
       .from("relationships")
       .select("*")
-      .or(`and(owner_id.eq.${ownerId},renter_id.eq.${renterId}),and(owner_id.eq.${renterId},renter_id.eq.${ownerId})`)
-      .single();
+      .or(`owner_id.eq.${ownerId},renter_id.eq.${renterId}`)
+      .or(`owner_id.eq.${renterId},renter_id.eq.${ownerId}`);
       
-    if (checkError && !checkError.message.includes('No rows found')) {
+    if (checkError) {
       console.error("Error checking existing relationship:", checkError);
       toast.error("Failed to check existing relationships");
       return null;
     }
     
-    if (existingRelationship) {
-      console.log("Existing relationship found:", existingRelationship);
+    if (existingRelationships && existingRelationships.length > 0) {
+      console.log("Existing relationship found:", existingRelationships);
       toast.error("You already have a relationship with this owner");
       return null;
     }
