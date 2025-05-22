@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/auth"; // Updated import
+import { AuthProvider } from "./context/auth"; 
 import { RoomProvider } from "./context/RoomContext";
 
 import Index from "./pages/Index";
@@ -19,6 +19,7 @@ import Chats from "./pages/Chats";
 import Connections from "./pages/Connections";
 import ListRoom from "./pages/ListRoom";
 import MyListings from "./pages/MyListings";
+import Notices from "./pages/Notices";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/connections/:relationshipId" element={<Connections />} />
               <Route path="/list-room" element={<ListRoom />} />
               <Route path="/my-listings" element={<MyListings />} />
+              <Route path="/notices" element={<Notices />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

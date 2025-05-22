@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, List, Loader2, UsersIcon } from 'lucide-react';
+import { Plus, List, Loader2, UsersIcon, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { fetchOwnerRelationships } from '@/services/relationship';
 import { Relationship } from '@/types/relationship';
 import { Badge } from '@/components/ui/badge';
+import SendNoticeForm from '@/components/dashboard/SendNoticeForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -68,66 +70,79 @@ const OwnerDashboard: React.FC = () => {
         </p>
       </div>
       
-      <div className="max-w-2xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="font-medium mb-1">Your Listings</h4>
-            {isLoading ? (
-              <div className="flex justify-center my-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <Tabs defaultValue="dashboard" className="max-w-3xl mx-auto">
+        <TabsList className="mb-6 grid grid-cols-2 max-w-md mx-auto">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="notices">Send Notices</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dashboard">
+          <div className="max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white p-6 rounded-lg border">
+                <h4 className="font-medium mb-1">Your Listings</h4>
+                {isLoading ? (
+                  <div className="flex justify-center my-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-3xl font-bold mb-4">{listingsCount}</p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {listingsCount === 0 
+                        ? "You haven't listed any rooms yet." 
+                        : `You have ${listingsCount} active room ${listingsCount === 1 ? 'listing' : 'listings'}.`}
+                    </p>
+                    <Button 
+                      variant={listingsCount > 0 ? "outline" : "default"} 
+                      className="w-full"
+                      onClick={() => navigate('/my-listings')}
+                    >
+                      <List className="h-4 w-4 mr-2" />
+                      {listingsCount > 0 ? 'View All Listings' : 'List Your First Room'}
+                    </Button>
+                  </>
+                )}
               </div>
-            ) : (
-              <>
-                <p className="text-3xl font-bold mb-4">{listingsCount}</p>
-                <p className="text-sm text-gray-500 mb-4">
-                  {listingsCount === 0 
-                    ? "You haven't listed any rooms yet." 
-                    : `You have ${listingsCount} active room ${listingsCount === 1 ? 'listing' : 'listings'}.`}
-                </p>
-                <Button 
-                  variant={listingsCount > 0 ? "outline" : "default"} 
-                  className="w-full"
-                  onClick={() => navigate('/my-listings')}
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  {listingsCount > 0 ? 'View All Listings' : 'List Your First Room'}
-                </Button>
-              </>
-            )}
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="font-medium mb-1">Connection Requests</h4>
-            {loadingConnections ? (
-              <div className="flex justify-center my-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              
+              <div className="bg-white p-6 rounded-lg border">
+                <h4 className="font-medium mb-1">Connection Requests</h4>
+                {loadingConnections ? (
+                  <div className="flex justify-center my-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center mb-4">
+                      <p className="text-3xl font-bold">{pendingConnections}</p>
+                      {pendingConnections > 0 && (
+                        <Badge variant="destructive" className="ml-2">New</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {pendingConnections === 0 
+                        ? "No pending connection requests." 
+                        : `You have ${pendingConnections} pending connection ${pendingConnections === 1 ? 'request' : 'requests'}.`}
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => navigate('/connections')}
+                    >
+                      <UsersIcon className="h-4 w-4 mr-2" />
+                      Manage Connections
+                    </Button>
+                  </>
+                )}
               </div>
-            ) : (
-              <>
-                <div className="flex items-center mb-4">
-                  <p className="text-3xl font-bold">{pendingConnections}</p>
-                  {pendingConnections > 0 && (
-                    <Badge variant="destructive" className="ml-2">New</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500 mb-4">
-                  {pendingConnections === 0 
-                    ? "No pending connection requests." 
-                    : `You have ${pendingConnections} pending connection ${pendingConnections === 1 ? 'request' : 'requests'}.`}
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/connections')}
-                >
-                  <UsersIcon className="h-4 w-4 mr-2" />
-                  Manage Connections
-                </Button>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="notices">
+          {user && <SendNoticeForm ownerId={user.id} />}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

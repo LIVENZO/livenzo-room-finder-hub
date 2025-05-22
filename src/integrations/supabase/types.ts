@@ -198,6 +198,30 @@ export type Database = {
           },
         ]
       }
+      notices: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          owner_id: string
+          renter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          owner_id: string
+          renter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          owner_id?: string
+          renter_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

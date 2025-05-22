@@ -1,6 +1,7 @@
+
 import React from "react";
-import { Home, Search, User, Heart, BookMarked, MessageSquare, Users, Plus, List } from "lucide-react";
-import { useAuth } from "@/context/auth"; // Updated import
+import { Home, Search, User, Heart, BookMarked, MessageSquare, Users, Plus, List, Bell } from "lucide-react";
+import { useAuth } from "@/context/auth";
 
 export type NavItem = {
   title: string;
@@ -50,6 +51,13 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       href: "/connections",
       icon: <Users className="h-4 w-4" />,
       label: "Connections",
+    },
+    {
+      title: "Notices",
+      href: "/notices",
+      icon: <Bell className="h-4 w-4" />,
+      renterOnly: true,
+      label: "Notices",
     },
     {
       title: "Favorites",
