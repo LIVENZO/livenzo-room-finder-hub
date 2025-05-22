@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { File, Check, X } from 'lucide-react';
 import { updateDocumentStatus, type Document } from '@/services/DocumentService';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface DocumentListProps {
   documents: Document[];
@@ -47,6 +49,36 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
     }
   };
   
+  const viewDocument = async (document: Document) => {
+    try {
+      // Extract the file path from the document URL
+      // URLs look like: https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/documents/user-id/filename
+      const filePath = document.file_path.split('/documents/')[1];
+      
+      if (!filePath) {
+        toast.error("Invalid document path");
+        return;
+      }
+      
+      // Get a signed URL for the document
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(filePath, 60); // 60 seconds expiry
+      
+      if (error || !data?.signedUrl) {
+        console.error("Error creating signed URL:", error);
+        toast.error("Could not access document");
+        return;
+      }
+      
+      // Open the signed URL in a new tab
+      window.open(data.signedUrl, '_blank');
+    } catch (error) {
+      console.error("Error viewing document:", error);
+      toast.error("Failed to open document");
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -83,14 +115,14 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a
-                      href={document.file_path}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => viewDocument(document)}
+                      className="text-sm text-blue-600 hover:text-blue-800"
                     >
                       View
-                    </a>
+                    </Button>
                     
                     {isOwner && document.status === 'submitted' && (
                       <div className="flex gap-1">

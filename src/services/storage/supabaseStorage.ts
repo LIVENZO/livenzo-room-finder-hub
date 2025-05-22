@@ -27,6 +27,7 @@ export const uploadImagesToStorage = async (
     // Log the authentication state
     console.log(`Upload attempt with ${session ? 'authenticated' : 'unauthenticated'} session`);
     console.log(`User ID for upload: ${userId}`);
+    console.log(`Using bucket: ${bucket}`);
     
     // Check if user is authenticated
     if (!session) {

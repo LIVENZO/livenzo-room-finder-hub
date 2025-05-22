@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { uploadImagesToStorage } from "./imageUploadService";
+import { uploadImagesToStorage } from "./storage/supabaseStorage";
 
 export type DocumentType = 'id_proof' | 'income_proof' | 'lease_agreement' | 'reference';
 
@@ -28,7 +28,7 @@ export const uploadDocument = async (
   documentType: DocumentType
 ): Promise<Document | null> => {
   try {
-    // First, upload the file to storage
+    // First, upload the file to storage - use 'documents' bucket
     const fileUrls = await uploadImagesToStorage([file], userId, 'documents');
     
     if (!fileUrls.length) {
