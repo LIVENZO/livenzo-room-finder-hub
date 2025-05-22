@@ -48,6 +48,20 @@ export function useAuthState() {
     }
   }, []);
 
+  // Function to safely redirect to dashboard
+  const redirectToDashboard = useCallback(() => {
+    const currentPath = window.location.pathname;
+    // Only redirect if we're on the landing page
+    if (currentPath === '/' || currentPath === '/index.html') {
+      console.log("Redirecting to dashboard...");
+      
+      // Use a small timeout to ensure all state is properly updated first
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 300);
+    }
+  }, []);
+
   // Handle auth state changes
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
     console.log("Auth state changed:", event, currentSession?.user?.email);
@@ -58,13 +72,7 @@ export function useAuthState() {
       
       if (currentSession?.user) {
         setupUserRole(currentSession.user);
-        
-        // Navigate to dashboard if not already there
-        const currentPath = window.location.pathname;
-        if (currentPath === '/' || currentPath === '/index.html') {
-          console.log("Redirecting to dashboard after authentication");
-          window.location.href = '/dashboard';
-        }
+        redirectToDashboard();
       }
       
       // Show success message after a short delay to ensure UI is responsive
@@ -84,7 +92,7 @@ export function useAuthState() {
     }
     
     setIsLoading(false);
-  }, [setupUserRole]);
+  }, [setupUserRole, redirectToDashboard]);
 
   // Check for existing session
   const checkExistingSession = useCallback(async () => {
@@ -119,21 +127,15 @@ export function useAuthState() {
           }
         }
         
-        // Check if we need to redirect to dashboard
-        const currentPath = window.location.pathname;
-        if (currentPath === '/' || currentPath === '/index.html') {
-          console.log("Redirecting to dashboard after session check");
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 500);
-        }
+        // Redirect to dashboard if we have a valid session
+        redirectToDashboard();
       }
     } catch (error) {
       console.error("Error checking session:", error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [redirectToDashboard]);
 
   useEffect(() => {
     console.log("AuthProvider initializing");

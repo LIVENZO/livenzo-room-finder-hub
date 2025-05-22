@@ -1,23 +1,30 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/auth'; // Updated import
+import { useAuth } from '@/context/auth';
 import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
 import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
+import LoadingState from '@/components/landing/LoadingState';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, userRole } = useAuth();
+  const { user, userRole, isLoading } = useAuth();
 
   useEffect(() => {
-    // Redirect if not logged in
-    if (!user) {
+    // Only redirect if we're sure there's no user (after loading completes)
+    if (!isLoading && !user) {
+      console.log("No user found, redirecting to login page");
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
 
-  // If not logged in, return null
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <LoadingState isRedirecting={false} />;
+  }
+
+  // If not logged in, return null while the redirect happens
   if (!user) return null;
 
   return (

@@ -28,14 +28,10 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Add a small delay to ensure everything is loaded properly
-        const timer = setTimeout(() => {
-          navigate('/dashboard');
-          const userName = user.email?.split('@')[0] || 'User';
-          toast.success(`Welcome, ${userName}!`);
-        }, 500);
-        
-        return () => clearTimeout(timer);
+        // Navigate directly to dashboard instead of using window.location
+        navigate('/dashboard');
+        const userName = user.email?.split('@')[0] || 'User';
+        toast.success(`Welcome, ${userName}!`);
       } else {
         console.log("No user detected on index page");
         setCheckingSession(false);

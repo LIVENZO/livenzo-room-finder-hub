@@ -15,14 +15,9 @@ export function useAuthMethods() {
         
         // Get the current origin and ensure it's correctly formatted
         const origin = window.location.origin;
-        let redirectUrl = `${origin}/dashboard`;
+        const redirectUrl = `${origin}/dashboard`;
         
-        // If we're on the Lovable preview domain, ensure we're using the full URL
-        if (origin.includes('lovable.app')) {
-          redirectUrl = `${origin}/dashboard`;
-        }
-          
-        console.log(`Redirect URL: ${redirectUrl}`);
+        console.log(`Using redirect URL: ${redirectUrl}`);
         
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
@@ -41,8 +36,8 @@ export function useAuthMethods() {
           toast.error(`Error signing in: ${error.message}`);
           setIsLoading(false);
         } else {
-          console.log("Auth request successful, redirecting...", data);
-          // No need to set loading to false as the page will redirect
+          console.log("Auth request successful, awaiting redirect...", data);
+          // The page will redirect automatically, so we don't need to do anything here
         }
       } else {
         toast.error("Unsupported authentication provider");
