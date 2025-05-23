@@ -1,6 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isProfileComplete } from "@/utils/profileUtils";
+import { fetchUserProfile } from "@/services/UserProfileService";
 
 export interface Booking {
   id: string;
@@ -18,8 +20,15 @@ export interface Booking {
 
 export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' | 'updated_at' | 'renter_phone' | 'renter_name'>): Promise<Booking | null> => {
   try {
-    // First, get the renter's profile information
-    const { data: renterProfile, error: profileError } = await supabase
+    // First check if renter profile is complete
+    const renterProfile = await fetchUserProfile(booking.user_id);
+    if (!isProfileComplete(renterProfile)) {
+      toast.error("Please complete your profile before sending a booking request");
+      return null;
+    }
+
+    // Get the renter's profile information
+    const { data: renterProfile2, error: profileError } = await supabase
       .from("user_profiles")
       .select("phone, full_name")
       .eq("id", booking.user_id)
@@ -45,8 +54,8 @@ export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' |
     const typedBooking = {
       ...data,
       status: data.status as 'pending' | 'approved' | 'rejected' | 'cancelled',
-      renter_phone: renterProfile?.phone || undefined,
-      renter_name: renterProfile?.full_name || undefined
+      renter_phone: renterProfile2?.phone || undefined,
+      renter_name: renterProfile2?.full_name || undefined
     };
 
     toast.success("Booking request sent successfully");
@@ -123,6 +132,23 @@ export const updateBookingStatus = async (
   status: 'approved' | 'rejected' | 'cancelled'
 ): Promise<Booking | null> => {
   try {
+    // If approving, check if owner profile is complete
+    if (status === 'approved') {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("owner_id")
+        .eq("id", bookingId)
+        .single();
+      
+      if (booking) {
+        const ownerProfile = await fetchUserProfile(booking.owner_id);
+        if (!isProfileComplete(ownerProfile)) {
+          toast.error("Please complete your profile before approving booking requests");
+          return null;
+        }
+      }
+    }
+    
     const { data, error } = await supabase
       .from("bookings")
       .update({ status })

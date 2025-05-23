@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import OwnerConnectionTabs from './tabs/OwnerConnectionTabs';
 import RenterConnectionTabs from './tabs/RenterConnectionTabs';
 import { Relationship } from '@/types/relationship';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { toast } from 'sonner';
 
 interface RelationshipListProps {
   ownerRelationships: Relationship[];
@@ -29,8 +31,14 @@ const RelationshipList: React.FC<RelationshipListProps> = ({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>(isOwner ? 'received' : 'sent');
   const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const { requireComplete } = useProfileCompletion();
   
   const handleAccept = async (relationshipId: string) => {
+    // Check profile completion only for owners accepting requests
+    if (isOwner && !requireComplete()) {
+      return;
+    }
+    
     setProcessingIds(prev => [...prev, relationshipId]);
     try {
       await updateRelationshipStatus(relationshipId, 'accepted');

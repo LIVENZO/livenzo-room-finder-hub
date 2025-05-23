@@ -13,6 +13,8 @@ import { UserProfile, createOrUpdateUserProfile, fetchUserProfile, uploadProfile
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Upload, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
+import { isProfileComplete } from '@/utils/profileUtils';
 
 const Profile = () => {
   const { user, userRole, isOwner } = useAuth();
@@ -93,10 +95,19 @@ const Profile = () => {
     
     if (updatedProfile) {
       setProfile(updatedProfile);
-      uiToast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
+
+      const profileComplete = isProfileComplete(updatedProfile);
+      if (profileComplete) {
+        uiToast({
+          title: "Profile updated",
+          description: "Your profile has been updated and is now complete",
+        });
+      } else {
+        uiToast({
+          title: "Profile updated",
+          description: "Your profile has been updated but is still incomplete",
+        });
+      }
     }
   };
   
@@ -146,6 +157,8 @@ const Profile = () => {
   return (
     <Layout>
       <div className="container max-w-4xl py-10">
+        <ProfileCompletionBanner profile={profile} />
+        
         <Card>
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>
@@ -193,18 +206,23 @@ const Profile = () => {
               
               <div className="w-full space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="fullName">Name</Label>
+                  <Label htmlFor="fullName">Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="fullName"
                     name="fullName"
                     value={formValues.fullName}
                     onChange={handleInputChange}
                     placeholder="Your full name"
+                    className={!formValues.fullName ? "border-red-300" : ""}
+                    required
                   />
+                  {!formValues.fullName && (
+                    <p className="text-xs text-red-500">Name is required to complete your profile</p>
+                  )}
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -212,7 +230,12 @@ const Profile = () => {
                     value={formValues.phone}
                     onChange={handleInputChange}
                     placeholder="Your phone number"
+                    className={!formValues.phone ? "border-red-300" : ""}
+                    required
                   />
+                  {!formValues.phone && (
+                    <p className="text-xs text-red-500">Phone number is required to complete your profile</p>
+                  )}
                 </div>
 
                 {isOwner && (
@@ -254,7 +277,14 @@ const Profile = () => {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end">
+          <CardFooter className="flex justify-between">
+            <div>
+              {!isProfileComplete(profile) && (
+                <p className="text-sm text-amber-600">
+                  Please complete your profile to unlock all features
+                </p>
+              )}
+            </div>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <>

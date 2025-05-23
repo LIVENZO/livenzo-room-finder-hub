@@ -7,6 +7,8 @@ import { findUserById, createRelationshipRequest } from '@/services/relationship
 import { User, Search, X, CheckCircle, InfoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { useNavigate } from 'react-router-dom';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -18,6 +20,8 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const { isComplete, requireComplete } = useProfileCompletion();
+  const navigate = useNavigate();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +54,10 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
 
   const handleConnect = async () => {
     if (!foundUser) return;
+    
+    if (!requireComplete()) {
+      return;
+    }
     
     try {
       console.log("Sending connection request from", currentUserId, "to", foundUser.id);

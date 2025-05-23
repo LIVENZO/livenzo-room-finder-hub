@@ -3,6 +3,8 @@ import { Room } from '@/types/room';
 import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 import { parseFacilities, mapDbRoomToRoom } from '@/utils/roomUtils';
+import { fetchUserProfile } from '@/services/UserProfileService';
+import { isProfileComplete } from '@/utils/profileUtils';
 
 // Re-export room fetch service 
 export { fetchRooms } from './roomFetchService';
@@ -10,6 +12,15 @@ export { fetchRooms } from './roomFetchService';
 // Create a new room listing
 export const createRoom = async (roomData: Partial<Room>, imageUrls: string[]): Promise<Room | null> => {
   try {
+    // Check if owner profile is complete
+    if (roomData.ownerId) {
+      const ownerProfile = await fetchUserProfile(roomData.ownerId);
+      if (!isProfileComplete(ownerProfile)) {
+        toast.error("Please complete your profile before listing a room");
+        return null;
+      }
+    }
+    
     const { data, error } = await supabase
       .from('rooms')
       .insert({
