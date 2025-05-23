@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,11 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Loader2, Heart, MapPin, Wifi, Bath, User, Users, BedSingle, BedDouble, MessageCircle, ChevronLeft, StarIcon } from 'lucide-react';
+import { Loader2, Heart, MapPin, Wifi, Bath, User, Users, BedSingle, BedDouble, ChevronLeft, StarIcon, Phone } from 'lucide-react';
 import { checkIsFavorite, addFavorite, removeFavorite } from '@/services/FavoriteService';
 import { format } from 'date-fns';
-import { sendMessage } from '@/services/ChatService';
 import { toast } from 'sonner';
+import { fetchUserProfile } from '@/services/UserProfileService';
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +27,7 @@ const RoomDetail = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   
   useEffect(() => {
     if (!id) return;
@@ -41,6 +41,19 @@ const RoomDetail = () => {
       checkIsFavorite(user.id, id).then(result => {
         setIsFavorite(result);
       });
+
+      // Use room's owner phone if available, or fetch from user profile
+      if (roomData.ownerPhone) {
+        setOwnerPhone(roomData.ownerPhone);
+      } else if (roomData.ownerId) {
+        fetchUserProfile(roomData.ownerId).then(profile => {
+          if (profile && profile.phone) {
+            setOwnerPhone(profile.phone);
+          } else {
+            console.log('Owner phone not found in profile');
+          }
+        });
+      }
     }
   }, [id, rooms, user]);
   
@@ -64,27 +77,21 @@ const RoomDetail = () => {
     setFavoritesLoading(false);
   };
   
-  const handleContactOwner = async () => {
-    if (!user || !room) {
+  const handleCallOwner = () => {
+    if (!user) {
       toast.error("Please sign in to contact the owner");
       navigate('/');
       return;
     }
     
-    // Send an initial message to start the conversation
-    const initialMessage = {
-      sender_id: user.id,
-      receiver_id: room.ownerId,
-      room_id: room.id,
-      message: `Hi, I'm interested in your room "${room.title}". Is it still available?`,
-    };
-    
-    const result = await sendMessage(initialMessage);
-    
-    if (result) {
-      toast.success("Message sent to owner");
-      navigate(`/chats/${room.id}`);
+    if (!ownerPhone) {
+      toast.error("Owner's phone number is not available");
+      return;
     }
+    
+    // Open the phone dialer
+    window.location.href = `tel:${ownerPhone}`;
+    toast.success("Connecting you to the owner");
   };
   
   const formatPrice = (price: number) => {
@@ -286,9 +293,10 @@ const RoomDetail = () => {
                 <Button 
                   variant="outline" 
                   className="w-full flex items-center"
-                  onClick={handleContactOwner}
+                  onClick={handleCallOwner}
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" /> Contact Owner
+                  <Phone className="h-4 w-4 mr-2" /> Call Owner
+                  {ownerPhone && <span className="ml-1">({ownerPhone.slice(-4).padStart(ownerPhone.length, '*')})</span>}
                 </Button>
               </div>
               
