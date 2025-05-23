@@ -1,59 +1,83 @@
 
 import React from 'react';
-import { Phone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { MapPin, Users, Bed, Bath, Home, Wifi, Car, Utensils, Wind } from 'lucide-react';
+import { Room } from '@/types/room';
 import { formatPrice } from '@/lib/utils';
 import BookRoom from '@/components/BookRoom';
 
 interface RoomActionCardProps {
-  price: number;
-  roomId: string;
-  ownerId: string;
-  roomAvailability: string;
-  handleCallOwner: () => void;
-  ownerPhone: string | null;
+  room: Room;
 }
 
-const RoomActionCard: React.FC<RoomActionCardProps> = ({
-  price,
-  roomId,
-  ownerId,
-  roomAvailability,
-  handleCallOwner,
-  ownerPhone
-}) => {
+const RoomActionCard: React.FC<RoomActionCardProps> = ({ room }) => {
+  const facilityIcons = {
+    'WiFi': Wifi,
+    'Parking': Car,
+    'Kitchen': Utensils,
+    'AC': Wind,
+  };
+
   return (
-    <div className="border rounded-lg shadow-sm p-6 sticky top-24">
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-2xl font-bold">{formatPrice(price)}<span className="text-base font-normal">/mo</span></div>
-        {roomAvailability === 'available' ? (
-          <Badge className="bg-green-500">Available</Badge>
-        ) : (
-          <Badge className="bg-yellow-500">Limited</Badge>
-        )}
-      </div>
-      
-      <div className="space-y-4">
-        <BookRoom roomId={roomId} ownerId={ownerId} />
-        
-        <Button 
-          variant="outline" 
-          className="w-full flex items-center"
-          onClick={handleCallOwner}
-        >
-          <Phone className="h-4 w-4 mr-2" /> Call Owner
-          {ownerPhone && <span className="ml-1">({ownerPhone.slice(-4).padStart(ownerPhone.length, '*')})</span>}
-        </Button>
-      </div>
-      
-      <div className="mt-6 text-sm text-gray-500">
-        <p>This room is managed by the owner directly.</p>
-        <p className="mt-1">Security deposit: {formatPrice(price)}</p>
-        <p className="mt-4">
-          <strong>Note:</strong> Always verify the property and owner before making any payments.
-        </p>
-      </div>
+    <div className="sticky top-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold text-primary">
+              {formatPrice(room.price)}
+              <span className="text-sm font-normal text-gray-600">/month</span>
+            </CardTitle>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Available
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="h-4 w-4" />
+            <span className="text-sm">{room.address}</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 py-4 border-y">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{room.occupancy_type}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Bed className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{room.room_type}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Bath className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{room.bathroom_type}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Home className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{room.property_type}</span>
+            </div>
+          </div>
+
+          {room.amenities && room.amenities.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-2">Amenities</h4>
+              <div className="flex flex-wrap gap-2">
+                {room.amenities.map((facility, index) => {
+                  const IconComponent = facilityIcons[facility as keyof typeof facilityIcons];
+                  return (
+                    <div key={index} className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                      {IconComponent && <IconComponent className="h-3 w-3" />}
+                      <span>{facility}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <BookRoom room={room} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

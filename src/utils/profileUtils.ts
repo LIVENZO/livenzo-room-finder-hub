@@ -1,5 +1,6 @@
 
 import { UserProfile } from "@/services/UserProfileService";
+import { toast } from "sonner";
 
 /**
  * Checks if a user profile is complete with required information
