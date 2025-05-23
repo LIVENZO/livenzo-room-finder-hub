@@ -12,10 +12,23 @@ export interface Booking {
   move_in_date: string | null;
   created_at: string;
   updated_at: string;
+  renter_phone?: string;
+  renter_name?: string;
 }
 
-export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' | 'updated_at'>): Promise<Booking | null> => {
+export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' | 'updated_at' | 'renter_phone' | 'renter_name'>): Promise<Booking | null> => {
   try {
+    // First, get the renter's profile information
+    const { data: renterProfile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("phone, full_name")
+      .eq("id", booking.user_id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching renter profile:", profileError);
+    }
+
     const { data, error } = await supabase
       .from("bookings")
       .insert(booking)
@@ -28,10 +41,12 @@ export const createBooking = async (booking: Omit<Booking, 'id' | 'created_at' |
       return null;
     }
 
-    // Type cast to ensure the status is one of the allowed values
+    // Type cast to ensure the status is one of the allowed values and include renter info
     const typedBooking = {
       ...data,
-      status: data.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
+      status: data.status as 'pending' | 'approved' | 'rejected' | 'cancelled',
+      renter_phone: renterProfile?.phone || undefined,
+      renter_name: renterProfile?.full_name || undefined
     };
 
     toast.success("Booking request sent successfully");
@@ -68,21 +83,35 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
 
 export const fetchOwnerBookings = async (ownerId: string): Promise<Booking[]> => {
   try {
-    const { data, error } = await supabase
+    const { data: bookingsData, error: bookingsError } = await supabase
       .from("bookings")
       .select("*")
       .eq("owner_id", ownerId);
 
-    if (error) {
-      console.error("Error fetching owner bookings:", error);
+    if (bookingsError) {
+      console.error("Error fetching owner bookings:", bookingsError);
       return [];
     }
 
-    // Type cast each booking to ensure status is of the correct type
-    return (data || []).map(booking => ({
-      ...booking,
-      status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled'
-    }));
+    // Fetch renter profiles for all bookings
+    const bookingsWithRenterInfo = await Promise.all(
+      (bookingsData || []).map(async (booking) => {
+        const { data: renterProfile } = await supabase
+          .from("user_profiles")
+          .select("phone, full_name")
+          .eq("id", booking.user_id)
+          .single();
+
+        return {
+          ...booking,
+          status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled',
+          renter_phone: renterProfile?.phone || undefined,
+          renter_name: renterProfile?.full_name || undefined
+        };
+      })
+    );
+
+    return bookingsWithRenterInfo;
   } catch (error) {
     console.error("Exception fetching owner bookings:", error);
     return [];
