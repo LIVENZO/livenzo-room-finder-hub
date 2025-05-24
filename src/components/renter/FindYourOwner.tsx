@@ -21,6 +21,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
 }) => {
   const activeConnection = renterRelationships.find(r => r.status === 'accepted');
   const pendingConnections = renterRelationships.filter(r => r.status === 'pending');
+  const declinedConnections = renterRelationships.filter(r => r.status === 'declined');
 
   if (activeConnection) {
     return (
@@ -65,6 +66,11 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
         <p className="text-gray-600">
           Connect with your property owner to manage your rental relationship
         </p>
+        {declinedConnections.length > 0 && (
+          <p className="text-sm text-orange-600 mt-2">
+            You can search for a new owner below
+          </p>
+        )}
       </div>
 
       <UserSearch currentUserId={currentUserId} />

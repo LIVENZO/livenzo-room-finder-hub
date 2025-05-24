@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,11 +12,14 @@ import {
   MapPin,
   Home,
   Building,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Unlink
 } from 'lucide-react';
 import { UserProfile } from '@/services/UserProfileService';
 import { Relationship } from '@/types/relationship';
 import { useNavigate } from 'react-router-dom';
+import { updateRelationshipStatus } from '@/services/relationship/manageRelationships';
+import { toast } from 'sonner';
 
 interface OwnerProfilePageProps {
   relationship: Relationship;
@@ -29,6 +32,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
 }) => {
   const navigate = useNavigate();
   const owner = relationship.owner;
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   const handleViewDocuments = () => {
     navigate(`/connections/${relationship.id}`);
@@ -46,6 +50,24 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
   const handlePayRent = () => {
     // Navigate to payment system - to be implemented
     console.log('Pay rent functionality to be implemented');
+  };
+
+  const handleDisconnect = async () => {
+    if (!confirm('Are you sure you want to disconnect from this owner? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    try {
+      await updateRelationshipStatus(relationship.id, 'declined');
+      toast.success('Successfully disconnected from owner');
+      onBack(); // Go back to Find Your Owner page
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      toast.error('Failed to disconnect. Please try again.');
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   return (
@@ -119,7 +141,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
       </Card>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Button 
           onClick={handleViewDocuments}
           variant="outline" 
@@ -155,6 +177,29 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
           <span>Pay Rent</span>
         </Button>
       </div>
+
+      {/* Disconnect Button */}
+      <Card className="border-red-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-red-800">Disconnect from Owner</h3>
+              <p className="text-sm text-red-600">
+                End your rental relationship with this owner
+              </p>
+            </div>
+            <Button 
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              variant="destructive"
+              className="flex items-center gap-2"
+            >
+              <Unlink className="h-4 w-4" />
+              {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

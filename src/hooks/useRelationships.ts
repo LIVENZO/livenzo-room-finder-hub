@@ -48,13 +48,20 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
       if (relationshipId) {
         const relationship = [...owner, ...renter].find(r => r.id === relationshipId);
         if (relationship) {
-          setSelectedRelationship(relationship);
-          await loadDocuments(relationshipId);
+          // Check if the relationship is still active
+          if (relationship.status === 'accepted') {
+            setSelectedRelationship(relationship);
+            await loadDocuments(relationshipId);
+          } else {
+            // If relationship is no longer active, go back to connections
+            toast.info("This connection is no longer active");
+            navigate('/connections');
+          }
         } else if (relationshipId) {
           // If relationship ID is provided but not found in the loaded relationships,
           // try to fetch it directly
           const fetchedRelationship = await fetchRelationship(relationshipId);
-          if (fetchedRelationship) {
+          if (fetchedRelationship && fetchedRelationship.status === 'accepted') {
             setSelectedRelationship(fetchedRelationship);
             await loadDocuments(relationshipId);
           } else {
@@ -99,6 +106,8 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
     setDocuments([]);
     // Remove relationship ID from URL
     navigate('/connections', { replace: true });
+    // Refresh relationships to get latest status
+    fetchRelationships();
   };
   
   useEffect(() => {
