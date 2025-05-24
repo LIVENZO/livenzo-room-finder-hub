@@ -34,7 +34,12 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
 
-    return data;
+    // Type cast the accommodation_type and resident_type to ensure compatibility
+    return {
+      ...data,
+      accommodation_type: data.accommodation_type as 'PG' | 'Hostel' | null,
+      resident_type: data.resident_type as 'Boys' | 'Girls' | 'Both' | null,
+    } as UserProfile;
   } catch (error) {
     console.error("Exception fetching user profile:", error);
     return null;
@@ -58,7 +63,13 @@ export const createOrUpdateUserProfile = async (
     }
 
     toast.success("Profile updated successfully");
-    return data;
+    
+    // Type cast the accommodation_type and resident_type to ensure compatibility
+    return {
+      ...data,
+      accommodation_type: data.accommodation_type as 'PG' | 'Hostel' | null,
+      resident_type: data.resident_type as 'Boys' | 'Girls' | 'Both' | null,
+    } as UserProfile;
   } catch (error) {
     toast.error("Failed to update profile");
     console.error("Exception updating user profile:", error);
