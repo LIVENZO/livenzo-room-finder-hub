@@ -24,7 +24,7 @@ const RenterDashboard: React.FC = () => {
           className="flex items-center gap-2"
         >
           <UsersIcon className="h-4 w-4" />
-          Manage Connections
+          Find Your Owner
         </Button>
         <Button 
           onClick={() => navigate('/notices')}
