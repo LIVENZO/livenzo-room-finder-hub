@@ -10,6 +10,15 @@ export interface UserProfile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  // New owner-specific fields
+  accommodation_type: 'PG' | 'Hostel' | null;
+  property_name: string | null;
+  house_number: string | null;
+  total_rental_rooms: number | null;
+  resident_type: 'Boys' | 'Girls' | 'Both' | null;
+  property_location: string | null;
+  property_address: any | null;
+  is_owner_profile_complete: boolean | null;
 }
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {

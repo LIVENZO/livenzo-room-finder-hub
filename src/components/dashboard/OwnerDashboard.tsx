@@ -10,10 +10,12 @@ import { Relationship } from '@/types/relationship';
 import { Badge } from '@/components/ui/badge';
 import SendNoticeForm from '@/components/dashboard/SendNoticeForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { requireOwnerComplete } = useProfileCompletion();
   
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +62,18 @@ const OwnerDashboard: React.FC = () => {
     fetchListingsCount();
     fetchConnectionRequests();
   }, [user]);
+
+  const handleListRoomClick = () => {
+    requireOwnerComplete(() => navigate('/list-room'));
+  };
+
+  const handleViewListingsClick = () => {
+    requireOwnerComplete(() => navigate('/my-listings'));
+  };
+
+  const handleManageConnectionsClick = () => {
+    requireOwnerComplete(() => navigate('/connections'));
+  };
   
   return (
     <div className="py-12 bg-gray-50 rounded-lg">
@@ -93,14 +107,26 @@ const OwnerDashboard: React.FC = () => {
                         ? "You haven't listed any rooms yet." 
                         : `You have ${listingsCount} active room ${listingsCount === 1 ? 'listing' : 'listings'}.`}
                     </p>
-                    <Button 
-                      variant={listingsCount > 0 ? "outline" : "default"} 
-                      className="w-full"
-                      onClick={() => navigate('/my-listings')}
-                    >
-                      <List className="h-4 w-4 mr-2" />
-                      {listingsCount > 0 ? 'View All Listings' : 'List Your First Room'}
-                    </Button>
+                    <div className="space-y-2">
+                      <Button 
+                        variant={listingsCount > 0 ? "outline" : "default"} 
+                        className="w-full"
+                        onClick={handleViewListingsClick}
+                      >
+                        <List className="h-4 w-4 mr-2" />
+                        {listingsCount > 0 ? 'View All Listings' : 'List Your First Room'}
+                      </Button>
+                      {listingsCount === 0 && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={handleListRoomClick}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          List a Room
+                        </Button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -127,7 +153,7 @@ const OwnerDashboard: React.FC = () => {
                     <Button 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => navigate('/connections')}
+                      onClick={handleManageConnectionsClick}
                     >
                       <UsersIcon className="h-4 w-4 mr-2" />
                       Manage Connections

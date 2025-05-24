@@ -466,30 +466,54 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          accommodation_type: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           full_name: string | null
+          house_number: string | null
           id: string
+          is_owner_profile_complete: boolean | null
           phone: string | null
+          property_address: Json | null
+          property_location: string | null
+          property_name: string | null
+          resident_type: string | null
+          total_rental_rooms: number | null
           updated_at: string
         }
         Insert: {
+          accommodation_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           full_name?: string | null
+          house_number?: string | null
           id: string
+          is_owner_profile_complete?: boolean | null
           phone?: string | null
+          property_address?: Json | null
+          property_location?: string | null
+          property_name?: string | null
+          resident_type?: string | null
+          total_rental_rooms?: number | null
           updated_at?: string
         }
         Update: {
+          accommodation_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           full_name?: string | null
+          house_number?: string | null
           id?: string
+          is_owner_profile_complete?: boolean | null
           phone?: string | null
+          property_address?: Json | null
+          property_location?: string | null
+          property_name?: string | null
+          resident_type?: string | null
+          total_rental_rooms?: number | null
           updated_at?: string
         }
         Relationships: []

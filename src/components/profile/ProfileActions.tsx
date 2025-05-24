@@ -2,22 +2,29 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { isProfileComplete } from '@/utils/profileUtils';
+import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
 import { UserProfile } from '@/services/UserProfileService';
 
 interface ProfileActionsProps {
   profile: UserProfile | null;
   saving: boolean;
   onSave: () => void;
+  isOwner?: boolean;
 }
 
-const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, saving, onSave }) => {
+const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, saving, onSave, isOwner = false }) => {
+  const basicComplete = isProfileComplete(profile);
+  const ownerComplete = isOwner ? isOwnerProfileComplete(profile) : true;
+  const fullyComplete = basicComplete && ownerComplete;
+
   return (
     <div className="flex justify-between">
       <div>
-        {!isProfileComplete(profile) && (
+        {!fullyComplete && (
           <p className="text-sm text-amber-600">
-            Please complete your profile to unlock all features
+            {!basicComplete && "Please complete your basic profile information. "}
+            {isOwner && !ownerComplete && "Please complete your property details. "}
+            Complete profile required for full access.
           </p>
         )}
       </div>
