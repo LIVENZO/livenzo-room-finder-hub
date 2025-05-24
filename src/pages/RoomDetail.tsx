@@ -108,7 +108,11 @@ const RoomDetail = () => {
           
           {/* Right column - Action card */}
           <div>
-            <RoomActionCard room={room} />
+            <RoomActionCard 
+              room={room} 
+              ownerPhone={ownerPhone}
+              onCallOwner={handleCallOwner}
+            />
           </div>
         </div>
       </div>

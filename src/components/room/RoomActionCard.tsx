@@ -6,12 +6,15 @@ import { MapPin, Users, Bed, Bath, Home, Wifi, Car, Utensils, Wind } from 'lucid
 import { Room } from '@/types/room';
 import { formatPrice } from '@/lib/utils';
 import BookRoom from '@/components/BookRoom';
+import CallButton from '@/components/ui/CallButton';
 
 interface RoomActionCardProps {
   room: Room;
+  ownerPhone?: string | null;
+  onCallOwner?: () => void;
 }
 
-const RoomActionCard: React.FC<RoomActionCardProps> = ({ room }) => {
+const RoomActionCard: React.FC<RoomActionCardProps> = ({ room, ownerPhone, onCallOwner }) => {
   const facilityIcons = {
     'WiFi': Wifi,
     'Parking': Car,
@@ -77,6 +80,17 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({ room }) => {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {ownerPhone && (
+            <div className="pt-2">
+              <CallButton
+                phoneNumber={ownerPhone}
+                label="Call Owner"
+                variant="outline"
+                className="w-full"
+              />
             </div>
           )}
 
