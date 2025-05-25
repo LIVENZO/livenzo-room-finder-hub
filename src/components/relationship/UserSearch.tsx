@@ -85,6 +85,10 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     setRequestError(null);
   };
 
+  const searchAnother = () => {
+    clearSearch();
+  };
+
   return (
     <div className="space-y-6">
       {/* Search Form */}
@@ -96,8 +100,9 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             className="w-full pr-10 h-12 text-base border-2 border-gray-200 focus:border-blue-500"
+            disabled={requestSent}
           />
-          {searchId && (
+          {searchId && !requestSent && (
             <button 
               type="button" 
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -109,7 +114,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
         </div>
         <Button 
           type="submit" 
-          disabled={isSearching || !searchId.trim()}
+          disabled={isSearching || !searchId.trim() || requestSent}
           className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
         >
           {isSearching ? (
@@ -223,17 +228,25 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
             )}
           </CardContent>
           
-          {/* Action Button */}
-          {!requestSent && (
-            <CardFooter className="pt-0">
+          {/* Action Buttons */}
+          <CardFooter className="pt-0">
+            {!requestSent ? (
               <Button 
                 onClick={handleConnect} 
                 className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium"
               >
                 ✅ Send Connection Request
               </Button>
-            </CardFooter>
-          )}
+            ) : (
+              <Button 
+                onClick={searchAnother}
+                variant="outline"
+                className="w-full h-12 text-base font-medium"
+              >
+                Search for Another Owner
+              </Button>
+            )}
+          </CardFooter>
         </Card>
       )}
     </div>

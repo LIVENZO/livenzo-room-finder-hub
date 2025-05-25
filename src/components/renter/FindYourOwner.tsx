@@ -91,14 +91,19 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
           <Search className="h-8 w-8 text-blue-600" />
         </div>
         
-        <h1 className="text-3xl font-bold text-gray-900">Find Your Owner</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {declinedConnections.length > 0 ? "Connect with a New Owner" : "Find Your Owner"}
+        </h1>
         <p className="text-lg text-gray-600 max-w-md mx-auto">
-          Search for your new PG/Hostel owner using their ID to reconnect
+          {declinedConnections.length > 0 
+            ? "You've successfully disconnected from your previous owner. Enter the new owner's ID to connect again."
+            : "Search for your PG/Hostel owner using their ID to connect"
+          }
         </p>
         
         {declinedConnections.length > 0 && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-4">
-            <p className="text-sm text-orange-700">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+            <p className="text-sm text-green-700">
               ✨ Ready to connect with a new owner? Search below using their unique Owner ID.
             </p>
           </div>
@@ -112,6 +117,9 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
             <Search className="h-5 w-5 text-blue-600" />
             Search by Owner ID
           </CardTitle>
+          <p className="text-sm text-gray-600">
+            Enter the Owner ID provided by your new property owner to send a connection request.
+          </p>
         </CardHeader>
         <CardContent>
           <UserSearch currentUserId={currentUserId} />
