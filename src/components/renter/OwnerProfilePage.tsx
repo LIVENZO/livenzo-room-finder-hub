@@ -300,8 +300,8 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
               {isDisconnecting ? 'Disconnecting...' : 'Confirm Disconnect'}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialog>
-      </AlertContent>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
