@@ -44,21 +44,26 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
   const owner = relationship.owner;
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
+  const [isDisconnected, setIsDisconnected] = useState(false);
 
   const handleViewDocuments = () => {
+    if (isDisconnected) return;
     navigate(`/connections/${relationship.id}`);
   };
 
   const handleChatWithOwner = () => {
+    if (isDisconnected) return;
     navigate(`/chats/${relationship.chat_room_id}`);
   };
 
   const handleRaiseComplaint = () => {
+    if (isDisconnected) return;
     // For now, open chat - can be enhanced later with a dedicated complaint system
     navigate(`/chats/${relationship.chat_room_id}`);
   };
 
   const handlePayRent = () => {
+    if (isDisconnected) return;
     // Navigate to payment system - to be implemented
     console.log('Pay rent functionality to be implemented');
   };
@@ -71,9 +76,20 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
     setIsDisconnecting(true);
     try {
       await updateRelationshipStatus(relationship.id, 'declined');
+      
+      // Set disconnected state to disable buttons
+      setIsDisconnected(true);
+      
+      // Show success toast with owner name
       toast.success(`You've successfully disconnected from ${owner?.full_name || 'this owner'}. You can now connect with a new property owner.`);
+      
       setShowDisconnectDialog(false);
-      onBack(); // Go back to Find Your Owner page
+      
+      // Navigate back after a short delay to allow user to see the success message
+      setTimeout(() => {
+        onBack(); // This will refresh relationships and show Find Your Owner page
+      }, 1500);
+      
     } catch (error) {
       console.error('Error disconnecting:', error);
       toast.error('Failed to disconnect. Please try again.');
@@ -81,6 +97,39 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
       setIsDisconnecting(false);
     }
   };
+
+  // If disconnected, show a simplified view
+  if (isDisconnected) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <button 
+            onClick={onBack}
+            className="text-blue-600 hover:underline mb-4"
+          >
+            ← Back to Find Your Owner
+          </button>
+          <h1 className="text-3xl font-bold">Connection Ended</h1>
+          <p className="text-gray-600">You have successfully disconnected from your property owner</p>
+        </div>
+
+        <Card className="mb-6 border-gray-200 bg-gray-50">
+          <CardContent className="p-6 text-center">
+            <div className="mb-4">
+              <Unlink className="h-12 w-12 mx-auto text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">
+              Connection Ended
+            </h3>
+            <p className="text-gray-600">
+              Your rental connection with {owner?.full_name || 'this owner'} has been terminated.
+              You can now find and connect with a new property owner.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -158,6 +207,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
           onClick={handleViewDocuments}
           variant="outline" 
           className="h-16 flex-col space-y-2"
+          disabled={isDisconnected}
         >
           <FileText className="h-6 w-6" />
           <span>View Documents</span>
@@ -167,6 +217,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
           onClick={handleRaiseComplaint}
           variant="outline" 
           className="h-16 flex-col space-y-2"
+          disabled={isDisconnected}
         >
           <AlertCircle className="h-6 w-6" />
           <span>Raise a Complaint</span>
@@ -176,6 +227,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
           onClick={handleChatWithOwner}
           variant="outline" 
           className="h-16 flex-col space-y-2"
+          disabled={isDisconnected}
         >
           <MessageSquare className="h-6 w-6" />
           <span>Chat with Owner</span>
@@ -184,6 +236,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
         <Button 
           onClick={handlePayRent}
           className="h-16 flex-col space-y-2 bg-green-600 hover:bg-green-700"
+          disabled={isDisconnected}
         >
           <CreditCard className="h-6 w-6" />
           <span>Pay Rent</span>
@@ -202,7 +255,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
             </div>
             <Button 
               onClick={handleDisconnectClick}
-              disabled={isDisconnecting}
+              disabled={isDisconnecting || isDisconnected}
               variant="destructive"
               className="flex items-center gap-2"
             >
@@ -213,17 +266,32 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
         </CardContent>
       </Card>
 
-      {/* Disconnect Confirmation Dialog */}
+      {/* Enhanced Disconnect Confirmation Dialog */}
       <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you want to disconnect from this owner?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will permanently end your rental connection with {owner?.full_name || 'this owner'} and you will no longer have access to property details, documents, chat, or rent payments. This cannot be undone.
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                This action will permanently end your rental connection with{' '}
+                <span className="font-semibold">{owner?.full_name || 'this owner'}</span>{' '}
+                and you will no longer have access to:
+              </p>
+              <ul className="list-disc list-inside pl-4 space-y-1 text-sm">
+                <li>Property details and documents</li>
+                <li>Chat and communication history</li>
+                <li>Rent payment system</li>
+                <li>Complaint management</li>
+              </ul>
+              <p className="font-medium text-red-600 mt-3">
+                This action cannot be undone.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDisconnecting}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDisconnect}
               disabled={isDisconnecting}
@@ -232,8 +300,8 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
               {isDisconnecting ? 'Disconnecting...' : 'Confirm Disconnect'}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </AlertDialog>
+      </AlertContent>
     </div>
   );
 };

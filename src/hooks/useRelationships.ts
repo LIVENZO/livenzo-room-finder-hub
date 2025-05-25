@@ -53,7 +53,9 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
             setSelectedRelationship(relationship);
             await loadDocuments(relationshipId);
           } else {
-            // If relationship is no longer active, go back to connections
+            // If relationship is no longer active, clear selection and go back to connections
+            setSelectedRelationship(null);
+            setDocuments([]);
             toast.info("This connection is no longer active");
             navigate('/connections');
           }
@@ -66,6 +68,8 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
             await loadDocuments(relationshipId);
           } else {
             // If we still can't find the relationship, it might not exist or user might not have access
+            setSelectedRelationship(null);
+            setDocuments([]);
             toast.error("Relationship not found or you don't have access to it");
             navigate('/connections');
           }
@@ -89,6 +93,12 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
   };
   
   const handleRelationshipSelect = (relationship: Relationship) => {
+    // Only allow selection of active relationships
+    if (relationship.status !== 'accepted') {
+      toast.error("This relationship is no longer active");
+      return;
+    }
+    
     setSelectedRelationship(relationship);
     loadDocuments(relationship.id);
     // Update URL to include the relationship ID for direct linking
@@ -112,8 +122,13 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
 
   // Function to refresh relationships after status changes
   const refreshRelationships = useCallback(async () => {
+    // Clear selected relationship if it's no longer active
+    if (selectedRelationship) {
+      setSelectedRelationship(null);
+      setDocuments([]);
+    }
     await fetchRelationships();
-  }, [fetchRelationships]);
+  }, [fetchRelationships, selectedRelationship]);
   
   useEffect(() => {
     if (userId) {
