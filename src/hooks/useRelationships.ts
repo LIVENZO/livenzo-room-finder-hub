@@ -109,6 +109,11 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
     // Refresh relationships to get latest status
     fetchRelationships();
   };
+
+  // Function to refresh relationships after status changes
+  const refreshRelationships = useCallback(async () => {
+    await fetchRelationships();
+  }, [fetchRelationships]);
   
   useEffect(() => {
     if (userId) {
@@ -125,6 +130,7 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
     fetchRelationships,
     handleRelationshipSelect,
     handleDocumentUploaded,
-    handleBack
+    handleBack,
+    refreshRelationships
   };
 };

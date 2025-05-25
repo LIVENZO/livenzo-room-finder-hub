@@ -25,7 +25,8 @@ const Connections = () => {
     fetchRelationships,
     handleRelationshipSelect,
     handleDocumentUploaded,
-    handleBack
+    handleBack,
+    refreshRelationships
   } = useRelationships(user?.id, isOwner || false, relationshipId);
   
   // Force refresh when component mounts or user changes
@@ -47,6 +48,8 @@ const Connections = () => {
   const handleBackToFindOwner = () => {
     setShowOwnerProfile(false);
     handleBack();
+    // Refresh relationships to get the latest data after disconnect
+    refreshRelationships();
   };
   
   if (isLoading) {
@@ -135,6 +138,7 @@ const Connections = () => {
                 currentUserId={user.id}
                 renterRelationships={renterRelationships}
                 onOwnerSelect={handleOwnerSelect}
+                onRefresh={refreshRelationships}
               />
             )
           )}

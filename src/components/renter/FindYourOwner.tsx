@@ -12,16 +12,26 @@ interface FindYourOwnerProps {
   currentUserId: string;
   renterRelationships: Relationship[];
   onOwnerSelect: (relationship: Relationship) => void;
+  onRefresh?: () => void;
 }
 
 const FindYourOwner: React.FC<FindYourOwnerProps> = ({
   currentUserId,
   renterRelationships,
   onOwnerSelect,
+  onRefresh,
 }) => {
   const activeConnection = renterRelationships.find(r => r.status === 'accepted');
   const pendingConnections = renterRelationships.filter(r => r.status === 'pending');
   const declinedConnections = renterRelationships.filter(r => r.status === 'declined');
+
+  // Refresh data when component mounts if there are declined connections
+  React.useEffect(() => {
+    if (onRefresh && declinedConnections.length > 0) {
+      // Only refresh if we detect a recently declined connection
+      onRefresh();
+    }
+  }, [onRefresh, declinedConnections.length]);
 
   if (activeConnection) {
     return (

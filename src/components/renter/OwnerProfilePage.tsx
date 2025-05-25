@@ -5,6 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { 
   FileText, 
   MessageSquare, 
   AlertCircle, 
@@ -33,6 +43,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
   const navigate = useNavigate();
   const owner = relationship.owner;
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   const handleViewDocuments = () => {
     navigate(`/connections/${relationship.id}`);
@@ -52,15 +63,16 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
     console.log('Pay rent functionality to be implemented');
   };
 
-  const handleDisconnect = async () => {
-    if (!confirm('Are you sure you want to disconnect from this owner? This action cannot be undone.')) {
-      return;
-    }
+  const handleDisconnectClick = () => {
+    setShowDisconnectDialog(true);
+  };
 
+  const handleConfirmDisconnect = async () => {
     setIsDisconnecting(true);
     try {
       await updateRelationshipStatus(relationship.id, 'declined');
-      toast.success('Successfully disconnected from owner');
+      toast.success(`You've successfully disconnected from ${owner?.full_name || 'this owner'}. You can now connect with a new property owner.`);
+      setShowDisconnectDialog(false);
       onBack(); // Go back to Find Your Owner page
     } catch (error) {
       console.error('Error disconnecting:', error);
@@ -189,7 +201,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
               </p>
             </div>
             <Button 
-              onClick={handleDisconnect}
+              onClick={handleDisconnectClick}
               disabled={isDisconnecting}
               variant="destructive"
               className="flex items-center gap-2"
@@ -200,6 +212,28 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Disconnect Confirmation Dialog */}
+      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to disconnect from this owner?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently end your rental connection with {owner?.full_name || 'this owner'} and you will no longer have access to property details, documents, chat, or rent payments. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDisconnect}
+              disabled={isDisconnecting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDisconnecting ? 'Disconnecting...' : 'Confirm Disconnect'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
