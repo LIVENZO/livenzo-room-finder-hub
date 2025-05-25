@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { findUserById, createRelationshipRequest } from '@/services/relationship';
-import { User, Search, X, CheckCircle, InfoIcon } from 'lucide-react';
+import { User, Search, X, CheckCircle, AlertCircle, MapPin, Home, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
-import { useNavigate } from 'react-router-dom';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -20,14 +20,13 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const { isComplete, requireComplete } = useProfileCompletion();
-  const navigate = useNavigate();
+  const { requireComplete } = useProfileCompletion();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!searchId.trim()) {
-      toast.error("Please enter a valid owner ID");
+      toast.error("Please enter a valid Owner ID");
       return;
     }
     
@@ -39,14 +38,17 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
       if (user) {
         console.log("Found user:", user);
         setFoundUser(user);
+        toast.success("Owner found! Review details below and send connection request.");
       } else {
-        toast.error("Owner not found. Make sure you have the correct ID");
-        setRequestError("Owner not found. Double check the ID and try again.");
+        setFoundUser(null);
+        toast.error("❌ No owner found with this ID. Please check and try again.");
+        setRequestError("No owner found with this ID. Please double-check the ID and try again.");
       }
     } catch (error) {
       console.error("Search error:", error);
-      toast.error("Failed to search for owner");
-      setRequestError("Search failed. Please try again later.");
+      setFoundUser(null);
+      toast.error("❌ Search failed. Please try again.");
+      setRequestError("Search failed. Please check your internet connection and try again.");
     } finally {
       setIsSearching(false);
     }
@@ -65,7 +67,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
       
       if (response) {
         setRequestSent(true);
-        toast.success(`Connection request sent to ${foundUser.full_name || 'owner'}`);
+        toast.success(`🎉 Request sent to ${foundUser.full_name || 'owner'}. You will be notified once they accept.`);
       } else {
         setRequestError("Failed to send request. You may already have a connection with this owner.");
       }
@@ -84,76 +86,157 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-xl">Find an Owner</CardTitle>
-        <CardDescription>
-          Ask the property owner for their ID and enter it below to connect
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-          <div className="relative w-full">
-            <Input
-              type="text"
-              placeholder="Enter owner ID"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              className="w-full pr-8"
-            />
-            {searchId && (
-              <button 
-                type="button" 
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={clearSearch}
-              >
-                <X className="h-4 w-4 text-gray-500" />
-              </button>
-            )}
-          </div>
-          <Button type="submit" disabled={isSearching}>
-            {isSearching ? "Searching..." : <Search className="h-4 w-4" />}
-          </Button>
-        </form>
+    <div className="space-y-6">
+      {/* Search Form */}
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            type="text"
+            placeholder="Enter Owner ID (e.g., abc123xy or UUID)"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            className="w-full pr-10 h-12 text-base border-2 border-gray-200 focus:border-blue-500"
+          />
+          {searchId && (
+            <button 
+              type="button" 
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={clearSearch}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <Button 
+          type="submit" 
+          disabled={isSearching || !searchId.trim()}
+          className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
+        >
+          {isSearching ? (
+            <>
+              <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </>
+          )}
+        </Button>
+      </form>
 
-        {requestError && (
-          <div className="p-3 mb-4 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
-            <InfoIcon className="h-4 w-4" />
-            <span>{requestError}</span>
-          </div>
-        )}
+      {/* Error Message */}
+      {requestError && !foundUser && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">{requestError}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {foundUser && (
-          <div className="mt-4">
-            <div className="flex items-center gap-3 p-3 border rounded-md">
-              <Avatar>
-                <AvatarImage src={foundUser.avatar_url || ''} />
-                <AvatarFallback>
-                  <User className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-medium">{foundUser.full_name || 'Unknown owner'}</p>
-                <p className="text-xs text-gray-500">ID: {foundUser.id}</p>
-              </div>
+      {/* Search Results */}
+      {foundUser && (
+        <Card className={`border-2 transition-all ${requestSent ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                {requestSent ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-green-800">Connection Request Sent</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="h-5 w-5 text-blue-600" />
+                    <span className="text-blue-800">Owner Found</span>
+                  </>
+                )}
+              </CardTitle>
               {requestSent && (
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <Badge className="bg-green-100 text-green-800 border-green-300">
+                  Request Sent
+                </Badge>
               )}
             </div>
-          </div>
-        )}
-      </CardContent>
-      {foundUser && !requestSent && (
-        <CardFooter>
-          <Button 
-            onClick={handleConnect} 
-            className="w-full"
-          >
-            Send Connection Request
-          </Button>
-        </CardFooter>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {/* Owner Details */}
+            <div className="flex items-start gap-4 p-4 bg-white rounded-lg border">
+              <Avatar className="h-16 w-16 border-2 border-gray-200">
+                <AvatarImage src={foundUser.avatar_url || ''} />
+                <AvatarFallback className="text-lg">
+                  {foundUser.full_name?.charAt(0) || 'O'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">
+                    {foundUser.full_name || 'Property Owner'}
+                  </h3>
+                  <p className="text-sm text-gray-500">Owner ID: {foundUser.id}</p>
+                </div>
+                
+                {/* Property Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Building className="h-4 w-4 text-blue-500" />
+                    <span>PG/Hostel Property</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Home className="h-4 w-4 text-green-500" />
+                    <span>Rental Rooms Available</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <MapPin className="h-4 w-4 text-orange-500" />
+                    <span>Property Location</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                    <span className="text-green-700 font-medium">Available for Connection</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Success Message */}
+            {requestSent && (
+              <div className="p-4 bg-green-100 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-800">
+                  <CheckCircle className="h-5 w-5" />
+                  <p className="font-medium">
+                    🎉 Request sent to {foundUser.full_name || 'owner'}. You will be notified once they accept.
+                  </p>
+                </div>
+                <p className="text-sm text-green-700 mt-2">
+                  Check your notifications for updates on your connection request.
+                </p>
+              </div>
+            )}
+          </CardContent>
+          
+          {/* Action Button */}
+          {!requestSent && (
+            <CardFooter className="pt-0">
+              <Button 
+                onClick={handleConnect} 
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium"
+              >
+                ✅ Send Connection Request
+              </Button>
+            </CardFooter>
+          )}
+        </Card>
       )}
-    </Card>
+    </div>
   );
 };
 
