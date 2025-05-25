@@ -47,10 +47,10 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       label: "My Listings",
     },
     {
-      title: userRole === 'owner' ? "Connections" : "Find Your Owner",
+      title: userRole === 'owner' ? "Renters" : "Find Your Owner",
       href: "/connections",
       icon: <Users className="h-4 w-4" />,
-      label: userRole === 'owner' ? "Connections" : "Find Your Owner",
+      label: userRole === 'owner' ? "Renters" : "Find Your Owner",
     },
     {
       title: "Notices",

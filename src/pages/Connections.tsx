@@ -7,6 +7,7 @@ import ConnectionOverview from '@/components/relationship/ConnectionOverview';
 import ConnectionDetails from '@/components/relationship/ConnectionDetails';
 import FindYourOwner from '@/components/renter/FindYourOwner';
 import OwnerProfilePage from '@/components/renter/OwnerProfilePage';
+import RentersManagement from '@/components/owner/RentersManagement';
 import { useRelationships } from '@/hooks/useRelationships';
 
 const Connections = () => {
@@ -77,20 +78,20 @@ const Connections = () => {
   }
 
   const getPageTitle = () => {
-    if (isOwner) return 'Connections';
+    if (isOwner) return 'Renters';
     if (showOwnerProfile) return 'Your Property Owner';
     return 'Find Your Owner';
   };
 
   const getPageDescription = () => {
-    if (isOwner) return 'Manage your owner-renter relationships and documents';
+    if (isOwner) return 'Manage your renters, payments, documents, and complaints';
     if (showOwnerProfile) return 'Manage your rental relationship and communications';
     return 'Connect with your property owner to manage your rental relationship';
   };
   
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
           <p className="text-gray-500">{getPageDescription()}</p>
@@ -98,28 +99,15 @@ const Connections = () => {
         
         <div className="grid grid-cols-1 gap-8">
           {isOwner ? (
-            // Owner view - existing functionality
-            !selectedRelationship ? (
-              <ConnectionOverview
-                currentUserId={user.id}
-                isOwner={isOwner || false}
-                ownerRelationships={ownerRelationships}
-                renterRelationships={renterRelationships}
-                onRelationshipSelect={handleRelationshipSelect}
-                onStatusChange={fetchRelationships}
-                isLoading={loading}
-              />
-            ) : (
-              <ConnectionDetails
-                selectedRelationship={selectedRelationship}
-                isOwner={isOwner || false}
-                documents={documents}
-                onDocumentUploaded={handleDocumentUploaded}
-                onBackClick={handleBack}
-              />
-            )
+            // Owner view - new renters management
+            <RentersManagement
+              currentUserId={user.id}
+              ownerRelationships={ownerRelationships}
+              isLoading={loading}
+              onRefresh={refreshRelationships}
+            />
           ) : (
-            // Renter view - new functionality
+            // Renter view - existing functionality
             showOwnerProfile && selectedRelationship ? (
               <OwnerProfilePage 
                 relationship={selectedRelationship}
