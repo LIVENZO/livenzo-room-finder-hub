@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +20,14 @@ import { toast } from 'sonner';
 
 interface RenterDetailPanelProps {
   relationship: Relationship;
+  initialTab?: string;
   onBack: () => void;
   onRefresh: () => void;
 }
 
 const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   relationship,
+  initialTab = 'overview',
   onBack,
   onRefresh,
 }) => {
@@ -34,10 +35,15 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   const [loading, setLoading] = useState(true);
   const [responseText, setResponseText] = useState('');
   const [notes, setNotes] = useState('');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     loadDocuments();
   }, [relationship.id]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const loadDocuments = async () => {
     try {
@@ -106,7 +112,7 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
       </div>
 
       {/* Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -154,19 +160,19 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-20 flex-col">
+                <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('documents')}>
                   <MessageSquare className="h-6 w-6 mb-2" />
                   Chat
                 </Button>
-                <Button variant="outline" className="h-20 flex-col">
+                <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('documents')}>
                   <FileText className="h-6 w-6 mb-2" />
                   Documents
                 </Button>
-                <Button variant="outline" className="h-20 flex-col">
+                <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('payments')}>
                   <DollarSign className="h-6 w-6 mb-2" />
                   Payments
                 </Button>
-                <Button variant="outline" className="h-20 flex-col">
+                <Button variant="outline" className="h-20 flex-col" onClick={() => setActiveTab('complaints')}>
                   <AlertTriangle className="h-6 w-6 mb-2" />
                   Complaints
                 </Button>

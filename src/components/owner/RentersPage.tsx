@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +17,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     loading,
     processingIds,
     selectedRelationship,
+    selectedTab,
     handleAccept,
     handleDecline,
     handleDisconnect,
@@ -28,11 +28,12 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     handleBackToList,
   } = useRentersManagement(currentUserId);
 
-  // If a renter is selected, show the detail panel
+  // If a renter is selected, show the detail panel with the specific tab
   if (selectedRelationship) {
     return (
       <RenterDetailPanel
         relationship={selectedRelationship}
+        initialTab={selectedTab}
         onBack={handleBackToList}
         onRefresh={() => {}} // Will be handled by the hook
       />

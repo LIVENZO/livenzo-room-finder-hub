@@ -1,9 +1,12 @@
 
-import { useState, useEffect } from 'react';
-import { fetchOwnerRelationships, updateRelationshipStatus } from '@/services/relationship';
-import { Relationship } from '@/types/relationship';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { 
+  fetchOwnerRelationships,
+  updateRelationshipStatus,
+  type Relationship 
+} from '@/services/relationship';
 
 export const useRentersManagement = (currentUserId: string) => {
   const navigate = useNavigate();
@@ -11,31 +14,33 @@ export const useRentersManagement = (currentUserId: string) => {
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
   const [selectedRelationship, setSelectedRelationship] = useState<Relationship | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>('overview');
 
-  const loadRelationships = async () => {
-    setLoading(true);
+  const fetchRelationships = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await fetchOwnerRelationships(currentUserId);
       setRelationships(data);
     } catch (error) {
-      console.error('Error loading relationships:', error);
-      toast.error('Failed to load renter requests');
+      console.error('Error fetching relationships:', error);
+      toast.error('Failed to load renters');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
 
   useEffect(() => {
-    loadRelationships();
-  }, [currentUserId]);
+    fetchRelationships();
+  }, [fetchRelationships]);
 
   const handleAccept = async (relationshipId: string) => {
     setProcessingIds(prev => [...prev, relationshipId]);
     try {
       await updateRelationshipStatus(relationshipId, 'accepted');
-      await loadRelationships();
       toast.success('Connection request accepted');
+      await fetchRelationships();
     } catch (error) {
+      console.error('Error accepting request:', error);
       toast.error('Failed to accept request');
     } finally {
       setProcessingIds(prev => prev.filter(id => id !== relationshipId));
@@ -46,9 +51,10 @@ export const useRentersManagement = (currentUserId: string) => {
     setProcessingIds(prev => [...prev, relationshipId]);
     try {
       await updateRelationshipStatus(relationshipId, 'declined');
-      await loadRelationships();
       toast.success('Connection request declined');
+      await fetchRelationships();
     } catch (error) {
+      console.error('Error declining request:', error);
       toast.error('Failed to decline request');
     } finally {
       setProcessingIds(prev => prev.filter(id => id !== relationshipId));
@@ -56,16 +62,13 @@ export const useRentersManagement = (currentUserId: string) => {
   };
 
   const handleDisconnect = async (relationshipId: string) => {
-    if (!window.confirm('Are you sure you want to disconnect this renter?')) {
-      return;
-    }
-    
     setProcessingIds(prev => [...prev, relationshipId]);
     try {
       await updateRelationshipStatus(relationshipId, 'declined');
-      await loadRelationships();
-      toast.success('Renter disconnected');
+      toast.success('Renter disconnected successfully');
+      await fetchRelationships();
     } catch (error) {
+      console.error('Error disconnecting renter:', error);
       toast.error('Failed to disconnect renter');
     } finally {
       setProcessingIds(prev => prev.filter(id => id !== relationshipId));
@@ -74,24 +77,30 @@ export const useRentersManagement = (currentUserId: string) => {
 
   const handleDocuments = (relationship: Relationship) => {
     setSelectedRelationship(relationship);
+    setSelectedTab('documents');
   };
 
   const handleChat = (relationship: Relationship) => {
-    navigate(`/chats/${relationship.chat_room_id}`);
+    if (relationship.chat_room_id) {
+      navigate(`/chats/${relationship.chat_room_id}`);
+    } else {
+      toast.error('Chat room not available');
+    }
   };
 
   const handleComplaints = (relationship: Relationship) => {
-    navigate(`/chats/${relationship.chat_room_id}`);
+    setSelectedRelationship(relationship);
+    setSelectedTab('complaints');
   };
 
   const handlePayments = (relationship: Relationship) => {
-    console.log('Navigate to payments for relationship:', relationship.id);
-    toast.info('Payment management feature coming soon');
+    setSelectedRelationship(relationship);
+    setSelectedTab('payments');
   };
 
   const handleBackToList = () => {
     setSelectedRelationship(null);
-    loadRelationships();
+    setSelectedTab('overview');
   };
 
   return {
@@ -99,7 +108,7 @@ export const useRentersManagement = (currentUserId: string) => {
     loading,
     processingIds,
     selectedRelationship,
-    loadRelationships,
+    selectedTab,
     handleAccept,
     handleDecline,
     handleDisconnect,
