@@ -1,57 +1,21 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
-import { useNavigate, useParams } from 'react-router-dom';
-import ConnectionOverview from '@/components/relationship/ConnectionOverview';
-import ConnectionDetails from '@/components/relationship/ConnectionDetails';
-import FindYourOwner from '@/components/renter/FindYourOwner';
-import OwnerProfilePage from '@/components/renter/OwnerProfilePage';
-import RentersManagement from '@/components/owner/RentersManagement';
-import { useRelationships } from '@/hooks/useRelationships';
+import { useNavigate } from 'react-router-dom';
+import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
+import RentersPage from '@/components/owner/RentersPage';
 
 const Connections = () => {
   const { user, userRole, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { relationshipId } = useParams<{ relationshipId: string }>();
   const isOwner = userRole === 'owner';
-  const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   
-  const {
-    ownerRelationships,
-    renterRelationships,
-    selectedRelationship,
-    documents,
-    loading,
-    fetchRelationships,
-    handleRelationshipSelect,
-    handleDocumentUploaded,
-    handleBack,
-    refreshRelationships
-  } = useRelationships(user?.id, isOwner || false, relationshipId);
-  
-  // Force refresh when component mounts or user changes
   useEffect(() => {
-    if (user?.id) {
-      console.log("Connections page: Fetching relationships for user:", user.id);
-      fetchRelationships();
-    } else if (!isLoading) {
-      // If not loading and no user, redirect to login
+    if (!isLoading && !user?.id) {
       navigate('/');
     }
-  }, [user?.id, fetchRelationships, isLoading, navigate]);
-
-  const handleOwnerSelect = (relationship: any) => {
-    setShowOwnerProfile(true);
-    handleRelationshipSelect(relationship);
-  };
-
-  const handleBackToFindOwner = () => {
-    setShowOwnerProfile(false);
-    handleBack();
-    // Refresh relationships to get the latest data after disconnect
-    refreshRelationships();
-  };
+  }, [user?.id, isLoading, navigate]);
   
   if (isLoading) {
     return (
@@ -78,15 +42,13 @@ const Connections = () => {
   }
 
   const getPageTitle = () => {
-    if (isOwner) return 'Renters';
-    if (showOwnerProfile) return 'Your Property Owner';
-    return 'Find Your Owner';
+    return isOwner ? 'Renters' : 'Find Your Owner';
   };
 
   const getPageDescription = () => {
-    if (isOwner) return 'Manage your renters, payments, documents, and complaints';
-    if (showOwnerProfile) return 'Manage your rental relationship and communications';
-    return 'Connect with your property owner to manage your rental relationship';
+    return isOwner 
+      ? 'Manage your renters, connection requests, and communications'
+      : 'Connect with your property owner to manage your rental relationship';
   };
   
   return (
@@ -97,40 +59,11 @@ const Connections = () => {
           <p className="text-gray-500">{getPageDescription()}</p>
         </div>
         
-        <div className="grid grid-cols-1 gap-8">
-          {isOwner ? (
-            // Owner view - new renters management
-            <RentersManagement
-              currentUserId={user.id}
-              ownerRelationships={ownerRelationships}
-              isLoading={loading}
-              onRefresh={refreshRelationships}
-            />
-          ) : (
-            // Renter view - existing functionality
-            showOwnerProfile && selectedRelationship ? (
-              <OwnerProfilePage 
-                relationship={selectedRelationship}
-                onBack={handleBackToFindOwner}
-              />
-            ) : selectedRelationship ? (
-              <ConnectionDetails
-                selectedRelationship={selectedRelationship}
-                isOwner={false}
-                documents={documents}
-                onDocumentUploaded={handleDocumentUploaded}
-                onBackClick={handleBack}
-              />
-            ) : (
-              <FindYourOwner
-                currentUserId={user.id}
-                renterRelationships={renterRelationships}
-                onOwnerSelect={handleOwnerSelect}
-                onRefresh={refreshRelationships}
-              />
-            )
-          )}
-        </div>
+        {isOwner ? (
+          <RentersPage currentUserId={user.id} />
+        ) : (
+          <ConnectWithOwner currentUserId={user.id} />
+        )}
       </div>
     </Layout>
   );
