@@ -7,30 +7,28 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   User, 
-  Phone, 
   MessageSquare, 
   FileText, 
   AlertTriangle,
   UserMinus,
   CheckCircle,
   XCircle,
-  DollarSign,
-  Eye
+  DollarSign
 } from 'lucide-react';
 import { fetchOwnerRelationships, updateRelationshipStatus } from '@/services/relationship';
 import { Relationship } from '@/types/relationship';
 import { toast } from 'sonner';
-import RenterDetailPanel from './RenterDetailPanel';
+import { useNavigate } from 'react-router-dom';
 
 interface RentersPageProps {
   currentUserId: string;
 }
 
 const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
+  const navigate = useNavigate();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
-  const [selectedRenter, setSelectedRenter] = useState<Relationship | null>(null);
 
   const loadRelationships = async () => {
     setLoading(true);
@@ -92,27 +90,27 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     }
   };
 
-  const handleViewRenter = (relationship: Relationship) => {
-    setSelectedRenter(relationship);
+  const handleDocuments = (relationship: Relationship) => {
+    navigate(`/connections/${relationship.id}`);
   };
 
-  const handleBackToList = () => {
-    setSelectedRenter(null);
-    loadRelationships(); // Refresh data when returning to list
+  const handleChat = (relationship: Relationship) => {
+    navigate(`/chats/${relationship.chat_room_id}`);
+  };
+
+  const handleComplaints = (relationship: Relationship) => {
+    // For now, navigate to chat - can be enhanced with dedicated complaint view
+    navigate(`/chats/${relationship.chat_room_id}`);
+  };
+
+  const handlePayments = (relationship: Relationship) => {
+    // Navigate to payments view - to be implemented
+    console.log('Navigate to payments for relationship:', relationship.id);
+    toast.info('Payment management feature coming soon');
   };
 
   const pendingRequests = relationships.filter(r => r.status === 'pending');
   const connectedRenters = relationships.filter(r => r.status === 'accepted');
-
-  if (selectedRenter) {
-    return (
-      <RenterDetailPanel
-        relationship={selectedRenter}
-        onBack={handleBackToList}
-        onRefresh={loadRelationships}
-      />
-    );
-  }
 
   if (loading) {
     return (
@@ -244,24 +242,35 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handleViewRenter(relationship)}
+                            onClick={() => handleDocuments(relationship)}
                           >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Details
-                          </Button>
-                          <Button size="sm" variant="outline">
                             <FileText className="h-4 w-4 mr-1" />
                             Documents
                           </Button>
-                          <Button size="sm" variant="outline">
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleChat(relationship)}
+                          >
                             <MessageSquare className="h-4 w-4 mr-1" />
                             Chat
                           </Button>
-                          <Button size="sm" variant="outline">
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleComplaints(relationship)}
+                          >
                             <AlertTriangle className="h-4 w-4 mr-1" />
                             Complaints
                           </Button>
-                          <Button size="sm" variant="outline">
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePayments(relationship)}
+                          >
                             <DollarSign className="h-4 w-4 mr-1" />
                             Payments
                           </Button>
