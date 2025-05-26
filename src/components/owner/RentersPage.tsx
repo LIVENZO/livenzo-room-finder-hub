@@ -19,6 +19,7 @@ import { fetchOwnerRelationships, updateRelationshipStatus } from '@/services/re
 import { Relationship } from '@/types/relationship';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import RenterDetailPanel from './RenterDetailPanel';
 
 interface RentersPageProps {
   currentUserId: string;
@@ -29,6 +30,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const [selectedRelationship, setSelectedRelationship] = useState<Relationship | null>(null);
 
   const loadRelationships = async () => {
     setLoading(true);
@@ -91,7 +93,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   };
 
   const handleDocuments = (relationship: Relationship) => {
-    navigate(`/connections/${relationship.id}`);
+    setSelectedRelationship(relationship);
   };
 
   const handleChat = (relationship: Relationship) => {
@@ -108,6 +110,22 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     console.log('Navigate to payments for relationship:', relationship.id);
     toast.info('Payment management feature coming soon');
   };
+
+  const handleBackToList = () => {
+    setSelectedRelationship(null);
+    loadRelationships(); // Refresh the list
+  };
+
+  // If a renter is selected, show the detail panel
+  if (selectedRelationship) {
+    return (
+      <RenterDetailPanel
+        relationship={selectedRelationship}
+        onBack={handleBackToList}
+        onRefresh={loadRelationships}
+      />
+    );
+  }
 
   const pendingRequests = relationships.filter(r => r.status === 'pending');
   const connectedRenters = relationships.filter(r => r.status === 'accepted');
