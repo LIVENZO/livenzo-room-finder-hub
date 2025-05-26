@@ -1,12 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, User, MapPin, Home, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { findUserById, createRelationshipRequest } from '@/services/relationship';
+import { findUserById, createRelationshipRequest, fetchRenterRelationships } from '@/services/relationship';
+import { Relationship } from '@/types/relationship';
+import PostConnectionInterface from './PostConnectionInterface';
 
 interface ConnectWithOwnerProps {
   currentUserId: string;
@@ -18,6 +19,46 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
   const [foundOwner, setFoundOwner] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeConnection, setActiveConnection] = useState<Relationship | null>(null);
+  const [isLoadingConnection, setIsLoadingConnection] = useState(true);
+
+  // Check for existing active connection on component mount
+  useEffect(() => {
+    checkActiveConnection();
+  }, [currentUserId]);
+
+  const checkActiveConnection = async () => {
+    try {
+      const relationships = await fetchRenterRelationships(currentUserId);
+      const activeRel = relationships.find(rel => rel.status === 'accepted');
+      
+      if (activeRel) {
+        setActiveConnection(activeRel);
+      }
+    } catch (error) {
+      console.error('Error checking active connection:', error);
+    } finally {
+      setIsLoadingConnection(false);
+    }
+  };
+
+  // If there's an active connection, show the post-connection interface
+  if (isLoadingConnection) {
+    return (
+      <div className="max-w-2xl mx-auto text-center py-8">
+        <p className="text-lg">Loading connection status...</p>
+      </div>
+    );
+  }
+
+  if (activeConnection) {
+    return (
+      <PostConnectionInterface 
+        relationship={activeConnection} 
+        currentUserId={currentUserId}
+      />
+    );
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

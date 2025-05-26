@@ -13,11 +13,14 @@ import {
   AlertTriangle,
   UserMinus,
   CheckCircle,
-  XCircle
+  XCircle,
+  DollarSign,
+  Eye
 } from 'lucide-react';
 import { fetchOwnerRelationships, updateRelationshipStatus } from '@/services/relationship';
 import { Relationship } from '@/types/relationship';
 import { toast } from 'sonner';
+import RenterDetailPanel from './RenterDetailPanel';
 
 interface RentersPageProps {
   currentUserId: string;
@@ -27,6 +30,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const [selectedRenter, setSelectedRenter] = useState<Relationship | null>(null);
 
   const loadRelationships = async () => {
     setLoading(true);
@@ -88,8 +92,27 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     }
   };
 
+  const handleViewRenter = (relationship: Relationship) => {
+    setSelectedRenter(relationship);
+  };
+
+  const handleBackToList = () => {
+    setSelectedRenter(null);
+    loadRelationships(); // Refresh data when returning to list
+  };
+
   const pendingRequests = relationships.filter(r => r.status === 'pending');
   const connectedRenters = relationships.filter(r => r.status === 'accepted');
+
+  if (selectedRenter) {
+    return (
+      <RenterDetailPanel
+        relationship={selectedRenter}
+        onBack={handleBackToList}
+        onRefresh={loadRelationships}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -218,6 +241,14 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
                         </p>
                         
                         <div className="flex flex-wrap gap-2 mt-3">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewRenter(relationship)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Details
+                          </Button>
                           <Button size="sm" variant="outline">
                             <FileText className="h-4 w-4 mr-1" />
                             Documents
@@ -229,6 +260,10 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
                           <Button size="sm" variant="outline">
                             <AlertTriangle className="h-4 w-4 mr-1" />
                             Complaints
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Payments
                           </Button>
                         </div>
                       </div>
