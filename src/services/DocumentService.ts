@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadImagesToStorage } from "./storage/supabaseStorage";
@@ -28,15 +27,18 @@ export const uploadDocument = async (
   documentType: DocumentType
 ): Promise<Document | null> => {
   try {
+    console.log('Starting document upload:', { fileName: file.name, documentType, userId, relationshipId });
+    
     // First, upload the file to storage - use 'documents' bucket
     const fileUrls = await uploadImagesToStorage([file], userId, 'documents');
     
     if (!fileUrls.length) {
-      toast.error("Failed to upload document");
+      toast.error("Failed to upload document to storage");
       return null;
     }
     
     const filePath = fileUrls[0];
+    console.log('File uploaded to storage:', filePath);
     
     // Then create a document record in the database
     const { data, error } = await supabase
@@ -50,21 +52,22 @@ export const uploadDocument = async (
         file_type: file.type,
         file_size: file.size,
         status: 'submitted'
-      } as any)  // Using 'any' as a temporary fix to bypass the type issue
+      })
       .select()
       .single();
 
     if (error) {
-      toast.error("Failed to record document");
-      console.error("Error uploading document:", error);
+      console.error("Error creating document record:", error);
+      toast.error("Failed to record document in database");
       return null;
     }
 
+    console.log('Document record created:', data);
     toast.success("Document uploaded successfully");
     return data as Document;
   } catch (error) {
-    toast.error("Failed to upload document");
     console.error("Exception uploading document:", error);
+    toast.error("Failed to upload document");
     return null;
   }
 };
