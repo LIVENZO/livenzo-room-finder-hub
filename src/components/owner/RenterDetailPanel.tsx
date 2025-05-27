@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import { Document, fetchDocumentsForRelationship } from '@/services/DocumentService';
+import DocumentList from '@/components/document/DocumentList';
 import { toast } from 'sonner';
 
 interface RenterDetailPanelProps {
@@ -56,6 +58,10 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDocumentStatusChanged = async () => {
+    await loadDocuments();
   };
 
   const handleSendResponse = () => {
@@ -182,37 +188,11 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Uploaded Documents ({documents.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p>Loading documents...</p>
-              ) : documents.length === 0 ? (
-                <p className="text-gray-500">No documents uploaded yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{doc.file_name}</p>
-                        <p className="text-sm text-gray-500">
-                          {doc.document_type} • Uploaded {new Date(doc.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Badge variant={doc.status === 'approved' ? 'default' : doc.status === 'rejected' ? 'destructive' : 'secondary'}>
-                        {doc.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <DocumentList 
+            documents={documents}
+            isOwner={true}
+            onDocumentStatusChanged={handleDocumentStatusChanged}
+          />
         </TabsContent>
 
         <TabsContent value="complaints" className="space-y-4">
