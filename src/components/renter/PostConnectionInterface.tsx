@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import DocumentUpload from '@/components/document/DocumentUpload';
+import DocumentList from '@/components/document/DocumentList';
 import RenterComplaints from '@/components/renter/RenterComplaints';
 import RenterPayments from '@/components/renter/RenterPayments';
+import { fetchDocumentsForRelationship, type Document } from '@/services/DocumentService';
 
 interface PostConnectionInterfaceProps {
   relationship: Relationship;
@@ -28,8 +30,30 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
   currentUserId
 }) => {
   const [activeTab, setActiveTab] = useState('documents');
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const owner = relationship.owner;
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true);
+      const docs = await fetchDocumentsForRelationship(relationship.id);
+      setDocuments(docs);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, [relationship.id]);
+
+  const handleDocumentUploaded = async () => {
+    await loadDocuments();
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -93,15 +117,13 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
             <DocumentUpload 
               userId={currentUserId} 
               relationshipId={relationship.id}
+              onDocumentUploaded={handleDocumentUploaded}
             />
-            <Card>
-              <CardHeader>
-                <CardTitle>Uploaded Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500">Your uploaded documents will appear here</p>
-              </CardContent>
-            </Card>
+            <DocumentList 
+              documents={documents}
+              isOwner={false}
+              onDocumentStatusChanged={loadDocuments}
+            />
           </div>
         </TabsContent>
 
