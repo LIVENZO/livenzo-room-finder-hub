@@ -51,26 +51,57 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
   
   const viewDocument = async (document: Document) => {
     try {
-      // Extract the file path from the document URL
-      // URLs look like: https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/documents/user-id/filename
-      const filePath = document.file_path.split('/documents/')[1];
+      console.log('Attempting to view document:', document.file_path);
+      
+      // Check if the file_path is already a full URL or just a path
+      if (document.file_path.startsWith('http')) {
+        // It's already a full URL, open it directly
+        window.open(document.file_path, '_blank');
+        return;
+      }
+      
+      // Extract the file path for signed URL generation
+      // Handle both formats: "user-id/filename" and full storage paths
+      let filePath = document.file_path;
+      
+      // If the path contains the full storage URL structure, extract just the relative path
+      if (filePath.includes('/storage/v1/object/public/documents/')) {
+        filePath = filePath.split('/documents/')[1];
+      } else if (filePath.includes('documents/')) {
+        // Handle case where path is like "documents/user-id/filename"
+        filePath = filePath.replace('documents/', '');
+      }
       
       if (!filePath) {
         toast.error("Invalid document path");
         return;
       }
       
+      console.log('Using file path for signed URL:', filePath);
+      
       // Get a signed URL for the document
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(filePath, 60); // 60 seconds expiry
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
       
       if (error || !data?.signedUrl) {
         console.error("Error creating signed URL:", error);
-        toast.error("Could not access document");
+        
+        // Fallback: try to construct public URL
+        const publicUrl = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+          
+        if (publicUrl.data?.publicUrl) {
+          console.log('Using public URL as fallback:', publicUrl.data.publicUrl);
+          window.open(publicUrl.data.publicUrl, '_blank');
+        } else {
+          toast.error("Could not access document");
+        }
         return;
       }
       
+      console.log('Opening signed URL:', data.signedUrl);
       // Open the signed URL in a new tab
       window.open(data.signedUrl, '_blank');
     } catch (error) {
@@ -119,7 +150,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
                       variant="outline"
                       size="sm"
                       onClick={() => viewDocument(document)}
-                      className="text-sm text-blue-600 hover:text-blue-800"
+                      className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                     >
                       View
                     </Button>
@@ -129,14 +160,14 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="h-8"
+                          className="h-8 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
                           onClick={() => handleReject(document.id)}
                         >
                           <X className="h-3 w-3 mr-1" /> Reject
                         </Button>
                         <Button 
                           size="sm"
-                          className="h-8"
+                          className="h-8 bg-green-600 hover:bg-green-700"
                           onClick={() => handleApprove(document.id)}
                         >
                           <Check className="h-3 w-3 mr-1" /> Approve
