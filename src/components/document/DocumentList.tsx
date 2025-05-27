@@ -53,23 +53,25 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
     try {
       console.log('Attempting to view document:', document.file_path);
       
-      // Check if the file_path is already a full URL or just a path
-      if (document.file_path.startsWith('http')) {
-        // It's already a full URL, open it directly
-        window.open(document.file_path, '_blank');
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to view documents");
         return;
       }
       
       // Extract the file path for signed URL generation
-      // Handle both formats: "user-id/filename" and full storage paths
       let filePath = document.file_path;
       
-      // If the path contains the full storage URL structure, extract just the relative path
+      // Handle different file path formats
       if (filePath.includes('/storage/v1/object/public/documents/')) {
         filePath = filePath.split('/documents/')[1];
       } else if (filePath.includes('documents/')) {
-        // Handle case where path is like "documents/user-id/filename"
         filePath = filePath.replace('documents/', '');
+      } else if (filePath.startsWith('http')) {
+        // If it's already a full URL, try to open it directly
+        window.open(filePath, '_blank');
+        return;
       }
       
       if (!filePath) {
@@ -79,25 +81,19 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
       
       console.log('Using file path for signed URL:', filePath);
       
-      // Get a signed URL for the document
+      // Get a signed URL for the document with longer expiry
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(filePath, 3600); // 1 hour expiry
+        .createSignedUrl(filePath, 7200); // 2 hours expiry
       
-      if (error || !data?.signedUrl) {
+      if (error) {
         console.error("Error creating signed URL:", error);
-        
-        // Fallback: try to construct public URL
-        const publicUrl = supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath);
-          
-        if (publicUrl.data?.publicUrl) {
-          console.log('Using public URL as fallback:', publicUrl.data.publicUrl);
-          window.open(publicUrl.data.publicUrl, '_blank');
-        } else {
-          toast.error("Could not access document");
-        }
+        toast.error(`Failed to access document: ${error.message}`);
+        return;
+      }
+      
+      if (!data?.signedUrl) {
+        toast.error("Could not generate access URL for document");
         return;
       }
       

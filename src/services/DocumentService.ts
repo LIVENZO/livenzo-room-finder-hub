@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadImagesToStorage } from "./storage/supabaseStorage";
@@ -29,7 +30,14 @@ export const uploadDocument = async (
   try {
     console.log('Starting document upload:', { fileName: file.name, documentType, userId, relationshipId });
     
-    // First, upload the file to storage - use 'documents' bucket
+    // Check authentication first
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Please log in to upload documents");
+      return null;
+    }
+    
+    // Upload the file to storage using 'documents' bucket
     const fileUrls = await uploadImagesToStorage([file], userId, 'documents');
     
     if (!fileUrls.length) {
@@ -40,7 +48,7 @@ export const uploadDocument = async (
     const filePath = fileUrls[0];
     console.log('File uploaded to storage:', filePath);
     
-    // Then create a document record in the database
+    // Create a document record in the database
     const { data, error } = await supabase
       .from("documents")
       .insert({
@@ -75,6 +83,14 @@ export const uploadDocument = async (
 // Fetch documents for a relationship
 export const fetchDocumentsForRelationship = async (relationshipId: string): Promise<Document[]> => {
   try {
+    // Check authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error("No authenticated session found");
+      toast.error("Please log in to view documents");
+      return [];
+    }
+
     const { data, error } = await supabase
       .from("documents")
       .select("*")
@@ -83,12 +99,14 @@ export const fetchDocumentsForRelationship = async (relationshipId: string): Pro
 
     if (error) {
       console.error("Error fetching documents:", error);
+      toast.error("Failed to load documents");
       return [];
     }
 
     return data as Document[];
   } catch (error) {
     console.error("Exception fetching documents:", error);
+    toast.error("Failed to load documents");
     return [];
   }
 };
