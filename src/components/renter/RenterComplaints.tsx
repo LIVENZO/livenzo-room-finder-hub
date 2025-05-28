@@ -85,7 +85,7 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
       if (newComplaint) {
         setComplaintTitle('');
         setComplaintDescription('');
-        await loadComplaints(); // Reload complaints to show the new one
+        await loadComplaints();
       }
     } catch (error) {
       console.error('Error submitting complaint:', error);
@@ -135,7 +135,7 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto px-4">
       {/* Submit New Complaint */}
       <Card>
         <CardHeader>
@@ -154,6 +154,7 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
                 onChange={(e) => setComplaintTitle(e.target.value)}
                 placeholder="Brief description of the issue"
                 disabled={isSubmitting}
+                className="text-base leading-relaxed"
               />
             </div>
             
@@ -166,6 +167,7 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
                 placeholder="Provide detailed information about the issue..."
                 rows={4}
                 disabled={isSubmitting}
+                className="text-base leading-relaxed resize-none"
               />
             </div>
             
@@ -194,20 +196,24 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
               ) : (
                 complaints.map((complaint) => (
                   <div key={complaint.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{complaint.title}</h3>
-                      <Badge variant={getStatusVariant(complaint.status)} className="flex items-center gap-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="font-medium text-base leading-relaxed break-words flex-1">{complaint.title}</h3>
+                      <Badge variant={getStatusVariant(complaint.status)} className="flex items-center gap-1 shrink-0">
                         {getStatusIcon(complaint.status)}
                         {getStatusLabel(complaint.status)}
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-gray-600">{complaint.description}</p>
+                    <div className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap p-3 bg-gray-50 rounded">
+                      {complaint.description}
+                    </div>
                     
                     {complaint.response && (
                       <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                        <p className="text-sm font-medium text-blue-800 mb-1">Owner Response:</p>
-                        <p className="text-sm text-blue-700">{complaint.response}</p>
+                        <p className="text-sm font-medium text-blue-800 mb-2">Owner Response:</p>
+                        <div className="text-sm text-blue-700 leading-relaxed break-words whitespace-pre-wrap">
+                          {complaint.response}
+                        </div>
                       </div>
                     )}
                     

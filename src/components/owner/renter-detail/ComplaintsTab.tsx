@@ -52,7 +52,7 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
       
       if (updatedComplaint) {
         setResponseTexts(prev => ({ ...prev, [complaintId]: '' }));
-        await loadComplaints(); // Reload to show updated data
+        await loadComplaints();
       }
     } catch (error) {
       console.error('Error sending response:', error);
@@ -66,7 +66,7 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
       const updatedComplaint = await updateComplaintStatus(complaintId, newStatus);
       
       if (updatedComplaint) {
-        await loadComplaints(); // Reload to show updated data
+        await loadComplaints();
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -113,7 +113,7 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
   };
 
   return (
-    <Card>
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
@@ -124,7 +124,7 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
         {loading ? (
           <p className="text-center py-8">Loading complaints...</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {complaints.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
                 No complaints have been submitted yet
@@ -132,9 +132,9 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
             ) : (
               complaints.map((complaint) => (
                 <div key={complaint.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">{complaint.title}</h3>
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <h3 className="font-medium text-base leading-relaxed break-words flex-1">{complaint.title}</h3>
+                    <div className="flex items-center gap-2 shrink-0">
                       <Select 
                         value={complaint.status} 
                         onValueChange={(value: 'pending' | 'in_progress' | 'resolved') => 
@@ -156,23 +156,29 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
                       </Badge>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{complaint.description}</p>
-                  <p className="text-xs text-gray-500 mb-3">
+                  
+                  <div className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap p-3 bg-gray-50 rounded mb-3">
+                    {complaint.description}
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mb-4">
                     Submitted on {new Date(complaint.created_at).toLocaleDateString()}
                   </p>
                   
                   {complaint.response && (
-                    <div className="bg-green-50 border border-green-200 rounded p-3 mb-3">
-                      <p className="text-sm font-medium text-green-800 mb-1">Your Response:</p>
-                      <p className="text-sm text-green-700">{complaint.response}</p>
-                      <p className="text-xs text-green-600 mt-1">
+                    <div className="bg-green-50 border border-green-200 rounded p-3 mb-4">
+                      <p className="text-sm font-medium text-green-800 mb-2">Your Response:</p>
+                      <div className="text-sm text-green-700 leading-relaxed break-words whitespace-pre-wrap">
+                        {complaint.response}
+                      </div>
+                      <p className="text-xs text-green-600 mt-2">
                         Responded on {new Date(complaint.updated_at).toLocaleDateString()}
                       </p>
                     </div>
                   )}
                   
                   {complaint.status !== 'resolved' && (
-                    <div className="mt-4 space-y-3">
+                    <div className="space-y-3">
                       <Textarea
                         placeholder="Type your response to this complaint..."
                         value={responseTexts[complaint.id] || ''}
@@ -180,6 +186,8 @@ const ComplaintsTab: React.FC<ComplaintsTabProps> = ({ relationshipId }) => {
                           ...prev, 
                           [complaint.id]: e.target.value 
                         }))}
+                        className="text-base leading-relaxed resize-none"
+                        rows={3}
                       />
                       <Button 
                         onClick={() => handleSendResponse(complaint.id)} 
