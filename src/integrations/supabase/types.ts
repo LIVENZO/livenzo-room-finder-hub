@@ -86,6 +86,53 @@ export type Database = {
           },
         ]
       }
+      complaints: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          owner_id: string
+          relationship_id: string
+          renter_id: string
+          response: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          owner_id: string
+          relationship_id: string
+          renter_id: string
+          response?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          owner_id?: string
+          relationship_id?: string
+          renter_id?: string
+          response?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           comments: string | null

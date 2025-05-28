@@ -79,7 +79,7 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="complaints" className="space-y-4">
-          <ComplaintsTab />
+          <ComplaintsTab relationshipId={relationship.id} />
         </TabsContent>
 
         <TabsContent value="payments" className="space-y-4">
