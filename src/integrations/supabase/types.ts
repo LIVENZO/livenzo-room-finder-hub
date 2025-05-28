@@ -275,10 +275,17 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          owner_id: string | null
           payment_date: string
+          payment_method: string | null
+          payment_status: string
           property_id: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          relationship_id: string | null
           renter_id: string
           status: string
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -286,10 +293,17 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          owner_id?: string | null
           payment_date?: string
+          payment_method?: string | null
+          payment_status?: string
           property_id: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          relationship_id?: string | null
           renter_id: string
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -297,10 +311,17 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          owner_id?: string | null
           payment_date?: string
+          payment_method?: string | null
+          payment_status?: string
           property_id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          relationship_id?: string | null
           renter_id?: string
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -309,6 +330,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "relationships"
             referencedColumns: ["id"]
           },
           {
@@ -400,6 +428,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rent_status: {
+        Row: {
+          created_at: string
+          current_amount: number
+          due_date: string
+          id: string
+          last_payment_id: string | null
+          relationship_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          due_date: string
+          id?: string
+          last_payment_id?: string | null
+          relationship_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          due_date?: string
+          id?: string
+          last_payment_id?: string | null
+          relationship_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_status_last_payment_id_fkey"
+            columns: ["last_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_status_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: true
+            referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       renters: {
         Row: {

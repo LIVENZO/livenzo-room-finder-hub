@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,73 +9,64 @@ import {
   CreditCard, 
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { fetchRentStatus, fetchPaymentHistory, initializeRentStatus, type RentStatus, type Payment } from '@/services/PaymentService';
+import PaymentModal from '@/components/payment/PaymentModal';
 
 interface RenterPaymentsProps {
   relationshipId: string;
 }
 
 const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [rentStatus, setRentStatus] = useState<RentStatus | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Mock data for now - replace with real data later
-  const [currentRent] = useState({
-    amount: 1200,
-    dueDate: '2024-02-01',
-    status: 'pending'
-  });
+  useEffect(() => {
+    loadPaymentData();
+  }, [relationshipId]);
 
-  const [paymentHistory] = useState([
-    {
-      id: '1',
-      amount: 1200,
-      date: '2024-01-01',
-      status: 'paid',
-      method: 'UPI',
-      transactionId: 'TXN123456'
-    },
-    {
-      id: '2',
-      amount: 1200,
-      date: '2023-12-01',
-      status: 'paid',
-      method: 'Bank Transfer',
-      transactionId: 'TXN123455'
-    },
-    {
-      id: '3',
-      amount: 1200,
-      date: '2023-11-01',
-      status: 'paid',
-      method: 'Cash',
-      transactionId: null
-    }
-  ]);
-
-  const handlePayRent = async () => {
-    setIsProcessingPayment(true);
-    
+  const loadPaymentData = async () => {
     try {
-      // TODO: Implement actual payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Mock payment processing
+      setLoading(true);
       
-      toast.success('Payment processed successfully');
+      // Fetch rent status
+      let status = await fetchRentStatus(relationshipId);
+      
+      // If no rent status exists, initialize it
+      if (!status) {
+        await initializeRentStatus(relationshipId);
+        status = await fetchRentStatus(relationshipId);
+      }
+      
+      setRentStatus(status);
+      
+      // Fetch payment history
+      const history = await fetchPaymentHistory(relationshipId);
+      setPaymentHistory(history);
+      
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
+      console.error('Error loading payment data:', error);
+      toast.error('Failed to load payment information');
     } finally {
-      setIsProcessingPayment(false);
+      setLoading(false);
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'completed':
       case 'paid':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-orange-600" />;
       case 'overdue':
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'failed':
         return <AlertCircle className="h-4 w-4 text-red-600" />;
       default:
         return <DollarSign className="h-4 w-4" />;
@@ -84,18 +75,37 @@ const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
+      case 'completed':
       case 'paid':
         return 'default' as const;
       case 'pending':
         return 'secondary' as const;
       case 'overdue':
+      case 'failed':
         return 'destructive' as const;
       default:
         return 'secondary' as const;
     }
   };
 
-  const isOverdue = new Date(currentRent.dueDate) < new Date() && currentRent.status !== 'paid';
+  const isOverdue = rentStatus && new Date(rentStatus.due_date) < new Date() && rentStatus.status !== 'paid';
+  const currentStatus = isOverdue ? 'overdue' : rentStatus?.status || 'pending';
+
+  const handlePaymentSuccess = () => {
+    loadPaymentData();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Loading payment information...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -110,11 +120,11 @@ const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
         <CardContent>
           <div className="flex items-center justify-between p-6 bg-gray-50 rounded-lg">
             <div>
-              <p className="text-2xl font-bold">${currentRent.amount}</p>
+              <p className="text-2xl font-bold">₹{rentStatus?.current_amount || 1200}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Calendar className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">
-                  Due: {new Date(currentRent.dueDate).toLocaleDateString()}
+                  Due: {rentStatus?.due_date ? new Date(rentStatus.due_date).toLocaleDateString() : 'Not set'}
                 </span>
               </div>
               {isOverdue && (
@@ -127,21 +137,21 @@ const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
             
             <div className="text-right">
               <Badge 
-                variant={getStatusVariant(isOverdue ? 'overdue' : currentRent.status)}
+                variant={getStatusVariant(currentStatus)}
                 className="mb-3 flex items-center gap-1 w-fit ml-auto"
               >
-                {getStatusIcon(isOverdue ? 'overdue' : currentRent.status)}
-                {isOverdue ? 'Overdue' : currentRent.status}
+                {getStatusIcon(currentStatus)}
+                {currentStatus === 'overdue' ? 'Overdue' : 
+                 currentStatus === 'paid' ? 'Paid' : 'Pending'}
               </Badge>
               
-              {currentRent.status === 'pending' && (
+              {currentStatus !== 'paid' && (
                 <Button 
-                  onClick={handlePayRent}
-                  disabled={isProcessingPayment}
+                  onClick={() => setShowPaymentModal(true)}
                   className="flex items-center gap-2"
                 >
                   <CreditCard className="h-4 w-4" />
-                  {isProcessingPayment ? 'Processing...' : 'Pay Now'}
+                  Pay Now
                 </Button>
               )}
             </div>
@@ -164,22 +174,22 @@ const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
               paymentHistory.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    {getStatusIcon(payment.status)}
+                    {getStatusIcon(payment.payment_status)}
                     <div>
-                      <p className="font-medium">${payment.amount}</p>
+                      <p className="font-medium">₹{payment.amount}</p>
                       <p className="text-sm text-gray-500">
-                        {new Date(payment.date).toLocaleDateString()} • {payment.method}
+                        {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'Processing'} • {payment.payment_method}
                       </p>
-                      {payment.transactionId && (
+                      {payment.transaction_id && (
                         <p className="text-xs text-gray-400">
-                          ID: {payment.transactionId}
+                          ID: {payment.transaction_id}
                         </p>
                       )}
                     </div>
                   </div>
                   
-                  <Badge variant={getStatusVariant(payment.status)}>
-                    {payment.status}
+                  <Badge variant={getStatusVariant(payment.payment_status)}>
+                    {payment.payment_status}
                   </Badge>
                 </div>
               ))
@@ -187,6 +197,18 @@ const RenterPayments: React.FC<RenterPaymentsProps> = ({ relationshipId }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment Modal */}
+      {showPaymentModal && rentStatus && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          relationshipId={relationshipId}
+          ownerId={rentStatus.relationship_id} // This should be owner_id, will need to fetch from relationship
+          initialAmount={rentStatus.current_amount}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 };
