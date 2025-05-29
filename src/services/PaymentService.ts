@@ -78,6 +78,7 @@ export const createPayment = async (paymentData: {
       renter_id: user.id,
       owner_id: paymentData.owner_id,
       relationship_id: paymentData.relationship_id,
+      property_id: paymentData.relationship_id, // Using relationship_id as property_id for now
       amount: paymentData.amount,
       payment_method: paymentData.payment_method,
       payment_status: 'pending' as const,
