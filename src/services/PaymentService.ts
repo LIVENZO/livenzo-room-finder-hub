@@ -41,7 +41,7 @@ export const fetchRentStatus = async (relationshipId: string): Promise<RentStatu
     throw error;
   }
 
-  return data;
+  return data as RentStatus | null;
 };
 
 export const fetchPaymentHistory = async (relationshipId: string): Promise<Payment[]> => {
@@ -56,7 +56,7 @@ export const fetchPaymentHistory = async (relationshipId: string): Promise<Payme
     throw error;
   }
 
-  return data || [];
+  return (data || []) as Payment[];
 };
 
 export const createPayment = async (paymentData: {
@@ -80,7 +80,7 @@ export const createPayment = async (paymentData: {
       relationship_id: paymentData.relationship_id,
       amount: paymentData.amount,
       payment_method: paymentData.payment_method,
-      payment_status: 'pending',
+      payment_status: 'pending' as const,
       due_date: paymentData.due_date || null,
       payment_date: new Date().toISOString()
     })
@@ -92,7 +92,7 @@ export const createPayment = async (paymentData: {
     throw error;
   }
 
-  return data;
+  return data as Payment;
 };
 
 export const updatePaymentStatus = async (
@@ -165,7 +165,7 @@ export const initializeRentStatus = async (
       relationship_id: relationshipId,
       current_amount: amount,
       due_date: dueDate,
-      status: 'pending'
+      status: 'pending' as const
     });
 
   if (error) {
