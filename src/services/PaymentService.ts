@@ -75,6 +75,7 @@ export const createPayment = async (paymentData: {
   const { data, error } = await supabase
     .from('payments')
     .insert({
+      renter_id: user.id,
       owner_id: paymentData.owner_id,
       relationship_id: paymentData.relationship_id,
       property_id: paymentData.relationship_id, // Using relationship_id as property_id for now
