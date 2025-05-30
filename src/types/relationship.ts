@@ -7,6 +7,7 @@ export interface Relationship {
   created_at: string;
   updated_at: string;
   chat_room_id: string;
+  archived?: boolean;
   owner?: {
     full_name: string;
     avatar_url: string;
