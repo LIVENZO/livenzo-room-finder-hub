@@ -2,49 +2,84 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Relationship } from "@/types/relationship";
 
-// Fetch relationships where current user is renter
 export const fetchRenterRelationships = async (userId: string): Promise<Relationship[]> => {
   try {
-    console.log("Fetching renter relationships for userId:", userId);
+    console.log("Fetching renter relationships for user:", userId);
     
-    // First, fetch the relationships
-    const { data: relationshipsData, error: relationshipsError } = await supabase
-      .from("relationships")
-      .select("*")
-      .eq("renter_id", userId);
-    
-    if (relationshipsError) {
-      console.error("Error fetching renter relationships:", relationshipsError);
+    // Use the new function to get only active (non-archived) relationships
+    const { data, error } = await supabase.rpc('get_active_renter_relationships', {
+      renter_user_id: userId
+    });
+
+    if (error) {
+      console.error("Error fetching renter relationships:", error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No active relationships found for renter:", userId);
       return [];
     }
-    
-    console.log("Renter relationships fetched:", relationshipsData?.length || 0, relationshipsData);
-    
-    // Then fetch the profiles separately and join them manually
-    const relationships = relationshipsData as Relationship[];
-    const enrichedRelationships = await Promise.all(
-      relationships.map(async (relationship) => {
-        // Fetch owner profile
-        const { data: ownerProfile } = await supabase
-          .from("user_profiles")
-          .select("full_name, avatar_url")
-          .eq("id", relationship.owner_id)
-          .single();
-          
-        return {
-          ...relationship,
-          owner: {
-            full_name: ownerProfile?.full_name || 'Unknown User',
-            avatar_url: ownerProfile?.avatar_url || '',
-          }
-        };
-      })
-    );
 
-    console.log("Enriched renter relationships:", enrichedRelationships);
-    return enrichedRelationships;
+    // Fetch owner profiles for each relationship
+    const ownerIds = data.map((rel: any) => rel.owner_id);
+    const { data: ownerProfiles, error: ownerError } = await supabase
+      .from("user_profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", ownerIds);
+
+    if (ownerError) {
+      console.error("Error fetching owner profiles:", ownerError);
+      // Continue without owner profiles rather than failing completely
+    }
+
+    // Map relationships with owner data
+    const relationshipsWithOwners = data.map((rel: any) => {
+      const ownerProfile = ownerProfiles?.find(owner => owner.id === rel.owner_id);
+      return {
+        ...rel,
+        owner: ownerProfile ? {
+          full_name: ownerProfile.full_name,
+          avatar_url: ownerProfile.avatar_url
+        } : null
+      } as Relationship;
+    });
+
+    console.log("Fetched renter relationships with owners:", relationshipsWithOwners);
+    return relationshipsWithOwners;
   } catch (error) {
     console.error("Exception fetching renter relationships:", error);
-    return [];
+    throw error;
+  }
+};
+
+// Function to fetch archived relationships for "Previous Connections" section
+export const fetchArchivedRenterRelationships = async (userId: string): Promise<Relationship[]> => {
+  try {
+    console.log("Fetching archived renter relationships for user:", userId);
+    
+    const { data, error } = await supabase
+      .from("relationships")
+      .select(`
+        *,
+        owner:user_profiles!relationships_owner_id_fkey(
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq("renter_id", userId)
+      .eq("archived", true)
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching archived relationships:", error);
+      throw error;
+    }
+
+    console.log("Fetched archived relationships:", data);
+    return data as Relationship[];
+  } catch (error) {
+    console.error("Exception fetching archived relationships:", error);
+    throw error;
   }
 };

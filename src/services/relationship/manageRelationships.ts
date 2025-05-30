@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Relationship } from "@/types/relationship";
 import { toast } from "sonner";
@@ -23,7 +24,8 @@ export const createRelationshipRequest = async (
       .from("relationships")
       .select("*")
       .eq("owner_id", ownerId)
-      .eq("renter_id", renterId);
+      .eq("renter_id", renterId)
+      .eq("archived", false); // Only check non-archived relationships
       
     if (checkError) {
       console.error("Error checking existing relationship:", checkError);
@@ -85,19 +87,15 @@ export const createRelationshipRequest = async (
         owner_id: ownerId,
         renter_id: renterId,
         status: "pending",
-        chat_room_id: chatRoomId
+        chat_room_id: chatRoomId,
+        archived: false
       })
       .select()
       .single();
 
     if (error) {
       console.error("Error creating relationship:", error);
-      // Handle the specific duplicate key error
-      if (error.code === '23505' && error.message.includes('relationships_owner_id_renter_id_key')) {
-        toast.error("A connection request with this owner already exists");
-      } else {
-        toast.error("Failed to send connection request");
-      }
+      toast.error("Failed to send connection request");
       return null;
     }
 
@@ -112,7 +110,7 @@ export const createRelationshipRequest = async (
   }
 };
 
-// Update relationship status (owner accepting/declining)
+// Update relationship status (owner accepting/declining, or renter disconnecting)
 export const updateRelationshipStatus = async (
   relationshipId: string,
   status: 'accepted' | 'declined'
@@ -154,5 +152,67 @@ export const updateRelationshipStatus = async (
     toast.error(`Failed to ${status} connection request`);
     console.error("Exception updating relationship:", error);
     return null;
+  }
+};
+
+// Archive previous connections when renter accepts new connection
+export const archivePreviousConnections = async (
+  renterId: string,
+  newOwnerId: string
+): Promise<boolean> => {
+  try {
+    console.log("Archiving previous connections for renter:", renterId, "new owner:", newOwnerId);
+    
+    const { error } = await supabase.rpc('archive_previous_connection_data', {
+      renter_user_id: renterId,
+      new_owner_id: newOwnerId
+    });
+
+    if (error) {
+      console.error("Error archiving previous connections:", error);
+      return false;
+    }
+
+    console.log("Previous connections archived successfully");
+    return true;
+  } catch (error) {
+    console.error("Exception archiving previous connections:", error);
+    return false;
+  }
+};
+
+// Function specifically for renter disconnection
+export const disconnectFromOwner = async (
+  relationshipId: string,
+  renterId: string
+): Promise<boolean> => {
+  try {
+    console.log("Renter disconnecting from relationship:", relationshipId);
+    
+    // Update the relationship status to declined
+    const { data, error } = await supabase
+      .from("relationships")
+      .update({ 
+        status: "declined",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", relationshipId)
+      .eq("renter_id", renterId) // Ensure only the renter can disconnect
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error disconnecting from owner:", error);
+      toast.error("Failed to disconnect from owner");
+      return false;
+    }
+
+    console.log("Successfully disconnected from owner:", data);
+    toast.success("Successfully disconnected from your property owner");
+    return true;
+  } catch (error) {
+    console.error("Exception disconnecting from owner:", error);
+    toast.error("Failed to disconnect from owner");
+    return false;
   }
 };

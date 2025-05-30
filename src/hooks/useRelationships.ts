@@ -7,6 +7,7 @@ import {
   type Relationship
 } from '@/services/relationship';
 import { fetchDocumentsForRelationship, type Document } from '@/services/DocumentService';
+import { archivePreviousConnections } from '@/services/relationship/manageRelationships';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,6 +40,17 @@ export const useRelationships = (userId: string | undefined, isOwner: boolean, r
       } else {
         renter = await fetchRenterRelationships(userId);
         console.log("Renter relationships loaded:", renter.length);
+        
+        // Check if there's a newly accepted relationship that needs archival
+        const acceptedRelationships = renter.filter(r => r.status === 'accepted');
+        if (acceptedRelationships.length > 0) {
+          const latestAccepted = acceptedRelationships.sort((a, b) => 
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          )[0];
+          
+          // Archive previous connections when user has an accepted relationship
+          await archivePreviousConnections(userId, latestAccepted.owner_id);
+        }
       }
       
       setOwnerRelationships(owner);

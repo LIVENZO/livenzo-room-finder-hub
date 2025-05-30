@@ -135,6 +135,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          archived: boolean | null
           comments: string | null
           created_at: string
           document_type: Database["public"]["Enums"]["document_type"]
@@ -149,6 +150,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean | null
           comments?: string | null
           created_at?: string
           document_type: Database["public"]["Enums"]["document_type"]
@@ -163,6 +165,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean | null
           comments?: string | null
           created_at?: string
           document_type?: Database["public"]["Enums"]["document_type"]
@@ -247,6 +250,7 @@ export type Database = {
       }
       notices: {
         Row: {
+          archived: boolean | null
           created_at: string
           id: string
           message: string
@@ -254,6 +258,7 @@ export type Database = {
           renter_id: string
         }
         Insert: {
+          archived?: boolean | null
           created_at?: string
           id?: string
           message: string
@@ -261,6 +266,7 @@ export type Database = {
           renter_id: string
         }
         Update: {
+          archived?: boolean | null
           created_at?: string
           id?: string
           message?: string
@@ -401,6 +407,7 @@ export type Database = {
       }
       relationships: {
         Row: {
+          archived: boolean | null
           chat_room_id: string
           created_at: string
           id: string
@@ -410,6 +417,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean | null
           chat_room_id?: string
           created_at?: string
           id?: string
@@ -419,6 +427,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean | null
           chat_room_id?: string
           created_at?: string
           id?: string
@@ -646,6 +655,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_previous_connection_data: {
+        Args: { renter_user_id: string; new_owner_id: string }
+        Returns: undefined
+      }
+      get_active_renter_relationships: {
+        Args: { renter_user_id: string }
+        Returns: {
+          id: string
+          owner_id: string
+          renter_id: string
+          status: string
+          chat_room_id: string
+          created_at: string
+          updated_at: string
+          archived: boolean
+        }[]
+      }
       update_room_availability_for_owner: {
         Args: { room_id: string; is_available: boolean }
         Returns: undefined
