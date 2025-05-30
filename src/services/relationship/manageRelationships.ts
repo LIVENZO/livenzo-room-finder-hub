@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Relationship } from "@/types/relationship";
 import { toast } from "sonner";
@@ -19,7 +18,7 @@ export const createRelationshipRequest = async (
       return null;
     }
     
-    // Check if there's already an active or pending relationship between these users
+    // Check if there's already a relationship between these users
     const { data: existingRelationships, error: checkError } = await supabase
       .from("relationships")
       .select("*")
@@ -32,25 +31,50 @@ export const createRelationshipRequest = async (
       return null;
     }
     
-    // Only block if there's an active (accepted) or pending relationship
-    const blockingRelationship = existingRelationships?.find(rel => 
-      rel.status === 'accepted' || rel.status === 'pending'
-    );
+    console.log("Existing relationships found:", existingRelationships);
     
-    if (blockingRelationship) {
-      if (blockingRelationship.status === 'accepted') {
+    if (existingRelationships && existingRelationships.length > 0) {
+      // Get the most recent relationship
+      const latestRelationship = existingRelationships.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
+      
+      console.log("Latest relationship status:", latestRelationship.status);
+      
+      // Block if there's an active (accepted) or pending relationship
+      if (latestRelationship.status === 'accepted') {
         toast.error("You already have an active connection with this owner");
-      } else {
+        return null;
+      } else if (latestRelationship.status === 'pending') {
         toast.error("You already have a pending request with this owner");
+        return null;
+      } else if (latestRelationship.status === 'declined') {
+        // For declined relationships, update the existing record instead of creating new one
+        console.log("Updating existing declined relationship to pending");
+        
+        const { data: updatedRelationship, error: updateError } = await supabase
+          .from("relationships")
+          .update({ 
+            status: "pending",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", latestRelationship.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("Error updating relationship:", updateError);
+          toast.error("Failed to send connection request");
+          return null;
+        }
+
+        console.log("Relationship updated successfully:", updatedRelationship);
+        toast.success("Request sent again to this PG successfully");
+        return updatedRelationship as Relationship;
       }
-      return null;
     }
     
-    // Check if this is a reconnection (previously declined)
-    const previousConnection = existingRelationships?.find(rel => rel.status === 'declined');
-    const isReconnection = !!previousConnection;
-    
-    console.log("Creating relationship request from renter:", renterId, "to owner:", ownerId);
+    console.log("Creating new relationship request from renter:", renterId, "to owner:", ownerId);
     
     // Generate a unique room ID for chat
     const chatRoomId = uuidv4();
@@ -67,24 +91,23 @@ export const createRelationshipRequest = async (
       .single();
 
     if (error) {
-      toast.error("Failed to send connection request");
       console.error("Error creating relationship:", error);
+      // Handle the specific duplicate key error
+      if (error.code === '23505' && error.message.includes('relationships_owner_id_renter_id_key')) {
+        toast.error("A connection request with this owner already exists");
+      } else {
+        toast.error("Failed to send connection request");
+      }
       return null;
     }
 
     console.log("Relationship request created successfully:", data);
-    
-    // Show appropriate success message
-    if (isReconnection) {
-      toast.success("Request sent again to this PG successfully");
-    } else {
-      toast.success("Connection request sent successfully");
-    }
+    toast.success("Connection request sent successfully");
     
     return data as Relationship;
   } catch (error) {
-    toast.error("Failed to send connection request");
     console.error("Exception creating relationship:", error);
+    toast.error("Failed to send connection request");
     return null;
   }
 };
