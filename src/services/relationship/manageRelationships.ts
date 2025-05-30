@@ -19,12 +19,12 @@ export const createRelationshipRequest = async (
       return null;
     }
     
-    // Check if a relationship already exists between these users
+    // Check if there's already an active or pending relationship between these users
     const { data: existingRelationships, error: checkError } = await supabase
       .from("relationships")
       .select("*")
-      .or(`owner_id.eq.${ownerId},renter_id.eq.${renterId}`)
-      .or(`owner_id.eq.${renterId},renter_id.eq.${ownerId}`);
+      .eq("owner_id", ownerId)
+      .eq("renter_id", renterId);
       
     if (checkError) {
       console.error("Error checking existing relationship:", checkError);
@@ -32,11 +32,23 @@ export const createRelationshipRequest = async (
       return null;
     }
     
-    if (existingRelationships && existingRelationships.length > 0) {
-      console.log("Existing relationship found:", existingRelationships);
-      toast.error("You already have a relationship with this owner");
+    // Only block if there's an active (accepted) or pending relationship
+    const blockingRelationship = existingRelationships?.find(rel => 
+      rel.status === 'accepted' || rel.status === 'pending'
+    );
+    
+    if (blockingRelationship) {
+      if (blockingRelationship.status === 'accepted') {
+        toast.error("You already have an active connection with this owner");
+      } else {
+        toast.error("You already have a pending request with this owner");
+      }
       return null;
     }
+    
+    // Check if this is a reconnection (previously declined)
+    const previousConnection = existingRelationships?.find(rel => rel.status === 'declined');
+    const isReconnection = !!previousConnection;
     
     console.log("Creating relationship request from renter:", renterId, "to owner:", ownerId);
     
@@ -61,7 +73,14 @@ export const createRelationshipRequest = async (
     }
 
     console.log("Relationship request created successfully:", data);
-    toast.success("Connection request sent successfully");
+    
+    // Show appropriate success message
+    if (isReconnection) {
+      toast.success("Request sent again to this PG successfully");
+    } else {
+      toast.success("Connection request sent successfully");
+    }
+    
     return data as Relationship;
   } catch (error) {
     toast.error("Failed to send connection request");
