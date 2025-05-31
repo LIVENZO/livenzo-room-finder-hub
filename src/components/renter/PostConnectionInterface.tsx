@@ -11,6 +11,7 @@ import ComplaintsTab from './post-connection/ComplaintsTab';
 import PaymentsTab from './post-connection/PaymentsTab';
 import RenterDisconnectButton from './RenterDisconnectButton';
 import { useNavigate } from 'react-router-dom';
+import { useRelationships } from '@/hooks/useRelationships';
 
 interface PostConnectionInterfaceProps {
   relationship: Relationship;
@@ -22,10 +23,21 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
   currentUserId
 }) => {
   const navigate = useNavigate();
+  
+  // Use the relationship hook to get documents and handlers
+  const {
+    documents,
+    handleDocumentUploaded
+  } = useRelationships(currentUserId, false, relationship.id);
 
   const handleDisconnect = () => {
     // Navigate back to connections page after disconnect
     navigate('/connections');
+  };
+
+  const handleDocumentStatusChanged = () => {
+    // Refresh documents when status changes
+    handleDocumentUploaded();
   };
 
   return (
@@ -106,15 +118,21 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
         </TabsList>
 
         <TabsContent value="documents" className="mt-6">
-          <DocumentsTab relationshipId={relationship.id} />
+          <DocumentsTab 
+            currentUserId={currentUserId}
+            relationshipId={relationship.id}
+            documents={documents}
+            onDocumentUploaded={handleDocumentUploaded}
+            onDocumentStatusChanged={handleDocumentStatusChanged}
+          />
         </TabsContent>
 
         <TabsContent value="complaints" className="mt-6">
-          <ComplaintsTab relationship={relationship} />
+          <ComplaintsTab relationshipId={relationship.id} />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
-          <PaymentsTab relationship={relationship} />
+          <PaymentsTab relationshipId={relationship.id} />
         </TabsContent>
       </Tabs>
     </div>
