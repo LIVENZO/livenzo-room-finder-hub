@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { findUserById, createRelationshipRequest } from '@/services/relationship';
-import { User, Search, X, CheckCircle, AlertCircle, MapPin, Home, Building } from 'lucide-react';
+import { User, Search, X, CheckCircle, AlertCircle, MapPin, Home, Building, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -20,10 +21,38 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [hasActiveConnection, setHasActiveConnection] = useState(false);
   const { requireComplete } = useProfileCompletion();
+
+  // Check if user has active connection
+  useEffect(() => {
+    const checkActiveConnection = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("relationships")
+          .select("*")
+          .eq("renter_id", currentUserId)
+          .eq("status", "accepted")
+          .eq("archived", false);
+
+        if (!error && data && data.length > 0) {
+          setHasActiveConnection(true);
+        }
+      } catch (error) {
+        console.error("Error checking active connection:", error);
+      }
+    };
+
+    checkActiveConnection();
+  }, [currentUserId]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (hasActiveConnection) {
+      toast.error("You already have an active connection. Please disconnect first to search for a new owner.");
+      return;
+    }
     
     if (!searchId.trim()) {
       toast.error("Please enter a valid Owner ID");
@@ -57,6 +86,11 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const handleConnect = async () => {
     if (!foundUser) return;
     
+    if (hasActiveConnection) {
+      toast.error("You already have an active connection. Please disconnect first to connect with a new owner.");
+      return;
+    }
+    
     if (!requireComplete()) {
       return;
     }
@@ -89,6 +123,26 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     clearSearch();
   };
 
+  // Show disabled state if user has active connection
+  if (hasActiveConnection) {
+    return (
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 text-orange-800">
+            <Lock className="h-6 w-6" />
+            <div>
+              <h3 className="font-medium">Search Disabled</h3>
+              <p className="text-sm text-orange-700 mt-1">
+                You already have an active connection with an owner. To search for a new owner, 
+                please disconnect from your current owner first.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Search Form */}
@@ -100,9 +154,9 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             className="w-full pr-10 h-12 text-base border-2 border-gray-200 focus:border-blue-500"
-            disabled={requestSent}
+            disabled={requestSent || hasActiveConnection}
           />
-          {searchId && !requestSent && (
+          {searchId && !requestSent && !hasActiveConnection && (
             <button 
               type="button" 
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -114,7 +168,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
         </div>
         <Button 
           type="submit" 
-          disabled={isSearching || !searchId.trim() || requestSent}
+          disabled={isSearching || !searchId.trim() || requestSent || hasActiveConnection}
           className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
         >
           {isSearching ? (
@@ -234,6 +288,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
               <Button 
                 onClick={handleConnect} 
                 className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium"
+                disabled={hasActiveConnection}
               >
                 ✅ Send Connection Request
               </Button>

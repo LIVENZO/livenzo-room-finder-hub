@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Users, Search, MapPin, Home } from 'lucide-react';
+import { Users, Search, MapPin, Home, AlertTriangle } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import UserSearch from '@/components/relationship/UserSearch';
 
@@ -76,6 +76,22 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
                 <Users className="h-4 w-4 mr-2" />
                 View Owner Profile
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Warning about connecting to new owner */}
+        <Card className="mt-6 border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3 text-orange-800">
+              <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2">
+                <p className="font-medium">Want to connect to a different owner?</p>
+                <p className="text-sm text-orange-700">
+                  You can only be connected to one owner at a time. To connect with a new owner, 
+                  you'll need to disconnect from your current owner first.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

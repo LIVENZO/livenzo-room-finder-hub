@@ -19,6 +19,25 @@ export const createRelationshipRequest = async (
       return null;
     }
     
+    // Check if renter already has an active (accepted) connection with any owner
+    const { data: activeConnections, error: activeCheckError } = await supabase
+      .from("relationships")
+      .select("*")
+      .eq("renter_id", renterId)
+      .eq("status", "accepted")
+      .eq("archived", false);
+      
+    if (activeCheckError) {
+      console.error("Error checking active connections:", activeCheckError);
+      toast.error("Failed to verify connection status");
+      return null;
+    }
+    
+    if (activeConnections && activeConnections.length > 0) {
+      toast.error("You already have an active connection with an owner. Please disconnect first before connecting to a new owner.");
+      return null;
+    }
+    
     // Check if there's already a relationship between these users
     const { data: existingRelationships, error: checkError } = await supabase
       .from("relationships")
