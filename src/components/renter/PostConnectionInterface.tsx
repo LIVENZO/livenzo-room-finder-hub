@@ -1,11 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, FileText, MessageSquare, AlertCircle, CreditCard } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
-import { fetchDocumentsForRelationship, type Document } from '@/services/DocumentService';
-import { fetchOwnerProfileForRenter } from '@/services/OwnerProfileService';
-import { UserProfile } from '@/services/UserProfileService';
-import OwnerInfoCard from './post-connection/OwnerInfoCard';
-import ConnectionTabs from './post-connection/ConnectionTabs';
+import DocumentsTab from './post-connection/DocumentsTab';
+import ComplaintsTab from './post-connection/ComplaintsTab';
+import PaymentsTab from './post-connection/PaymentsTab';
+import RenterDisconnectButton from './RenterDisconnectButton';
+import { useNavigate } from 'react-router-dom';
 
 interface PostConnectionInterfaceProps {
   relationship: Relationship;
@@ -16,66 +21,102 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
   relationship,
   currentUserId
 }) => {
-  const [activeTab, setActiveTab] = useState('documents');
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const loadDocuments = async () => {
-    try {
-      setLoading(true);
-      const docs = await fetchDocumentsForRelationship(relationship.id);
-      setDocuments(docs);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadOwnerProfile = async () => {
-    try {
-      setProfileLoading(true);
-      if (relationship.owner_id) {
-        const profile = await fetchOwnerProfileForRenter(relationship.owner_id, currentUserId);
-        setOwnerProfile(profile);
-      }
-    } catch (error) {
-      console.error('Error loading owner profile:', error);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadDocuments();
-    loadOwnerProfile();
-  }, [relationship.id, relationship.owner_id, currentUserId]);
-
-  const handleDocumentUploaded = async () => {
-    await loadDocuments();
+  const handleDisconnect = () => {
+    // Navigate back to connections page after disconnect
+    navigate('/connections');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <OwnerInfoCard
-          relationship={relationship}
-          ownerProfile={ownerProfile}
-          profileLoading={profileLoading}
-        />
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Connection Status Header */}
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div>
+                  <CardTitle className="text-xl text-green-800">
+                    Connected to Property Owner
+                  </CardTitle>
+                  <p className="text-sm text-green-600 mt-1">
+                    Your rental connection is active
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Badge className="bg-green-100 text-green-800 border-green-300">
+              Active Connection
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Owner Info */}
+          <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-green-200">
+            <Avatar className="h-16 w-16 border-2 border-green-200">
+              <AvatarImage src={relationship.owner?.avatar_url || ''} />
+              <AvatarFallback className="bg-green-100 text-green-800 text-xl">
+                {relationship.owner?.full_name?.charAt(0) || 'O'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {relationship.owner?.full_name || 'Property Owner'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                Connected since {new Date(relationship.created_at).toLocaleDateString()}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-700 font-medium">Active Connection</span>
+              </div>
+            </div>
+          </div>
 
-        <ConnectionTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          currentUserId={currentUserId}
-          relationshipId={relationship.id}
-          documents={documents}
-          onDocumentUploaded={handleDocumentUploaded}
-          onDocumentStatusChanged={loadDocuments}
-        />
-      </div>
+          {/* Disconnect Button */}
+          <div className="flex justify-center pt-2">
+            <RenterDisconnectButton
+              relationship={relationship}
+              onDisconnect={handleDisconnect}
+              className="w-auto"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Management Tabs */}
+      <Tabs defaultValue="documents" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Documents
+          </TabsTrigger>
+          <TabsTrigger value="complaints" className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Complaints
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Payments
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documents" className="mt-6">
+          <DocumentsTab relationshipId={relationship.id} />
+        </TabsContent>
+
+        <TabsContent value="complaints" className="mt-6">
+          <ComplaintsTab relationship={relationship} />
+        </TabsContent>
+
+        <TabsContent value="payments" className="mt-6">
+          <PaymentsTab relationship={relationship} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
