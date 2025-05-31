@@ -33,70 +33,16 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
     }
   }, [onRefresh, declinedConnections.length]);
 
+  // If user has active connection, redirect directly to post-connection interface
+  React.useEffect(() => {
+    if (activeConnection) {
+      onOwnerSelect(activeConnection);
+    }
+  }, [activeConnection, onOwnerSelect]);
+
+  // If we have an active connection, don't render anything as we're redirecting
   if (activeConnection) {
-    return (
-      <div className="max-w-md mx-auto">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow border-green-200">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl text-green-700">Your Property Owner</CardTitle>
-            <p className="text-sm text-gray-600">Connected and Active</p>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="flex flex-col items-center space-y-4"
-              onClick={() => onOwnerSelect(activeConnection)}
-            >
-              <Avatar className="h-20 w-20 border-2 border-green-200">
-                <AvatarImage src={activeConnection.owner?.avatar_url || ''} />
-                <AvatarFallback className="text-xl bg-green-50 text-green-700">
-                  {activeConnection.owner?.full_name?.charAt(0) || 'O'}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold text-lg">
-                  {activeConnection.owner?.full_name || 'Owner'}
-                </h3>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                  Connected
-                </Badge>
-                
-                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                  <Home className="h-4 w-4" />
-                  <span>PG/Hostel Property</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  <span>Property Location</span>
-                </div>
-              </div>
-              
-              <Button className="w-full bg-green-600 hover:bg-green-700">
-                <Users className="h-4 w-4 mr-2" />
-                View Owner Profile
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Warning about connecting to new owner */}
-        <Card className="mt-6 border-orange-200 bg-orange-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3 text-orange-800">
-              <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-              <div className="space-y-2">
-                <p className="font-medium">Want to connect to a different owner?</p>
-                <p className="text-sm text-orange-700">
-                  You can only be connected to one owner at a time. To connect with a new owner, 
-                  you'll need to disconnect from your current owner first.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (
