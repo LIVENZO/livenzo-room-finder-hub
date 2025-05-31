@@ -93,18 +93,26 @@ export const fetchArchivedRenterRelationships = async (userId: string): Promise<
 
     if (ownerError) {
       console.error("Error fetching owner profiles for archived relationships:", ownerError);
+      // Continue without owner profiles rather than failing completely
     }
 
     // Map archived relationships with owner data
-    const archivedRelationshipsWithOwners = data.map(rel => {
+    const archivedRelationshipsWithOwners: Relationship[] = data.map(rel => {
       const ownerProfile = ownerProfiles?.find(owner => owner.id === rel.owner_id);
       return {
-        ...rel,
+        id: rel.id,
+        owner_id: rel.owner_id,
+        renter_id: rel.renter_id,
+        status: rel.status as 'pending' | 'accepted' | 'declined',
+        chat_room_id: rel.chat_room_id,
+        created_at: rel.created_at,
+        updated_at: rel.updated_at,
+        archived: rel.archived,
         owner: ownerProfile ? {
-          full_name: ownerProfile.full_name,
-          avatar_url: ownerProfile.avatar_url
+          full_name: ownerProfile.full_name || '',
+          avatar_url: ownerProfile.avatar_url || ''
         } : null
-      } as Relationship;
+      };
     });
 
     console.log("Fetched archived relationships:", archivedRelationshipsWithOwners);
