@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRelationships } from '@/hooks/useRelationships';
 import ConnectionOverview from '@/components/relationship/ConnectionOverview';
 import PostConnectionInterface from '@/components/renter/PostConnectionInterface';
@@ -28,6 +28,14 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
   // Find the active (accepted) relationship
   const activeRelationship = renterRelationships.find(rel => rel.status === 'accepted');
 
+  // Auto-redirect to interface if there's an active connection
+  useEffect(() => {
+    if (activeRelationship && viewMode === 'overview') {
+      handleRelationshipSelect(activeRelationship);
+      setViewMode('interface');
+    }
+  }, [activeRelationship, viewMode, handleRelationshipSelect]);
+
   const handleOwnerProfileView = (relationship: any) => {
     handleRelationshipSelect(relationship);
     setViewMode('profile');
@@ -55,7 +63,7 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
     );
   }
 
-  // If viewing post-connection interface
+  // If viewing post-connection interface (including auto-redirect for active connections)
   if (viewMode === 'interface' && selectedRelationship) {
     return (
       <PostConnectionInterface
@@ -65,7 +73,7 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
     );
   }
 
-  // Default overview mode
+  // Default overview mode (only shown if no active connection)
   return (
     <div className="space-y-6">
       <ConnectionOverview
@@ -77,30 +85,6 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
         onStatusChange={refreshRelationships}
         isLoading={loading}
       />
-      
-      {/* Show active connection interface if available */}
-      {activeRelationship && (
-        <div className="mt-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-green-900">
-                  Connected to {activeRelationship.owner?.full_name}
-                </h3>
-                <p className="text-sm text-green-700">
-                  Access your rental management tools
-                </p>
-              </div>
-              <button
-                onClick={() => handleInterfaceView(activeRelationship)}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                Manage Connection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Previous Connections Section */}
       <PreviousConnections renterId={currentUserId} />
