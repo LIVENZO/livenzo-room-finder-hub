@@ -206,8 +206,22 @@ export const disconnectFromOwner = async (
   renterId: string
 ): Promise<boolean> => {
   try {
-    console.log("Renter disconnecting from relationship:", relationshipId);
+    console.log("Renter disconnecting from relationship:", relationshipId, "renter:", renterId);
     
+    // First verify the relationship exists and belongs to this renter
+    const { data: relationship, error: fetchError } = await supabase
+      .from("relationships")
+      .select("*")
+      .eq("id", relationshipId)
+      .eq("renter_id", renterId)
+      .single();
+
+    if (fetchError || !relationship) {
+      console.error("Error fetching relationship for disconnect:", fetchError);
+      toast.error("Relationship not found or unauthorized");
+      return false;
+    }
+
     // Update the relationship status to declined
     const { data, error } = await supabase
       .from("relationships")
@@ -216,7 +230,6 @@ export const disconnectFromOwner = async (
         updated_at: new Date().toISOString()
       })
       .eq("id", relationshipId)
-      .eq("renter_id", renterId) // Ensure only the renter can disconnect
       .select()
       .single();
 
