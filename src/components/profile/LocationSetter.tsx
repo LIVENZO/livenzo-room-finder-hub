@@ -83,7 +83,7 @@ const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLoca
               {/* Preview Map */}
               <div className="border rounded-lg overflow-hidden">
                 <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dISGnYJMzXjHQ0&q=${currentLocation.latitude},${currentLocation.longitude}&zoom=15`}
+                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCz8BaS21XMfSt1iN1jDuhEIqEpZA5WERE&q=${currentLocation.latitude},${currentLocation.longitude}&zoom=15`}
                   width="100%"
                   height="200"
                   style={{ border: 0 }}

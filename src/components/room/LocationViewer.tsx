@@ -63,7 +63,7 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
           {/* Map */}
           <div className="border rounded-lg overflow-hidden">
             <iframe
-              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dISGnYJMzXjHQ0&q=${ownerLatitude},${ownerLongitude}&zoom=16`}
+              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCz8BaS21XMfSt1iN1jDuhEIqEpZA5WERE&q=${ownerLatitude},${ownerLongitude}&zoom=16`}
               width="100%"
               height="250"
               style={{ border: 0 }}
