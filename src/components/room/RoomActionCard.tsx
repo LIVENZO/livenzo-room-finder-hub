@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Heart, HeartOff, Loader2 } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import { fetchUserProfile, UserProfile } from '@/services/UserProfileService';
@@ -58,10 +57,10 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
         
         {/* Location Viewer */}
         {loadingOwnerProfile ? (
-          <Button disabled className="w-full">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Loading location...
-          </Button>
+          <div className="w-full h-12 bg-gray-100 rounded animate-pulse flex items-center justify-center">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="ml-2 text-sm text-gray-500">Loading location...</span>
+          </div>
         ) : (
           <LocationViewer 
             room={room}

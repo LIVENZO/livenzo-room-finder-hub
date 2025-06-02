@@ -8,8 +8,7 @@ import {
   MessageSquare, 
   FileText, 
   AlertTriangle,
-  UserMinus,
-  DollarSign
+  UserMinus
 } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 
@@ -18,7 +17,6 @@ interface RenterCardProps {
   onDocuments: (relationship: Relationship) => void;
   onChat: (relationship: Relationship) => void;
   onComplaints: (relationship: Relationship) => void;
-  onPayments: (relationship: Relationship) => void;
   onDisconnect: (relationshipId: string) => void;
   isProcessing: boolean;
 }
@@ -28,7 +26,6 @@ const RenterCard: React.FC<RenterCardProps> = ({
   onDocuments,
   onChat,
   onComplaints,
-  onPayments,
   onDisconnect,
   isProcessing,
 }) => {
@@ -78,15 +75,6 @@ const RenterCard: React.FC<RenterCardProps> = ({
                 >
                   <AlertTriangle className="h-4 w-4 mr-1" />
                   Complaints
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onPayments(relationship)}
-                >
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Payments
                 </Button>
               </div>
             </div>

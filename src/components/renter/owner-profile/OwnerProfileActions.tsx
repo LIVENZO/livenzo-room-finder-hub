@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   FileText, 
   MessageSquare, 
-  AlertCircle, 
-  CreditCard
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Relationship } from '@/types/relationship';
@@ -37,14 +36,8 @@ const OwnerProfileActions: React.FC<OwnerProfileActionsProps> = ({
     navigate(`/chats/${relationship.chat_room_id}`);
   };
 
-  const handlePayRent = () => {
-    if (isDisconnected) return;
-    // Navigate to payment system - to be implemented
-    console.log('Pay rent functionality to be implemented');
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <Button 
         onClick={handleViewDocuments}
         variant="outline" 
@@ -73,15 +66,6 @@ const OwnerProfileActions: React.FC<OwnerProfileActionsProps> = ({
       >
         <MessageSquare className="h-6 w-6" />
         <span>Chat with Owner</span>
-      </Button>
-      
-      <Button 
-        onClick={handlePayRent}
-        className="h-16 flex-col space-y-2 bg-green-600 hover:bg-green-700"
-        disabled={isDisconnected}
-      >
-        <CreditCard className="h-6 w-6" />
-        <span>Pay Rent</span>
       </Button>
     </div>
   );

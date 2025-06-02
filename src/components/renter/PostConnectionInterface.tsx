@@ -4,11 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, FileText, MessageSquare, AlertCircle, CreditCard } from 'lucide-react';
+import { CheckCircle, FileText, MessageSquare, AlertCircle } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import DocumentsTab from './post-connection/DocumentsTab';
 import ComplaintsTab from './post-connection/ComplaintsTab';
-import PaymentsTab from './post-connection/PaymentsTab';
 import RenterDisconnectButton from './RenterDisconnectButton';
 import { useNavigate } from 'react-router-dom';
 import { useRelationships } from '@/hooks/useRelationships';
@@ -102,7 +101,7 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
 
       {/* Management Tabs */}
       <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Documents
@@ -110,10 +109,6 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
           <TabsTrigger value="complaints" className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
             Complaints
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payments
           </TabsTrigger>
         </TabsList>
 
@@ -129,10 +124,6 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
 
         <TabsContent value="complaints" className="mt-6">
           <ComplaintsTab relationshipId={relationship.id} />
-        </TabsContent>
-
-        <TabsContent value="payments" className="mt-6">
-          <PaymentsTab relationshipId={relationship.id} />
         </TabsContent>
       </Tabs>
     </div>
