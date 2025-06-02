@@ -4,21 +4,21 @@ import { toast } from "sonner";
 
 export interface UserProfile {
   id: string;
-  full_name: string | null;
-  phone: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-  // New owner-specific fields
-  accommodation_type: 'PG' | 'Hostel' | null;
-  property_name: string | null;
-  house_number: string | null;
-  total_rental_rooms: number | null;
-  resident_type: 'Boys' | 'Girls' | 'Both' | null;
-  property_location: string | null;
-  property_address: any | null;
-  is_owner_profile_complete: boolean | null;
+  full_name?: string;
+  phone?: string;
+  bio?: string;
+  avatar_url?: string;
+  accommodation_type?: 'PG' | 'Hostel' | null;
+  property_name?: string | null;
+  house_number?: string | null;
+  total_rental_rooms?: number | null;
+  resident_type?: 'Boys' | 'Girls' | 'Both' | null;
+  property_location?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  created_at?: string;
+  updated_at?: string;
+  is_owner_profile_complete?: boolean;
 }
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -30,11 +30,15 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .single();
 
     if (error) {
+      if (error.code === 'PGRST116') {
+        // No profile found, return null
+        return null;
+      }
       console.error("Error fetching user profile:", error);
       return null;
     }
 
-    // Type cast the accommodation_type and resident_type to ensure compatibility
+    // Type cast accommodation_type and resident_type
     return {
       ...data,
       accommodation_type: data.accommodation_type as 'PG' | 'Hostel' | null,
@@ -46,33 +50,29 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
   }
 };
 
-export const createOrUpdateUserProfile = async (
-  profile: Partial<UserProfile> & { id: string }
-): Promise<UserProfile | null> => {
+export const createOrUpdateUserProfile = async (profile: Partial<UserProfile> & { id: string }): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase
       .from("user_profiles")
-      .upsert(profile)
-      .select("*")
+      .upsert(profile, { onConflict: 'id' })
+      .select()
       .single();
 
     if (error) {
+      console.error("Error creating/updating user profile:", error);
       toast.error("Failed to update profile");
-      console.error("Error updating user profile:", error);
       return null;
     }
 
-    toast.success("Profile updated successfully");
-    
-    // Type cast the accommodation_type and resident_type to ensure compatibility
+    // Type cast accommodation_type and resident_type
     return {
       ...data,
       accommodation_type: data.accommodation_type as 'PG' | 'Hostel' | null,
       resident_type: data.resident_type as 'Boys' | 'Girls' | 'Both' | null,
     } as UserProfile;
   } catch (error) {
+    console.error("Exception creating/updating user profile:", error);
     toast.error("Failed to update profile");
-    console.error("Exception updating user profile:", error);
     return null;
   }
 };
@@ -80,27 +80,27 @@ export const createOrUpdateUserProfile = async (
 export const uploadProfilePicture = async (file: File, userId: string): Promise<string | null> => {
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `profiles/${fileName}`;
-    
+    const fileName = `${userId}-${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
     const { error: uploadError } = await supabase.storage
-      .from('avatars')
+      .from('user-uploads')
       .upload(filePath, file);
-    
+
     if (uploadError) {
-      toast.error("Failed to upload profile picture");
-      console.error("Error uploading profile picture:", uploadError);
+      console.error("Error uploading file:", uploadError);
+      toast.error("Failed to upload image");
       return null;
     }
-    
+
     const { data } = supabase.storage
-      .from('avatars')
+      .from('user-uploads')
       .getPublicUrl(filePath);
-    
+
     return data.publicUrl;
   } catch (error) {
-    toast.error("Failed to upload profile picture");
     console.error("Exception uploading profile picture:", error);
+    toast.error("Failed to upload image");
     return null;
   }
 };

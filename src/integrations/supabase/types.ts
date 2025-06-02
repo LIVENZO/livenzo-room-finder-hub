@@ -559,6 +559,8 @@ export type Database = {
           id: string
           images: string[] | null
           location: string
+          location_latitude: number | null
+          location_longitude: number | null
           owner_id: string
           owner_phone: string
           price: number
@@ -574,6 +576,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           location: string
+          location_latitude?: number | null
+          location_longitude?: number | null
           owner_id: string
           owner_phone: string
           price: number
@@ -589,6 +593,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           location?: string
+          location_latitude?: number | null
+          location_longitude?: number | null
           owner_id?: string
           owner_phone?: string
           price?: number
@@ -606,6 +612,8 @@ export type Database = {
           house_number: string | null
           id: string
           is_owner_profile_complete: boolean | null
+          location_latitude: number | null
+          location_longitude: number | null
           phone: string | null
           property_address: Json | null
           property_location: string | null
@@ -623,6 +631,8 @@ export type Database = {
           house_number?: string | null
           id: string
           is_owner_profile_complete?: boolean | null
+          location_latitude?: number | null
+          location_longitude?: number | null
           phone?: string | null
           property_address?: Json | null
           property_location?: string | null
@@ -640,6 +650,8 @@ export type Database = {
           house_number?: string | null
           id?: string
           is_owner_profile_complete?: boolean | null
+          location_latitude?: number | null
+          location_longitude?: number | null
           phone?: string | null
           property_address?: Json | null
           property_location?: string | null

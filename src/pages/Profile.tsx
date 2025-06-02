@@ -14,6 +14,7 @@ import OwnerPropertyForm from '@/components/profile/OwnerPropertyForm';
 import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import UserIdDisplay from '@/components/profile/UserIdDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
+import LocationSetter from '@/components/profile/LocationSetter';
 import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -183,6 +184,16 @@ const Profile = () => {
     
     setUploadingImage(false);
   };
+
+  const handleLocationSaved = async () => {
+    // Refresh profile data after location is saved
+    if (user) {
+      const updatedProfile = await fetchUserProfile(user.id);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
+    }
+  };
   
   if (loading) {
     return (
@@ -209,9 +220,10 @@ const Profile = () => {
           <CardContent className="space-y-6">
             {isOwner ? (
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Basic Information</TabsTrigger>
                   <TabsTrigger value="property">Property Details</TabsTrigger>
+                  <TabsTrigger value="location">Location</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basic" className="space-y-6">
@@ -242,6 +254,16 @@ const Profile = () => {
                     onInputChange={handleOwnerInputChange}
                     onSelectChange={handleOwnerSelectChange}
                   />
+                </TabsContent>
+
+                <TabsContent value="location" className="space-y-6">
+                  {user && (
+                    <LocationSetter
+                      userId={user.id}
+                      profile={profile}
+                      onLocationSaved={handleLocationSaved}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             ) : (
