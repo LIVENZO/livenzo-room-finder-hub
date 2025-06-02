@@ -93,11 +93,6 @@ export const useRentersManagement = (currentUserId: string) => {
     setSelectedTab('complaints');
   };
 
-  const handlePayments = (relationship: Relationship) => {
-    setSelectedRelationship(relationship);
-    setSelectedTab('payments');
-  };
-
   const handleBackToList = () => {
     setSelectedRelationship(null);
     setSelectedTab('overview');
@@ -115,7 +110,6 @@ export const useRentersManagement = (currentUserId: string) => {
     handleDocuments,
     handleChat,
     handleComplaints,
-    handlePayments,
     handleBackToList,
   };
 };

@@ -7,7 +7,6 @@ import DocumentList from '@/components/document/DocumentList';
 import RenterHeader from './renter-detail/RenterHeader';
 import OverviewTab from './renter-detail/OverviewTab';
 import ComplaintsTab from './renter-detail/ComplaintsTab';
-import PaymentsTab from './renter-detail/PaymentsTab';
 import NotesTab from './renter-detail/NotesTab';
 import { toast } from 'sonner';
 
@@ -58,11 +57,10 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
       <RenterHeader relationship={relationship} onBack={onBack} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="complaints">Complaints</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
 
@@ -80,10 +78,6 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
 
         <TabsContent value="complaints" className="space-y-4">
           <ComplaintsTab relationshipId={relationship.id} />
-        </TabsContent>
-
-        <TabsContent value="payments" className="space-y-4">
-          <PaymentsTab relationshipId={relationship.id} />
         </TabsContent>
 
         <TabsContent value="notes" className="space-y-4">

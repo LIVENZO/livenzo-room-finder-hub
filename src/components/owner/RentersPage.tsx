@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +25,6 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     handleDocuments,
     handleChat,
     handleComplaints,
-    handlePayments,
     handleBackToList,
   } = useRentersManagement(currentUserId);
 
@@ -106,7 +106,6 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
                 onDocuments={handleDocuments}
                 onChat={handleChat}
                 onComplaints={handleComplaints}
-                onPayments={handlePayments}
                 onDisconnect={handleDisconnect}
                 isProcessing={processingIds.includes(relationship.id)}
               />

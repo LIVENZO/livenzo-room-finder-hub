@@ -15,7 +15,6 @@ import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
-import Bookings from "./pages/Bookings";
 import Chats from "./pages/Chats";
 import Connections from "./pages/Connections";
 import ListRoom from "./pages/ListRoom";
@@ -40,7 +39,6 @@ const App = () => (
               <Route path="/room/:id" element={<RoomDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />
-              <Route path="/bookings" element={<Bookings />} />
               <Route path="/chats" element={<Chats />} />
               <Route path="/chats/:roomId" element={<Chats />} />
               <Route path="/connections" element={<Connections />} />
