@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MapPin, Navigation, AlertCircle } from 'lucide-react';
-import { openGoogleMapsDirections } from '@/services/LocationService';
+import { getMapsUrlsSecure } from '@/services/security/secureLocationService';
 import { Room } from '@/types/room';
 
 interface LocationViewerProps {
@@ -18,12 +18,34 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
   ownerLongitude 
 }) => {
   const [open, setOpen] = useState(false);
+  const [mapsUrls, setMapsUrls] = useState<{ embedUrl?: string; directionsUrl?: string } | null>(null);
+  const [loading, setLoading] = useState(false);
   
   const hasLocation = ownerLatitude && ownerLongitude;
 
+  useEffect(() => {
+    if (hasLocation && open) {
+      loadMapsUrls();
+    }
+  }, [hasLocation, open]);
+
+  const loadMapsUrls = async () => {
+    if (!hasLocation) return;
+    
+    setLoading(true);
+    try {
+      const urls = await getMapsUrlsSecure(ownerLatitude, ownerLongitude);
+      setMapsUrls(urls);
+    } catch (error) {
+      console.error('Error loading maps URLs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGetDirections = () => {
-    if (hasLocation) {
-      openGoogleMapsDirections(ownerLatitude, ownerLongitude);
+    if (mapsUrls?.directionsUrl) {
+      window.open(mapsUrls.directionsUrl, "_blank");
     }
   };
 
@@ -62,21 +84,32 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
           
           {/* Map */}
           <div className="border rounded-lg overflow-hidden">
-            <iframe
-              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCz8BaS21XMfSt1iN1jDuhEIqEpZA5WERE&q=${ownerLatitude},${ownerLongitude}&zoom=16`}
-              width="100%"
-              height="250"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Property Location"
-            />
+            {loading ? (
+              <div className="h-[250px] flex items-center justify-center bg-gray-100">
+                <div className="text-sm text-gray-500">Loading map...</div>
+              </div>
+            ) : mapsUrls?.embedUrl ? (
+              <iframe
+                src={mapsUrls.embedUrl}
+                width="100%"
+                height="250"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Property Location"
+              />
+            ) : (
+              <div className="h-[250px] flex items-center justify-center bg-gray-100">
+                <div className="text-sm text-gray-500">Map unavailable</div>
+              </div>
+            )}
           </div>
           
           {/* Get Directions Button */}
           <Button 
             onClick={handleGetDirections}
+            disabled={!mapsUrls?.directionsUrl}
             className="w-full bg-green-600 hover:bg-green-700"
           >
             <Navigation className="h-4 w-4 mr-2" />

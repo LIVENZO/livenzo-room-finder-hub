@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
-import { getCurrentLocation, saveOwnerLocation, LocationCoordinates } from '@/services/LocationService';
+import { getCurrentLocationSecure, saveOwnerLocationSecure } from '@/services/security/secureLocationService';
 import { UserProfile } from '@/services/UserProfileService';
 
 interface LocationSetterProps {
@@ -14,7 +14,7 @@ interface LocationSetterProps {
 
 const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLocationSaved }) => {
   const [loading, setLoading] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<LocationCoordinates | null>(
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(
     profile?.location_latitude && profile?.location_longitude
       ? {
           latitude: Number(profile.location_latitude),
@@ -26,8 +26,8 @@ const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLoca
   const handleSetLocation = async () => {
     setLoading(true);
     try {
-      const coordinates = await getCurrentLocation();
-      const success = await saveOwnerLocation(userId, coordinates);
+      const coordinates = await getCurrentLocationSecure();
+      const success = await saveOwnerLocationSecure(userId, coordinates);
       
       if (success) {
         setCurrentLocation(coordinates);
@@ -75,23 +75,14 @@ const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLoca
                   ✅ Location saved successfully
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  Lat: {currentLocation.latitude.toFixed(6)}, 
-                  Lng: {currentLocation.longitude.toFixed(6)}
+                  Location coordinates secured
                 </p>
               </div>
               
-              {/* Preview Map */}
-              <div className="border rounded-lg overflow-hidden">
-                <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCz8BaS21XMfSt1iN1jDuhEIqEpZA5WERE&q=${currentLocation.latitude},${currentLocation.longitude}&zoom=15`}
-                  width="100%"
-                  height="200"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="PG Location Preview"
-                />
+              <div className="bg-gray-100 border rounded-lg p-3">
+                <p className="text-sm text-gray-600">
+                  🗺️ Map preview will be available to renters
+                </p>
               </div>
             </div>
           )}
@@ -99,7 +90,7 @@ const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLoca
         
         <div className="text-sm text-gray-600">
           <p>• This location will be shown to potential renters</p>
-          <p>• You only need to set this once unless you want to update it</p>
+          <p>• Your exact coordinates are kept secure</p>
           <p>• Make sure to allow location access when prompted</p>
         </div>
       </CardContent>
