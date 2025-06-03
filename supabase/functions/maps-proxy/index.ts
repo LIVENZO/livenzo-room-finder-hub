@@ -23,8 +23,8 @@ serve(async (req) => {
     }
 
     const supabaseClient = createClient(
-      Denv.get('SUPABASE_URL') ?? '',
-      Denv.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
     const { data: { user }, error } = await supabaseClient.auth.getUser(
@@ -38,10 +38,9 @@ serve(async (req) => {
       )
     }
 
-    const { searchParams } = new URL(req.url)
-    const action = searchParams.get('action')
-    const latitude = searchParams.get('lat')
-    const longitude = searchParams.get('lng')
+    // Parse request body
+    const requestBody = await req.json()
+    const { action, lat, lng } = requestBody
 
     // Input validation
     if (!action || !['embed', 'directions'].includes(action)) {
@@ -51,7 +50,7 @@ serve(async (req) => {
       )
     }
 
-    if (!latitude || !longitude) {
+    if (!lat || !lng) {
       return new Response(
         JSON.stringify({ error: 'Missing coordinates' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -59,17 +58,17 @@ serve(async (req) => {
     }
 
     // Validate coordinates are numbers and within valid ranges
-    const lat = parseFloat(latitude)
-    const lng = parseFloat(longitude)
+    const latitude = parseFloat(lat)
+    const longitude = parseFloat(lng)
     
-    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    if (isNaN(latitude) || isNaN(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       return new Response(
         JSON.stringify({ error: 'Invalid coordinates' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const mapsApiKey = Denv.get('GOOGLE_MAPS_API_KEY')
+    const mapsApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
     if (!mapsApiKey) {
       return new Response(
         JSON.stringify({ error: 'Maps service unavailable' }),
@@ -80,11 +79,11 @@ serve(async (req) => {
     let responseData
     if (action === 'embed') {
       responseData = {
-        embedUrl: `https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${lat},${lng}&zoom=16`
+        embedUrl: `https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${latitude},${longitude}&zoom=16`
       }
     } else if (action === 'directions') {
       responseData = {
-        directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+        directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
       }
     }
 

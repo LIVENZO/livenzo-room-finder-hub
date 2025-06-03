@@ -120,29 +120,29 @@ export const getMapsUrlsSecure = async (
     if (!session) return null;
     
     // Get embed URL
-    const embedResponse = await fetch('/api/maps-proxy?action=embed&lat=${latitude}&lng=${longitude}', {
+    const embedResponse = await supabase.functions.invoke('maps-proxy', {
+      body: { action: 'embed', lat: latitude, lng: longitude },
       headers: {
         'Authorization': `Bearer ${session.access_token}`
       }
     });
     
     // Get directions URL  
-    const directionsResponse = await fetch('/api/maps-proxy?action=directions&lat=${latitude}&lng=${longitude}', {
+    const directionsResponse = await supabase.functions.invoke('maps-proxy', {
+      body: { action: 'directions', lat: latitude, lng: longitude },
       headers: {
         'Authorization': `Bearer ${session.access_token}`
       }
     });
     
-    if (!embedResponse.ok || !directionsResponse.ok) {
+    if (embedResponse.error || directionsResponse.error) {
+      console.error('Maps proxy error:', embedResponse.error || directionsResponse.error);
       return null;
     }
     
-    const embedData = await embedResponse.json();
-    const directionsData = await directionsResponse.json();
-    
     return {
-      embedUrl: embedData.embedUrl,
-      directionsUrl: directionsData.directionsUrl
+      embedUrl: embedResponse.data?.embedUrl,
+      directionsUrl: directionsResponse.data?.directionsUrl
     };
   } catch (error) {
     console.error('Error getting maps URLs:', error);
