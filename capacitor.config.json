@@ -1,0 +1,19 @@
+
+{
+  "appId": "com.livenzo.app",
+  "appName": "Livenzo",
+  "webDir": "dist",
+  "server": {
+    "url": "https://f44f9031-d1bf-4d61-8695-911f00d61194.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": null,
+      "keystorePassword": null,
+      "keystoreAlias": null,
+      "keystoreAliasPassword": null,
+      "releaseType": "AAB"
+    }
+  }
+}
