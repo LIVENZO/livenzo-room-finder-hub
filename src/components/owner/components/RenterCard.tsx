@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   User, 
-  MessageSquare, 
   FileText, 
   AlertTriangle,
   UserMinus
@@ -15,7 +14,6 @@ import { Relationship } from '@/types/relationship';
 interface RenterCardProps {
   relationship: Relationship;
   onDocuments: (relationship: Relationship) => void;
-  onChat: (relationship: Relationship) => void;
   onComplaints: (relationship: Relationship) => void;
   onDisconnect: (relationshipId: string) => void;
   isProcessing: boolean;
@@ -24,7 +22,6 @@ interface RenterCardProps {
 const RenterCard: React.FC<RenterCardProps> = ({
   relationship,
   onDocuments,
-  onChat,
   onComplaints,
   onDisconnect,
   isProcessing,
@@ -57,15 +54,6 @@ const RenterCard: React.FC<RenterCardProps> = ({
                 >
                   <FileText className="h-4 w-4 mr-1" />
                   Documents
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onChat(relationship)}
-                >
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  Chat
                 </Button>
                 
                 <Button 

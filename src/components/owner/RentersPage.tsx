@@ -23,7 +23,6 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     handleDecline,
     handleDisconnect,
     handleDocuments,
-    handleChat,
     handleComplaints,
     handleBackToList,
   } = useRentersManagement(currentUserId);
@@ -104,7 +103,6 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
                 key={relationship.id}
                 relationship={relationship}
                 onDocuments={handleDocuments}
-                onChat={handleChat}
                 onComplaints={handleComplaints}
                 onDisconnect={handleDisconnect}
                 isProcessing={processingIds.includes(relationship.id)}
