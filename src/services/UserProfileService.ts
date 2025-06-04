@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { uploadFilesSecure } from './storage/secureStorage';
 
 export interface UserProfile {
   id: string;
@@ -79,28 +80,22 @@ export const createOrUpdateUserProfile = async (profile: Partial<UserProfile> & 
 
 export const uploadProfilePicture = async (file: File, userId: string): Promise<string | null> => {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Math.random()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('user-uploads')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error("Error uploading file:", uploadError);
-      toast.error("Failed to upload image");
-      return null;
+    console.log('Starting profile picture upload...', { fileName: file.name, fileSize: file.size, fileType: file.type });
+    
+    // Use the secure upload service with retry logic
+    const uploadedUrls = await uploadFilesSecure([file], userId, 'user-uploads', 'image');
+    
+    if (uploadedUrls.length > 0) {
+      console.log('Profile picture uploaded successfully:', uploadedUrls[0]);
+      return uploadedUrls[0];
     }
-
-    const { data } = supabase.storage
-      .from('user-uploads')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    
+    console.error('No URLs returned from upload service');
+    toast.error("Failed to upload image. Please try a different image or check your internet connection.");
+    return null;
   } catch (error) {
     console.error("Exception uploading profile picture:", error);
-    toast.error("Failed to upload image");
+    toast.error("Upload failed. Please try again or check your internet connection.");
     return null;
   }
 };

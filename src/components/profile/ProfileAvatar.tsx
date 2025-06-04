@@ -2,8 +2,9 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, AlertCircle } from 'lucide-react';
 import { UserProfile } from '@/services/UserProfileService';
+import { toast } from 'sonner';
 
 interface ProfileAvatarProps {
   profile: UserProfile | null;
@@ -18,6 +19,36 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   uploadingImage, 
   onImageUpload 
 }) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (JPG, PNG, or WebP)');
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB');
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
+    console.log('File validation passed:', { 
+      name: file.name, 
+      size: file.size, 
+      type: file.type 
+    });
+
+    // File is valid, proceed with upload
+    onImageUpload(e);
+  };
+
   return (
     <div className="flex flex-col items-center gap-2">
       <Avatar className="h-24 w-24">
@@ -30,9 +61,9 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
         <input
           id="picture"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
           className="hidden"
-          onChange={onImageUpload}
+          onChange={handleFileSelect}
           disabled={uploadingImage}
         />
         <Button
@@ -53,6 +84,11 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
           )}
         </Button>
       </div>
+      {!uploadingImage && (
+        <p className="text-xs text-gray-500 text-center max-w-[120px]">
+          JPG, PNG or WebP (max 5MB)
+        </p>
+      )}
     </div>
   );
 };

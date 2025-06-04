@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile, createOrUpdateUserProfile, fetchUserProfile, uploadProfilePicture } from '@/services/UserProfileService';
 import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
@@ -24,7 +24,6 @@ interface OwnerFormValues {
 export const useProfileManagement = () => {
   const { user, isOwner } = useAuth();
   const navigate = useNavigate();
-  const { toast: uiToast } = useToast();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -149,15 +148,9 @@ export const useProfileManagement = () => {
       const ownerProfileComplete = isOwner ? isOwnerProfileComplete(result) : true;
       
       if (profileComplete && ownerProfileComplete) {
-        uiToast({
-          title: "Profile updated",
-          description: "Your profile has been updated and is now complete",
-        });
+        toast.success("Profile updated successfully! Your profile is now complete.");
       } else {
-        uiToast({
-          title: "Profile updated",
-          description: "Your profile has been updated but may still be incomplete",
-        });
+        toast.success("Profile updated successfully! Please complete remaining fields for full access.");
       }
     }
   };
@@ -166,26 +159,44 @@ export const useProfileManagement = () => {
     if (!user || !e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    console.log('Starting image upload process...', { fileName: file.name, fileSize: file.size });
+    
     setUploadingImage(true);
     
-    const imageUrl = await uploadProfilePicture(file, user.id);
-    
-    if (imageUrl) {
-      setProfile(prev => prev ? { ...prev, avatar_url: imageUrl } : null);
+    try {
+      const imageUrl = await uploadProfilePicture(file, user.id);
       
-      // Update the profile with the new image URL
-      await createOrUpdateUserProfile({
-        id: user.id,
-        avatar_url: imageUrl,
-      });
-      
-      uiToast({
-        title: "Image uploaded",
-        description: "Your profile picture has been updated",
-      });
+      if (imageUrl) {
+        console.log('Image uploaded successfully, updating profile...', imageUrl);
+        
+        // Update the profile state immediately for UI feedback
+        setProfile(prev => prev ? { ...prev, avatar_url: imageUrl } : null);
+        
+        // Update the profile in the database
+        const updateResult = await createOrUpdateUserProfile({
+          id: user.id,
+          avatar_url: imageUrl,
+        });
+        
+        if (updateResult) {
+          toast.success("Profile picture updated successfully!");
+        } else {
+          console.error('Failed to update profile with new image URL');
+          toast.error("Image uploaded but failed to save to profile. Please try again.");
+          // Revert the UI change
+          setProfile(prev => prev ? { ...prev, avatar_url: profile?.avatar_url } : null);
+        }
+      } else {
+        console.error('Upload failed - no image URL returned');
+      }
+    } catch (error) {
+      console.error('Error in handleImageUpload:', error);
+      toast.error("Upload failed. Please try again or check your internet connection.");
+    } finally {
+      setUploadingImage(false);
+      // Clear the input to allow re-uploading the same file if needed
+      e.target.value = '';
     }
-    
-    setUploadingImage(false);
   };
 
   const handleLocationSaved = async () => {
