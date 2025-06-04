@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,10 +32,13 @@ const RenterDashboard: React.FC = () => {
       title: 'View Notices',
       description: 'Check important updates and announcements',
       icon: Bell,
-      color: 'bg-gradient-accent',
-      iconBg: 'bg-primary-100',
+      color: 'bg-gradient-to-br from-[#BFA5FF] to-[#D3C5FF]',
+      iconBg: 'bg-white/30',
+      textColor: 'text-purple-900',
+      buttonStyle: 'bg-purple-800 hover:bg-purple-900 text-white border-0',
       onClick: () => navigate('/notices'),
-      isPrimary: false
+      isPrimary: false,
+      hasNotification: true // This could be dynamic based on actual notices
     }
   ];
 
@@ -77,21 +81,42 @@ const RenterDashboard: React.FC = () => {
           >
             <CardHeader className="pb-4">
               <div className="flex items-center gap-4">
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", action.iconBg)}>
-                  <action.icon className="h-6 w-6 text-white" />
+                <div className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center relative",
+                  action.iconBg
+                )}>
+                  <action.icon className={cn(
+                    "h-6 w-6",
+                    action.textColor ? "text-purple-800" : "text-white",
+                    action.hasNotification ? "animate-pulse" : ""
+                  )} />
+                  {action.hasNotification && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  )}
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-xl font-display font-bold text-white mb-1">
+                  <CardTitle className={cn(
+                    "text-xl font-display font-bold mb-1",
+                    action.textColor || "text-white"
+                  )}>
                     {action.title}
                   </CardTitle>
-                  <p className="text-white/80 text-sm">{action.description}</p>
+                  <p className={cn(
+                    "text-sm",
+                    action.textColor ? "text-purple-700" : "text-white/80"
+                  )}>
+                    {action.description}
+                  </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               <Button 
                 variant="ghost" 
-                className="text-white hover:bg-white/20 border border-white/30 hover:border-white/50 transition-all w-full md:w-auto"
+                className={cn(
+                  "transition-all w-full md:w-auto",
+                  action.buttonStyle || "text-white hover:bg-white/20 border border-white/30 hover:border-white/50"
+                )}
               >
                 Get Started
               </Button>
