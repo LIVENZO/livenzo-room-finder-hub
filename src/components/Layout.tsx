@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-radial font-sans">
       {/* Mobile navigation */}
       {isMobile && <NavBar />}
       
@@ -28,10 +28,17 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
       
       {/* Main content */}
       <main className={cn(
-        "flex-1 bg-gray-50",
-        isMobile ? "pt-16 pb-16" : "ml-[240px]"
+        "flex-1 bg-gradient-radial",
+        isMobile ? "pt-16 pb-16" : "ml-[280px]"
       )}>
-        {children}
+        <div className="relative">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+            <div className="absolute top-20 left-1/4 w-64 h-64 bg-primary-300 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-secondary-300 rounded-full blur-3xl"></div>
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );

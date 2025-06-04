@@ -29,12 +29,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="min-h-screen bg-gradient-radial">
+        <div className="container mx-auto px-6 py-8 max-w-7xl">
+          {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
         </div>
-        
-        {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
       </div>
     </Layout>
   );
