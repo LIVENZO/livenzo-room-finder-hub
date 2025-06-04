@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import SendNoticeForm from '@/components/dashboard/SendNoticeForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { cn } from '@/lib/utils';
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
