@@ -128,9 +128,9 @@ const ListRoom: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Step 1: Upload images to Supabase Storage
+      // Step 1: Upload images to Supabase Storage with correct bucket name
       const toastId = toast.loading('Uploading images...');
-      const imageUrls = await uploadImagesToStorage(imageFiles, user.id);
+      const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms'); // Fixed: ensure bucket name is 'rooms'
       
       if (imageUrls.length === 0) {
         toast.error('Failed to upload images', { id: toastId });

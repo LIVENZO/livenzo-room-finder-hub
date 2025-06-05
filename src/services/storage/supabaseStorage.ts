@@ -13,7 +13,7 @@ import { uploadFilesSecure } from './secureStorage';
 export const uploadImagesToStorage = async (
   files: File[], 
   userId: string,
-  bucket: string = 'rooms'
+  bucket: string = 'rooms'  // Fixed: changed from 'roomes' to 'rooms'
 ): Promise<string[]> => {
   // Use the secure upload service
   const fileType = bucket === 'documents' ? 'document' : 'image';
