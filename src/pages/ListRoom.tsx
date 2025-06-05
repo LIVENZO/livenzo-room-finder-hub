@@ -128,20 +128,28 @@ const ListRoom: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Step 1: Upload images to Supabase Storage with correct bucket name
-      const toastId = toast.loading('Uploading images...');
-      const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms'); // Fixed: ensure bucket name is 'rooms'
+      console.log('Starting room listing process...');
+      console.log('User ID:', user.id);
+      console.log('Images to upload:', imageFiles.length);
+      
+      // Step 1: Upload images to Supabase Storage
+      const toastId = toast.loading('Preparing to upload images...');
+      
+      // Ensure we're using the correct bucket name 'rooms'
+      const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms');
       
       if (imageUrls.length === 0) {
-        toast.error('Failed to upload images', { id: toastId });
+        console.error('Image upload failed - no URLs returned');
+        toast.error('Failed to upload images. Please try again or contact support.', { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
+      console.log('Images uploaded successfully:', imageUrls);
       toast.loading('Creating room listing...', { id: toastId });
       
       // Step 2: Save room data to Supabase
-      const { data: room, error } = await supabase.from('rooms').insert({
+      const roomData = {
         title: values.title,
         description: values.description,
         house_no: values.house_no || null,
@@ -157,7 +165,15 @@ const ListRoom: React.FC = () => {
         owner_id: user.id,
         owner_phone: values.owner_phone,
         images: imageUrls,
-      }).select().single();
+      };
+      
+      console.log('Inserting room data:', roomData);
+      
+      const { data: room, error } = await supabase
+        .from('rooms')
+        .insert(roomData)
+        .select()
+        .single();
       
       if (error) {
         console.error('Error inserting room:', error);
@@ -166,6 +182,7 @@ const ListRoom: React.FC = () => {
         return;
       }
       
+      console.log('Room created successfully:', room);
       toast.success('Room listed successfully!', { id: toastId });
       
       // Step 3: Redirect to my listings
@@ -173,7 +190,7 @@ const ListRoom: React.FC = () => {
       
     } catch (error: any) {
       console.error('Error in room submission:', error);
-      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}`);
+      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}. Please contact support if this persists.`);
     } finally {
       setIsSubmitting(false);
     }
