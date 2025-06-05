@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { uploadImagesToStorage } from "./storage/supabaseStorage";
+import { uploadFilesSecure } from "./storage/secureStorage";
 
 export type DocumentType = 'id_proof' | 'income_proof' | 'lease_agreement' | 'reference';
 
@@ -37,8 +37,8 @@ export const uploadDocument = async (
       return null;
     }
     
-    // Upload the file to storage using 'documents' bucket
-    const fileUrls = await uploadImagesToStorage([file], userId, 'documents');
+    // Upload the file to storage using 'documents' bucket and document file type
+    const fileUrls = await uploadFilesSecure([file], userId, 'documents', 'document');
     
     if (!fileUrls.length) {
       toast.error("Failed to upload document to storage");
