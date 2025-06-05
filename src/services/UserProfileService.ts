@@ -102,6 +102,7 @@ export const uploadProfilePicture = async (file: File, userId: string): Promise<
     
     if (uploadedUrls.length > 0) {
       console.log('Profile picture uploaded successfully:', uploadedUrls[0]);
+      // Return the URL without cache-busting here, we'll add it in the hook
       return uploadedUrls[0];
     }
     

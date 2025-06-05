@@ -25,27 +25,22 @@ export const useProfileImageUpload = (
       if (imageUrl) {
         console.log('Image uploaded successfully, updating profile...', imageUrl);
         
-        // Update the profile state immediately for UI feedback
-        const updatedProfile = profile ? { ...profile, avatar_url: imageUrl } : null;
-        if (updatedProfile) {
-          updateProfile(updatedProfile);
-        }
+        // Add cache-busting parameter to ensure new image loads
+        const cacheBustingUrl = `${imageUrl}?t=${Date.now()}`;
         
-        // Update the profile in the database
+        // Update the profile in the database first
         const updateResult = await createOrUpdateUserProfile({
           id: user.id,
-          avatar_url: imageUrl,
+          avatar_url: cacheBustingUrl,
         });
         
         if (updateResult) {
+          // Update the profile state with the new image URL
+          updateProfile(updateResult);
           toast.success("Profile picture updated successfully!");
         } else {
           console.error('Failed to update profile with new image URL');
           toast.error("Image uploaded but failed to save to profile. Please try again.");
-          // Revert the UI change
-          if (profile) {
-            updateProfile(profile);
-          }
         }
       } else {
         console.error('Upload failed - no image URL returned');

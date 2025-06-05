@@ -2,7 +2,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload, AlertCircle } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { UserProfile } from '@/services/UserProfileService';
 import { toast } from 'sonner';
 
@@ -49,10 +49,20 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     onImageUpload(e);
   };
 
+  // Create a cache-busting image URL to force refresh
+  const imageUrl = profile?.avatar_url ? 
+    (profile.avatar_url.includes('?') ? profile.avatar_url : `${profile.avatar_url}?t=${Date.now()}`) : 
+    '';
+
   return (
     <div className="flex flex-col items-center gap-2">
       <Avatar className="h-24 w-24">
-        <AvatarImage src={profile?.avatar_url || ''} />
+        <AvatarImage 
+          src={imageUrl} 
+          key={imageUrl} // Force re-render when URL changes
+          onLoad={() => console.log('Avatar image loaded:', imageUrl)}
+          onError={() => console.log('Avatar image failed to load:', imageUrl)}
+        />
         <AvatarFallback>
           {profile?.full_name?.charAt(0).toUpperCase() || userEmail?.charAt(0).toUpperCase() || 'U'}
         </AvatarFallback>
