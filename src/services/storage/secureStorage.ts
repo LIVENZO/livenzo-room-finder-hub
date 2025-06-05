@@ -53,20 +53,39 @@ export const uploadFilesSecure = async (
     const uploadedUrls: string[] = [];
     const uploadToastId = toast.loading(`Uploading ${validFiles.length} files...`);
     
-    // First check if bucket exists before attempting upload
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === bucket);
-    
-    if (!bucketExists) {
-      console.error(`Storage bucket '${bucket}' not found`);
-      toast.error(`Storage bucket '${bucket}' is not accessible. Please contact support.`, {
+    // Check if bucket exists before attempting upload
+    try {
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+        toast.error('Unable to access storage. Please try again.', {
+          id: uploadToastId,
+          duration: 5000
+        });
+        return [];
+      }
+      
+      const bucketExists = buckets?.some(b => b.name === bucket);
+      
+      if (!bucketExists) {
+        console.error(`Storage bucket '${bucket}' not found`);
+        toast.error(`Storage configuration issue. Please contact support if this persists.`, {
+          id: uploadToastId,
+          duration: 5000
+        });
+        return [];
+      }
+      
+      console.log(`Bucket '${bucket}' confirmed to exist`);
+    } catch (bucketCheckError) {
+      console.error('Error checking bucket existence:', bucketCheckError);
+      toast.error('Storage access error. Please try again.', {
         id: uploadToastId,
         duration: 5000
       });
       return [];
     }
-    
-    console.log(`Bucket '${bucket}' confirmed to exist`);
     
     // Upload each valid file
     for (const [index, file] of validFiles.entries()) {
