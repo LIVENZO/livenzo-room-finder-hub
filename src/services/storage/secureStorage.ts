@@ -89,6 +89,8 @@ export const uploadFilesSecure = async (
           upsert: false
         });
       
+      let uploadData = data;
+      
       if (error) {
         console.error('Supabase storage upload error:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
@@ -123,7 +125,7 @@ export const uploadFilesSecure = async (
             toast.error(`Failed to upload ${file.name}. Please try again.`);
             continue;
           } else {
-            data = retryData;
+            uploadData = retryData;
           }
         } else {
           toast.error(`Upload failed: ${error.message}`);
@@ -131,13 +133,13 @@ export const uploadFilesSecure = async (
         }
       }
       
-      if (data) {
-        console.log('Upload successful, getting public URL for:', data.path);
+      if (uploadData) {
+        console.log('Upload successful, getting public URL for:', uploadData.path);
         
         // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from(bucket)
-          .getPublicUrl(data.path);
+          .getPublicUrl(uploadData.path);
         
         if (publicUrlData?.publicUrl) {
           console.log('Public URL generated:', publicUrlData.publicUrl);
