@@ -31,6 +31,8 @@ export const uploadFilesSecure = async (
       return [];
     }
     
+    console.log('Authentication validated successfully');
+    
     // Validate files
     const { validFiles, errors } = validateFiles(files, fileType);
     
@@ -45,6 +47,8 @@ export const uploadFilesSecure = async (
       console.error('No valid files to upload');
       return [];
     }
+    
+    console.log(`${validFiles.length} valid files ready for upload`);
     
     const uploadedUrls: string[] = [];
     const uploadToastId = toast.loading(`Uploading ${validFiles.length} files...`);
@@ -63,7 +67,19 @@ export const uploadFilesSecure = async (
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = bucket === 'user-uploads' ? `avatars/${userId}/${fileName}` : `${userId}/${fileName}`;
       
-      console.log('Uploading to path:', filePath);
+      console.log('Uploading to bucket:', bucket, 'with path:', filePath);
+      
+      // First, check if the bucket exists and is accessible
+      const { data: bucketData, error: bucketError } = await supabase.storage
+        .getBucket(bucket);
+        
+      if (bucketError) {
+        console.error('Bucket access error:', bucketError);
+        toast.error(`Storage bucket '${bucket}' is not accessible. Please contact support.`);
+        break;
+      }
+      
+      console.log('Bucket accessible:', bucketData);
       
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -75,11 +91,13 @@ export const uploadFilesSecure = async (
       
       if (error) {
         console.error('Supabase storage upload error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         
         if (error.message.includes('permissions') || 
             error.message.includes('denied') ||
-            error.message.includes('authorized')) {
-          toast.error('Permission denied for file upload. Please check your account settings.');
+            error.message.includes('authorized') ||
+            error.message.includes('JWT')) {
+          toast.error('Permission denied for file upload. Please log out and log back in.');
           break;
         } else if (error.message.includes('size')) {
           toast.error('File size too large. Please use a smaller image (max 5MB).');
@@ -87,8 +105,28 @@ export const uploadFilesSecure = async (
         } else if (error.message.includes('type') || error.message.includes('format')) {
           toast.error('Invalid file type. Please use JPG, PNG, or WebP format.');
           continue;
+        } else if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+          // File with same name exists, try with different name
+          const retryFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 20)}.${fileExt}`;
+          const retryFilePath = bucket === 'user-uploads' ? `avatars/${userId}/${retryFileName}` : `${userId}/${retryFileName}`;
+          console.log('Retrying upload with new filename:', retryFilePath);
+          
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from(bucket)
+            .upload(retryFilePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+            
+          if (retryError) {
+            console.error('Retry upload failed:', retryError);
+            toast.error(`Failed to upload ${file.name}. Please try again.`);
+            continue;
+          } else {
+            data = retryData;
+          }
         } else {
-          toast.error(`Failed to upload ${file.name}. Please try again.`);
+          toast.error(`Upload failed: ${error.message}`);
           continue;
         }
       }

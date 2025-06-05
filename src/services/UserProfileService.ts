@@ -80,7 +80,22 @@ export const createOrUpdateUserProfile = async (profile: Partial<UserProfile> & 
 
 export const uploadProfilePicture = async (file: File, userId: string): Promise<string | null> => {
   try {
-    console.log('Starting profile picture upload...', { fileName: file.name, fileSize: file.size, fileType: file.type });
+    console.log('Starting profile picture upload...', { 
+      fileName: file.name, 
+      fileSize: file.size, 
+      fileType: file.type,
+      userId: userId 
+    });
+    
+    // Check if user is authenticated
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    if (authError || !session) {
+      console.error('Authentication error:', authError);
+      toast.error("Please log in to upload images");
+      return null;
+    }
+    
+    console.log('User authenticated, proceeding with upload...');
     
     // Use the secure upload service with retry logic
     const uploadedUrls = await uploadFilesSecure([file], userId, 'user-uploads', 'image');
