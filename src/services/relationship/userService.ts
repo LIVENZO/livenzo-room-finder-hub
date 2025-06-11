@@ -11,13 +11,14 @@ export const findUserById = async (userId: string): Promise<UserProfile | null> 
 
     // If the input is 8 characters or less, search by prefix
     if (userId.length <= 8) {
-      query = query.ilike("id", `${userId}%`);
+      // Cast UUID to text for prefix matching
+      query = query.filter('id::text', 'like', `${userId}%`);
     } else {
       // For longer inputs, search by exact match
       query = query.eq("id", userId);
     }
 
-    const { data, error } = await query.single();
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error("Error finding user:", error);
