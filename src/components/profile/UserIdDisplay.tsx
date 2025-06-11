@@ -12,9 +12,13 @@ interface UserIdDisplayProps {
 
 const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ userId }) => {
   const copyUserIdToClipboard = () => {
+    // Always copy the full UID
     navigator.clipboard.writeText(userId);
     toast.success("User ID copied to clipboard");
   };
+
+  // Display only first 8 characters
+  const displayUserId = userId.substring(0, 8);
 
   return (
     <div className="grid gap-2">
@@ -22,15 +26,16 @@ const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ userId }) => {
       <div className="flex gap-2">
         <Input 
           id="userId"
-          value={userId}
+          value={displayUserId}
           readOnly
           className="bg-gray-50 font-mono text-sm"
+          title={`Full ID: ${userId}`} // Show full ID on hover
         />
         <Button
           size="icon"
           variant="outline"
           onClick={copyUserIdToClipboard}
-          title="Copy ID to clipboard"
+          title="Copy full ID to clipboard"
         >
           <Copy className="h-4 w-4" />
         </Button>
