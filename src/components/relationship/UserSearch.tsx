@@ -30,11 +30,18 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
       return;
     }
     
+    // Validate input length (should be 8 characters for short ID or full UUID)
+    const trimmedId = searchId.trim();
+    if (trimmedId.length < 8) {
+      toast.error("Owner ID must be at least 8 characters");
+      return;
+    }
+    
     setIsSearching(true);
     setRequestError(null);
     
     try {
-      const user = await findUserById(searchId.trim());
+      const user = await findUserById(trimmedId);
       if (user) {
         console.log("Found user:", user);
         setFoundUser(user);
@@ -96,11 +103,12 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
         <div className="relative flex-1">
           <Input
             type="text"
-            placeholder="Enter Owner ID (e.g., abc123xy or UUID)"
+            placeholder="Enter first 8 characters of Owner ID (e.g., 6d2faf25)"
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             className="w-full pr-10 h-12 text-base border-2 border-gray-200 focus:border-blue-500"
             disabled={requestSent}
+            maxLength={36} // Allow full UUID if needed, but encourage 8 chars
           />
           {searchId && !requestSent && (
             <button 
@@ -130,6 +138,14 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
           )}
         </Button>
       </form>
+
+      {/* Helper Text */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-700">
+          💡 <strong>Tip:</strong> You only need the first 8 characters of your owner's ID (e.g., "6d2faf25" instead of the full ID). 
+          Ask your property owner for their shortened ID to make searching easier!
+        </p>
+      </div>
 
       {/* Error Message */}
       {requestError && !foundUser && (
@@ -184,7 +200,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
                   <h3 className="font-semibold text-lg text-gray-900">
                     {foundUser.full_name || 'Property Owner'}
                   </h3>
-                  <p className="text-sm text-gray-500">Owner ID: {foundUser.id}</p>
+                  <p className="text-sm text-gray-500">Owner ID: {foundUser.id.substring(0, 8)}...</p>
                 </div>
                 
                 {/* Property Details */}

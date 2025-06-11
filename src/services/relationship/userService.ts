@@ -2,14 +2,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/relationship";
 
-// Search for a user by ID
+// Search for a user by ID (supports both full UID and first 8 characters)
 export const findUserById = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("user_profiles")
-      .select("id, full_name, avatar_url")
-      .eq("id", userId)
-      .single();
+      .select("id, full_name, avatar_url");
+
+    // If the input is 8 characters or less, search by prefix
+    if (userId.length <= 8) {
+      query = query.ilike("id", `${userId}%`);
+    } else {
+      // For longer inputs, search by exact match
+      query = query.eq("id", userId);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) {
       console.error("Error finding user:", error);

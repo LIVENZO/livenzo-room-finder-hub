@@ -80,7 +80,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
             Search by Owner ID
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Enter the Owner ID provided by your new property owner to send a connection request.
+            Enter the first 8 characters of the Owner ID provided by your property owner to send a connection request.
           </p>
         </CardHeader>
         <CardContent>
@@ -152,8 +152,8 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
           <div className="text-center space-y-3">
             <h3 className="font-semibold text-gray-900">Need Help?</h3>
             <div className="space-y-2 text-sm text-gray-600">
-              <p>• Ask your property owner for their unique Owner ID</p>
-              <p>• Make sure you have the correct 8-digit ID or UUID</p>
+              <p>• Ask your property owner for the first 8 characters of their Owner ID</p>
+              <p>• The short ID looks like "6d2faf25" (8 characters)</p>
               <p>• Contact your owner if you're having trouble connecting</p>
             </div>
           </div>
