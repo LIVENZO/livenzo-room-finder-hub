@@ -1,117 +1,233 @@
 
-import { toast } from 'sonner';
+/**
+ * Enhanced file upload security utilities
+ */
+export interface FileValidationResult {
+  isValid: boolean;
+  error?: string;
+  sanitizedFile?: File;
+}
 
+// Allowed file types for documents
+const ALLOWED_DOCUMENT_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg', 
+  'image/png',
+  'image/webp'
+];
+
+// Allowed file types for images
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/jpg',
   'image/png',
-  'image/webp'
+  'image/webp',
+  'image/gif'
 ];
 
-const ALLOWED_DOCUMENT_TYPES = [
-  'application/pdf',
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp'
-];
+// Maximum file sizes (in bytes)
+const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const MAX_FILE_SIZE_MB = 5;
-const MAX_IMAGE_SIZE_MB = 10;
+// Dangerous file extensions to block
+const BLOCKED_EXTENSIONS = [
+  '.exe', '.bat', '.com', '.cmd', '.scr', '.pif', '.vbs', '.js', '.jar',
+  '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz',
+  '.php', '.asp', '.aspx', '.jsp', '.sh', '.ps1', '.py', '.rb'
+];
 
 /**
- * Validates file for image uploads
+ * Sanitize filename to prevent directory traversal and other attacks
  */
-export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
-  // Check file type
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return {
-      isValid: false,
-      error: 'Only JPEG, PNG, and WebP images are allowed'
-    };
+export const sanitizeFileName = (fileName: string): string => {
+  // Remove directory traversal attempts
+  let sanitized = fileName.replace(/[\/\\]/g, '');
+  
+  // Remove dangerous characters
+  sanitized = sanitized.replace(/[<>:"|?*]/g, '');
+  
+  // Remove leading/trailing dots and spaces
+  sanitized = sanitized.replace(/^[.\s]+|[.\s]+$/g, '');
+  
+  // Limit length
+  if (sanitized.length > 255) {
+    const ext = sanitized.substring(sanitized.lastIndexOf('.'));
+    const name = sanitized.substring(0, 255 - ext.length);
+    sanitized = name + ext;
   }
   
-  // Check file size
-  if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-    return {
-      isValid: false,
-      error: `Image size cannot exceed ${MAX_IMAGE_SIZE_MB}MB`
-    };
+  // Ensure we have a valid filename
+  if (!sanitized || sanitized === '') {
+    sanitized = 'file_' + Date.now();
   }
   
-  // Check for suspicious file names
-  if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
-    return {
-      isValid: false,
-      error: 'Invalid file name'
-    };
-  }
-  
-  return { isValid: true };
+  return sanitized;
 };
 
 /**
- * Validates file for document uploads
+ * Check if file extension is blocked
  */
-export const validateDocumentFile = (file: File): { isValid: boolean; error?: string } => {
+const hasBlockedExtension = (fileName: string): boolean => {
+  const lowerFileName = fileName.toLowerCase();
+  return BLOCKED_EXTENSIONS.some(ext => lowerFileName.endsWith(ext));
+};
+
+/**
+ * Validate file header (magic bytes) to ensure file type matches extension
+ */
+const validateFileHeader = async (file: File): Promise<boolean> => {
+  try {
+    const buffer = await file.slice(0, 8).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    
+    // Check common file signatures
+    const signatures = {
+      pdf: [0x25, 0x50, 0x44, 0x46], // %PDF
+      jpg: [0xFF, 0xD8, 0xFF],
+      png: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+      gif: [0x47, 0x49, 0x46],
+      webp: [0x52, 0x49, 0x46, 0x46] // RIFF (first 4 bytes of WebP)
+    };
+    
+    // Check if file header matches expected type
+    for (const [type, signature] of Object.entries(signatures)) {
+      if (file.type.includes(type) || file.name.toLowerCase().includes(type)) {
+        const matches = signature.every((byte, index) => bytes[index] === byte);
+        if (matches) return true;
+      }
+    }
+    
+    // For WebP, check additional bytes
+    if (file.type === 'image/webp' && bytes.length >= 8) {
+      const webpCheck = bytes[8] === 0x57 && bytes[9] === 0x45 && 
+                       bytes[10] === 0x42 && bytes[11] === 0x50;
+      if (webpCheck) return true;
+    }
+    
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Validate document file
+ */
+export const validateDocumentFile = (file: File): FileValidationResult => {
+  // Check file size
+  if (file.size > MAX_DOCUMENT_SIZE) {
+    return {
+      isValid: false,
+      error: `Document size must be less than ${MAX_DOCUMENT_SIZE / (1024 * 1024)}MB`
+    };
+  }
+  
   // Check file type
   if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: 'Only PDF and image files are allowed for documents'
+      error: 'Only PDF, JPEG, JPG, PNG, and WebP files are allowed for documents'
     };
   }
   
-  // Check file size
-  if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+  // Check for blocked extensions
+  if (hasBlockedExtension(file.name)) {
     return {
       isValid: false,
-      error: `Document size cannot exceed ${MAX_FILE_SIZE_MB}MB`
+      error: 'File type not allowed for security reasons'
     };
   }
   
-  // Check for suspicious file names
-  if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
-    return {
-      isValid: false,
-      error: 'Invalid file name'
-    };
-  }
+  // Sanitize filename
+  const sanitizedName = sanitizeFileName(file.name);
+  const sanitizedFile = new File([file], sanitizedName, { type: file.type });
   
-  return { isValid: true };
+  return {
+    isValid: true,
+    sanitizedFile
+  };
 };
 
 /**
- * Sanitizes file name
+ * Validate image file
  */
-export const sanitizeFileName = (fileName: string): string => {
-  return fileName
-    .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace special chars with underscore
-    .replace(/_{2,}/g, '_') // Replace multiple underscores with single
-    .toLowerCase();
+export const validateImageFile = (file: File): FileValidationResult => {
+  // Check file size
+  if (file.size > MAX_IMAGE_SIZE) {
+    return {
+      isValid: false,
+      error: `Image size must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB`
+    };
+  }
+  
+  // Check file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      isValid: false,
+      error: 'Only JPEG, JPG, PNG, WebP, and GIF files are allowed for images'
+    };
+  }
+  
+  // Check for blocked extensions
+  if (hasBlockedExtension(file.name)) {
+    return {
+      isValid: false,
+      error: 'File type not allowed for security reasons'
+    };
+  }
+  
+  // Sanitize filename
+  const sanitizedName = sanitizeFileName(file.name);
+  const sanitizedFile = new File([file], sanitizedName, { type: file.type });
+  
+  return {
+    isValid: true,
+    sanitizedFile
+  };
 };
 
 /**
- * Validates multiple files
+ * Validate multiple files with comprehensive checks
  */
 export const validateFiles = (
-  files: File[],
+  files: File[], 
   type: 'image' | 'document' = 'image'
 ): { validFiles: File[]; errors: string[] } => {
   const validFiles: File[] = [];
   const errors: string[] = [];
   
+  if (files.length === 0) {
+    errors.push('No files selected');
+    return { validFiles, errors };
+  }
+  
+  if (files.length > 5) {
+    errors.push('Maximum 5 files allowed');
+    return { validFiles, errors };
+  }
+  
   for (const file of files) {
-    const validation = type === 'image' 
-      ? validateImageFile(file)
-      : validateDocumentFile(file);
+    const validation = type === 'document' 
+      ? validateDocumentFile(file)
+      : validateImageFile(file);
     
-    if (validation.isValid) {
-      validFiles.push(file);
+    if (validation.isValid && validation.sanitizedFile) {
+      validFiles.push(validation.sanitizedFile);
     } else {
       errors.push(`${file.name}: ${validation.error}`);
     }
   }
   
   return { validFiles, errors };
+};
+
+/**
+ * Generate secure filename with timestamp and random string
+ */
+export const generateSecureFileName = (originalName: string): string => {
+  const ext = originalName.substring(originalName.lastIndexOf('.'));
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 15);
+  return `${timestamp}_${random}${ext}`;
 };

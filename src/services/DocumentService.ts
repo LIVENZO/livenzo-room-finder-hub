@@ -2,6 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadFilesSecure } from "./storage/secureStorage";
+import { validateAuthentication, validateUserPermission } from "./security/authValidator";
+import { validateText, validateUserId } from "./security/inputValidator";
 
 export type DocumentType = 'id_proof' | 'income_proof' | 'lease_agreement' | 'reference';
 
@@ -30,10 +32,36 @@ export const uploadDocument = async (
   try {
     console.log('Starting document upload:', { fileName: file.name, documentType, userId, relationshipId });
     
-    // Check authentication first
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast.error("Please log in to upload documents");
+    // Validate inputs
+    const userIdValidation = validateUserId(userId);
+    if (!userIdValidation.isValid) {
+      toast.error("Invalid user ID");
+      return null;
+    }
+    
+    const relationshipIdValidation = validateUserId(relationshipId);
+    if (!relationshipIdValidation.isValid) {
+      toast.error("Invalid relationship ID");
+      return null;
+    }
+    
+    // Check authentication
+    const authResult = await validateAuthentication();
+    if (!authResult.isValid || authResult.userId !== userId) {
+      toast.error("Authentication failed. Please log in again.");
+      return null;
+    }
+    
+    // Validate user permission for this relationship
+    const hasPermission = await validateUserPermission(
+      userId, 
+      'write', 
+      'document', 
+      relationshipId
+    );
+    
+    if (!hasPermission) {
+      toast.error("You don't have permission to upload documents to this relationship");
       return null;
     }
     
@@ -83,11 +111,33 @@ export const uploadDocument = async (
 // Fetch documents for a relationship
 export const fetchDocumentsForRelationship = async (relationshipId: string): Promise<Document[]> => {
   try {
+    // Validate input
+    const relationshipIdValidation = validateUserId(relationshipId);
+    if (!relationshipIdValidation.isValid) {
+      console.error("Invalid relationship ID format");
+      toast.error("Invalid relationship ID");
+      return [];
+    }
+    
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const authResult = await validateAuthentication();
+    if (!authResult.isValid) {
       console.error("No authenticated session found");
       toast.error("Please log in to view documents");
+      return [];
+    }
+    
+    // Validate user permission for this relationship
+    const hasPermission = await validateUserPermission(
+      authResult.userId!, 
+      'read', 
+      'document', 
+      relationshipId
+    );
+    
+    if (!hasPermission) {
+      console.error("User doesn't have permission to view documents for this relationship");
+      toast.error("You don't have permission to view these documents");
       return [];
     }
 
@@ -118,6 +168,42 @@ export const updateDocumentStatus = async (
   comments?: string
 ): Promise<Document | null> => {
   try {
+    // Validate inputs
+    const documentIdValidation = validateUserId(documentId);
+    if (!documentIdValidation.isValid) {
+      toast.error("Invalid document ID");
+      return null;
+    }
+    
+    if (comments) {
+      const commentsValidation = validateText(comments, 0, 500);
+      if (!commentsValidation.isValid) {
+        toast.error(commentsValidation.error || "Invalid comments");
+        return null;
+      }
+      comments = commentsValidation.sanitizedValue;
+    }
+    
+    // Check authentication
+    const authResult = await validateAuthentication();
+    if (!authResult.isValid) {
+      toast.error("Please log in to update document status");
+      return null;
+    }
+    
+    // Validate user permission for this document
+    const hasPermission = await validateUserPermission(
+      authResult.userId!, 
+      'write', 
+      'document', 
+      documentId
+    );
+    
+    if (!hasPermission) {
+      toast.error("You don't have permission to update this document");
+      return null;
+    }
+
     const { data, error } = await supabase
       .from("documents")
       .update({ 
