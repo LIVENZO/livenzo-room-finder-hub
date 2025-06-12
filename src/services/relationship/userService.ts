@@ -14,8 +14,8 @@ export const findUserById = async (userId: string): Promise<UserProfile | null> 
     // If the input is 8 characters or less, search by prefix
     if (userId.length <= 8) {
       console.log("Searching by prefix for:", userId);
-      // Use text casting and LIKE operator for prefix matching
-      query = query.filter('id', 'like', `${userId}%`);
+      // Use raw SQL to cast UUID to text for prefix matching
+      query = query.filter('id::text', 'like', `${userId}%`);
     } else {
       console.log("Searching by exact match for:", userId);
       // For longer inputs, search by exact match
