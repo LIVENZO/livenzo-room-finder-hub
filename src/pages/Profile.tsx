@@ -45,6 +45,21 @@ const Profile = () => {
       <div className="container max-w-4xl py-10">
         <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
         
+        {/* Show Owner ID prominently for owners */}
+        {isOwner && profile?.public_id && (
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-lg text-blue-800">Your Owner ID</CardTitle>
+              <CardDescription className="text-blue-700">
+                Share this ID with renters so they can easily connect with you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserIdDisplay publicId={profile.public_id} />
+            </CardContent>
+          </Card>
+        )}
+        
         <Card>
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>

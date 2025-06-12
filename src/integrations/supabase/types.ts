@@ -618,6 +618,7 @@ export type Database = {
           property_address: Json | null
           property_location: string | null
           property_name: string | null
+          public_id: string | null
           resident_type: string | null
           total_rental_rooms: number | null
           updated_at: string
@@ -637,6 +638,7 @@ export type Database = {
           property_address?: Json | null
           property_location?: string | null
           property_name?: string | null
+          public_id?: string | null
           resident_type?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
@@ -656,6 +658,7 @@ export type Database = {
           property_address?: Json | null
           property_location?: string | null
           property_name?: string | null
+          public_id?: string | null
           resident_type?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
@@ -670,6 +673,14 @@ export type Database = {
       archive_previous_connection_data: {
         Args: { renter_user_id: string; new_owner_id: string }
         Returns: undefined
+      }
+      ensure_unique_public_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_public_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_active_renter_relationships: {
         Args: { renter_user_id: string }

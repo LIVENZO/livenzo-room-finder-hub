@@ -2,24 +2,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/relationship";
 
-// Search for a user by ID (supports both full UID and first 8 characters)
-export const findUserById = async (userId: string): Promise<UserProfile | null> => {
+// Search for a user by public ID (supports both full public_id and partial matches)
+export const findUserById = async (publicId: string): Promise<UserProfile | null> => {
   try {
-    console.log("Searching for user with ID:", userId);
+    console.log("Searching for user with public ID:", publicId);
     
     let query = supabase
       .from("user_profiles")
-      .select("id, full_name, avatar_url");
+      .select("id, full_name, avatar_url, public_id");
 
-    // If the input is 8 characters or less, search by prefix
-    if (userId.length <= 8) {
-      console.log("Searching by prefix for:", userId);
-      // Use raw SQL to cast UUID to text for prefix matching
-      query = query.filter('id::text', 'like', `${userId}%`);
+    // Search by public_id using prefix matching for shorter inputs
+    if (publicId.length <= 10) {
+      console.log("Searching by public_id prefix for:", publicId);
+      query = query.filter('public_id', 'like', `${publicId}%`);
     } else {
-      console.log("Searching by exact match for:", userId);
-      // For longer inputs, search by exact match
-      query = query.eq("id", userId);
+      console.log("Searching by exact public_id match for:", publicId);
+      query = query.eq("public_id", publicId);
     }
 
     const { data, error } = await query.maybeSingle();

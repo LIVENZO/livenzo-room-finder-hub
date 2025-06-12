@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadFilesSecure } from './storage/secureStorage';
@@ -17,6 +16,7 @@ export interface UserProfile {
   property_location?: string | null;
   location_latitude?: number | null;
   location_longitude?: number | null;
+  public_id?: string | null;
   created_at?: string;
   updated_at?: string;
   is_owner_profile_complete?: boolean;

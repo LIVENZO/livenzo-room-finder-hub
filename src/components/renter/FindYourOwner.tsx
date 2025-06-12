@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,7 +58,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
         <p className="text-lg text-gray-600 max-w-md mx-auto">
           {declinedConnections.length > 0 
             ? "You've successfully disconnected from your previous owner. Enter the new owner's ID to connect again."
-            : "Search for your PG/Hostel owner using their ID to connect"
+            : "Search for your PG/Hostel owner using their unique 10-character Owner ID"
           }
         </p>
         
@@ -80,7 +79,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
             Search by Owner ID
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Enter the first 8 characters of the Owner ID provided by your property owner to send a connection request.
+            Enter the 10-character Owner ID provided by your property owner (e.g., "a9x8b7c2qk") to send a connection request.
           </p>
         </CardHeader>
         <CardContent>
@@ -152,8 +151,8 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
           <div className="text-center space-y-3">
             <h3 className="font-semibold text-gray-900">Need Help?</h3>
             <div className="space-y-2 text-sm text-gray-600">
-              <p>• Ask your property owner for the first 8 characters of their Owner ID</p>
-              <p>• The short ID looks like "6d2faf25" (8 characters)</p>
+              <p>• Ask your property owner for their 10-character Owner ID</p>
+              <p>• The Owner ID looks like "a9x8b7c2qk" (10 characters with letters and numbers)</p>
               <p>• Contact your owner if you're having trouble connecting</p>
             </div>
           </div>

@@ -7,41 +7,38 @@ import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserIdDisplayProps {
-  userId: string;
+  publicId: string;
 }
 
-const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ userId }) => {
-  const copyUserIdToClipboard = () => {
-    // Always copy the full UID
-    navigator.clipboard.writeText(userId);
-    toast.success("User ID copied to clipboard");
+const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
+  const copyPublicIdToClipboard = () => {
+    navigator.clipboard.writeText(publicId);
+    toast.success("Owner ID copied to clipboard");
   };
-
-  // Display only first 8 characters
-  const displayUserId = userId.substring(0, 8);
 
   return (
     <div className="grid gap-2">
-      <Label htmlFor="userId">Your User ID (for renters to find you)</Label>
+      <Label htmlFor="publicId">Your Owner ID (for renters to find you)</Label>
       <div className="flex gap-2">
         <Input 
-          id="userId"
-          value={displayUserId}
+          id="publicId"
+          value={publicId || 'Generating...'}
           readOnly
-          className="bg-gray-50 font-mono text-sm"
-          title={`Full ID: ${userId}`} // Show full ID on hover
+          className="bg-gray-50 font-mono text-lg tracking-wider"
+          placeholder="Generating unique ID..."
         />
         <Button
           size="icon"
           variant="outline"
-          onClick={copyUserIdToClipboard}
-          title="Copy full ID to clipboard"
+          onClick={copyPublicIdToClipboard}
+          disabled={!publicId}
+          title="Copy Owner ID to clipboard"
         >
           <Copy className="h-4 w-4" />
         </Button>
       </div>
       <p className="text-xs text-gray-500 mt-1">
-        Share this ID with potential renters so they can connect with you
+        Share this 10-character ID with potential renters so they can connect with you easily
       </p>
     </div>
   );
