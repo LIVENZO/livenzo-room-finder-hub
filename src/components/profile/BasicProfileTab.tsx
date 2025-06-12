@@ -44,8 +44,8 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
         />
       </div>
 
-      {user && (
-        <UserIdDisplay userId={user.id} />
+      {profile?.public_id && (
+        <UserIdDisplay publicId={profile.public_id} />
       )}
     </div>
   );

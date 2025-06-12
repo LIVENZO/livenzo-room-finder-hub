@@ -9,6 +9,7 @@ import ProfileForm from '@/components/profile/ProfileForm';
 import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
+import UserIdDisplay from '@/components/profile/UserIdDisplay';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
 

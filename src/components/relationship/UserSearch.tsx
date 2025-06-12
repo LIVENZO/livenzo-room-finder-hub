@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { UserProfile } from '@/types/relationship';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -17,7 +18,7 @@ interface UserSearchProps {
 const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   const [searchId, setSearchId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [foundUser, setFoundUser] = useState<{id: string, full_name: string, avatar_url: string} | null>(null);
+  const [foundUser, setFoundUser] = useState<UserProfile | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const { requireComplete } = useProfileCompletion();
