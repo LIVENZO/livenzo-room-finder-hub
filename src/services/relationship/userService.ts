@@ -5,15 +5,19 @@ import { UserProfile } from "@/types/relationship";
 // Search for a user by ID (supports both full UID and first 8 characters)
 export const findUserById = async (userId: string): Promise<UserProfile | null> => {
   try {
+    console.log("Searching for user with ID:", userId);
+    
     let query = supabase
       .from("user_profiles")
       .select("id, full_name, avatar_url");
 
     // If the input is 8 characters or less, search by prefix
     if (userId.length <= 8) {
-      // Cast UUID to text for prefix matching
-      query = query.filter('id::text', 'like', `${userId}%`);
+      console.log("Searching by prefix for:", userId);
+      // Use text casting and LIKE operator for prefix matching
+      query = query.filter('id', 'like', `${userId}%`);
     } else {
+      console.log("Searching by exact match for:", userId);
       // For longer inputs, search by exact match
       query = query.eq("id", userId);
     }
@@ -25,6 +29,7 @@ export const findUserById = async (userId: string): Promise<UserProfile | null> 
       return null;
     }
 
+    console.log("Search result:", data);
     return data;
   } catch (error) {
     console.error("Exception finding user:", error);
