@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -75,6 +76,14 @@ const OwnerDashboard: React.FC = () => {
     requireOwnerComplete(() => navigate('/connections'));
   };
 
+  const handleStatsCardClick = (type: 'listings' | 'connections') => {
+    if (type === 'listings' && listingsCount > 0) {
+      handleViewListingsClick();
+    } else if (type === 'connections' && pendingConnections > 0) {
+      handleManageConnectionsClick();
+    }
+  };
+
   const statsCards = [
     {
       title: 'Active Listings',
@@ -82,7 +91,9 @@ const OwnerDashboard: React.FC = () => {
       subtitle: listingsCount === 0 ? "No rooms listed yet" : `${listingsCount} room${listingsCount === 1 ? '' : 's'} available`,
       icon: Home,
       color: 'bg-gradient-primary',
-      isLoading: isLoading
+      isLoading: isLoading,
+      isClickable: listingsCount > 0,
+      onClick: () => handleStatsCardClick('listings')
     },
     {
       title: 'Connection Requests',
@@ -91,7 +102,9 @@ const OwnerDashboard: React.FC = () => {
       icon: UsersIcon,
       color: 'bg-gradient-secondary',
       badge: pendingConnections > 0 ? 'New' : null,
-      isLoading: loadingConnections
+      isLoading: loadingConnections,
+      isClickable: pendingConnections > 0,
+      onClick: () => handleStatsCardClick('connections')
     },
     {
       title: 'Profile Views',
@@ -100,7 +113,8 @@ const OwnerDashboard: React.FC = () => {
       icon: Eye,
       color: 'bg-accent-100 border border-accent-200',
       textColor: 'text-accent-800',
-      isLoading: false
+      isLoading: false,
+      isClickable: false
     },
     {
       title: 'Growth',
@@ -109,7 +123,8 @@ const OwnerDashboard: React.FC = () => {
       icon: TrendingUp,
       color: 'bg-success/10 border border-success/20',
       textColor: 'text-success',
-      isLoading: false
+      isLoading: false,
+      isClickable: false
     }
   ];
 
@@ -182,11 +197,13 @@ const OwnerDashboard: React.FC = () => {
               <Card 
                 key={stat.title}
                 className={cn(
-                  "border-0 shadow-soft hover:shadow-medium transition-all duration-300 animate-slide-up",
+                  "border-0 shadow-soft transition-all duration-300 animate-slide-up",
                   stat.color,
-                  !stat.textColor && "text-white"
+                  !stat.textColor && "text-white",
+                  stat.isClickable && "cursor-pointer hover:shadow-medium hover:scale-105"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
+                onClick={stat.isClickable ? stat.onClick : undefined}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -216,6 +233,11 @@ const OwnerDashboard: React.FC = () => {
                       <div className={cn("text-sm opacity-80", stat.textColor ? "opacity-60" : "")}>
                         {stat.subtitle}
                       </div>
+                      {stat.isClickable && (
+                        <div className={cn("text-xs mt-2 font-medium", stat.textColor ? "opacity-70" : "text-white/70")}>
+                          Click to view
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
