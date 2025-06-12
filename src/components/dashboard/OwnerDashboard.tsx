@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -176,9 +177,8 @@ const OwnerDashboard: React.FC = () => {
               <Card 
                 key={stat.title}
                 className={cn(
-                  "border-0 shadow-soft transition-all duration-300 animate-slide-up",
+                  "border-0 shadow-soft transition-all duration-300 animate-slide-up text-white",
                   stat.color,
-                  !stat.textColor && "text-white",
                   stat.isClickable && "cursor-pointer hover:shadow-medium hover:scale-105"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
@@ -186,11 +186,8 @@ const OwnerDashboard: React.FC = () => {
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center",
-                      stat.textColor ? "bg-white/10" : "bg-white/20"
-                    )}>
-                      <stat.icon className={cn("h-6 w-6", stat.textColor || "text-white")} />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/20">
+                      <stat.icon className="h-6 w-6 text-white" />
                     </div>
                     {stat.badge && (
                       <Badge variant="destructive" className="text-xs">
@@ -201,19 +198,19 @@ const OwnerDashboard: React.FC = () => {
                   
                   {stat.isLoading ? (
                     <div className="space-y-2">
-                      <Loader2 className={cn("h-6 w-6 animate-spin", stat.textColor || "text-white")} />
+                      <Loader2 className="h-6 w-6 animate-spin text-white" />
                       <div className="text-sm opacity-70">Loading...</div>
                     </div>
                   ) : (
                     <div>
-                      <div className={cn("text-3xl font-display font-bold mb-1", stat.textColor || "text-white")}>
+                      <div className="text-3xl font-display font-bold mb-1 text-white">
                         {stat.value}
                       </div>
-                      <div className={cn("text-sm opacity-80", stat.textColor ? "opacity-60" : "")}>
+                      <div className="text-sm opacity-80">
                         {stat.subtitle}
                       </div>
                       {stat.isClickable && (
-                        <div className={cn("text-xs mt-2 font-medium", stat.textColor ? "opacity-70" : "text-white/70")}>
+                        <div className="text-xs mt-2 font-medium text-white/70">
                           Click to view
                         </div>
                       )}
