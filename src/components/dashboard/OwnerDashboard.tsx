@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, List, Loader2, UsersIcon, Bell, Home, TrendingUp, Eye } from 'lucide-react';
+import { Plus, List, Loader2, UsersIcon, Bell, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { fetchOwnerRelationships } from '@/services/relationship';
@@ -105,26 +104,6 @@ const OwnerDashboard: React.FC = () => {
       isLoading: loadingConnections,
       isClickable: pendingConnections > 0,
       onClick: () => handleStatsCardClick('connections')
-    },
-    {
-      title: 'Profile Views',
-      value: '24',
-      subtitle: 'This month',
-      icon: Eye,
-      color: 'bg-accent-100 border border-accent-200',
-      textColor: 'text-accent-800',
-      isLoading: false,
-      isClickable: false
-    },
-    {
-      title: 'Growth',
-      value: '+12%',
-      subtitle: 'vs last month',
-      icon: TrendingUp,
-      color: 'bg-success/10 border border-success/20',
-      textColor: 'text-success',
-      isLoading: false,
-      isClickable: false
     }
   ];
 
@@ -192,7 +171,7 @@ const OwnerDashboard: React.FC = () => {
         
         <TabsContent value="dashboard" className="space-y-8">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {statsCards.map((stat, index) => (
               <Card 
                 key={stat.title}
@@ -264,7 +243,7 @@ const OwnerDashboard: React.FC = () => {
                         ? "bg-gradient-primary hover:shadow-medium text-white border-0" 
                         : "hover:bg-primary-50 hover:border-primary-200"
                     )}
-                    style={{ animationDelay: `${(index + 4) * 100}ms` }}
+                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
                     onClick={action.onClick}
                   >
                     <div className={cn(
