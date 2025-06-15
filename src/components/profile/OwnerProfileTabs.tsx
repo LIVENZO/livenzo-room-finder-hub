@@ -2,7 +2,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BasicProfileTab from './BasicProfileTab';
-import PropertyDetailsTab from './PropertyDetailsTab';
 import LocationTab from './LocationTab';
 import { UserProfile } from '@/services/UserProfileService';
 import { User } from '@supabase/supabase-js';
@@ -45,9 +44,8 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="basic">Basic Information</TabsTrigger>
-        <TabsTrigger value="property">Property Details</TabsTrigger>
         <TabsTrigger value="location">Location</TabsTrigger>
       </TabsList>
       
@@ -59,15 +57,6 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
           uploadingImage={uploadingImage}
           onInputChange={onInputChange}
           onImageUpload={onImageUpload}
-        />
-      </TabsContent>
-
-      <TabsContent value="property">
-        <PropertyDetailsTab
-          formValues={ownerFormValues}
-          profile={profile}
-          onInputChange={onOwnerInputChange}
-          onSelectChange={onOwnerSelectChange}
         />
       </TabsContent>
 
