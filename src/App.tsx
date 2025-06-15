@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/auth"; 
 import { RoomProvider } from "./context/RoomContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
+import SetLocation from "./pages/SetLocation";
 
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/list-room" element={<ListRoom />} />
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/notices" element={<Notices />} />
+              <Route path="/set-location" element={<SetLocation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

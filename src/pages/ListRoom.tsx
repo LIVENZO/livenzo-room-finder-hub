@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -16,6 +15,7 @@ import { formSchema, FormValues } from '@/components/room-listing/schemas/roomLi
 import BasicRoomInfoFields from '@/components/room-listing/BasicRoomInfoFields';
 import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFields';
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
+import { fetchUserProfile } from '@/services/UserProfileService';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -24,7 +24,8 @@ const ListRoom: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  
+  const [profileChecked, setProfileChecked] = useState(false);
+
   // Initialize form with react-hook-form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,6 +58,31 @@ const ListRoom: React.FC = () => {
       return;
     }
   }, [user, userRole, navigate]);
+  
+  // Owner location check: Must have location set before listing
+  useEffect(() => {
+    if (!user) return;
+    const checkLocation = async () => {
+      const profile = await fetchUserProfile(user.id);
+      // Check both latitude and longitude presence and ensure they're not null/0/undefined
+      const hasValidLocation =
+        !!profile?.location_latitude &&
+        !!profile?.location_longitude &&
+        typeof profile.location_latitude === "number" &&
+        typeof profile.location_longitude === "number";
+      if (!hasValidLocation) {
+        toast.info('Set your property location before listing a room.');
+        // Pass intended backTo via state
+        navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
+      } else {
+        setProfileChecked(true);
+      }
+    };
+    checkLocation();
+  }, [user, navigate]);
+  
+  // Only render the page after checking the location
+  if (!user || !profileChecked) return null;
   
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
