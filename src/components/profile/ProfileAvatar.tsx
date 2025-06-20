@@ -60,6 +60,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
         <AvatarImage 
           src={imageUrl} 
           key={imageUrl} // Force re-render when URL changes
+          className="object-cover"
           onLoad={() => console.log('Avatar image loaded:', imageUrl)}
           onError={() => console.log('Avatar image failed to load:', imageUrl)}
         />
@@ -94,11 +95,6 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
           )}
         </Button>
       </div>
-      {!uploadingImage && (
-        <p className="text-xs text-gray-500 text-center max-w-[120px]">
-          JPG, PNG or WebP (max 5MB)
-        </p>
-      )}
     </div>
   );
 };
