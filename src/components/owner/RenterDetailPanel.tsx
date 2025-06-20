@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import { Document, fetchDocumentsForRelationship } from '@/services/DocumentService';
 import DocumentList from '@/components/document/DocumentList';
@@ -13,17 +15,19 @@ import { toast } from 'sonner';
 interface RenterDetailPanelProps {
   relationship: Relationship;
   initialTab?: string;
-  mode?: 'full' | 'documents' | 'complaints'; // Add mode prop
+  mode?: 'full' | 'documents' | 'complaints';
   onBack: () => void;
   onRefresh: () => void;
+  onModeChange?: (mode: 'full' | 'documents' | 'complaints') => void;
 }
 
 const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   relationship,
   initialTab = 'overview',
-  mode = 'full', // Default to full mode
+  mode = 'full',
   onBack,
   onRefresh,
+  onModeChange,
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +65,18 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
     await loadDocuments();
   };
 
+  const handleSwitchToComplaints = () => {
+    if (onModeChange) {
+      onModeChange('complaints');
+    }
+  };
+
+  const handleSwitchToDocuments = () => {
+    if (onModeChange) {
+      onModeChange('documents');
+    }
+  };
+
   // Determine which tabs to show based on mode
   const getVisibleTabs = () => {
     switch (mode) {
@@ -79,6 +95,31 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   return (
     <div className="space-y-6">
       <RenterHeader relationship={relationship} onBack={onBack} />
+
+      {/* Show navigation buttons when in single mode */}
+      {(mode === 'documents' || mode === 'complaints') && (
+        <div className="flex gap-2">
+          {mode === 'documents' && (
+            <Button
+              variant="outline"
+              onClick={handleSwitchToComplaints}
+              className="flex items-center gap-2"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              View Complaints
+            </Button>
+          )}
+          {mode === 'complaints' && (
+            <Button
+              variant="outline"
+              onClick={handleSwitchToDocuments}
+              className="flex items-center gap-2"
+            >
+              View Documents
+            </Button>
+          )}
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className={`grid w-full grid-cols-${visibleTabs.length}`}>

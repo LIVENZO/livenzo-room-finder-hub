@@ -108,7 +108,7 @@ export const useRentersManagement = (currentUserId: string) => {
     processingIds,
     selectedRelationship,
     selectedTab,
-    viewMode, // Add viewMode to return
+    viewMode,
     handleAccept,
     handleDecline,
     handleDisconnect,
@@ -116,5 +116,6 @@ export const useRentersManagement = (currentUserId: string) => {
     handleChat,
     handleComplaints,
     handleBackToList,
+    setViewMode, // Add this to the return object
   };
 };

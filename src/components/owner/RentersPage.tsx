@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -18,14 +19,24 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     processingIds,
     selectedRelationship,
     selectedTab,
-    viewMode, // Get viewMode from hook
+    viewMode,
     handleAccept,
     handleDecline,
     handleDisconnect,
     handleDocuments,
     handleComplaints,
     handleBackToList,
+    setViewMode, // Add this from the hook
   } = useRentersManagement(currentUserId);
+
+  const handleModeChange = (mode: 'full' | 'documents' | 'complaints') => {
+    setViewMode(mode);
+    if (mode === 'documents') {
+      // Set active tab to documents when switching to documents mode
+    } else if (mode === 'complaints') {
+      // Set active tab to complaints when switching to complaints mode
+    }
+  };
 
   // If a renter is selected, show the detail panel with the specific mode
   if (selectedRelationship) {
@@ -33,9 +44,10 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
       <RenterDetailPanel
         relationship={selectedRelationship}
         initialTab={selectedTab}
-        mode={viewMode} // Pass the viewMode
+        mode={viewMode}
         onBack={handleBackToList}
-        onRefresh={() => {}} // Will be handled by the hook
+        onRefresh={() => {}}
+        onModeChange={handleModeChange}
       />
     );
   }
