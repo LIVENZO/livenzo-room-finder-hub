@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -79,7 +78,8 @@ const OwnerDashboard: React.FC = () => {
   const handleStatsCardClick = (type: 'listings' | 'connections') => {
     if (type === 'listings' && listingsCount > 0) {
       handleViewListingsClick();
-    } else if (type === 'connections' && pendingConnections > 0) {
+    } else if (type === 'connections') {
+      // Always allow clicking on connections, regardless of pending count
       handleManageConnectionsClick();
     }
   };
@@ -103,7 +103,7 @@ const OwnerDashboard: React.FC = () => {
       color: 'bg-gradient-secondary',
       badge: pendingConnections > 0 ? 'New' : null,
       isLoading: loadingConnections,
-      isClickable: pendingConnections > 0,
+      isClickable: true, // Always clickable now
       onClick: () => handleStatsCardClick('connections')
     }
   ];
