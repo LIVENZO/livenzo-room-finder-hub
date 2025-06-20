@@ -15,6 +15,7 @@ export const useRentersManagement = (currentUserId: string) => {
   const [processingIds, setProcessingIds] = useState<string[]>([]);
   const [selectedRelationship, setSelectedRelationship] = useState<Relationship | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>('overview');
+  const [viewMode, setViewMode] = useState<'full' | 'documents' | 'complaints'>('full');
 
   const fetchRelationships = useCallback(async () => {
     try {
@@ -78,6 +79,7 @@ export const useRentersManagement = (currentUserId: string) => {
   const handleDocuments = (relationship: Relationship) => {
     setSelectedRelationship(relationship);
     setSelectedTab('documents');
+    setViewMode('documents'); // Set mode to documents only
   };
 
   const handleChat = (relationship: Relationship) => {
@@ -91,11 +93,13 @@ export const useRentersManagement = (currentUserId: string) => {
   const handleComplaints = (relationship: Relationship) => {
     setSelectedRelationship(relationship);
     setSelectedTab('complaints');
+    setViewMode('complaints'); // Set mode to complaints only
   };
 
   const handleBackToList = () => {
     setSelectedRelationship(null);
     setSelectedTab('overview');
+    setViewMode('full'); // Reset to full mode
   };
 
   return {
@@ -104,6 +108,7 @@ export const useRentersManagement = (currentUserId: string) => {
     processingIds,
     selectedRelationship,
     selectedTab,
+    viewMode, // Add viewMode to return
     handleAccept,
     handleDecline,
     handleDisconnect,

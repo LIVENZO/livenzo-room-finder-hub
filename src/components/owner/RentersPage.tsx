@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +18,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     processingIds,
     selectedRelationship,
     selectedTab,
+    viewMode, // Get viewMode from hook
     handleAccept,
     handleDecline,
     handleDisconnect,
@@ -27,12 +27,13 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
     handleBackToList,
   } = useRentersManagement(currentUserId);
 
-  // If a renter is selected, show the detail panel with the specific tab
+  // If a renter is selected, show the detail panel with the specific mode
   if (selectedRelationship) {
     return (
       <RenterDetailPanel
         relationship={selectedRelationship}
         initialTab={selectedTab}
+        mode={viewMode} // Pass the viewMode
         onBack={handleBackToList}
         onRefresh={() => {}} // Will be handled by the hook
       />

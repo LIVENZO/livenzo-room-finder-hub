@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 interface RenterDetailPanelProps {
   relationship: Relationship;
   initialTab?: string;
+  mode?: 'full' | 'documents' | 'complaints'; // Add mode prop
   onBack: () => void;
   onRefresh: () => void;
 }
@@ -20,6 +21,7 @@ interface RenterDetailPanelProps {
 const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   relationship,
   initialTab = 'overview',
+  mode = 'full', // Default to full mode
   onBack,
   onRefresh,
 }) => {
@@ -32,8 +34,15 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   }, [relationship.id]);
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    // Set initial tab based on mode
+    if (mode === 'documents') {
+      setActiveTab('documents');
+    } else if (mode === 'complaints') {
+      setActiveTab('complaints');
+    } else {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, mode]);
 
   const loadDocuments = async () => {
     try {
@@ -52,37 +61,68 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
     await loadDocuments();
   };
 
+  // Determine which tabs to show based on mode
+  const getVisibleTabs = () => {
+    switch (mode) {
+      case 'documents':
+        return ['documents'];
+      case 'complaints':
+        return ['complaints'];
+      case 'full':
+      default:
+        return ['overview', 'documents', 'complaints', 'notes'];
+    }
+  };
+
+  const visibleTabs = getVisibleTabs();
+
   return (
     <div className="space-y-6">
       <RenterHeader relationship={relationship} onBack={onBack} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="complaints">Complaints</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
+        <TabsList className={`grid w-full grid-cols-${visibleTabs.length}`}>
+          {visibleTabs.includes('overview') && (
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+          )}
+          {visibleTabs.includes('documents') && (
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          )}
+          {visibleTabs.includes('complaints') && (
+            <TabsTrigger value="complaints">Complaints</TabsTrigger>
+          )}
+          {visibleTabs.includes('notes') && (
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <OverviewTab onTabChange={setActiveTab} />
-        </TabsContent>
+        {visibleTabs.includes('overview') && (
+          <TabsContent value="overview" className="space-y-4">
+            <OverviewTab onTabChange={setActiveTab} />
+          </TabsContent>
+        )}
 
-        <TabsContent value="documents" className="space-y-4">
-          <DocumentList 
-            documents={documents}
-            isOwner={true}
-            onDocumentStatusChanged={handleDocumentStatusChanged}
-          />
-        </TabsContent>
+        {visibleTabs.includes('documents') && (
+          <TabsContent value="documents" className="space-y-4">
+            <DocumentList 
+              documents={documents}
+              isOwner={true}
+              onDocumentStatusChanged={handleDocumentStatusChanged}
+            />
+          </TabsContent>
+        )}
 
-        <TabsContent value="complaints" className="space-y-4">
-          <ComplaintsTab relationshipId={relationship.id} />
-        </TabsContent>
+        {visibleTabs.includes('complaints') && (
+          <TabsContent value="complaints" className="space-y-4">
+            <ComplaintsTab relationshipId={relationship.id} />
+          </TabsContent>
+        )}
 
-        <TabsContent value="notes" className="space-y-4">
-          <NotesTab />
-        </TabsContent>
+        {visibleTabs.includes('notes') && (
+          <TabsContent value="notes" className="space-y-4">
+            <NotesTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
