@@ -1,16 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, List, Loader2, UsersIcon, Bell, Home } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { fetchOwnerRelationships } from '@/services/relationship';
-import { Badge } from '@/components/ui/badge';
-import SendNoticeForm from '@/components/dashboard/SendNoticeForm';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
-import { cn } from '@/lib/utils';
+import WelcomeHeader from './components/WelcomeHeader';
+import OwnerDashboardTabs from './components/OwnerDashboardTabs';
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -84,204 +81,23 @@ const OwnerDashboard: React.FC = () => {
     }
   };
 
-  const statsCards = [
-    {
-      title: 'Active Listings',
-      value: listingsCount,
-      subtitle: listingsCount === 0 ? "No rooms listed yet" : `${listingsCount} room${listingsCount === 1 ? '' : 's'} available`,
-      icon: Home,
-      color: 'bg-gradient-primary',
-      isLoading: isLoading,
-      isClickable: listingsCount > 0,
-      onClick: () => handleStatsCardClick('listings')
-    },
-    {
-      title: 'Connection Requests',
-      value: pendingConnections,
-      subtitle: pendingConnections === 0 ? "No pending requests" : `${pendingConnections} awaiting response`,
-      icon: UsersIcon,
-      color: 'bg-gradient-secondary',
-      badge: pendingConnections > 0 ? 'New' : null,
-      isLoading: loadingConnections,
-      isClickable: true, // Always clickable now
-      onClick: () => handleStatsCardClick('connections')
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: 'List New Room',
-      description: 'Add a new property to attract renters',
-      icon: Plus,
-      onClick: handleListRoomClick,
-      isPrimary: true,
-      show: true
-    },
-    {
-      title: 'View All Listings',
-      description: 'Manage your existing properties',
-      icon: List,
-      onClick: handleViewListingsClick,
-      isPrimary: false,
-      show: listingsCount > 0
-    },
-    {
-      title: 'Manage Renters',
-      description: 'Review connection requests and communications',
-      icon: UsersIcon,
-      onClick: handleManageConnectionsClick,
-      isPrimary: false,
-      show: true
-    }
-  ];
+  if (!user) return null;
   
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Welcome Header */}
-      <div className="text-center py-8">
-        <div className="mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mb-4 animate-float">
-            <Home className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">
-            Property Owner Dashboard
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Manage your properties, connect with renters, and grow your rental business with ease.
-          </p>
-        </div>
-      </div>
+      <WelcomeHeader />
       
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <div className="flex justify-center">
-          <TabsList className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-soft p-1">
-            <TabsTrigger 
-              value="dashboard" 
-              className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
-            >
-              Dashboard Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="notices"
-              className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
-            >
-              Send Notices
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        
-        <TabsContent value="dashboard" className="space-y-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {statsCards.map((stat, index) => (
-              <Card 
-                key={stat.title}
-                className={cn(
-                  "border-0 shadow-soft transition-all duration-300 animate-slide-up text-white",
-                  stat.color,
-                  stat.isClickable && "cursor-pointer hover:shadow-medium hover:scale-105"
-                )}
-                style={{ animationDelay: `${index * 100}ms` }}
-                onClick={stat.isClickable ? stat.onClick : undefined}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/20">
-                      <stat.icon className="h-6 w-6 text-white" />
-                    </div>
-                    {stat.badge && (
-                      <Badge variant="destructive" className="text-xs">
-                        {stat.badge}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {stat.isLoading ? (
-                    <div className="space-y-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-white" />
-                      <div className="text-sm opacity-70">Loading...</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="text-3xl font-display font-bold mb-1 text-white">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm opacity-80">
-                        {stat.subtitle}
-                      </div>
-                      {stat.isClickable && (
-                        <div className="text-xs mt-2 font-medium text-white/70">
-                          Click to view
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Quick Actions */}
-          <Card className="border-0 shadow-soft bg-white/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-display font-bold text-gray-900">
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {quickActions.filter(action => action.show).map((action, index) => (
-                  <Button
-                    key={action.title}
-                    variant={action.isPrimary ? "default" : "outline"}
-                    className={cn(
-                      "h-auto p-6 flex flex-col items-center gap-4 transition-all duration-200 animate-scale-in",
-                      action.isPrimary 
-                        ? "bg-gradient-primary hover:shadow-medium text-white border-0" 
-                        : "hover:bg-primary-50 hover:border-primary-200"
-                    )}
-                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
-                    onClick={action.onClick}
-                  >
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center",
-                      action.isPrimary ? "bg-white/20" : "bg-primary-100"
-                    )}>
-                      <action.icon className={cn(
-                        "h-6 w-6",
-                        action.isPrimary ? "text-white" : "text-primary-600"
-                      )} />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-display font-semibold mb-1">{action.title}</div>
-                      <div className={cn(
-                        "text-xs",
-                        action.isPrimary ? "text-white/80" : "text-gray-600"
-                      )}>
-                        {action.description}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="notices" className="animate-fade-in">
-          <Card className="border-0 shadow-soft bg-white/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary-600" />
-                Send Notice to Renters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {user && <SendNoticeForm ownerId={user.id} />}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <OwnerDashboardTabs
+        listingsCount={listingsCount}
+        isLoading={isLoading}
+        pendingConnections={pendingConnections}
+        loadingConnections={loadingConnections}
+        onStatsCardClick={handleStatsCardClick}
+        onListRoomClick={handleListRoomClick}
+        onViewListingsClick={handleViewListingsClick}
+        onManageConnectionsClick={handleManageConnectionsClick}
+        userId={user.id}
+      />
 
       {/* Background decorative elements */}
       <div className="fixed top-1/3 right-1/4 opacity-5 pointer-events-none">
