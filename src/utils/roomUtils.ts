@@ -60,6 +60,8 @@ export const mapDbRoomToRoom = (data: any): Room => {
     ownerId: data.owner_id,
     ownerPhone: data.owner_phone,
     available: data.available,
-    createdAt: data.created_at
+    createdAt: data.created_at,
+    house_no: data.house_no,
+    house_name: data.house_name
   };
 };

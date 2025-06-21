@@ -21,6 +21,13 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
   handleFavoriteToggle,
   roomRating,
 }) => {
+  // Debug logging to check if house data is available
+  console.log('Room data in RoomHeader:', {
+    house_name: room.house_name,
+    house_no: room.house_no,
+    title: room.title
+  });
+
   return (
     <div className="mt-6">
       <div className="flex items-start justify-between">
