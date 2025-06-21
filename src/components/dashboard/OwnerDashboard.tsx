@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
@@ -6,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { fetchOwnerRelationships } from '@/services/relationship';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { fetchUserProfile } from '@/services/UserProfileService';
+import { toast } from 'sonner';
 import WelcomeHeader from './components/WelcomeHeader';
 import OwnerDashboardTabs from './components/OwnerDashboardTabs';
 
@@ -60,8 +61,34 @@ const OwnerDashboard: React.FC = () => {
     fetchConnectionRequests();
   }, [user]);
 
-  const handleListRoomClick = () => {
-    requireOwnerComplete(() => navigate('/list-room'));
+  const handleListRoomClick = async () => {
+    if (!user) return;
+    
+    // First check if owner profile is complete
+    const profileComplete = requireOwnerComplete();
+    if (!profileComplete) return;
+    
+    // Then check if location is set
+    try {
+      const profile = await fetchUserProfile(user.id);
+      const hasValidLocation =
+        !!profile?.location_latitude &&
+        !!profile?.location_longitude &&
+        typeof profile.location_latitude === "number" &&
+        typeof profile.location_longitude === "number";
+        
+      if (!hasValidLocation) {
+        toast.info('Set your property location before listing a room.');
+        navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
+        return;
+      }
+      
+      // Location is set, proceed to listing
+      navigate('/list-room');
+    } catch (error) {
+      console.error('Error checking location:', error);
+      toast.error('Failed to check location. Please try again.');
+    }
   };
 
   const handleViewListingsClick = () => {
