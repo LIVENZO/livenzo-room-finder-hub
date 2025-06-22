@@ -97,7 +97,7 @@ const OwnerDashboard: React.FC = () => {
   };
 
   const handleManageConnectionsClick = () => {
-    requireOwnerComplete(() => navigate('/connections'));
+    navigate('/connections');
   };
 
   const handleStatsCardClick = (type: 'listings' | 'connections') => {
