@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
+import { AUTH_CONFIG } from '@/config/auth';
 
 const Index: React.FC = () => {
   const { user, login, isLoading, session, canChangeRole } = useAuth();
@@ -17,6 +18,22 @@ const Index: React.FC = () => {
   
   useEffect(() => {
     const checkAuth = async () => {
+      // If auth is disabled, redirect directly to dashboard
+      if (!AUTH_CONFIG.AUTH_ENABLED) {
+        console.log("Auth disabled, redirecting to dashboard");
+        setIsRedirecting(true);
+        
+        // Set default role if not already set
+        if (!localStorage.getItem('userRole')) {
+          localStorage.setItem('userRole', userRole);
+          console.log("Setting default user role:", userRole);
+        }
+        
+        navigate('/dashboard');
+        toast.success("Welcome to Livenzo!");
+        return;
+      }
+      
       // Check if we have a user session and redirect if needed
       if (session && user) {
         console.log("User detected on index page, navigating to dashboard:", user.email);
