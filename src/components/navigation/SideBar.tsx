@@ -74,6 +74,7 @@ const SideBar: React.FC = () => {
             variant="ghost" 
             className="w-full justify-start gap-3 h-12 text-white/70 hover:text-white hover:bg-red-500/20 transition-all duration-200"
             onClick={handleLogout}
+            data-native-logout
           >
             <LogOut size={20} />
             <span className="font-display font-medium">Logout</span>

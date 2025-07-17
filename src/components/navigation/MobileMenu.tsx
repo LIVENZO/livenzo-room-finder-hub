@@ -51,7 +51,7 @@ const MobileMenu: React.FC = () => {
           </SheetClose>
         ))}
         <Separator className="my-2" />
-        <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout}>
+        <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout} data-native-logout>
           <LogOut size={20} />
           Logout
         </Button>
