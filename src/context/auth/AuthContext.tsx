@@ -12,7 +12,8 @@ export const AuthContext = createContext<AuthContextType>({
   userRole: null,
   isOwner: false,
   currentUser: null,
-  canChangeRole: true
+  canChangeRole: true,
+  checkRoleConflict: async () => false
 });
 
 // Hook for using the auth context

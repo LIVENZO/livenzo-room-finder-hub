@@ -670,6 +670,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_role_assignments: {
+        Row: {
+          created_at: string
+          email: string
+          google_id: string | null
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          google_id?: string | null
+          id?: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          google_id?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -699,6 +729,10 @@ export type Database = {
           updated_at: string
           archived: boolean
         }[]
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
       }
       update_room_availability_for_owner: {
         Args: { room_id: string; is_available: boolean }

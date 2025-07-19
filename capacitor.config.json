@@ -7,6 +7,13 @@
     "url": "https://f44f9031-d1bf-4d61-8695-911f00d61194.lovableproject.com?forceHideBadge=true",
     "cleartext": true
   },
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "307050598947-h6d37all037croa540sgkudo7tfvmdqk.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  },
   "android": {
     "buildOptions": {
       "keystorePath": null,

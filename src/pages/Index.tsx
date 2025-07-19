@@ -61,12 +61,12 @@ const Index: React.FC = () => {
     }
   }, [user, session, navigate, isLoading, userRole]);
   
-  const handleLogin = () => {
+  const handleLogin = async () => {
     console.log("Login button clicked with role:", userRole);
     // Store the selected role in localStorage to be used after authentication
     localStorage.setItem('selectedRole', userRole);
     toast.info("Redirecting to Google sign-in...");
-    login('google');
+    await login('google', userRole);
   };
   
   // Show a loading state while checking for existing session

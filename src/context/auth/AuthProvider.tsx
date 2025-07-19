@@ -14,7 +14,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isOwner,
     currentUser,
     canChangeRole,
-    setUserRole
+    setUserRole,
+    checkRoleConflict
   } = useAuthState();
   
   const {
@@ -102,7 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userRole: authState.userRole,
       isOwner: authState.isOwner,
       currentUser: authState.currentUser,
-      canChangeRole: authState.canChangeRole
+      canChangeRole: authState.canChangeRole,
+      checkRoleConflict
     }}>
       {children}
     </AuthContext.Provider>

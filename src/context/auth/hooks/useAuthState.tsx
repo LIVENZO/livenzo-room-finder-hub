@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { getStoredUserRoles, storeUserRole, getDefaultRole } from '../authUtils';
+import { AUTH_CONFIG } from '@/config/auth';
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,36 +18,71 @@ export function useAuthState() {
   const currentUser = user;
 
   // Handle role setup for a user
-  const setupUserRole = useCallback((currentUser: User) => {
-    if (!currentUser.email) return;
+  const setupUserRole = useCallback(async (currentUser: User) => {
+    if (!currentUser.email || !AUTH_CONFIG.AUTH_ENABLED) return;
     
-    const userEmail = currentUser.email;
-    const userRolesMap = getStoredUserRoles();
-    
-    // If we have a stored role for this email
-    if (userRolesMap[userEmail]) {
-      const existingRole = userRolesMap[userEmail];
-      setUserRole(existingRole);
-      localStorage.setItem('userRole', existingRole);
-      setCanChangeRole(false);
-      
-      // Inform the user if the selected role doesn't match their stored role
-      const selectedRole = localStorage.getItem('selectedRole');
-      if (selectedRole && selectedRole !== existingRole) {
-        setTimeout(() => {
-          toast.warning(`You previously signed in as a ${existingRole}. Role selection has been locked to ${existingRole}.`);
-        }, 1000);
+    try {
+      // Fetch user role from database
+      const { data: roleData, error } = await supabase
+        .from('user_role_assignments')
+        .select('role')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user role:', error);
+        return;
       }
-    } else {
-      // First time this user is signing in
-      const selectedRole = localStorage.getItem('selectedRole') || 'renter';
-      setUserRole(selectedRole);
+
+      if (roleData) {
+        // User has a role in database
+        setUserRole(roleData.role);
+        localStorage.setItem('userRole', roleData.role);
+        storeUserRole(currentUser.email, roleData.role);
+        setCanChangeRole(false);
+      } else {
+        // No role found in database, this should not happen due to trigger
+        // but handle gracefully
+        const defaultRole = getDefaultRole();
+        setUserRole(defaultRole);
+        localStorage.setItem('userRole', defaultRole);
+        setCanChangeRole(false);
+      }
       
-      // Store this email with its role
-      storeUserRole(userEmail, selectedRole);
-      setCanChangeRole(false);
+    } catch (error) {
+      console.error('Error setting up user role:', error);
+      const defaultRole = getDefaultRole();
+      setUserRole(defaultRole);
+      localStorage.setItem('userRole', defaultRole);
     }
   }, []);
+
+  // Check for role conflicts before authentication
+  const checkRoleConflict = async (googleId: string, selectedRole: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_role_assignments')
+        .select('role')
+        .eq('google_id', googleId)
+        .neq('role', selectedRole);
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking role conflict:', error);
+        return false;
+      }
+
+      if (data && data.length > 0) {
+        const existingRole = data[0].role;
+        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking role conflict:', error);
+      return false;
+    }
+  };
 
   // Function to safely redirect to dashboard
   const redirectToDashboard = useCallback(() => {
@@ -71,8 +107,11 @@ export function useAuthState() {
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        setupUserRole(currentSession.user);
-        redirectToDashboard();
+        // Use setTimeout to handle async operation without making callback async
+        setTimeout(async () => {
+          await setupUserRole(currentSession.user);
+          redirectToDashboard();
+        }, 0);
       }
       
       // Show success message after a short delay to ensure UI is responsive
@@ -104,27 +143,9 @@ export function useAuthState() {
         setSession(currentSession);
         setUser(currentSession.user);
         
-        // Check for stored roles
+        // Set up user role from database
         if (currentSession.user.email) {
-          const userRolesMap = getStoredUserRoles();
-          
-          if (userRolesMap[currentSession.user.email]) {
-            // User has a role already
-            const existingRole = userRolesMap[currentSession.user.email];
-            setUserRole(existingRole);
-            localStorage.setItem('userRole', existingRole);
-            setCanChangeRole(false);
-          } else {
-            // Check for stored role on initial load
-            const storedRole = localStorage.getItem('userRole');
-            if (storedRole) {
-              setUserRole(storedRole);
-              setCanChangeRole(false);
-              
-              // Also save this to the user roles map
-              storeUserRole(currentSession.user.email, storedRole);
-            }
-          }
+          await setupUserRole(currentSession.user);
         }
         
         // Redirect to dashboard if we have a valid session
@@ -135,7 +156,7 @@ export function useAuthState() {
     } finally {
       setIsLoading(false);
     }
-  }, [redirectToDashboard]);
+  }, [redirectToDashboard, setupUserRole]);
 
   useEffect(() => {
     console.log("AuthProvider initializing");
@@ -159,6 +180,7 @@ export function useAuthState() {
     isOwner,
     currentUser,
     canChangeRole,
-    setUserRole
+    setUserRole,
+    checkRoleConflict
   };
 }

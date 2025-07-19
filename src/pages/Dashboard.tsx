@@ -6,26 +6,37 @@ import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
 import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
 import LoadingState from '@/components/landing/LoadingState';
+import { toast } from 'sonner';
+import { AUTH_CONFIG } from '@/config/auth';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, userRole, isLoading } = useAuth();
+  const { user, userRole, isLoading, session } = useAuth();
 
   useEffect(() => {
-    // Only redirect if we're sure there's no user (after loading completes)
-    if (!isLoading && !user) {
-      console.log("No user found, redirecting to login page");
-      navigate('/');
+    // If authentication is enabled, check for user session
+    if (AUTH_CONFIG.AUTH_ENABLED) {
+      if (!isLoading && !user && !session) {
+        console.log("No authenticated user found, redirecting to login");
+        navigate('/');
+        toast.error("Please sign in to access the dashboard");
+        return;
+      }
     }
-  }, [user, navigate, isLoading]);
+
+    // Debug current user state
+    console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
+  }, [user, userRole, isLoading, session, navigate]);
 
   // Show loading state while checking authentication
   if (isLoading) {
     return <LoadingState isRedirecting={false} />;
   }
 
-  // If not logged in, return null while the redirect happens
-  if (!user) return null;
+  // If auth is enabled and no user, don't render anything (redirect will happen)
+  if (AUTH_CONFIG.AUTH_ENABLED && !user) {
+    return null;
+  }
 
   return (
     <Layout>
