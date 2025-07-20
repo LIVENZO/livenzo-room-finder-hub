@@ -33,7 +33,7 @@ export function useAuthMethods() {
           isHybrid: Capacitor.isPluginAvailable('GoogleAuth')
         });
         
-        // Use native authentication on Capacitor platforms
+        // Use native authentication only on Capacitor platforms
         if (Capacitor.isNativePlatform() || Capacitor.isPluginAvailable('GoogleAuth')) {
           console.log("Using native Google Sign-In");
           
@@ -41,6 +41,7 @@ export function useAuthMethods() {
             await initializeGoogleAuth();
             console.log("Google Auth initialized successfully");
             
+            // Use simple signIn without any additional parameters
             const result = await GoogleAuth.signIn();
             console.log("Google Sign-In result received:", {
               hasIdToken: !!result.authentication.idToken,
@@ -89,29 +90,11 @@ export function useAuthMethods() {
           }
           
         } else {
-          // Web fallback - only for development/testing in browser
-          console.log("Using web fallback for Google Sign-In");
-          
-          const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: `${window.location.origin}/dashboard`,
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-              },
-            }
-          });
-          
-          if (error) {
-            console.error("Web Google auth error:", error);
-            toast.error(`Error signing in: ${error.message}`);
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log("Web Google auth initiated");
-          toast.info("Redirecting to Google sign-in...");
+          // No web fallback for native apps - show error
+          console.error("Native platform detected but GoogleAuth plugin not available");
+          toast.error("Google Sign-In is not properly configured for this device");
+          setIsLoading(false);
+          return;
         }
         
       } else {
