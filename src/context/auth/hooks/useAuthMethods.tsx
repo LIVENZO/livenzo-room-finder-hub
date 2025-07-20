@@ -16,7 +16,6 @@ export function useAuthMethods() {
       await GoogleAuth.initialize({
         clientId: AUTH_CONFIG.GOOGLE_WEB_CLIENT_ID,
         scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
       });
       console.log("Google Auth initialization complete");
     }
