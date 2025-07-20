@@ -9,15 +9,25 @@ import { AUTH_CONFIG } from '@/config/auth';
 export function useAuthMethods() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Initialize Google Auth for native platforms
+  // Check if we're in a true Capacitor environment (not WebView)
+  const isCapacitorNative = () => {
+    return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('GoogleAuth');
+  };
+
+  // Initialize Google Auth for native platforms only
   const initializeGoogleAuth = async () => {
-    if (Capacitor.isNativePlatform()) {
-      console.log("Initializing Google Auth for native platform");
-      await GoogleAuth.initialize({
-        clientId: AUTH_CONFIG.GOOGLE_WEB_CLIENT_ID,
-        scopes: ['profile', 'email'],
-      });
-      console.log("Google Auth initialization complete");
+    if (isCapacitorNative()) {
+      console.log("Initializing Google Auth for Capacitor native platform");
+      try {
+        await GoogleAuth.initialize({
+          clientId: AUTH_CONFIG.GOOGLE_WEB_CLIENT_ID,
+          scopes: ['profile', 'email'],
+        });
+        console.log("Google Auth initialization complete");
+      } catch (error) {
+        console.error("Google Auth initialization failed:", error);
+        throw error;
+      }
     }
   };
 
@@ -27,15 +37,16 @@ export function useAuthMethods() {
     try {
       if (provider === 'google') {
         console.log("Starting Google authentication...");
-        console.log("Platform info:", {
+        console.log("Environment info:", {
           isNativePlatform: Capacitor.isNativePlatform(),
           platform: Capacitor.getPlatform(),
-          isHybrid: Capacitor.isPluginAvailable('GoogleAuth')
+          isCapacitorNative: isCapacitorNative(),
+          userAgent: navigator.userAgent
         });
         
-        // Use native authentication only on Capacitor platforms
-        if (Capacitor.isNativePlatform() || Capacitor.isPluginAvailable('GoogleAuth')) {
-          console.log("Using native Google Sign-In");
+        // Only use Capacitor GoogleAuth if we're in a true Capacitor environment
+        if (isCapacitorNative()) {
+          console.log("Using Capacitor native Google Sign-In");
           
           try {
             await initializeGoogleAuth();
@@ -83,18 +94,43 @@ export function useAuthMethods() {
             toast.success("Successfully signed in!");
             
           } catch (nativeError) {
-            console.error("Native Google Sign-In error:", nativeError);
+            console.error("Capacitor Google Sign-In error:", nativeError);
             toast.error(`Google Sign-In failed: ${nativeError instanceof Error ? nativeError.message : 'Unknown error'}`);
             setIsLoading(false);
             return;
           }
           
         } else {
-          // No web fallback for native apps - show error
-          console.error("Native platform detected but GoogleAuth plugin not available");
-          toast.error("Google Sign-In is not properly configured for this device");
-          setIsLoading(false);
-          return;
+          // For WebView environments, use Supabase OAuth
+          console.log("Using Supabase OAuth for WebView environment");
+          
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${window.location.origin}/dashboard`,
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              },
+            }
+          });
+          
+          if (error) {
+            console.error("Supabase OAuth error:", error);
+            toast.error(`Error signing in: ${error.message}`);
+            setIsLoading(false);
+            return;
+          }
+          
+          console.log("Supabase OAuth initiated");
+          
+          // Store the selected role if provided
+          if (selectedRole) {
+            localStorage.setItem('selectedRole', selectedRole);
+            console.log("Stored selected role:", selectedRole);
+          }
+          
+          toast.info("Redirecting to Google sign-in...");
         }
         
       } else {
@@ -111,12 +147,12 @@ export function useAuthMethods() {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // Sign out from native Google Auth if available
-      if (Capacitor.isNativePlatform() || Capacitor.isPluginAvailable('GoogleAuth')) {
+      // Sign out from Capacitor Google Auth if available
+      if (isCapacitorNative()) {
         try {
-          console.log("Signing out from native Google Auth");
+          console.log("Signing out from Capacitor Google Auth");
           await GoogleAuth.signOut();
-          console.log("Native Google sign out successful");
+          console.log("Capacitor Google sign out successful");
         } catch (error) {
           console.log("Google native sign out error (non-critical):", error);
         }
