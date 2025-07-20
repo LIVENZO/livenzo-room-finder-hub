@@ -101,36 +101,11 @@ export function useAuthMethods() {
           }
           
         } else {
-          // For WebView environments, use Supabase OAuth
-          console.log("Using Supabase OAuth for WebView environment");
-          
-          const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: `${window.location.origin}/dashboard`,
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-              },
-            }
-          });
-          
-          if (error) {
-            console.error("Supabase OAuth error:", error);
-            toast.error(`Error signing in: ${error.message}`);
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log("Supabase OAuth initiated");
-          
-          // Store the selected role if provided
-          if (selectedRole) {
-            localStorage.setItem('selectedRole', selectedRole);
-            console.log("Stored selected role:", selectedRole);
-          }
-          
-          toast.info("Redirecting to Google sign-in...");
+          // Native platform detected but GoogleAuth plugin not available
+          console.error("Native platform detected but GoogleAuth plugin not available");
+          toast.error("Google Sign-In is not available on this device");
+          setIsLoading(false);
+          return;
         }
         
       } else {
