@@ -13,8 +13,8 @@ export function useAuthMethods() {
   const initializeGoogleAuth = async () => {
     console.log("Initializing Google Auth for Capacitor native platform");
     try {
+      // For native Android, let the plugin use the configured androidClientId from capacitor.config.json
       await GoogleAuth.initialize({
-        clientId: AUTH_CONFIG.GOOGLE_WEB_CLIENT_ID,
         scopes: ['profile', 'email'],
       });
       console.log("Google Auth initialization complete");
