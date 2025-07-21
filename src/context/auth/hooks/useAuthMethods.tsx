@@ -29,58 +29,86 @@ export function useAuthMethods() {
     
     try {
       if (provider === 'google') {
-        console.log("Starting native Google authentication...");
+        // Check if we're on native platform or web
+        const isNative = Capacitor.isNativePlatform();
         
-        try {
-          await initializeGoogleAuth();
-          console.log("Google Auth initialized successfully");
+        if (isNative) {
+          console.log("Starting native Google authentication...");
           
-          // Use native Capacitor GoogleAuth sign-in
-          const result = await GoogleAuth.signIn();
-          console.log("Google Sign-In result received:", {
-            hasIdToken: !!result.authentication.idToken,
-            hasAccessToken: !!result.authentication.accessToken,
-            email: result.email
-          });
-          
-          if (!result.authentication.idToken) {
-            throw new Error('No ID token received from Google');
+          try {
+            await initializeGoogleAuth();
+            console.log("Google Auth initialized successfully");
+            
+            // Use native Capacitor GoogleAuth sign-in
+            const result = await GoogleAuth.signIn();
+            console.log("Google Sign-In result received:", {
+              hasIdToken: !!result.authentication.idToken,
+              hasAccessToken: !!result.authentication.accessToken,
+              email: result.email
+            });
+            
+            if (!result.authentication.idToken) {
+              throw new Error('No ID token received from Google');
+            }
+            
+            const idToken = result.authentication.idToken;
+            const accessToken = result.authentication.accessToken;
+            
+            console.log("Signing in to Supabase with Google tokens...");
+            
+            // Sign in to Supabase with the Google tokens
+            const { data, error } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: idToken,
+              access_token: accessToken,
+            });
+
+            if (error) {
+              console.error("Supabase auth error:", error);
+              toast.error(`Error signing in: ${error.message}`);
+              setIsLoading(false);
+              return;
+            }
+
+            console.log("Successfully authenticated with Supabase");
+            
+            // Store the selected role if provided
+            if (selectedRole && data.user?.email) {
+              localStorage.setItem('selectedRole', selectedRole);
+              console.log("Stored selected role:", selectedRole);
+            }
+            
+            toast.success("Successfully signed in!");
+            
+          } catch (nativeError) {
+            console.error("Capacitor Google Sign-In error:", nativeError);
+            toast.error(`Google Sign-In failed: ${nativeError instanceof Error ? nativeError.message : 'Unknown error'}`);
+            setIsLoading(false);
+            return;
           }
+        } else {
+          // Web platform - use Supabase's built-in Google OAuth
+          console.log("Starting web Google authentication...");
           
-          const idToken = result.authentication.idToken;
-          const accessToken = result.authentication.accessToken;
-          
-          console.log("Signing in to Supabase with Google tokens...");
-          
-          // Sign in to Supabase with the Google tokens
-          const { data, error } = await supabase.auth.signInWithIdToken({
+          const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            token: idToken,
-            access_token: accessToken,
+            options: {
+              redirectTo: `${window.location.origin}/`,
+            }
           });
 
           if (error) {
-            console.error("Supabase auth error:", error);
+            console.error("Web Google OAuth error:", error);
             toast.error(`Error signing in: ${error.message}`);
             setIsLoading(false);
             return;
           }
 
-          console.log("Successfully authenticated with Supabase");
-          
-          // Store the selected role if provided
-          if (selectedRole && data.user?.email) {
+          // Store the selected role for web OAuth flow
+          if (selectedRole) {
             localStorage.setItem('selectedRole', selectedRole);
-            console.log("Stored selected role:", selectedRole);
+            console.log("Stored selected role for web OAuth:", selectedRole);
           }
-          
-          toast.success("Successfully signed in!");
-          
-        } catch (nativeError) {
-          console.error("Capacitor Google Sign-In error:", nativeError);
-          toast.error(`Google Sign-In failed: ${nativeError instanceof Error ? nativeError.message : 'Unknown error'}`);
-          setIsLoading(false);
-          return;
         }
         
       } else {
