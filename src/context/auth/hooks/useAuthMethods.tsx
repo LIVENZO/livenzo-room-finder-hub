@@ -6,6 +6,33 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
 
+// Function to check for role conflicts before authentication
+const checkRoleConflict = async (googleId: string, selectedRole: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_role_assignments')
+      .select('role')
+      .eq('google_id', googleId)
+      .neq('role', selectedRole);
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking role conflict:', error);
+      return false;
+    }
+
+    if (data && data.length > 0) {
+      const existingRole = data[0].role;
+      toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error checking role conflict:', error);
+    return false;
+  }
+};
+
 export function useAuthMethods() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -53,6 +80,26 @@ export function useAuthMethods() {
             
             const idToken = result.authentication.idToken;
             const accessToken = result.authentication.accessToken;
+            
+            // Extract Google ID from ID token to check for role conflicts
+            if (selectedRole) {
+              try {
+                const payload = JSON.parse(atob(idToken.split('.')[1]));
+                const googleId = payload.sub;
+                
+                console.log("Checking for role conflicts for Google ID:", googleId, "with role:", selectedRole);
+                
+                // Check if this Google account already has a different role
+                const hasConflict = await checkRoleConflict(googleId, selectedRole);
+                if (hasConflict) {
+                  setIsLoading(false);
+                  return;
+                }
+              } catch (tokenError) {
+                console.error("Error extracting Google ID from token:", tokenError);
+                // Continue with authentication even if we can't check for conflicts
+              }
+            }
             
             console.log("Signing in to Supabase with Google tokens...");
             
