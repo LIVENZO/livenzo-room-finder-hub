@@ -57,26 +57,57 @@ export function useAuthState() {
     }
   }, []);
 
-  // Check for role conflicts before authentication
-  const checkRoleConflict = async (googleId: string, selectedRole: string): Promise<boolean> => {
+  // Check for role conflicts after authentication (mainly for web OAuth flow)
+  const checkRoleConflict = async (user: User, selectedRole: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .from('user_role_assignments')
-        .select('role')
-        .eq('google_id', googleId)
-        .neq('role', selectedRole);
+      const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
+      const email = user.email;
+      
+      console.log("Checking role conflict for:", { email, googleId, selectedRole, userMetadata: user.user_metadata });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking role conflict:', error);
-        return false;
+      // Check by google_id first if available
+      if (googleId) {
+        console.log("Checking role conflict by Google ID:", googleId);
+        const { data: googleData, error: googleError } = await supabase
+          .from('user_role_assignments')
+          .select('role, email')
+          .eq('google_id', googleId)
+          .neq('role', selectedRole);
+
+        console.log("Google ID check result:", { googleData, googleError });
+
+        if (googleError && googleError.code !== 'PGRST116') {
+          console.error('Error checking Google ID role conflict:', googleError);
+        } else if (googleData && googleData.length > 0) {
+          const existingRole = googleData[0].role;
+          console.log("Role conflict detected by Google ID:", existingRole);
+          toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+          return true;
+        }
       }
 
-      if (data && data.length > 0) {
-        const existingRole = data[0].role;
-        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
-        return true;
+      // Also check by email as fallback
+      if (email) {
+        console.log("Checking role conflict by email:", email);
+        const { data: emailData, error: emailError } = await supabase
+          .from('user_role_assignments')
+          .select('role, google_id')
+          .eq('email', email)
+          .neq('role', selectedRole);
+
+        console.log("Email check result:", { emailData, emailError });
+
+        if (emailError && emailError.code !== 'PGRST116') {
+          console.error('Error checking email role conflict:', emailError);
+        } else if (emailData && emailData.length > 0) {
+          const existingRole = emailData[0].role;
+          console.log("Role conflict detected by email:", existingRole);
+          toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+          return true;
+        }
       }
 
+      console.log("No role conflict detected");
       return false;
     } catch (error) {
       console.error('Error checking role conflict:', error);
@@ -109,6 +140,21 @@ export function useAuthState() {
       if (currentSession?.user) {
         // Use setTimeout to handle async operation without making callback async
         setTimeout(async () => {
+          // Check for role conflicts (especially important for web OAuth flow)
+          const selectedRole = localStorage.getItem('selectedRole');
+          console.log("Checking role conflicts - selectedRole:", selectedRole, "user:", currentSession.user.email);
+          
+          if (selectedRole) {
+            const hasConflict = await checkRoleConflict(currentSession.user, selectedRole);
+            if (hasConflict) {
+              // Sign out the user if there's a role conflict
+              console.log("Role conflict detected, signing out user");
+              await supabase.auth.signOut();
+              localStorage.removeItem('selectedRole');
+              return;
+            }
+          }
+          
           await setupUserRole(currentSession.user);
           redirectToDashboard();
         }, 0);
@@ -181,6 +227,6 @@ export function useAuthState() {
     currentUser,
     canChangeRole,
     setUserRole,
-    checkRoleConflict
+    checkRoleConflict: (user: User, selectedRole: string) => checkRoleConflict(user, selectedRole)
   };
 }

@@ -11,5 +11,5 @@ export interface AuthContextType {
   isOwner: boolean;
   currentUser: User | null;
   canChangeRole: boolean;
-  checkRoleConflict?: (googleId: string, selectedRole: string) => Promise<boolean>;
+  checkRoleConflict?: (user: User, selectedRole: string) => Promise<boolean>;
 }

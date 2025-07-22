@@ -7,25 +7,53 @@ import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
 
 // Function to check for role conflicts before authentication
-const checkRoleConflict = async (googleId: string, selectedRole: string): Promise<boolean> => {
+const checkRoleConflict = async (googleId: string | null, email: string | null, selectedRole: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('user_role_assignments')
-      .select('role')
-      .eq('google_id', googleId)
-      .neq('role', selectedRole);
+    console.log("Pre-auth conflict check:", { googleId, email, selectedRole });
+    
+    // Check by google_id first if available
+    if (googleId) {
+      console.log("Checking role conflict by Google ID:", googleId);
+      const { data: googleData, error: googleError } = await supabase
+        .from('user_role_assignments')
+        .select('role, email')
+        .eq('google_id', googleId)
+        .neq('role', selectedRole);
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error checking role conflict:', error);
-      return false;
+      console.log("Google ID check result:", { googleData, googleError });
+
+      if (googleError && googleError.code !== 'PGRST116') {
+        console.error('Error checking Google ID role conflict:', googleError);
+      } else if (googleData && googleData.length > 0) {
+        const existingRole = googleData[0].role;
+        console.log("Role conflict detected by Google ID:", existingRole);
+        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+        return true;
+      }
     }
 
-    if (data && data.length > 0) {
-      const existingRole = data[0].role;
-      toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
-      return true;
+    // Also check by email as fallback
+    if (email) {
+      console.log("Checking role conflict by email:", email);
+      const { data: emailData, error: emailError } = await supabase
+        .from('user_role_assignments')
+        .select('role, google_id')
+        .eq('email', email)
+        .neq('role', selectedRole);
+
+      console.log("Email check result:", { emailData, emailError });
+
+      if (emailError && emailError.code !== 'PGRST116') {
+        console.error('Error checking email role conflict:', emailError);
+      } else if (emailData && emailData.length > 0) {
+        const existingRole = emailData[0].role;
+        console.log("Role conflict detected by email:", existingRole);
+        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+        return true;
+      }
     }
 
+    console.log("No role conflict detected");
     return false;
   } catch (error) {
     console.error('Error checking role conflict:', error);
@@ -90,7 +118,7 @@ export function useAuthMethods() {
                 console.log("Checking for role conflicts for Google ID:", googleId, "with role:", selectedRole);
                 
                 // Check if this Google account already has a different role
-                const hasConflict = await checkRoleConflict(googleId, selectedRole);
+                const hasConflict = await checkRoleConflict(googleId, result.email, selectedRole);
                 if (hasConflict) {
                   setIsLoading(false);
                   return;
@@ -137,6 +165,8 @@ export function useAuthMethods() {
           // Web platform - use Supabase's built-in Google OAuth
           console.log("Starting web Google authentication...");
           
+          // For web OAuth, we can't check conflicts before redirect
+          // The role conflict check will happen in useAuthState after successful auth
           const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
