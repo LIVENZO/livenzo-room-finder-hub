@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitComplaint } from '@/services/ComplaintService';
+import { EnhancedValidator } from '@/services/security/enhancedValidation';
+import { securityMonitor } from '@/services/security/securityMonitor';
+import { validateAuthentication } from '@/services/security/authValidator';
 
 interface ComplaintFormProps {
   relationshipId: string;
@@ -24,11 +27,71 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({
   const [complaintDescription, setComplaintDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Enhanced input validation
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const validationResult = EnhancedValidator.validateAndSanitize(value, 'safeName', {
+      required: true,
+      minLength: 5,
+      maxLength: 100
+    });
+    
+    if (validationResult.securityIssue) {
+      securityMonitor.logSuspiciousActivity('form_injection_attempt', {
+        field: 'complaint_title',
+        value: value.substring(0, 50),
+        action: 'complaint_form_input'
+      });
+      toast.error('Invalid input detected in title field');
+      return;
+    }
+    
+    setComplaintTitle(validationResult.sanitizedValue || value);
+  };
+  
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const validationResult = EnhancedValidator.validateDescription(value, true);
+    
+    if (validationResult.securityIssue) {
+      securityMonitor.logSuspiciousActivity('form_injection_attempt', {
+        field: 'complaint_description',
+        value: value.substring(0, 50),
+        action: 'complaint_form_input'
+      });
+      toast.error('Invalid input detected in description field');
+      return;
+    }
+    
+    setComplaintDescription(validationResult.sanitizedValue || value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!complaintTitle.trim() || !complaintDescription.trim()) {
-      toast.error('Please fill in all fields');
+    // Validate authentication
+    const authResult = await validateAuthentication();
+    if (!authResult.isValid) {
+      toast.error('Authentication required. Please log in again.');
+      return;
+    }
+    
+    // Enhanced validation
+    const titleValidation = EnhancedValidator.validateAndSanitize(complaintTitle, 'safeName', {
+      required: true,
+      minLength: 5,
+      maxLength: 100
+    });
+    
+    const descriptionValidation = EnhancedValidator.validateDescription(complaintDescription, true);
+    
+    if (!titleValidation.isValid) {
+      toast.error(titleValidation.error || 'Please provide a valid title');
+      return;
+    }
+    
+    if (!descriptionValidation.isValid) {
+      toast.error(descriptionValidation.error || 'Please provide a valid description');
       return;
     }
 
@@ -40,20 +103,32 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Monitor user behavior for security
+      await securityMonitor.monitorUserBehavior(authResult.userId!, 'complaint_submission');
+      
       const newComplaint = await submitComplaint(
         relationshipId,
         ownerId,
-        complaintTitle,
-        complaintDescription
+        titleValidation.sanitizedValue!,
+        descriptionValidation.sanitizedValue!
       );
       
       if (newComplaint) {
         setComplaintTitle('');
         setComplaintDescription('');
         onComplaintSubmitted();
+        toast.success('Complaint submitted successfully');
       }
     } catch (error) {
       console.error('Error submitting complaint:', error);
+      
+      // Log potential security issue
+      securityMonitor.logSuspiciousActivity('complaint_submission_failure', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        relationshipId,
+        ownerId
+      });
+      
       toast.error('Failed to submit complaint');
     } finally {
       setIsSubmitting(false);
@@ -75,7 +150,7 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({
             <Input
               id="title"
               value={complaintTitle}
-              onChange={(e) => setComplaintTitle(e.target.value)}
+              onChange={handleTitleChange}
               placeholder="Brief description of the issue"
               disabled={isSubmitting}
               className="text-base leading-relaxed"
@@ -87,7 +162,7 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({
             <Textarea
               id="description"
               value={complaintDescription}
-              onChange={(e) => setComplaintDescription(e.target.value)}
+              onChange={handleDescriptionChange}
               placeholder="Provide detailed information about the issue..."
               rows={4}
               disabled={isSubmitting}

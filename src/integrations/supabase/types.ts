@@ -738,6 +738,14 @@ export type Database = {
         Args: { room_id: string; is_available: boolean }
         Returns: undefined
       }
+      validate_relationship_access: {
+        Args: { relationship_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
+      validate_sensitive_operation: {
+        Args: { operation_type: string; user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       document_type:

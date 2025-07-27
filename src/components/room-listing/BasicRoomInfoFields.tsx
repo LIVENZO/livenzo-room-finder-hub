@@ -12,12 +12,55 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormValues } from './schemas/roomListingSchema';
+import { EnhancedValidator } from '@/services/security/enhancedValidation';
+import { securityMonitor } from '@/services/security/securityMonitor';
+import { toast } from 'sonner';
 
 interface BasicRoomInfoFieldsProps {
   control: Control<FormValues>;
 }
 
 const BasicRoomInfoFields: React.FC<BasicRoomInfoFieldsProps> = ({ control }) => {
+  
+  // Security validation for room listing inputs
+  const validateRoomInput = (value: string, fieldType: 'title' | 'description' | 'location' | 'house') => {
+    let validationResult;
+    
+    switch (fieldType) {
+      case 'title':
+      case 'house':
+        validationResult = EnhancedValidator.validateAndSanitize(value, 'safeName', {
+          required: fieldType === 'title',
+          minLength: fieldType === 'title' ? 5 : 0,
+          maxLength: 100
+        });
+        break;
+      case 'description':
+        validationResult = EnhancedValidator.validateDescription(value, true);
+        break;
+      case 'location':
+        validationResult = EnhancedValidator.validateAndSanitize(value, 'safeName', {
+          required: true,
+          minLength: 5,
+          maxLength: 200
+        });
+        break;
+      default:
+        validationResult = { isValid: true, sanitizedValue: value };
+    }
+    
+    if (validationResult.securityIssue) {
+      securityMonitor.logSuspiciousActivity('form_injection_attempt', {
+        field: fieldType,
+        value: value.substring(0, 50),
+        action: 'room_listing_input'
+      });
+      toast.error(`Invalid input detected in ${fieldType} field`);
+      return false;
+    }
+    
+    return validationResult;
+  };
   return (
     <>
       {/* Room Title */}
