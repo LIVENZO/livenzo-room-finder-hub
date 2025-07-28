@@ -57,6 +57,42 @@ export function useAuthState() {
     }
   }, []);
 
+  // Ensure user has a role assignment (fallback for OAuth flows)
+  const ensureUserRoleAssignment = useCallback(async (user: User, selectedRole: string) => {
+    try {
+      const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
+      
+      // Check if user already has a role assignment
+      const { data: existingRole, error } = await supabase
+        .from('user_role_assignments')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // No role assignment found, create one
+        console.log("Creating role assignment for user:", user.email, "role:", selectedRole);
+        
+        const { error: insertError } = await supabase
+          .from('user_role_assignments')
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            role: selectedRole,
+            google_id: googleId
+          });
+
+        if (insertError) {
+          console.error('Error creating role assignment:', insertError);
+        } else {
+          console.log("Successfully created role assignment");
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring user role assignment:', error);
+    }
+  }, []);
+
   // Check for role conflicts after authentication (mainly for web OAuth flow)
   const checkRoleConflict = async (user: User, selectedRole: string): Promise<boolean> => {
     try {
@@ -141,20 +177,20 @@ export function useAuthState() {
         // Use setTimeout to handle async operation without making callback async
         setTimeout(async () => {
           // Check for role conflicts (especially important for web OAuth flow)
-          const selectedRole = localStorage.getItem('selectedRole');
+          const selectedRole = localStorage.getItem('selectedRole') || 'renter';
           console.log("Checking role conflicts - selectedRole:", selectedRole, "user:", currentSession.user.email);
           
-          if (selectedRole) {
-            const hasConflict = await checkRoleConflict(currentSession.user, selectedRole);
-            if (hasConflict) {
-              // Sign out the user if there's a role conflict
-              console.log("Role conflict detected, signing out user");
-              await supabase.auth.signOut();
-              localStorage.removeItem('selectedRole');
-              return;
-            }
+          const hasConflict = await checkRoleConflict(currentSession.user, selectedRole);
+          if (hasConflict) {
+            // Sign out the user if there's a role conflict
+            console.log("Role conflict detected, signing out user");
+            await supabase.auth.signOut();
+            localStorage.removeItem('selectedRole');
+            return;
           }
           
+          // Ensure the user has a role assignment
+          await ensureUserRoleAssignment(currentSession.user, selectedRole);
           await setupUserRole(currentSession.user);
           redirectToDashboard();
         }, 0);
@@ -227,6 +263,7 @@ export function useAuthState() {
     currentUser,
     canChangeRole,
     setUserRole,
-    checkRoleConflict: (user: User, selectedRole: string) => checkRoleConflict(user, selectedRole)
+    checkRoleConflict: (user: User, selectedRole: string) => checkRoleConflict(user, selectedRole),
+    ensureUserRoleAssignment
   };
 }
