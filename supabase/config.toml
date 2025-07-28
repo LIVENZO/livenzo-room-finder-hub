@@ -13,3 +13,9 @@ public = false
 enabled = true
 client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+
+[functions.create-payment-order]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = true

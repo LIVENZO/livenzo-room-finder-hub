@@ -20,6 +20,7 @@ import Connections from "./pages/Connections";
 import ListRoom from "./pages/ListRoom";
 import MyListings from "./pages/MyListings";
 import Notices from "./pages/Notices";
+import Payments from "./pages/Payments";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/list-room" element={<ListRoom />} />
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/notices" element={<Notices />} />
+              <Route path="/payments" element={<Payments />} />
               <Route path="/set-location" element={<SetLocation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

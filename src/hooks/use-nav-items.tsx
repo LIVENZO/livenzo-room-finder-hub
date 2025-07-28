@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Home, Search, User, Heart, MessageSquare, Users, Plus, List, Bell } from "lucide-react";
+import { Home, Search, User, Heart, MessageSquare, Users, Plus, List, Bell, CreditCard } from "lucide-react";
 import { useAuth } from "@/context/auth";
 
 export type NavItem = {
@@ -58,6 +58,12 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       icon: <Bell className="h-4 w-4" />,
       renterOnly: true,
       label: "Notices",
+    },
+    {
+      title: "Payments",
+      href: "/payments",
+      icon: <CreditCard className="h-4 w-4" />,
+      label: "Payments",
     },
     {
       title: "Favorites",
