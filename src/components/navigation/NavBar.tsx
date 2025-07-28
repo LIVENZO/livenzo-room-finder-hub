@@ -13,17 +13,17 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
   
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b py-3 px-4">
-      <div className="flex justify-between items-center">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-3 px-4 safe-area-top">
+      <div className="flex justify-between items-center max-w-full">
         <h1 
-          className="text-xl font-bold text-primary cursor-pointer"
+          className="text-xl font-bold text-primary cursor-pointer truncate mr-4"
           onClick={() => navigate('/dashboard')}
         >
           Livenzo
         </h1>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
               <Menu size={24} />
             </Button>
           </SheetTrigger>

@@ -67,14 +67,14 @@ const RenterDashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {quickActions.map((action, index) => (
           <Card 
             key={action.title}
             className={cn(
               "group cursor-pointer border-0 shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 animate-slide-up",
               action.color,
-              action.isPrimary ? "md:col-span-2" : ""
+              action.isPrimary ? "sm:col-span-2 lg:col-span-2" : ""
             )}
             style={{ animationDelay: `${index * 100}ms` }}
             onClick={action.onClick}
@@ -114,11 +114,12 @@ const RenterDashboard: React.FC = () => {
               <Button 
                 variant="ghost" 
                 className={cn(
-                  "transition-all w-full md:w-auto",
+                  "transition-all w-full",
                   action.buttonStyle || "text-white hover:bg-white/20 border border-white/30 hover:border-white/50"
                 )}
               >
-                Get Started
+                <span className="hidden sm:inline">Get Started</span>
+                <span className="sm:hidden">Start</span>
               </Button>
             </CardContent>
           </Card>
@@ -133,21 +134,21 @@ const RenterDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {quickLinks.map((link, index) => (
               <Button
                 key={link.title}
                 variant="ghost"
-                className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 group animate-scale-in"
+                className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2 sm:gap-3 hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 group animate-scale-in"
                 style={{ animationDelay: `${(index + 3) * 100}ms` }}
                 onClick={() => navigate(link.path)}
               >
-                <div className="w-10 h-10 bg-primary-100 group-hover:bg-primary-200 rounded-xl flex items-center justify-center transition-colors">
-                  <link.icon className="h-5 w-5 text-primary-600" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 group-hover:bg-primary-200 rounded-xl flex items-center justify-center transition-colors">
+                  <link.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600" />
                 </div>
                 <div className="text-center">
-                  <div className="font-display font-semibold text-sm">{link.title}</div>
-                  <div className="text-xs text-gray-500 group-hover:text-primary-600">{link.count} items</div>
+                  <div className="font-display font-semibold text-xs sm:text-sm truncate w-full">{link.title}</div>
+                  <div className="text-xs text-gray-500 group-hover:text-primary-600">{link.count}</div>
                 </div>
               </Button>
             ))}

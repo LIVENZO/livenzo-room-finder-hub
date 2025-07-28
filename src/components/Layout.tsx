@@ -28,12 +28,12 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
       
       {/* Main content */}
       <main className={cn(
-        "flex-1 bg-gradient-radial",
-        isMobile ? "pt-16 pb-16" : "ml-[280px]"
+        "flex-1 bg-gradient-radial w-full",
+        isMobile ? "pt-16 pb-20 px-3 sm:px-4" : "ml-[280px] px-6"
       )}>
-        <div className="relative">
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+        <div className="relative max-w-full overflow-hidden">
+          {/* Subtle background pattern - hidden on mobile for performance */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none hidden md:block">
             <div className="absolute top-20 left-1/4 w-64 h-64 bg-primary-300 rounded-full blur-3xl"></div>
             <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-secondary-300 rounded-full blur-3xl"></div>
           </div>

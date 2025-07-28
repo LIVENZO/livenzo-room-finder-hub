@@ -40,8 +40,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-radial">
-        <div className="container mx-auto px-6 py-8 max-w-7xl">
+      <div className="min-h-screen bg-gradient-radial w-full">
+        <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 md:py-8">
           {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
         </div>
       </div>
