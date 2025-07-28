@@ -235,7 +235,7 @@ export const OwnerPayments = () => {
       fetchStats();
     } catch (error) {
       console.error('Error adding manual payment:', error);
-      toast.error("Failed to add manual payment");
+      toast({ description: "Failed to add manual payment", variant: "destructive" });
     }
   };
 
@@ -243,10 +243,10 @@ export const OwnerPayments = () => {
     try {
       // Here you would implement the actual reminder sending logic
       // For now, we'll just show a success message
-      toast.success(`Reminder sent to ${renterName}`);
+      toast({ description: `Reminder sent to ${renterName}` });
     } catch (error) {
       console.error('Error sending reminder:', error);
-      toast.error("Failed to send reminder");
+      toast({ description: "Failed to send reminder", variant: "destructive" });
     }
   };
 
@@ -273,10 +273,10 @@ export const OwnerPayments = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      toast.success("CSV exported successfully!");
+      toast({ description: "CSV exported successfully!" });
     } catch (error) {
       console.error('Error exporting CSV:', error);
-      toast.error("Failed to export CSV");
+      toast({ description: "Failed to export CSV", variant: "destructive" });
     }
   };
 
@@ -310,10 +310,10 @@ ${payments.map(p =>
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      toast.success("Report exported successfully!");
+      toast({ description: "Report exported successfully!" });
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      toast.error("Failed to export report");
+      toast({ description: "Failed to export report", variant: "destructive" });
     }
   };
 
@@ -612,7 +612,6 @@ ${payments.map(p =>
       {/* Payments List */}
       <PaymentsList
         payments={payments}
-        onRefresh={fetchPayments}
       />
     </div>
   );
