@@ -26,18 +26,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
   const handleSecureInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Validate input based on field type
+    // Validate input based on field type - allowing normal input
     let validationResult;
     if (name === 'fullName') {
-      validationResult = EnhancedValidator.validateName(value, true);
+      validationResult = EnhancedValidator.validateName(value, false); // Not required during typing
     } else if (name === 'phone') {
-      validationResult = EnhancedValidator.validatePhone(value, true);
+      validationResult = EnhancedValidator.validatePhone(value, false); // Not required during typing
     } else if (name === 'bio') {
       validationResult = EnhancedValidator.validateDescription(value, false);
     } else {
       validationResult = EnhancedValidator.validateAndSanitize(value, 'safeName', { required: false });
     }
     
+    // Only block for serious security issues, allow normal typing
     if (validationResult.securityIssue) {
       securityMonitor.logSuspiciousActivity('form_injection_attempt', {
         field: name,
@@ -49,21 +50,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
       return;
     }
     
-    if (!validationResult.isValid && validationResult.error) {
-      toast.error(validationResult.error);
-      return;
-    }
-    
-    // Create sanitized event
-    const sanitizedEvent = {
-      ...e,
-      target: {
-        ...e.target,
-        value: validationResult.sanitizedValue || value
-      }
-    } as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
-    
-    onInputChange(sanitizedEvent);
+    // Allow input to pass through, only validate on save
+    onInputChange(e);
   };
   return (
     <div className="w-full space-y-4">
