@@ -709,6 +709,14 @@ export type Database = {
         Args: { renter_user_id: string; new_owner_id: string }
         Returns: undefined
       }
+      check_google_role_conflict: {
+        Args: {
+          google_id_param: string
+          email_param: string
+          requested_role: string
+        }
+        Returns: boolean
+      }
       ensure_unique_public_id: {
         Args: Record<PropertyKey, never>
         Returns: string

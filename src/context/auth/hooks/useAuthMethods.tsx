@@ -171,6 +171,9 @@ export function useAuthMethods() {
             provider: 'google',
             options: {
               redirectTo: `${window.location.origin}/`,
+              queryParams: {
+                role: selectedRole || 'renter'
+              }
             }
           });
 
