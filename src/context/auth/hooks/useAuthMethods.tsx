@@ -86,6 +86,7 @@ export function useAuthMethods() {
       if (provider === 'google') {
         // Check if we're on native platform or web
         const isNative = Capacitor.isNativePlatform();
+        console.log("Platform detection - isNative:", isNative, "Platform:", Capacitor.getPlatform());
         
         if (isNative) {
           console.log("Starting native Google authentication...");
