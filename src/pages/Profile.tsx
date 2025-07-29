@@ -43,28 +43,28 @@ const Profile = () => {
   
   return (
     <Layout>
-      <div className="container max-w-4xl py-10">
+      <div className="container max-w-4xl py-4 px-4 sm:py-6 md:py-10">
         <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
         
         {/* Show Owner ID prominently for owners */}
         {isOwner && profile?.public_id && (
-          <Card className="mb-6 border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-lg text-blue-800">Your Owner ID</CardTitle>
-              <CardDescription className="text-blue-700">
+          <Card className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg text-blue-800">Your Owner ID</CardTitle>
+              <CardDescription className="text-sm sm:text-base text-blue-700">
                 Share this ID with renters so they can easily connect with you
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <UserIdDisplay publicId={profile.public_id} />
             </CardContent>
           </Card>
         )}
         
         <Card>
-          <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
-            <CardDescription>
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl">Your Profile</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Update your personal information and how you appear to others
             </CardDescription>
           </CardHeader>
@@ -83,7 +83,7 @@ const Profile = () => {
                 onLocationSaved={handleLocationSaved}
               />
             ) : (
-              <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+              <div className="flex flex-col items-center gap-6">
                 <ProfileAvatar
                   profile={profile}
                   userEmail={user?.email}
@@ -91,11 +91,28 @@ const Profile = () => {
                   onImageUpload={handleImageUpload}
                 />
                 
-                <ProfileForm
-                  formValues={formValues}
-                  profile={profile}
-                  onInputChange={handleInputChange}
-                />
+                <div className="w-full max-w-md">
+                  <ProfileForm
+                    formValues={formValues}
+                    profile={profile}
+                    onInputChange={handleInputChange}
+                  />
+                </div>
+
+                {/* Show Room Number prominently for renters if filled */}
+                {!isOwner && formValues.roomNumber && (
+                  <div className="w-full max-w-md p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-sm font-medium text-blue-800 mb-1">Room Number</div>
+                    <div className="text-blue-700">{formValues.roomNumber}</div>
+                  </div>
+                )}
+
+                {/* Show Public ID for renters */}
+                {!isOwner && profile?.public_id && (
+                  <div className="w-full max-w-md">
+                    <UserIdDisplay publicId={profile.public_id} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -104,7 +121,7 @@ const Profile = () => {
               <OwnerPropertyDisplay profile={profile} />
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-4 sm:pt-6">
             <ProfileActions
               profile={profile}
               saving={saving}

@@ -14,6 +14,7 @@ interface ProfileFormProps {
     fullName: string;
     phone: string;
     bio: string;
+    roomNumber: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -87,6 +88,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
           <p className="text-xs text-red-500">Phone number is required to complete your profile</p>
         )}
       </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="roomNumber">Room Number</Label>
+        <Input
+          id="roomNumber"
+          name="roomNumber"
+          value={formValues.roomNumber}
+          onChange={handleSecureInputChange}
+          placeholder="e.g., Room 202, A-101"
+        />
+        <p className="text-xs text-muted-foreground">Optional: Specify your room number for easier identification</p>
+      </div>
       
       <div className="grid gap-2">
         <Label htmlFor="bio">About You</Label>
@@ -96,7 +109,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
           value={formValues.bio}
           onChange={handleSecureInputChange}
           placeholder="Tell others a bit about yourself"
-          rows={4}
+          rows={3}
         />
       </div>
     </div>

@@ -13,6 +13,7 @@ interface BasicProfileTabProps {
     fullName: string;
     phone: string;
     bio: string;
+    roomNumber: string;
   };
   uploadingImage: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -29,7 +30,7 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+      <div className="flex flex-col items-center gap-6">
         <ProfileAvatar
           profile={profile}
           userEmail={user?.email}

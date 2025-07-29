@@ -9,6 +9,7 @@ interface FormValues {
   fullName: string;
   phone: string;
   bio: string;
+  roomNumber: string;
 }
 
 interface OwnerFormValues {
@@ -39,6 +40,7 @@ export const useProfileSave = (
       full_name: formValues.fullName,
       phone: formValues.phone,
       bio: formValues.bio,
+      room_number: formValues.roomNumber || null,
       avatar_url: profile.avatar_url,
     };
 

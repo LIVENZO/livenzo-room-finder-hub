@@ -625,6 +625,7 @@ export type Database = {
           property_name: string | null
           public_id: string | null
           resident_type: string | null
+          room_number: string | null
           total_rental_rooms: number | null
           updated_at: string
         }
@@ -645,6 +646,7 @@ export type Database = {
           property_name?: string | null
           public_id?: string | null
           resident_type?: string | null
+          room_number?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
         }
@@ -665,6 +667,7 @@ export type Database = {
           property_name?: string | null
           public_id?: string | null
           resident_type?: string | null
+          room_number?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
         }

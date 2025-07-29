@@ -13,6 +13,7 @@ interface OwnerProfileTabsProps {
     fullName: string;
     phone: string;
     bio: string;
+    roomNumber: string;
   };
   ownerFormValues: {
     accommodationType: string;

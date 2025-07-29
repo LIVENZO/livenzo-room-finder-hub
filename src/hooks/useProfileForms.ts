@@ -6,6 +6,7 @@ interface FormValues {
   fullName: string;
   phone: string;
   bio: string;
+  roomNumber: string;
 }
 
 interface OwnerFormValues {
@@ -22,6 +23,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
     fullName: '',
     phone: '',
     bio: '',
+    roomNumber: '',
   });
 
   const [ownerFormValues, setOwnerFormValues] = useState<OwnerFormValues>({
@@ -39,6 +41,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
         fullName: profile.full_name || '',
         phone: profile.phone || '',
         bio: profile.bio || '',
+        roomNumber: profile.room_number || '',
       });
       setOwnerFormValues({
         accommodationType: profile.accommodation_type || '',
