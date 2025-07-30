@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { FacebookLogin } from '@capacitor-community/facebook-login';
 import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
 
@@ -192,6 +193,94 @@ export function useAuthMethods() {
           }
         }
         
+      } else if (provider === 'facebook') {
+        // Check if we're on native platform or web
+        const isNative = Capacitor.isNativePlatform();
+        console.log("Facebook auth - Platform detection - isNative:", isNative, "Platform:", Capacitor.getPlatform());
+        
+        if (isNative) {
+          console.log("Starting native Facebook authentication...");
+          
+          try {
+            // Initialize Facebook Login
+            await FacebookLogin.initialize({ appId: 'YOUR_FACEBOOK_APP_ID' });
+            
+            // Use native Capacitor Facebook Login
+            const result = await FacebookLogin.login({
+              permissions: ['email', 'public_profile'],
+            });
+            
+            console.log("Facebook Sign-In result received:", result);
+            
+            if (result.accessToken) {
+              console.log("Signing in to Supabase with Facebook token...");
+              
+              // Sign in to Supabase with the Facebook token
+              const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'facebook',
+                options: {
+                  redirectTo: `${window.location.origin}/`,
+                  queryParams: {
+                    access_token: result.accessToken.token
+                  }
+                }
+              });
+
+              if (error) {
+                console.error("Supabase Facebook auth error:", error);
+                toast.error(`Error signing in: ${error.message}`);
+                setIsLoading(false);
+                return;
+              }
+
+              console.log("Successfully authenticated with Supabase via Facebook");
+              
+              // Store the selected role if provided
+              if (selectedRole) {
+                localStorage.setItem('selectedRole', selectedRole);
+                console.log("Stored selected role:", selectedRole);
+              }
+              
+              toast.success("Successfully signed in with Facebook!");
+              
+            } else {
+              throw new Error('No access token received from Facebook');
+            }
+            
+          } catch (nativeError) {
+            console.error("Capacitor Facebook Sign-In error:", nativeError);
+            toast.error(`Facebook Sign-In failed: ${nativeError instanceof Error ? nativeError.message : 'Unknown error'}`);
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // Web platform - use Supabase's built-in Facebook OAuth
+          console.log("Starting web Facebook authentication...");
+          
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'facebook',
+            options: {
+              redirectTo: `${window.location.origin}/`,
+              queryParams: {
+                role: selectedRole || 'renter'
+              }
+            }
+          });
+
+          if (error) {
+            console.error("Web Facebook OAuth error:", error);
+            toast.error(`Error signing in: ${error.message}`);
+            setIsLoading(false);
+            return;
+          }
+
+          // Store the selected role for web OAuth flow
+          if (selectedRole) {
+            localStorage.setItem('selectedRole', selectedRole);
+            console.log("Stored selected role for web Facebook OAuth:", selectedRole);
+          }
+        }
+        
       } else {
         toast.error("Unsupported authentication provider");
         setIsLoading(false);
@@ -213,6 +302,15 @@ export function useAuthMethods() {
         console.log("Capacitor Google sign out successful");
       } catch (error) {
         console.log("Google native sign out error (non-critical):", error);
+      }
+      
+      // Sign out from Capacitor Facebook Login
+      try {
+        console.log("Signing out from Capacitor Facebook Login");
+        await FacebookLogin.logout();
+        console.log("Capacitor Facebook sign out successful");
+      } catch (error) {
+        console.log("Facebook native sign out error (non-critical):", error);
       }
       
       // Sign out from Supabase

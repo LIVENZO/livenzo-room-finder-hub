@@ -13,6 +13,11 @@
       "serverClientId": "307050598947-h6d37all037croa540sgkudo7tfvmdqk.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true,
       "androidClientId": "307050598947-oa8r2p3qr5dbl8hh982cn2vpvst5o65p.apps.googleusercontent.com"
+    },
+    "FacebookLogin": {
+      "appId": "YOUR_FACEBOOK_APP_ID",
+      "appName": "Livenzo",
+      "version": "v18.0"
     }
   },
   "android": {

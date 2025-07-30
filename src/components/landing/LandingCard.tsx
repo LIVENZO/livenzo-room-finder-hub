@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
-import LoginButton from './LoginButton';
+import SocialLoginButtons from './SocialLoginButtons';
 
 interface LandingCardProps {
   userRole: string;
   setUserRole: (role: string) => void;
   canChangeRole: boolean;
   isLoading: boolean;
-  handleLogin: () => void;
+  handleGoogleLogin: () => void;
+  handleFacebookLogin: () => void;
 }
 
 const LandingCard: React.FC<LandingCardProps> = ({
@@ -16,7 +17,8 @@ const LandingCard: React.FC<LandingCardProps> = ({
   setUserRole,
   canChangeRole,
   isLoading,
-  handleLogin
+  handleGoogleLogin,
+  handleFacebookLogin
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
@@ -33,7 +35,11 @@ const LandingCard: React.FC<LandingCardProps> = ({
         canChangeRole={canChangeRole} 
       />
       
-      <LoginButton onClick={handleLogin} isLoading={isLoading} />
+      <SocialLoginButtons 
+        onGoogleLogin={handleGoogleLogin} 
+        onFacebookLogin={handleFacebookLogin}
+        isLoading={isLoading} 
+      />
       
       <div className="text-sm text-gray-500">
         By continuing, you agree to our Terms of Service and Privacy Policy.

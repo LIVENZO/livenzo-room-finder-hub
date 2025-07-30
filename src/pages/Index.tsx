@@ -61,12 +61,18 @@ const Index: React.FC = () => {
     }
   }, [user, session, navigate, isLoading, userRole]);
   
-  const handleLogin = async () => {
-    console.log("Login button clicked with role:", userRole);
-    // Store the selected role in localStorage to be used after authentication
+  const handleGoogleLogin = async () => {
+    console.log("Google login button clicked with role:", userRole);
     localStorage.setItem('selectedRole', userRole);
     toast.info("Redirecting to Google sign-in...");
     await login('google', userRole);
+  };
+
+  const handleFacebookLogin = async () => {
+    console.log("Facebook login button clicked with role:", userRole);
+    localStorage.setItem('selectedRole', userRole);
+    toast.info("Redirecting to Facebook sign-in...");
+    await login('facebook', userRole);
   };
   
   // Show a loading state while checking for existing session
@@ -88,7 +94,8 @@ const Index: React.FC = () => {
             setUserRole={setUserRole}
             canChangeRole={canChangeRole}
             isLoading={isLoading}
-            handleLogin={handleLogin}
+            handleGoogleLogin={handleGoogleLogin}
+            handleFacebookLogin={handleFacebookLogin}
           />
           
           <StatCards />
