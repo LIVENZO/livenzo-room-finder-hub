@@ -29,7 +29,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   onPaymentSaved
 }) => {
   const [amount, setAmount] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -37,7 +37,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid amount greater than 0",
+        description: "Please enter a valid monthly rent amount greater than 0",
         variant: "destructive"
       });
       return;
@@ -61,75 +61,47 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
 
       if (!relationship) {
         toast({
-          title: "❌ Cannot add payment",
-          description: "You must be connected to this renter to add a payment.",
+          title: "❌ Cannot set rent",
+          description: "You must be connected to this renter to set their monthly rent.",
           variant: "destructive"
         });
         return;
       }
 
-      // Verify the renter_id exists in user_profiles (valid user)
-      const { data: renterExists, error: userError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', relationship.renter_id)
-        .maybeSingle();
-
-      if (userError || !renterExists) {
-        console.error('Error verifying renter:', userError);
-        toast({
-          title: "❌ Invalid renter",
-          description: "The renter profile could not be found.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Insert payment into Supabase using the verified renter_id
+      // Update or insert rent_status for this relationship
       const { error } = await supabase
-        .from('payments')
-        .insert({
-          renter_id: relationship.renter_id,
-          owner_id: ownerId,
-          amount: Number(amount),
-          status: 'paid',
-          payment_status: 'paid',
-          payment_date: selectedDate.toISOString(),
-          relationship_id: relationship.id
+        .from('rent_status')
+        .upsert({
+          relationship_id: relationship.id,
+          current_amount: Number(amount),
+          due_date: dueDate.toISOString().split('T')[0], // Format as date only
+          status: 'pending',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'relationship_id'
         });
 
       if (error) {
         console.error('Supabase error:', error);
-        
-        // Check for specific RLS policy errors
-        if (error.message?.includes('row-level security')) {
-          toast({
-            title: "❌ Permission denied",
-            description: "You don't have permission to add payments for this renter.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
         throw error;
       }
 
       toast({
-        title: "✅ Payment saved successfully",
-        description: `Payment of ₹${amount} recorded for ${renterName}`
+        title: "✅ Monthly rent set successfully",
+        description: `Monthly rent of ₹${amount} set for ${renterName}`
       });
       
       // Reset form and close
       setAmount('');
-      setSelectedDate(new Date());
+      setDueDate(new Date());
       onPaymentSaved();
       onClose();
     } catch (error: any) {
-      console.error('Error saving payment:', error);
+      console.error('Error setting monthly rent:', error);
       
       const errorMessage = error?.message || 'Please check your input or try again later';
       toast({
-        title: "❌ Failed to save payment",
+        title: "❌ Failed to set monthly rent",
         description: errorMessage,
         variant: "destructive"
       });
@@ -140,7 +112,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
 
   const handleClose = () => {
     setAmount('');
-    setSelectedDate(new Date());
+    setDueDate(new Date());
     onClose();
   };
 
@@ -151,10 +123,10 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           <SheetHeader className="px-6 py-4 border-b">
             <SheetTitle className="flex items-center gap-2 text-lg">
               <DollarSign className="h-5 w-5 text-primary" />
-              Add Payment
+              Set Monthly Rent
             </SheetTitle>
             <SheetDescription className="text-left">
-              Record a rent payment for <strong>{renterName}</strong>
+              Set monthly rent amount for <strong>{renterName}</strong>
             </SheetDescription>
           </SheetHeader>
           
@@ -162,14 +134,14 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             {/* Amount Input */}
             <div className="space-y-3">
               <Label htmlFor="amount" className="text-base font-medium text-foreground">
-                Amount (₹) *
+                Monthly Rent Amount (₹) *
               </Label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="Enter amount"
+                  placeholder="Enter monthly rent amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="pl-12 h-14 text-base border-2 rounded-xl focus:border-primary"
@@ -182,7 +154,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             {/* Date Picker */}
             <div className="space-y-3">
               <Label className="text-base font-medium text-foreground">
-                Payment Date *
+                Next Due Date *
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -190,20 +162,20 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                     variant="outline"
                     className={cn(
                       "w-full h-14 justify-start text-left font-normal border-2 rounded-xl text-base",
-                      !selectedDate && "text-muted-foreground"
+                      !dueDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-3 h-5 w-5" />
-                    {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                    {dueDate ? format(dueDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
+                    selected={dueDate}
+                    onSelect={setDueDate}
                     disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
+                      date < new Date()
                     }
                     initialFocus
                     className="pointer-events-auto"
@@ -221,7 +193,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
               className="w-full h-14 text-base font-medium rounded-xl"
               size="lg"
             >
-              {saving ? 'Saving Payment...' : 'Save Payment'}
+              {saving ? 'Setting Rent...' : 'Set Monthly Rent'}
             </Button>
             <Button
               variant="outline"
