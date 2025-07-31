@@ -145,50 +145,50 @@ const ActiveRenters: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-radial">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(-1)}
-                className="p-2 hover:bg-background/80"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Active Renters</h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage rent payments for your connected renters
-                </p>
-              </div>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-background border-b border-border/50 px-4 py-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-muted/80 -ml-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">Active Renters</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                Manage rent payments for your connected renters
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* Active Renters List */}
+        {/* Active Renters List - Full width */}
+        <div className="pb-6">
           <ActiveRentersList
             renters={renters}
             loading={loading}
             onAddPayment={handleAddPayment}
           />
-
-          {/* Add Payment Modal */}
-          {selectedRenter && (
-            <AddPaymentModal
-              isOpen={showAddPayment}
-              onClose={() => {
-                setShowAddPayment(false);
-                setSelectedRenter(null);
-              }}
-              renterName={selectedRenter.name}
-              renterId={selectedRenter.id}
-              ownerId={user?.id || ''}
-              onPaymentSaved={handlePaymentSaved}
-            />
-          )}
         </div>
+
+        {/* Add Payment Modal */}
+        {selectedRenter && (
+          <AddPaymentModal
+            isOpen={showAddPayment}
+            onClose={() => {
+              setShowAddPayment(false);
+              setSelectedRenter(null);
+            }}
+            renterName={selectedRenter.name}
+            renterId={selectedRenter.id}
+            ownerId={user?.id || ''}
+            onPaymentSaved={handlePaymentSaved}
+          />
+        )}
       </div>
     </Layout>
   );
