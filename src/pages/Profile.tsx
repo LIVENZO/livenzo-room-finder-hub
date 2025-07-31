@@ -107,12 +107,7 @@ const Profile = () => {
                   </div>
                 )}
 
-                {/* Show Public ID for renters */}
-                {!isOwner && profile?.public_id && (
-                  <div className="w-full max-w-md">
-                    <UserIdDisplay publicId={profile.public_id} />
-                  </div>
-                )}
+                {/* Renter ID removed from UI - kept in backend for functionality */}
               </div>
             )}
 
