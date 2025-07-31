@@ -2,10 +2,11 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell } from 'lucide-react';
+import { Bell, DollarSign } from 'lucide-react';
 import SendNoticeForm from '@/components/dashboard/SendNoticeForm';
 import StatsGrid from './StatsGrid';
 import QuickActionsCard from './QuickActionsCard';
+import RentManagementDashboard from '../rent-management/RentManagementDashboard';
 
 interface OwnerDashboardTabsProps {
   listingsCount: number;
@@ -41,6 +42,12 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
             Dashboard Overview
           </TabsTrigger>
           <TabsTrigger 
+            value="rent"
+            className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
+          >
+            Rent Management
+          </TabsTrigger>
+          <TabsTrigger 
             value="notices"
             className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
           >
@@ -64,6 +71,10 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
           onViewListingsClick={onViewListingsClick}
           onManageConnectionsClick={onManageConnectionsClick}
         />
+      </TabsContent>
+      
+      <TabsContent value="rent" className="animate-fade-in">
+        <RentManagementDashboard />
       </TabsContent>
       
       <TabsContent value="notices" className="animate-fade-in">

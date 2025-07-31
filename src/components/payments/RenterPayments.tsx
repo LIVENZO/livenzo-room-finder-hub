@@ -76,14 +76,48 @@ export const RenterPayments = () => {
 
   const fetchCurrentRent = async () => {
     try {
-      // Simplified current rent fetch
-      setCurrentRent({
-        id: 'sample-rent-id',
-        current_amount: 25000,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'pending',
-        relationship_id: 'sample-relationship-id'
-      });
+      // Get renter's relationship
+      const { data: relationships, error: relError } = await supabase
+        .from('relationships')
+        .select('id, owner_id')
+        .eq('renter_id', user?.id)
+        .eq('status', 'accepted')
+        .eq('archived', false)
+        .limit(1);
+
+      if (relError) throw relError;
+
+      if (relationships && relationships.length > 0) {
+        const relationshipId = relationships[0].id;
+
+        // Get current rent status
+        const { data: rentStatus, error: rentError } = await supabase
+          .from('rent_status')
+          .select('*')
+          .eq('relationship_id', relationshipId)
+          .limit(1);
+
+        if (rentError) throw rentError;
+
+        if (rentStatus && rentStatus.length > 0) {
+          setCurrentRent(rentStatus[0]);
+        } else {
+          // Create default rent status if none exists
+          const { data: newRentStatus, error: insertError } = await supabase
+            .from('rent_status')
+            .insert({
+              relationship_id: relationshipId,
+              current_amount: 25000,
+              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              status: 'pending'
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          setCurrentRent(newRentStatus);
+        }
+      }
     } catch (error) {
       console.error('Error in fetchCurrentRent:', error);
     } finally {
@@ -93,14 +127,35 @@ export const RenterPayments = () => {
 
   const fetchRentalInfo = async () => {
     try {
-      // Simplified rental info fetch
-      setRentalInfo({
-        propertyName: 'Sample Property',
-        address: 'Sample Address',
-        ownerName: 'Owner Name',
-        ownerPhone: '123-456-7890',
-        monthlyRent: 25000
-      });
+      // Get renter's active relationship with owner details
+      const { data: relationships, error } = await supabase
+        .from('relationships')
+        .select('id, owner_id')
+        .eq('renter_id', user?.id)
+        .eq('status', 'accepted')
+        .eq('archived', false)
+        .limit(1);
+
+      if (error) throw error;
+
+      if (relationships && relationships.length > 0) {
+        const relationship = relationships[0];
+        
+        // Get owner profile separately
+        const { data: ownerProfile } = await supabase
+          .from('user_profiles')
+          .select('full_name, phone, property_name, property_location')
+          .eq('id', relationship.owner_id)
+          .single();
+
+        setRentalInfo({
+          propertyName: ownerProfile?.property_name || 'Property',
+          address: ownerProfile?.property_location || 'Address not available',
+          ownerName: ownerProfile?.full_name || 'Owner',
+          ownerPhone: ownerProfile?.phone || 'Phone not available',
+          monthlyRent: 25000 // This could come from rent_status table
+        });
+      }
     } catch (error) {
       console.error('Error fetching rental info:', error);
     }
@@ -108,12 +163,36 @@ export const RenterPayments = () => {
 
   const fetchPaymentStats = async () => {
     try {
-      // Simplified payment stats
+      // Get all payments for this renter
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('amount, payment_date, status')
+        .eq('renter_id', user?.id)
+        .eq('status', 'paid')
+        .order('payment_date', { ascending: false });
+
+      if (error) throw error;
+
+      const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+      const currentYear = new Date().getFullYear();
+      const thisYear = payments
+        ?.filter(p => new Date(p.payment_date).getFullYear() === currentYear)
+        .reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+      const averageMonthly = payments && payments.length > 0 
+        ? totalPaid / Math.max(1, payments.length) 
+        : 0;
+
+      const lastPaymentDate = payments && payments.length > 0 
+        ? payments[0].payment_date 
+        : null;
+
       setPaymentStats({
-        totalPaid: 150000,
-        thisYear: 75000,
-        averageMonthly: 25000,
-        lastPaymentDate: '2024-01-15'
+        totalPaid,
+        thisYear,
+        averageMonthly,
+        lastPaymentDate
       });
     } catch (error) {
       console.error('Error fetching payment stats:', error);
@@ -122,15 +201,15 @@ export const RenterPayments = () => {
 
   const fetchRecentPayments = async () => {
     try {
-      // Simplified recent payments
-      setRecentPayments([
-        {
-          id: '1',
-          amount: 25000,
-          payment_date: '2024-01-15',
-          status: 'paid'
-        }
-      ]);
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('renter_id', user?.id)
+        .order('payment_date', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setRecentPayments(payments || []);
     } catch (error) {
       console.error('Error fetching recent payments:', error);
     }
