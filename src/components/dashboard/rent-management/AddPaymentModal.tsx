@@ -54,15 +54,18 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           amount: Number(amount),
           status: 'paid',
           payment_status: 'paid',
-          payment_date: selectedDate.toISOString(),
-          property_id: '00000000-0000-0000-0000-000000000000' // Placeholder - update if needed
+          payment_date: selectedDate.toISOString()
+          // property_id is now nullable, so we don't need to provide a placeholder
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
-        title: "✅ Payment saved",
-        description: `Payment of ₹${amount} saved successfully`
+        title: "✅ Payment saved successfully",
+        description: `Payment of ₹${amount} recorded for ${renterName}`
       });
       
       // Reset form and close
@@ -74,7 +77,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       console.error('Error saving payment:', error);
       toast({
         title: "❌ Failed to save payment",
-        description: "Please try again later",
+        description: "Please check your input or try again later",
         variant: "destructive"
       });
     } finally {

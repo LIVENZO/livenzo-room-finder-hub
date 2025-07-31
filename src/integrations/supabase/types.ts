@@ -290,7 +290,7 @@ export type Database = {
           payment_date: string
           payment_method: string | null
           payment_status: string
-          property_id: string
+          property_id: string | null
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
           relationship_id: string | null
@@ -308,7 +308,7 @@ export type Database = {
           payment_date?: string
           payment_method?: string | null
           payment_status?: string
-          property_id: string
+          property_id?: string | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           relationship_id?: string | null
@@ -326,7 +326,7 @@ export type Database = {
           payment_date?: string
           payment_method?: string | null
           payment_status?: string
-          property_id?: string
+          property_id?: string | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           relationship_id?: string | null
