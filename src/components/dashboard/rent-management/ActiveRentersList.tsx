@@ -126,45 +126,46 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           {renters.map((renter) => (
             <div
               key={renter.id}
-              className={cn(
-                "p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow",
-                "bg-white"
-              )}
+              className="bg-card rounded-2xl border shadow-sm hover:shadow-lg transition-all duration-300 p-6 mb-4"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <Avatar className="h-12 w-12 shadow-sm">
-                    <AvatarImage src={renter.renter.avatar_url || ''} />
-                    <AvatarFallback className="bg-gradient-primary text-white">
-                      {renter.renter.full_name?.charAt(0) || 'R'}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">
+              <div className="flex items-start gap-6">
+                {/* Left: Avatar */}
+                <Avatar className="h-16 w-16 shadow-md flex-shrink-0">
+                  <AvatarImage src={renter.renter.avatar_url || ''} />
+                  <AvatarFallback className="bg-gradient-primary text-white font-semibold text-lg">
+                    {renter.renter.full_name?.charAt(0) || 'R'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Center: Renter Info */}
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground leading-tight">
                       {renter.renter.full_name || 'Unknown Renter'}
                     </h3>
                     
                     {renter.renter.room_number && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>Room {renter.renter.room_number}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center gap-1">
-                        {getStatusIcon(renter.paymentStatus)}
-                        <span className="text-sm text-muted-foreground">
-                          {renter.paymentStatus === 'paid' && renter.latestPayment 
-                            ? `Last payment: ₹${renter.latestPayment.amount.toLocaleString()}`
-                            : `Amount due: ₹${renter.amount.toLocaleString()}`
-                          }
+                      <div className="flex items-center gap-2 mt-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Room {renter.renter.room_number}
                         </span>
                       </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(renter.paymentStatus)}
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {renter.paymentStatus === 'paid' && renter.latestPayment 
+                          ? `Last payment: ₹${renter.latestPayment.amount.toLocaleString()}`
+                          : `Amount due: ₹${renter.amount.toLocaleString()}`
+                        }
+                      </span>
                     </div>
                     
-                    <div className="mt-2">
+                    <div>
                       {getStatusBadge(
                         renter.paymentStatus, 
                         renter.paymentStatus === 'paid' ? renter.latestPayment?.amount : undefined
@@ -173,13 +174,13 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
                   </div>
                 </div>
                 
-                <div className="flex flex-col gap-2 ml-4">
+                {/* Right: Add Payment Button */}
+                <div className="flex-shrink-0">
                   <Button
-                    size="sm"
                     onClick={() => onAddPayment(renter.renter.id, renter.renter.full_name || 'Unknown')}
-                    className="min-h-[48px] px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="min-h-[56px] min-w-[120px] px-6 rounded-2xl font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-5 w-5 mr-2" />
                     Add Payment
                   </Button>
                 </div>
