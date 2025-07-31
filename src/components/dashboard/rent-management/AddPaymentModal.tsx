@@ -48,7 +48,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       // First, verify that there's an accepted relationship between owner and renter
       const { data: relationship, error: relationshipError } = await supabase
         .from('relationships')
-        .select('id, status')
+        .select('id, status, renter_id')
         .eq('owner_id', ownerId)
         .eq('renter_id', renterId)
         .eq('status', 'accepted')
@@ -68,11 +68,28 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         return;
       }
 
-      // Insert payment into Supabase
+      // Verify the renter_id exists in user_profiles (valid user)
+      const { data: renterExists, error: userError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', relationship.renter_id)
+        .maybeSingle();
+
+      if (userError || !renterExists) {
+        console.error('Error verifying renter:', userError);
+        toast({
+          title: "❌ Invalid renter",
+          description: "The renter profile could not be found.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Insert payment into Supabase using the verified renter_id
       const { error } = await supabase
         .from('payments')
         .insert({
-          renter_id: renterId,
+          renter_id: relationship.renter_id,
           owner_id: ownerId,
           amount: Number(amount),
           status: 'paid',
