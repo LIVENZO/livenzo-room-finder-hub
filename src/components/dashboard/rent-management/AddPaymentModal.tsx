@@ -45,6 +45,29 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
 
     setSaving(true);
     try {
+      // First, verify that there's an accepted relationship between owner and renter
+      const { data: relationship, error: relationshipError } = await supabase
+        .from('relationships')
+        .select('id, status')
+        .eq('owner_id', ownerId)
+        .eq('renter_id', renterId)
+        .eq('status', 'accepted')
+        .maybeSingle();
+
+      if (relationshipError) {
+        console.error('Error checking relationship:', relationshipError);
+        throw new Error('Failed to verify connection with renter');
+      }
+
+      if (!relationship) {
+        toast({
+          title: "❌ Cannot add payment",
+          description: "You must be connected to this renter to add a payment.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Insert payment into Supabase
       const { error } = await supabase
         .from('payments')
@@ -54,12 +77,23 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           amount: Number(amount),
           status: 'paid',
           payment_status: 'paid',
-          payment_date: selectedDate.toISOString()
-          // property_id is now nullable, so we don't need to provide a placeholder
+          payment_date: selectedDate.toISOString(),
+          relationship_id: relationship.id
         });
 
       if (error) {
         console.error('Supabase error:', error);
+        
+        // Check for specific RLS policy errors
+        if (error.message?.includes('row-level security')) {
+          toast({
+            title: "❌ Permission denied",
+            description: "You don't have permission to add payments for this renter.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
         throw error;
       }
 
@@ -73,11 +107,13 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       setSelectedDate(new Date());
       onPaymentSaved();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving payment:', error);
+      
+      const errorMessage = error?.message || 'Please check your input or try again later';
       toast({
         title: "❌ Failed to save payment",
-        description: "Please check your input or try again later",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
