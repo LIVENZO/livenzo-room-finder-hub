@@ -102,20 +102,9 @@ export const RenterPayments = () => {
         if (rentStatus && rentStatus.length > 0) {
           setCurrentRent(rentStatus[0]);
         } else {
-          // Create default rent status if none exists
-          const { data: newRentStatus, error: insertError } = await supabase
-            .from('rent_status')
-            .insert({
-              relationship_id: relationshipId,
-              current_amount: 25000,
-              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              status: 'pending'
-            })
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          setCurrentRent(newRentStatus);
+          // If no rent status exists, don't create a default one - let owner set it
+          console.log('No rent status found for relationship:', relationshipId);
+          setCurrentRent(null);
         }
       }
     } catch (error) {
@@ -141,19 +130,29 @@ export const RenterPayments = () => {
       if (relationships && relationships.length > 0) {
         const relationship = relationships[0];
         
-        // Get owner profile separately
-        const { data: ownerProfile } = await supabase
-          .from('user_profiles')
-          .select('full_name, phone, property_name, property_location')
-          .eq('id', relationship.owner_id)
-          .single();
+        // Get owner profile and rent status
+        const [ownerProfileResponse, rentStatusResponse] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('full_name, phone, property_name, property_location')
+            .eq('id', relationship.owner_id)
+            .single(),
+          supabase
+            .from('rent_status')
+            .select('current_amount')
+            .eq('relationship_id', relationship.id)
+            .limit(1)
+        ]);
+
+        const ownerProfile = ownerProfileResponse.data;
+        const rentAmount = rentStatusResponse.data?.[0]?.current_amount || 0;
 
         setRentalInfo({
           propertyName: ownerProfile?.property_name || 'Property',
           address: ownerProfile?.property_location || 'Address not available',
           ownerName: ownerProfile?.full_name || 'Owner',
           ownerPhone: ownerProfile?.phone || 'Phone not available',
-          monthlyRent: 25000 // This could come from rent_status table
+          monthlyRent: rentAmount
         });
       }
     } catch (error) {

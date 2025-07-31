@@ -103,7 +103,7 @@ const ActiveRenters: React.FC = () => {
               room_number: renterProfile?.room_number
             },
             paymentStatus,
-            amount: rentStatus?.[0]?.current_amount || 25000, // Default amount
+            amount: rentStatus?.[0]?.current_amount || 0, // No default amount - will be set by owner
             dueDate: rentStatus?.[0]?.due_date,
             lastPaymentDate: recentPayment?.[0]?.payment_date,
             latestPayment: recentPayment?.[0] ? {
