@@ -33,30 +33,39 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="dashboard" className="space-y-6">
-      <div className="flex justify-center">
-        <TabsList className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-soft p-1">
-          <TabsTrigger 
-            value="dashboard" 
-            className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
-          >
-            Dashboard Overview
-          </TabsTrigger>
-          <TabsTrigger 
-            value="rent"
-            className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
-          >
-            Rent Management
-          </TabsTrigger>
-          <TabsTrigger 
-            value="notices"
-            className="font-display font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white"
-          >
-            Send Notices
-          </TabsTrigger>
-        </TabsList>
+      {/* Mobile-optimized sticky tabs with horizontal scroll */}
+      <div className="sticky top-0 z-10 bg-gradient-radial/95 backdrop-blur-sm pb-2">
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="flex justify-center min-w-max px-4">
+            <TabsList className="bg-white/90 backdrop-blur-sm border border-primary/10 shadow-elegant p-1.5 rounded-xl min-w-max">
+              <TabsTrigger 
+                value="dashboard" 
+                className="font-display font-medium text-sm px-4 py-2.5 min-h-[48px] min-w-[120px] rounded-lg transition-all duration-300 ease-out data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft data-[state=active]:scale-[1.02] hover:bg-primary/5 whitespace-nowrap"
+              >
+                <span className="hidden sm:inline">Dashboard Overview</span>
+                <span className="sm:hidden">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rent"
+                className="font-display font-medium text-sm px-4 py-2.5 min-h-[48px] min-w-[120px] rounded-lg transition-all duration-300 ease-out data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft data-[state=active]:scale-[1.02] hover:bg-primary/5 whitespace-nowrap ml-1"
+              >
+                <span className="hidden sm:inline">Rent Management</span>
+                <span className="sm:hidden">Rent</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notices"
+                className="font-display font-medium text-sm px-4 py-2.5 min-h-[48px] min-w-[120px] rounded-lg transition-all duration-300 ease-out data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft data-[state=active]:scale-[1.02] hover:bg-primary/5 whitespace-nowrap ml-1"
+              >
+                <span className="hidden sm:inline">Send Notices</span>
+                <span className="sm:hidden">Notices</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
       </div>
       
-      <TabsContent value="dashboard" className="space-y-8">
+      {/* Mobile-optimized tab content with proper spacing */}
+      <TabsContent value="dashboard" className="space-y-6 px-1 animate-fade-in">
         <StatsGrid
           listingsCount={listingsCount}
           isLoading={isLoading}
@@ -73,19 +82,19 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
         />
       </TabsContent>
       
-      <TabsContent value="rent" className="animate-fade-in">
+      <TabsContent value="rent" className="px-1 animate-fade-in">
         <RentManagementDashboard />
       </TabsContent>
       
-      <TabsContent value="notices" className="animate-fade-in">
-        <Card className="border-0 shadow-soft bg-white/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary-600" />
+      <TabsContent value="notices" className="px-1 animate-fade-in">
+        <Card className="border-0 shadow-soft bg-white/90 backdrop-blur-sm rounded-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-display font-bold text-foreground flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
               Send Notice to Renters
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <SendNoticeForm ownerId={userId} />
           </CardContent>
         </Card>

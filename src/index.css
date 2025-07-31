@@ -120,6 +120,16 @@
   .animate-scale-in {
     animation: scale-in 0.2s ease-out;
   }
+
+  /* Hide scrollbars for mobile tabs */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Custom scrollbar */
