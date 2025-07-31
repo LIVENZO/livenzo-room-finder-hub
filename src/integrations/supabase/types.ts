@@ -350,13 +350,6 @@ export type Database = {
             referencedRelation: "relationships"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "payments_renter_id_fkey"
-            columns: ["renter_id"]
-            isOneToOne: false
-            referencedRelation: "renters"
-            referencedColumns: ["id"]
-          },
         ]
       }
       properties: {
