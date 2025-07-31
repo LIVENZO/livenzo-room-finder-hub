@@ -18,12 +18,17 @@ interface RenterPaymentInfo {
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
+  latestPayment?: {
+    amount: number;
+    payment_date: string;
+    status: string;
+  };
 }
 
 interface ActiveRentersListProps {
   renters: RenterPaymentInfo[];
   loading: boolean;
-  onAddPayment: (renterId: string) => void;
+  onAddPayment: (renterId: string, renterName: string) => void;
 }
 
 const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
@@ -44,14 +49,18 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, amount?: number) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">✅ Paid</Badge>;
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200 font-medium">
+            ✅ Paid {amount ? `₹${amount.toLocaleString()}` : ''}
+          </Badge>
+        );
       case 'unpaid':
-        return <Badge variant="destructive">❌ Unpaid</Badge>;
+        return <Badge variant="destructive" className="font-medium">❌ Unpaid</Badge>;
       case 'pending':
-        return <Badge variant="secondary">🕒 Pending</Badge>;
+        return <Badge variant="secondary" className="font-medium">🕒 Pending</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -146,11 +155,20 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
                     <div className="flex items-center gap-3 mt-2">
                       <div className="flex items-center gap-1">
                         {getStatusIcon(renter.paymentStatus)}
-                        <span className="text-sm text-gray-600">
-                          ₹{renter.amount.toLocaleString()}
+                        <span className="text-sm text-muted-foreground">
+                          {renter.paymentStatus === 'paid' && renter.latestPayment 
+                            ? `Last payment: ₹${renter.latestPayment.amount.toLocaleString()}`
+                            : `Amount due: ₹${renter.amount.toLocaleString()}`
+                          }
                         </span>
                       </div>
-                      {getStatusBadge(renter.paymentStatus)}
+                    </div>
+                    
+                    <div className="mt-2">
+                      {getStatusBadge(
+                        renter.paymentStatus, 
+                        renter.paymentStatus === 'paid' ? renter.latestPayment?.amount : undefined
+                      )}
                     </div>
                   </div>
                 </div>
@@ -158,8 +176,8 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
                 <div className="flex flex-col gap-2 ml-4">
                   <Button
                     size="sm"
-                    onClick={() => onAddPayment(renter.renter.id)}
-                    className="min-h-[48px] px-4"
+                    onClick={() => onAddPayment(renter.renter.id, renter.renter.full_name || 'Unknown')}
+                    className="min-h-[48px] px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Payment

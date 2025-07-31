@@ -25,6 +25,11 @@ interface RenterPaymentInfo {
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
+  latestPayment?: {
+    amount: number;
+    payment_date: string;
+    status: string;
+  };
 }
 
 const RentManagementDashboard: React.FC = () => {
@@ -197,7 +202,12 @@ const RentManagementDashboard: React.FC = () => {
             paymentStatus,
             amount: rentStatus?.[0]?.current_amount || 25000, // Default amount
             dueDate: rentStatus?.[0]?.due_date,
-            lastPaymentDate: recentPayment?.[0]?.payment_date
+            lastPaymentDate: recentPayment?.[0]?.payment_date,
+            latestPayment: recentPayment?.[0] ? {
+              amount: Number(recentPayment[0].amount),
+              payment_date: recentPayment[0].payment_date,
+              status: 'paid'
+            } : undefined
           };
         })
       );
@@ -215,74 +225,21 @@ const RentManagementDashboard: React.FC = () => {
     // Add more actions for other cards if needed
   };
 
-  const handleAddPayment = (renterId: string) => {
-    const renter = renters.find(r => r.renter.id === renterId);
-    if (renter) {
-      setSelectedRenter({
-        id: renterId,
-        name: renter.renter.full_name
-      });
-      setShowAddPayment(true);
-    }
+  const handleAddPayment = (renterId: string, renterName: string) => {
+    setSelectedRenter({
+      id: renterId,
+      name: renterName
+    });
+    setShowAddPayment(true);
   };
 
-  const handleSavePayment = async (payment: {
-    amount: number;
-    paymentDate: Date;
-    renterId: string;
-  }) => {
-    try {
-      // Find the relationship for this renter
-      const relationship = renters.find(r => r.renter.id === payment.renterId);
-      if (!relationship) {
-        throw new Error('Relationship not found');
-      }
-
-      // Insert payment record
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          amount: payment.amount,
-          renter_id: payment.renterId,
-          owner_id: user?.id,
-          relationship_id: relationship.id,
-          payment_date: payment.paymentDate.toISOString(),
-          payment_method: 'manual',
-          status: 'paid',
-          property_id: crypto.randomUUID() // Temporary property ID
-        });
-
-      if (paymentError) throw paymentError;
-
-      // Update rent status to paid
-      const { error: rentError } = await supabase
-        .from('rent_status')
-        .upsert({
-          relationship_id: relationship.id,
-          current_amount: payment.amount,
-          status: 'paid',
-          due_date: new Date(payment.paymentDate.getFullYear(), payment.paymentDate.getMonth() + 1, 1).toISOString()
-        });
-
-      if (rentError) throw rentError;
-
-      toast({
-        title: "Payment Added",
-        description: `Payment of ₹${payment.amount.toLocaleString()} added successfully!`
-      });
-
-      // Refresh data
-      await fetchData();
-    } catch (error) {
-      console.error('Error saving payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save payment. Please try again.",
-        variant: "destructive"
-      });
-      throw error;
-    }
+  const handlePaymentSaved = () => {
+    // Refresh the data after payment is saved
+    fetchData();
+    setShowAddPayment(false);
+    setSelectedRenter(null);
   };
+
 
   return (
     <div className="space-y-6">
@@ -303,17 +260,19 @@ const RentManagementDashboard: React.FC = () => {
       )}
 
       {/* Add Payment Modal */}
-      <AddPaymentModal
-        isOpen={showAddPayment}
-        onClose={() => {
-          setShowAddPayment(false);
-          setSelectedRenter(null);
-        }}
-        onSave={handleSavePayment}
-        renterName={selectedRenter?.name || ''}
-        renterId={selectedRenter?.id || ''}
-        loading={loading}
-      />
+      {selectedRenter && (
+        <AddPaymentModal
+          isOpen={showAddPayment}
+          onClose={() => {
+            setShowAddPayment(false);
+            setSelectedRenter(null);
+          }}
+          renterName={selectedRenter.name}
+          renterId={selectedRenter.id}
+          ownerId={user?.id || ''}
+          onPaymentSaved={handlePaymentSaved}
+        />
+      )}
     </div>
   );
 };
