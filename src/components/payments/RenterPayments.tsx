@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { PaymentModal } from "./PaymentModal";
 
 interface RentStatus {
   id: string;
@@ -64,6 +65,7 @@ export const RenterPayments = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -245,7 +247,8 @@ export const RenterPayments = () => {
     }
   };
 
-  const handlePaymentSuccess = async (paymentId: string) => {
+  const handlePaymentSuccess = async () => {
+    setShowPaymentModal(false);
     toast({ description: "Payment successful!" });
     fetchCurrentRent();
     fetchPaymentStats();
@@ -491,7 +494,7 @@ export const RenterPayments = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   className="flex-1"
-                  onClick={() => toast({ description: "Payment feature will be available soon!" })}
+                  onClick={() => setShowPaymentModal(true)}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
                   Pay Now
@@ -597,6 +600,17 @@ export const RenterPayments = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && currentRent && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          amount={currentRent.current_amount}
+          relationshipId={currentRent.relationship_id}
+          onSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );
