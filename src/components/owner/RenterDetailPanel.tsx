@@ -93,17 +93,39 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   const visibleTabs = getVisibleTabs();
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-4 min-h-screen bg-background">
       <RenterHeader relationship={relationship} onBack={onBack} />
 
-      {/* Show navigation buttons when in single mode - Mobile optimized */}
+      {/* Quick Action Buttons - Only show in full mode */}
+      {mode === 'full' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={handleSwitchToComplaints}
+            className="h-12 justify-start gap-3 border-destructive/30 text-destructive hover:bg-destructive/10"
+          >
+            <AlertTriangle className="h-5 w-5" />
+            <span className="font-medium">View Complaints</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSwitchToDocuments}
+            className="h-12 justify-start gap-3 border-muted-foreground/30 hover:bg-muted/50"
+          >
+            <FileText className="h-5 w-5" />
+            <span className="font-medium">View Documents</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Navigation buttons when in single mode */}
       {(mode === 'documents' || mode === 'complaints') && (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-3">
           {mode === 'documents' && (
             <Button
               variant="outline"
               onClick={handleSwitchToComplaints}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 h-11"
+              className="w-full sm:w-auto h-11 gap-2 border-destructive/30 text-destructive hover:bg-destructive/10"
             >
               <AlertTriangle className="h-4 w-4" />
               <span>View Complaints</span>
@@ -113,7 +135,7 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
             <Button
               variant="outline"
               onClick={handleSwitchToDocuments}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 h-11"
+              className="w-full sm:w-auto h-11 gap-2 border-muted-foreground/30 hover:bg-muted/50"
             >
               <FileText className="h-4 w-4" />
               <span>View Documents</span>
@@ -122,52 +144,69 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-        <TabsList className={`grid w-full ${visibleTabs.length === 1 ? 'grid-cols-1' : 
-          visibleTabs.length === 2 ? 'grid-cols-2' : 
-          visibleTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} h-11`}>
-          {visibleTabs.includes('overview') && (
-            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+      {/* Content Area */}
+      <div className="bg-card rounded-lg border shadow-sm">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {visibleTabs.length > 1 && (
+            <div className="border-b px-6 pt-4">
+              <TabsList className={`grid w-full ${visibleTabs.length === 1 ? 'grid-cols-1' : 
+                visibleTabs.length === 2 ? 'grid-cols-2' : 
+                visibleTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} h-10 bg-muted/50`}>
+                {visibleTabs.includes('overview') && (
+                  <TabsTrigger value="overview" className="text-sm font-medium">Overview</TabsTrigger>
+                )}
+                {visibleTabs.includes('documents') && (
+                  <TabsTrigger value="documents" className="text-sm font-medium">Documents</TabsTrigger>
+                )}
+                {visibleTabs.includes('complaints') && (
+                  <TabsTrigger value="complaints" className="text-sm font-medium">Complaints</TabsTrigger>
+                )}
+                {visibleTabs.includes('notes') && (
+                  <TabsTrigger value="notes" className="text-sm font-medium">Notes</TabsTrigger>
+                )}
+              </TabsList>
+            </div>
           )}
-          {visibleTabs.includes('documents') && (
-            <TabsTrigger value="documents" className="text-sm">Documents</TabsTrigger>
-          )}
-          {visibleTabs.includes('complaints') && (
-            <TabsTrigger value="complaints" className="text-sm">Complaints</TabsTrigger>
-          )}
-          {visibleTabs.includes('notes') && (
-            <TabsTrigger value="notes" className="text-sm">Notes</TabsTrigger>
-          )}
-        </TabsList>
 
-        {visibleTabs.includes('overview') && (
-          <TabsContent value="overview" className="space-y-4">
-            <OverviewTab onTabChange={setActiveTab} />
-          </TabsContent>
-        )}
+          <div className="p-6">
+            {visibleTabs.includes('overview') && (
+              <TabsContent value="overview" className="mt-0 space-y-4">
+                <OverviewTab onTabChange={setActiveTab} />
+              </TabsContent>
+            )}
 
-        {visibleTabs.includes('documents') && (
-          <TabsContent value="documents" className="space-y-4">
-            <DocumentList 
-              documents={documents}
-              isOwner={true}
-              onDocumentStatusChanged={handleDocumentStatusChanged}
-            />
-          </TabsContent>
-        )}
+            {visibleTabs.includes('documents') && (
+              <TabsContent value="documents" className="mt-0">
+                {documents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No Documents</h3>
+                    <p className="text-muted-foreground">No documents uploaded yet by this renter.</p>
+                  </div>
+                ) : (
+                  <DocumentList 
+                    documents={documents}
+                    isOwner={true}
+                    onDocumentStatusChanged={handleDocumentStatusChanged}
+                  />
+                )}
+              </TabsContent>
+            )}
 
-        {visibleTabs.includes('complaints') && (
-          <TabsContent value="complaints" className="space-y-4">
-            <ComplaintsTab relationshipId={relationship.id} />
-          </TabsContent>
-        )}
+            {visibleTabs.includes('complaints') && (
+              <TabsContent value="complaints" className="mt-0">
+                <ComplaintsTab relationshipId={relationship.id} />
+              </TabsContent>
+            )}
 
-        {visibleTabs.includes('notes') && (
-          <TabsContent value="notes" className="space-y-4">
-            <NotesTab />
-          </TabsContent>
-        )}
-      </Tabs>
+            {visibleTabs.includes('notes') && (
+              <TabsContent value="notes" className="mt-0">
+                <NotesTab />
+              </TabsContent>
+            )}
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 };
