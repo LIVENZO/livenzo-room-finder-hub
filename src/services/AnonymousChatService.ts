@@ -22,12 +22,22 @@ export interface AnonymousChatSession {
 // Find or create an anonymous chat session
 export const findAnonymousChat = async (userId: string): Promise<string | null> => {
   try {
-    // First, try to find an existing waiting session (not created by this user)
+    console.log("Finding anonymous chat for user:", userId);
+    
+    // First, clean up any existing waiting sessions for this user
+    await supabase
+      .from("anonymous_chat_sessions")
+      .delete()
+      .eq("participant_1", userId)
+      .eq("status", "waiting");
+
+    // Try to find an existing waiting session (not created by this user)
     const { data: waitingSessions, error: findError } = await supabase
       .from("anonymous_chat_sessions")
       .select("*")
       .eq("status", "waiting")
       .neq("participant_1", userId)
+      .order("created_at", { ascending: true })
       .limit(1);
 
     if (findError) {
@@ -35,25 +45,33 @@ export const findAnonymousChat = async (userId: string): Promise<string | null> 
       return null;
     }
 
+    console.log("Found waiting sessions:", waitingSessions);
+
     if (waitingSessions && waitingSessions.length > 0) {
       // Join the existing session
       const session = waitingSessions[0];
+      console.log("Joining existing session:", session.id);
+      
       const { error: updateError } = await supabase
         .from("anonymous_chat_sessions")
         .update({ 
           participant_2: userId, 
           status: 'active' 
         })
-        .eq("id", session.id);
+        .eq("id", session.id)
+        .eq("status", "waiting"); // Ensure it's still waiting
 
       if (updateError) {
         console.error("Error joining session:", updateError);
         return null;
       }
 
+      console.log("Successfully joined session:", session.id);
       return session.id;
     } else {
       // Create a new waiting session
+      console.log("Creating new waiting session for user:", userId);
+      
       const { data: newSession, error: createError } = await supabase
         .from("anonymous_chat_sessions")
         .insert({
@@ -68,6 +86,7 @@ export const findAnonymousChat = async (userId: string): Promise<string | null> 
         return null;
       }
 
+      console.log("Created new session:", newSession.id);
       return newSession.id;
     }
   } catch (error) {

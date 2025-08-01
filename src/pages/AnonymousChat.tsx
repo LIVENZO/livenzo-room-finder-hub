@@ -86,7 +86,7 @@ const AnonymousChat = () => {
         }
         
         if (updatedSession.status === 'ended') {
-          toast.info("Chat ended by your partner");
+          toast.info("Your Fellow Kotayan has left the chat.");
           handleBackToDashboard();
         }
       })
@@ -114,8 +114,17 @@ const AnonymousChat = () => {
         if (sessionData?.status === 'waiting') {
           setIsWaiting(true);
           toast.info("Looking for a Fellow Kotayan to chat with...");
+          
+          // Set a timeout to show "no one available" message
+          setTimeout(() => {
+            if (sessionData?.status === 'waiting') {
+              toast.info("No one is available right now. Please try again in a few minutes.");
+            }
+          }, 30000); // 30 seconds timeout
+          
         } else if (sessionData?.status === 'active') {
           toast.success("Connected to a Fellow Kotayan!");
+          setIsWaiting(false);
           // Load existing messages
           const existingMessages = await fetchAnonymousMessages(sessionId, user.id);
           setMessages(existingMessages);
