@@ -34,8 +34,11 @@ const Profile = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="container max-w-4xl py-10 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="w-full min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Loading your profile...</p>
+          </div>
         </div>
       </Layout>
     );
@@ -43,88 +46,112 @@ const Profile = () => {
   
   return (
     <Layout>
-      <div className="container max-w-4xl py-4 px-4 sm:py-6 md:py-10">
-        <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
-        
-        {/* Show Owner ID prominently for owners */}
-        {isOwner && profile?.public_id && (
-          <Card className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg text-blue-800">Your Owner ID</CardTitle>
-              <CardDescription className="text-sm sm:text-base text-blue-700">
-                Share this ID with renters so they can easily connect with you
+      <div className="w-full min-h-screen px-4 py-6 md:px-8 lg:px-12">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Profile Completion Banner */}
+          <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
+          
+          {/* Owner ID Section - Prominent Display */}
+          {isOwner && profile?.public_id && (
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-xl font-semibold text-primary">
+                  Your Owner ID
+                </CardTitle>
+                <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                  Share this unique ID with renters so they can easily connect with you
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserIdDisplay publicId={profile.public_id} />
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Main Profile Card */}
+          <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-8 text-center md:text-left">
+              <CardTitle className="text-2xl font-bold tracking-tight">
+                Your Profile
+              </CardTitle>
+              <CardDescription className="text-lg text-muted-foreground leading-relaxed mt-2">
+                Update your personal information and how you appear to others
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-0">
-              <UserIdDisplay publicId={profile.public_id} />
-            </CardContent>
-          </Card>
-        )}
-        
-        <Card>
-          <CardHeader className="pb-4 sm:pb-6">
-            <CardTitle className="text-lg sm:text-xl">Your Profile</CardTitle>
-            <CardDescription className="text-sm sm:text-base">
-              Update your personal information and how you appear to others
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {isOwner ? (
-              <OwnerProfileTabs
-                profile={profile}
-                user={user}
-                formValues={formValues}
-                ownerFormValues={ownerFormValues}
-                uploadingImage={uploadingImage}
-                onInputChange={handleInputChange}
-                onOwnerInputChange={handleOwnerInputChange}
-                onOwnerSelectChange={handleOwnerSelectChange}
-                onImageUpload={handleImageUpload}
-                onLocationSaved={handleLocationSaved}
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-6">
-                <ProfileAvatar
+            
+            <CardContent className="space-y-10">
+              {isOwner ? (
+                <OwnerProfileTabs
                   profile={profile}
-                  userEmail={user?.email}
+                  user={user}
+                  formValues={formValues}
+                  ownerFormValues={ownerFormValues}
                   uploadingImage={uploadingImage}
+                  onInputChange={handleInputChange}
+                  onOwnerInputChange={handleOwnerInputChange}
+                  onOwnerSelectChange={handleOwnerSelectChange}
                   onImageUpload={handleImageUpload}
+                  onLocationSaved={handleLocationSaved}
                 />
-                
-                <div className="w-full max-w-md">
-                  <ProfileForm
-                    formValues={formValues}
-                    profile={profile}
-                    onInputChange={handleInputChange}
-                  />
-                </div>
-
-                {/* Show Room Number prominently for renters if filled */}
-                {!isOwner && formValues.roomNumber && (
-                  <div className="w-full max-w-md p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="text-sm font-medium text-blue-800 mb-1">Room Number</div>
-                    <div className="text-blue-700">{formValues.roomNumber}</div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Profile Avatar Section */}
+                  <div className="flex justify-center">
+                    <ProfileAvatar
+                      profile={profile}
+                      userEmail={user?.email}
+                      uploadingImage={uploadingImage}
+                      onImageUpload={handleImageUpload}
+                    />
                   </div>
-                )}
+                  
+                  {/* Profile Form Section */}
+                  <div className="max-w-2xl mx-auto">
+                    <ProfileForm
+                      formValues={formValues}
+                      profile={profile}
+                      onInputChange={handleInputChange}
+                    />
+                  </div>
 
-                {/* Renter ID removed from UI - kept in backend for functionality */}
+                  {/* Room Number Display */}
+                  {!isOwner && formValues.roomNumber && (
+                    <div className="max-w-2xl mx-auto">
+                      <Card className="bg-secondary/30 border-secondary shadow-sm">
+                        <CardContent className="p-6">
+                          <div className="text-sm font-semibold text-secondary-foreground mb-2 uppercase tracking-wide">
+                            Room Number
+                          </div>
+                          <div className="text-lg font-medium text-foreground">
+                            {formValues.roomNumber}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Property Information for Complete Owner Profiles */}
+              {isOwner && profile && isOwnerProfileComplete(profile) && (
+                <div className="border-t pt-8">
+                  <OwnerPropertyDisplay profile={profile} />
+                </div>
+              )}
+            </CardContent>
+            
+            <CardFooter className="pt-8 pb-8 bg-muted/20">
+              <div className="w-full">
+                <ProfileActions
+                  profile={profile}
+                  saving={saving}
+                  onSave={handleSave}
+                  isOwner={isOwner}
+                />
               </div>
-            )}
-
-            {/* Display property information for owners in a read-only format */}
-            {isOwner && profile && isOwnerProfileComplete(profile) && (
-              <OwnerPropertyDisplay profile={profile} />
-            )}
-          </CardContent>
-          <CardFooter className="pt-4 sm:pt-6">
-            <ProfileActions
-              profile={profile}
-              saving={saving}
-              onSave={handleSave}
-              isOwner={isOwner}
-            />
-          </CardFooter>
-        </Card>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

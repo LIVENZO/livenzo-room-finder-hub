@@ -18,25 +18,35 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, saving, onSave
   const fullyComplete = basicComplete && ownerComplete;
 
   return (
-    <div className="flex justify-between">
-      <div>
-        {!fullyComplete && (
-          <p className="text-sm text-amber-600">
+    <div className="w-full space-y-6">
+      {/* Status Message */}
+      {!fullyComplete && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <p className="text-base text-amber-800 font-medium leading-relaxed">
             {!basicComplete && "Please complete your basic profile information. "}
             {isOwner && !ownerComplete && "Please complete your property details. "}
-            Complete profile required for full access.
+            A complete profile is required for full access to all features.
           </p>
-        )}
+        </div>
+      )}
+      
+      {/* Save Button */}
+      <div className="flex justify-center md:justify-end">
+        <Button 
+          onClick={onSave} 
+          disabled={saving}
+          size="lg"
+          className="w-full md:w-auto px-8 py-3 h-auto text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Saving Changes...
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
       </div>
-      <Button onClick={onSave} disabled={saving}>
-        {saving ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...
-          </>
-        ) : (
-          'Save Changes'
-        )}
-      </Button>
     </div>
   );
 };

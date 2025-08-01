@@ -29,15 +29,19 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
   onImageUpload
 }) => {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-center gap-6">
+    <div className="space-y-10">
+      {/* Profile Avatar Section */}
+      <div className="flex justify-center">
         <ProfileAvatar
           profile={profile}
           userEmail={user?.email}
           uploadingImage={uploadingImage}
           onImageUpload={onImageUpload}
         />
-        
+      </div>
+      
+      {/* Profile Form Section */}
+      <div className="max-w-2xl mx-auto">
         <ProfileForm
           formValues={formValues}
           profile={profile}
@@ -45,8 +49,13 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
         />
       </div>
 
+      {/* Owner ID Section */}
       {profile?.public_id && (
-        <UserIdDisplay publicId={profile.public_id} />
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-muted/30 rounded-lg p-6 border">
+            <UserIdDisplay publicId={profile.public_id} />
+          </div>
+        </div>
       )}
     </div>
   );

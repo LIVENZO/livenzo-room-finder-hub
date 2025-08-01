@@ -55,25 +55,31 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
     onInputChange(e);
   };
   return (
-    <div className="w-full space-y-4">
-      <div className="grid gap-2">
-        <Label htmlFor="fullName">Name <span className="text-red-500">*</span></Label>
+    <div className="w-full space-y-8">
+      {/* Name Field */}
+      <div className="space-y-3">
+        <Label htmlFor="fullName" className="text-base font-semibold text-foreground">
+          Name <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="fullName"
           name="fullName"
           value={formValues.fullName}
           onChange={handleSecureInputChange}
           placeholder="Your full name"
-          className={!formValues.fullName ? "border-red-300" : ""}
+          className={`h-12 text-base ${!formValues.fullName ? "border-destructive/50 focus-visible:ring-destructive/20" : ""}`}
           required
         />
         {!formValues.fullName && (
-          <p className="text-xs text-red-500">Name is required to complete your profile</p>
+          <p className="text-sm text-destructive font-medium">Name is required to complete your profile</p>
         )}
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
+      {/* Phone Number Field */}
+      <div className="space-y-3">
+        <Label htmlFor="phone" className="text-base font-semibold text-foreground">
+          Phone Number <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="phone"
           name="phone"
@@ -81,35 +87,45 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
           value={formValues.phone}
           onChange={handleSecureInputChange}
           placeholder="Your phone number"
-          className={!formValues.phone ? "border-red-300" : ""}
+          className={`h-12 text-base ${!formValues.phone ? "border-destructive/50 focus-visible:ring-destructive/20" : ""}`}
           required
         />
         {!formValues.phone && (
-          <p className="text-xs text-red-500">Phone number is required to complete your profile</p>
+          <p className="text-sm text-destructive font-medium">Phone number is required to complete your profile</p>
         )}
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="roomNumber">Room Number</Label>
+      {/* Room Number Field */}
+      <div className="space-y-3">
+        <Label htmlFor="roomNumber" className="text-base font-semibold text-foreground">
+          Room Number
+        </Label>
         <Input
           id="roomNumber"
           name="roomNumber"
           value={formValues.roomNumber}
           onChange={handleSecureInputChange}
           placeholder="e.g., Room 202, A-101"
+          className="h-12 text-base"
         />
-        <p className="text-xs text-muted-foreground">Optional: Specify your room number for easier identification</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Optional: Specify your room number for easier identification
+        </p>
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="bio">About You</Label>
+      {/* Bio Field */}
+      <div className="space-y-3">
+        <Label htmlFor="bio" className="text-base font-semibold text-foreground">
+          About You
+        </Label>
         <Textarea
           id="bio"
           name="bio"
           value={formValues.bio}
           onChange={handleSecureInputChange}
           placeholder="Tell others a bit about yourself"
-          rows={3}
+          rows={4}
+          className="text-base leading-relaxed resize-none"
         />
       </div>
     </div>

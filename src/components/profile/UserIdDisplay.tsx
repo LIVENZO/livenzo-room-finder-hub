@@ -17,28 +17,32 @@ const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
   };
 
   return (
-    <div className="grid gap-2">
-      <Label htmlFor="publicId">Your Owner ID (for renters to find you)</Label>
-      <div className="flex gap-2">
+    <div className="space-y-4">
+      <Label htmlFor="publicId" className="text-base font-semibold text-primary">
+        Your Owner ID (for renters to find you)
+      </Label>
+      <div className="flex gap-3">
         <Input 
           id="publicId"
           value={publicId || 'Generating...'}
           readOnly
-          className="bg-gray-50 font-mono text-lg tracking-wider"
+          className="bg-muted/30 font-mono text-lg tracking-wider h-12 text-center font-bold border-primary/20 focus-visible:ring-primary/20"
           placeholder="Generating unique ID..."
         />
         <Button
-          size="icon"
+          size="lg"
           variant="outline"
           onClick={copyPublicIdToClipboard}
           disabled={!publicId}
           title="Copy Owner ID to clipboard"
+          className="h-12 px-4 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
         >
-          <Copy className="h-4 w-4" />
+          <Copy className="h-5 w-5" />
         </Button>
       </div>
-      <p className="text-xs text-gray-500 mt-1">
-        Share this 10-character ID with potential renters so they can connect with you easily
+      <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded-lg border">
+        Share this unique 10-character ID with potential renters so they can connect with you easily. 
+        This ID helps maintain your privacy while allowing renters to find you.
       </p>
     </div>
   );

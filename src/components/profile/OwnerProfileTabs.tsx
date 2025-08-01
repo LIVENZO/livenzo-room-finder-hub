@@ -45,12 +45,22 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="basic">Basic Information</TabsTrigger>
-        <TabsTrigger value="location">Location</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50 rounded-lg p-1">
+        <TabsTrigger 
+          value="basic" 
+          className="text-base font-semibold h-10 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+        >
+          Basic Information
+        </TabsTrigger>
+        <TabsTrigger 
+          value="location" 
+          className="text-base font-semibold h-10 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+        >
+          Location
+        </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="basic">
+      <TabsContent value="basic" className="mt-8">
         <BasicProfileTab
           profile={profile}
           user={user}
@@ -61,7 +71,7 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="location">
+      <TabsContent value="location" className="mt-8">
         {user && (
           <LocationTab
             userId={user.id}
