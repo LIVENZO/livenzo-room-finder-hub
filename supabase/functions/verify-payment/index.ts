@@ -72,12 +72,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to update payment record');
     }
 
-    // Update rent status
+    // Update rent status to paid and set next due date
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(1); // Set to first day of next month
+    
     const { error: rentStatusError } = await supabaseClient
       .from('rent_status')
       .update({
         status: 'paid',
         last_payment_id: payment.id,
+        due_date: nextMonth.toISOString().split('T')[0], // Format as YYYY-MM-DD
         updated_at: new Date().toISOString()
       })
       .eq('relationship_id', payment.relationship_id);
@@ -85,6 +90,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (rentStatusError) {
       console.error('Rent status update error:', rentStatusError);
     }
+
+    console.log('Payment verified and processed successfully:', {
+      paymentId: payment.id,
+      razorpayPaymentId,
+      relationshipId: payment.relationship_id,
+      nextDueDate: nextMonth.toISOString().split('T')[0]
+    });
 
     console.log('Payment verified successfully:', razorpayPaymentId);
 

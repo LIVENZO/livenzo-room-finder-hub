@@ -34,7 +34,10 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
         body: { amount, relationshipId }
       });
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw new Error(orderError.message || 'Failed to create payment order');
+      }
 
       // Load Razorpay script if not already loaded
       if (!window.Razorpay) {
@@ -54,7 +57,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Livenzo',
-        description: 'Rent Payment',
+        description: `Rent Payment for ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`,
         order_id: orderData.orderId,
         handler: async (response: any) => {
           try {
@@ -141,8 +144,8 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 border rounded-lg opacity-60">
-              <CreditCard className="h-5 w-5 text-gray-400" />
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <CreditCard className="h-5 w-5 text-green-600" />
               <div>
                 <p className="font-medium">Card Payment</p>
                 <p className="text-sm text-muted-foreground">Credit/Debit cards also supported</p>

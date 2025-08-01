@@ -34,16 +34,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { amount, relationshipId }: PaymentOrderRequest = await req.json();
 
-    // Verify the relationship belongs to the user
+    // Verify the relationship belongs to the user and is active
     const { data: relationship, error: relationshipError } = await supabaseClient
       .from('relationships')
       .select('*')
       .eq('id', relationshipId)
       .eq('renter_id', user.id)
-      .single();
+      .eq('status', 'accepted')
+      .eq('archived', false)
+      .maybeSingle();
 
-    if (relationshipError || !relationship) {
-      throw new Error('Invalid relationship');
+    if (relationshipError) {
+      console.error('Relationship query error:', relationshipError);
+      throw new Error('Database error while verifying relationship');
+    }
+
+    if (!relationship) {
+      console.error('No valid relationship found for user:', user.id, 'relationshipId:', relationshipId);
+      throw new Error('Invalid relationship or access denied');
     }
 
     // Create Razorpay order
