@@ -93,61 +93,66 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   const visibleTabs = getVisibleTabs();
 
   return (
-    <div className="space-y-4 px-0 sm:px-6 lg:px-8 py-0 sm:py-4 min-h-screen bg-background">
-      <div className="px-4 sm:px-0">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      {/* Header - Mobile edge-to-edge */}
+      <div className="px-4 py-4 sm:px-6 sm:py-6">
         <RenterHeader relationship={relationship} onBack={onBack} />
       </div>
 
       {/* Quick Action Buttons - Only show in full mode */}
       {mode === 'full' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
-          <Button
-            variant="outline"
-            onClick={handleSwitchToComplaints}
-            className="h-14 justify-start gap-3 bg-red-50/50 border-red-200/50 text-red-700 hover:bg-red-100/70 rounded-xl shadow-sm active:scale-[0.98] transition-all"
-          >
-            <AlertTriangle className="h-5 w-5" />
-            <span className="font-medium">View Complaints</span>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleSwitchToDocuments}
-            className="h-14 justify-start gap-3 bg-blue-50/50 border-blue-200/50 text-blue-700 hover:bg-blue-100/70 rounded-xl shadow-sm active:scale-[0.98] transition-all"
-          >
-            <FileText className="h-5 w-5" />
-            <span className="font-medium">View Documents</span>
-          </Button>
+        <div className="px-4 pb-6 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              onClick={handleSwitchToComplaints}
+              className="h-16 justify-start gap-4 bg-gradient-to-r from-red-50 to-orange-50 border-red-200/60 text-red-700 hover:from-red-100 hover:to-orange-100 hover:shadow-lg rounded-2xl shadow-md active:scale-[0.98] transition-all duration-200 font-semibold"
+            >
+              <AlertTriangle className="h-6 w-6" />
+              <span>View Complaints</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSwitchToDocuments}
+              className="h-16 justify-start gap-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200/60 text-blue-700 hover:from-blue-100 hover:to-cyan-100 hover:shadow-lg rounded-2xl shadow-md active:scale-[0.98] transition-all duration-200 font-semibold"
+            >
+              <FileText className="h-6 w-6" />
+              <span>View Documents</span>
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Navigation buttons when in single mode */}
       {(mode === 'documents' || mode === 'complaints') && (
-        <div className="flex flex-col sm:flex-row gap-4 px-4 sm:px-0">
-          {mode === 'documents' && (
-            <Button
-              variant="outline"
-              onClick={handleSwitchToComplaints}
-              className="w-full sm:w-auto h-12 gap-2 bg-red-50/50 border-red-200/50 text-red-700 hover:bg-red-100/70 rounded-xl shadow-sm active:scale-[0.98] transition-all"
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span>View Complaints</span>
-            </Button>
-          )}
-          {mode === 'complaints' && (
-            <Button
-              variant="outline"
-              onClick={handleSwitchToDocuments}
-              className="w-full sm:w-auto h-12 gap-2 bg-blue-50/50 border-blue-200/50 text-blue-700 hover:bg-blue-100/70 rounded-xl shadow-sm active:scale-[0.98] transition-all"
-            >
-              <FileText className="h-4 w-4" />
-              <span>View Documents</span>
-            </Button>
-          )}
+        <div className="px-4 pb-6 sm:px-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {mode === 'documents' && (
+              <Button
+                variant="outline"
+                onClick={handleSwitchToComplaints}
+                className="w-full sm:w-auto h-14 gap-3 bg-gradient-to-r from-red-50 to-orange-50 border-red-200/60 text-red-700 hover:from-red-100 hover:to-orange-100 hover:shadow-lg rounded-2xl shadow-md active:scale-[0.98] transition-all duration-200 font-medium"
+              >
+                <AlertTriangle className="h-5 w-5" />
+                <span>View Complaints</span>
+              </Button>
+            )}
+            {mode === 'complaints' && (
+              <Button
+                variant="outline"
+                onClick={handleSwitchToDocuments}
+                className="w-full sm:w-auto h-14 gap-3 bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200/60 text-blue-700 hover:from-blue-100 hover:to-cyan-100 hover:shadow-lg rounded-2xl shadow-md active:scale-[0.98] transition-all duration-200 font-medium"
+              >
+                <FileText className="h-5 w-5" />
+                <span>View Documents</span>
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Content Area */}
-      <div className="bg-card rounded-t-lg sm:rounded-lg border-0 sm:border shadow-sm mx-0 sm:mx-0">
+      {/* Content Area - Edge-to-edge on mobile */}
+      <div className="bg-card rounded-t-3xl sm:rounded-2xl sm:mx-6 sm:mb-6 shadow-xl border-t sm:border overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {visibleTabs.length > 1 && (
             <div className="border-b px-6 pt-4">
@@ -180,10 +185,12 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
             {visibleTabs.includes('documents') && (
               <TabsContent value="documents" className="mt-0">
                 {documents.length === 0 ? (
-                  <div className="bg-blue-50/30 rounded-2xl p-8 text-center border border-blue-100/50">
-                    <FileText className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No Documents</h3>
-                    <p className="text-muted-foreground">No documents uploaded yet by this renter.</p>
+                  <div className="bg-gradient-to-br from-cyan-50 to-blue-100 rounded-3xl p-10 text-center border border-cyan-200/50 shadow-lg backdrop-blur-sm">
+                    <div className="bg-white/70 rounded-full p-4 w-20 h-20 mx-auto mb-6 shadow-md">
+                      <FileText className="h-12 w-12 text-cyan-600 mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-800 mb-3">No Documents Yet</h3>
+                    <p className="text-slate-600 text-base leading-relaxed">This renter hasn't uploaded any documents. When they do, you'll see them here for review and approval.</p>
                   </div>
                 ) : (
                   <DocumentList 
