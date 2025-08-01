@@ -127,13 +127,15 @@ export const fetchDocumentsForRelationship = async (relationshipId: string): Pro
       return [];
     }
     
-    // Validate user permission for this relationship
-    const hasPermission = await validateUserPermission(
-      authResult.userId!, 
-      'read', 
-      'document', 
-      relationshipId
-    );
+    // Check if user can access this relationship (owner or renter)
+    const { data: relationship } = await supabase
+      .from('relationships')
+      .select('owner_id, renter_id')
+      .eq('id', relationshipId)
+      .single();
+    
+    const hasPermission = relationship && 
+      (relationship.owner_id === authResult.userId || relationship.renter_id === authResult.userId);
     
     if (!hasPermission) {
       console.error("User doesn't have permission to view documents for this relationship");

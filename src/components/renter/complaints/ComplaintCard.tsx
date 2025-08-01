@@ -49,31 +49,31 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({ complaint }) => {
   };
 
   return (
-    <div className="border rounded-lg p-4 space-y-3">
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="font-medium text-base leading-relaxed break-words flex-1">
+        <h3 className="font-semibold text-lg leading-relaxed break-words flex-1">
           {complaint.title}
         </h3>
-        <Badge variant={getStatusVariant(complaint.status)} className="flex items-center gap-1 shrink-0">
+        <Badge variant={getStatusVariant(complaint.status)} className="flex items-center gap-2 shrink-0 px-3 py-1">
           {getStatusIcon(complaint.status)}
           {getStatusLabel(complaint.status)}
         </Badge>
       </div>
       
-      <div className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap p-3 bg-gray-50 rounded">
+      <div className="text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap p-4 bg-muted/30 rounded-lg">
         {complaint.description}
       </div>
       
       {complaint.response && (
-        <div className="bg-blue-50 border border-blue-200 rounded p-3">
-          <p className="text-sm font-medium text-blue-800 mb-2">Owner Response:</p>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm font-semibold text-blue-800 mb-3">Owner Response:</p>
           <div className="text-sm text-blue-700 leading-relaxed break-words whitespace-pre-wrap">
             {complaint.response}
           </div>
         </div>
       )}
       
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
         Submitted on {new Date(complaint.created_at).toLocaleDateString()}
       </p>
     </div>

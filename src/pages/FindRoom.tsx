@@ -9,11 +9,13 @@ import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { filteredRooms, filters, setFilters, isLoading } = useRooms();
+  const { filteredRooms, filters, setFilters, isLoading, refreshRooms } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [location, setLocation] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -50,7 +52,17 @@ const FindRoom: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <h1 className="text-3xl font-bold mb-6">Find Your Perfect Room</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Find Your Perfect Room</h1>
+          <Button 
+            onClick={refreshRooms}
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
         
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <SearchBar 

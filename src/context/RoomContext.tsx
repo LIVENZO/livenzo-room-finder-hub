@@ -13,6 +13,7 @@ interface RoomContextType {
   filteredRooms: Room[];
   setFilters: (filters: RoomFilters) => void;
   getRoom: (id: string) => Room | undefined;
+  refreshRooms: () => Promise<void>;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -38,6 +39,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshRooms = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedRooms = await fetchRoomsService();
+      setRooms(fetchedRooms);
+      toast.success('Rooms refreshed successfully');
+    } catch (error) {
+      toast.error('Failed to refresh rooms');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Get a specific room by ID
   const getRoom = (id: string) => {
     return rooms.find(room => room.id === id);
@@ -52,6 +66,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         filteredRooms,
         setFilters,
         getRoom,
+        refreshRooms,
       }}
     >
       {children}
