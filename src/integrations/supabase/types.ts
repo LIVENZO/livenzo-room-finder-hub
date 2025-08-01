@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anonymous_chat_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          participant_1: string
+          participant_2: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          participant_1: string
+          participant_2?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          participant_1?: string
+          participant_2?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           created_at: string

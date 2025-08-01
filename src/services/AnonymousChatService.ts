@@ -13,10 +13,10 @@ export interface AnonymousMessage {
 export interface AnonymousChatSession {
   id: string;
   participant_1: string;
-  participant_2: string;
-  status: 'waiting' | 'active' | 'ended';
+  participant_2: string | null;
+  status: string;
   created_at: string;
-  ended_at?: string;
+  ended_at?: string | null;
 }
 
 // Find or create an anonymous chat session
@@ -171,7 +171,7 @@ export const getAnonymousSession = async (sessionId: string): Promise<AnonymousC
       return null;
     }
 
-    return data;
+    return data as AnonymousChatSession;
   } catch (error) {
     console.error("Exception fetching session:", error);
     return null;

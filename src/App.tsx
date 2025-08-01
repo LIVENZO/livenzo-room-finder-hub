@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Chats from "./pages/Chats";
+import AnonymousChat from "./pages/AnonymousChat";
 import Connections from "./pages/Connections";
 import ListRoom from "./pages/ListRoom";
 import MyListings from "./pages/MyListings";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/chats" element={<Chats />} />
               <Route path="/chats/:roomId" element={<Chats />} />
+              <Route path="/anonymous-chat" element={<AnonymousChat />} />
               <Route path="/connections" element={<Connections />} />
               <Route path="/connections/:relationshipId" element={<Connections />} />
               <Route path="/list-room" element={<ListRoom />} />
