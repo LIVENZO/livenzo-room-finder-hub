@@ -87,7 +87,7 @@ const AnonymousChat = () => {
         
         if (updatedSession.status === 'ended') {
           toast.info("Your Fellow Kotayan has left the chat.");
-          handleBackToDashboard();
+          handlePartnerLeft();
         }
       })
       .subscribe();
@@ -202,6 +202,14 @@ const AnonymousChat = () => {
       console.error("Error ending chat:", error);
       toast.error("Unable to end chat");
     }
+  };
+
+  const handlePartnerLeft = () => {
+    // Reset chat state but stay on the chat screen
+    setCurrentSessionId(null);
+    setSession(null);
+    setMessages([]);
+    setIsWaiting(false);
   };
 
   const handleBackToDashboard = () => {
