@@ -74,10 +74,10 @@ const useNavItems = (unreadMessageCount: number = 0) => {
     },
     {
       title: "Messages",
-      href: "/chats",
+      href: userRole === 'renter' ? "/anonymous-chat" : "/chats",
       icon: <MessageSquare className="h-4 w-4" />,
       showNotificationBadge: unreadMessageCount > 0,
-      label: "Messages",
+      label: userRole === 'renter' ? "Talk to Fellow Kotayan" : "Messages",
     },
     {
       title: "Profile",
