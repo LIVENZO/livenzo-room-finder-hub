@@ -772,8 +772,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_stale_waiting_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       ensure_unique_public_id: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      find_or_create_anonymous_chat: {
+        Args: { user_id_param: string }
         Returns: string
       }
       generate_public_id: {
