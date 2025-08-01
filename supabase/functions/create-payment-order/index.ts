@@ -34,6 +34,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { amount, relationshipId }: PaymentOrderRequest = await req.json();
 
+    console.log('Creating payment order for:', { amount, relationshipId, userId: user.id });
+
     // Verify the relationship belongs to the user and is active
     const { data: relationship, error: relationshipError } = await supabaseClient
       .from('relationships')
@@ -51,8 +53,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!relationship) {
       console.error('No valid relationship found for user:', user.id, 'relationshipId:', relationshipId);
+      
+      // Debug: Let's check what relationships exist for this user
+      const { data: debugRelationships } = await supabaseClient
+        .from('relationships')
+        .select('*')
+        .eq('renter_id', user.id);
+      
+      console.error('Available relationships for user:', debugRelationships);
       throw new Error('Invalid relationship or access denied');
     }
+
+    console.log('Valid relationship found:', relationship.id);
 
     // Create Razorpay order
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');

@@ -102,7 +102,12 @@ export const RenterPayments = () => {
         if (rentError) throw rentError;
 
         if (rentStatus && rentStatus.length > 0) {
-          setCurrentRent(rentStatus[0]);
+          // Add relationship_id to the rent status for easy access
+          const rentWithRelationship = {
+            ...rentStatus[0],
+            relationship_id: relationshipId
+          };
+          setCurrentRent(rentWithRelationship);
         } else {
           // If no rent status exists, don't create a default one - let owner set it
           console.log('No rent status found for relationship:', relationshipId);
@@ -603,11 +608,11 @@ export const RenterPayments = () => {
       )}
 
       {/* Payment Modal */}
-      {showPaymentModal && currentRent && (
+      {showPaymentModal && currentRent && rentalInfo && (
         <PaymentModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
-          amount={currentRent.current_amount}
+          amount={Number(currentRent.current_amount)}
           relationshipId={currentRent.relationship_id}
           onSuccess={handlePaymentSuccess}
         />
