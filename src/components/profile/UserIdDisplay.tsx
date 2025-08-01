@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,10 +39,6 @@ const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
           <Copy className="h-5 w-5" />
         </Button>
       </div>
-      <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded-lg border">
-        Share this unique 10-character ID with potential renters so they can connect with you easily. 
-        This ID helps maintain your privacy while allowing renters to find you.
-      </p>
     </div>
   );
 };

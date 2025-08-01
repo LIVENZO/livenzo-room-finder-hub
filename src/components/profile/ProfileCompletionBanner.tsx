@@ -17,13 +17,10 @@ const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = ({ profi
   
   if (fullyComplete) {
     return (
-      <Alert className="bg-green-50 border-green-200 mb-6">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertTitle className="text-green-700">Profile Complete</AlertTitle>
-        <AlertDescription className="text-green-600">
-          Your profile is complete and you can access all features of the application.
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center justify-center p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+        <CheckCircle2 className="h-5 w-5 text-green-600 mr-2" />
+        <span className="text-green-700 font-medium">Profile Complete</span>
+      </div>
     );
   }
   

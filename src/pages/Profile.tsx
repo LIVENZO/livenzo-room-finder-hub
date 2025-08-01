@@ -46,27 +46,11 @@ const Profile = () => {
   
   return (
     <Layout>
-      <div className="w-full min-h-screen px-4 py-6 md:px-8 lg:px-12">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="w-full min-h-screen">
+        <div className="max-w-4xl mx-auto space-y-6 px-4 py-6">
           {/* Profile Completion Banner */}
           <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
           
-          {/* Owner ID Section - Prominent Display */}
-          {isOwner && profile?.public_id && (
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
-              <CardHeader className="pb-6">
-                <CardTitle className="text-xl font-semibold text-primary">
-                  Your Owner ID
-                </CardTitle>
-                <CardDescription className="text-base text-muted-foreground leading-relaxed">
-                  Share this unique ID with renters so they can easily connect with you
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserIdDisplay publicId={profile.public_id} />
-              </CardContent>
-            </Card>
-          )}
           
           {/* Main Profile Card */}
           <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">

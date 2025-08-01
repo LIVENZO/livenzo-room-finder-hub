@@ -152,7 +152,7 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
       )}
 
       {/* Content Area - Edge-to-edge on mobile */}
-      <div className="bg-card rounded-t-3xl sm:rounded-2xl sm:mx-6 sm:mb-6 shadow-xl border-t sm:border overflow-hidden">
+      <div className="bg-card rounded-t-3xl sm:rounded-2xl shadow-xl border-t sm:border overflow-hidden min-h-[60vh]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {visibleTabs.length > 1 && (
             <div className="border-b px-6 pt-4">
