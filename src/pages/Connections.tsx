@@ -47,7 +47,7 @@ const Connections = () => {
 
   const getPageDescription = () => {
     return isOwner 
-      ? 'Manage your renters, connection requests, and communications'
+      ? 'Manage connection requests and connected renters'
       : 'Connect with your property owner to manage your rental relationship';
   };
   

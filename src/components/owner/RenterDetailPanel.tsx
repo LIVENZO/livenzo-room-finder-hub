@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
 import { Relationship } from '@/types/relationship';
 import { Document, fetchDocumentsForRelationship } from '@/services/DocumentService';
 import DocumentList from '@/components/document/DocumentList';
@@ -93,47 +93,50 @@ const RenterDetailPanel: React.FC<RenterDetailPanelProps> = ({
   const visibleTabs = getVisibleTabs();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       <RenterHeader relationship={relationship} onBack={onBack} />
 
-      {/* Show navigation buttons when in single mode */}
+      {/* Show navigation buttons when in single mode - Mobile optimized */}
       {(mode === 'documents' || mode === 'complaints') && (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {mode === 'documents' && (
             <Button
               variant="outline"
               onClick={handleSwitchToComplaints}
-              className="flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 h-11"
             >
               <AlertTriangle className="h-4 w-4" />
-              View Complaints
+              <span>View Complaints</span>
             </Button>
           )}
           {mode === 'complaints' && (
             <Button
               variant="outline"
               onClick={handleSwitchToDocuments}
-              className="flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 h-11"
             >
-              View Documents
+              <FileText className="h-4 w-4" />
+              <span>View Documents</span>
             </Button>
           )}
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className={`grid w-full grid-cols-${visibleTabs.length}`}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <TabsList className={`grid w-full ${visibleTabs.length === 1 ? 'grid-cols-1' : 
+          visibleTabs.length === 2 ? 'grid-cols-2' : 
+          visibleTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} h-11`}>
           {visibleTabs.includes('overview') && (
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
           )}
           {visibleTabs.includes('documents') && (
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="documents" className="text-sm">Documents</TabsTrigger>
           )}
           {visibleTabs.includes('complaints') && (
-            <TabsTrigger value="complaints">Complaints</TabsTrigger>
+            <TabsTrigger value="complaints" className="text-sm">Complaints</TabsTrigger>
           )}
           {visibleTabs.includes('notes') && (
-            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="notes" className="text-sm">Notes</TabsTrigger>
           )}
         </TabsList>
 
