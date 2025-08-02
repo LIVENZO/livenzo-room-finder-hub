@@ -331,18 +331,45 @@ export function useAuthMethods() {
     }
   };
 
-  const loginWithMagicLink = async (email: string, selectedRole?: string): Promise<void> => {
+  const signInWithPassword = async (email: string, password: string, selectedRole?: string): Promise<void> => {
     try {
       setIsLoading(true);
       
-      // Store the selected role for after authentication
-      if (selectedRole) {
-        localStorage.setItem('selectedRole', selectedRole);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      });
+
+      if (error) {
+        console.error('Supabase sign-in error:', error);
+        toast.error(`Sign-in failed: ${error.message}`);
+        throw error;
+      } else {
+        console.log('Sign-in successful:', data);
+        
+        // Store the selected role if provided
+        if (selectedRole) {
+          localStorage.setItem('selectedRole', selectedRole);
+        }
+        
+        toast.success('Successfully signed in!');
       }
       
-      // Send magic link using Supabase OTP
-      const { data, error } = await supabase.auth.signInWithOtp({
+    } catch (error) {
+      console.error('Sign-in error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUpWithPassword = async (email: string, password: string, selectedRole?: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
+        password: password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -352,22 +379,58 @@ export function useAuthMethods() {
       });
 
       if (error) {
-        console.error('Supabase OTP error:', error);
-        toast.error(`Failed to send magic link: ${error.message}`);
+        console.error('Supabase sign-up error:', error);
+        toast.error(`Sign-up failed: ${error.message}`);
         throw error;
       } else {
-        console.log('Magic link sent successfully:', data);
-        toast.success('Magic link sent! Please check your email and click the link to sign in.');
+        console.log('Sign-up successful:', data);
+        
+        // Store the selected role if provided
+        if (selectedRole) {
+          localStorage.setItem('selectedRole', selectedRole);
+        }
+        
+        if (data.user && !data.user.email_confirmed_at) {
+          toast.success('Account created! Please check your email to confirm your account.');
+        } else {
+          toast.success('Account created and signed in!');
+        }
       }
       
     } catch (error) {
-      console.error('Magic link error:', error);
-      toast.error('Failed to send magic link. Please try again.');
+      console.error('Sign-up error:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { login, logout, loginWithMagicLink, isLoading, setIsLoading };
+  const resetPassword = async (email: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/`,
+        }
+      );
+
+      if (error) {
+        console.error('Password reset error:', error);
+        toast.error(`Failed to send reset email: ${error.message}`);
+        throw error;
+      } else {
+        toast.success('Password reset email sent! Check your inbox.');
+      }
+      
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { login, logout, signInWithPassword, signUpWithPassword, resetPassword, isLoading, setIsLoading };
 }

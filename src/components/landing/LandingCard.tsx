@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
-import MagicLinkButton from './MagicLinkButton';
+import EmailPasswordForm from './EmailPasswordForm';
 
 interface LandingCardProps {
   userRole: string;
@@ -11,7 +11,11 @@ interface LandingCardProps {
   isLoading: boolean;
   handleGoogleLogin: () => void;
   handleFacebookLogin: () => void;
-  handleMagicLinkLogin: (email: string) => void;
+  handleEmailPasswordAuth: {
+    signIn: (email: string, password: string) => Promise<void>;
+    signUp: (email: string, password: string) => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
+  };
 }
 
 const LandingCard: React.FC<LandingCardProps> = ({
@@ -21,7 +25,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
   isLoading,
   handleGoogleLogin,
   handleFacebookLogin,
-  handleMagicLinkLogin
+  handleEmailPasswordAuth
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
@@ -38,10 +42,11 @@ const LandingCard: React.FC<LandingCardProps> = ({
         canChangeRole={canChangeRole} 
       />
       
-      <MagicLinkButton 
-        onMagicLinkSent={handleMagicLinkLogin}
+      <EmailPasswordForm 
+        onSignIn={handleEmailPasswordAuth.signIn}
+        onSignUp={handleEmailPasswordAuth.signUp}
+        onResetPassword={handleEmailPasswordAuth.resetPassword}
         isLoading={isLoading}
-        selectedRole={userRole}
       />
       
       <div className="relative">

@@ -10,7 +10,7 @@ import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
 
 const Index: React.FC = () => {
-  const { user, login, loginWithMagicLink, isLoading, session, canChangeRole } = useAuth();
+  const { user, login, signInWithPassword, signUpWithPassword, resetPassword, isLoading, session, canChangeRole } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
@@ -75,10 +75,21 @@ const Index: React.FC = () => {
     await login('facebook', userRole);
   };
 
-  const handleMagicLinkLogin = async (email: string) => {
-    console.log("Magic Link login initiated for email:", email, "with role:", userRole);
-    localStorage.setItem('selectedRole', userRole);
-    await loginWithMagicLink(email, userRole);
+  const handleEmailPasswordAuth = {
+    signIn: async (email: string, password: string) => {
+      console.log("Email sign-in initiated for:", email, "with role:", userRole);
+      localStorage.setItem('selectedRole', userRole);
+      await signInWithPassword(email, password, userRole);
+    },
+    signUp: async (email: string, password: string) => {
+      console.log("Email sign-up initiated for:", email, "with role:", userRole);
+      localStorage.setItem('selectedRole', userRole);
+      await signUpWithPassword(email, password, userRole);
+    },
+    resetPassword: async (email: string) => {
+      console.log("Password reset initiated for:", email);
+      await resetPassword(email);
+    }
   };
   
   // Show a loading state while checking for existing session
@@ -102,7 +113,7 @@ const Index: React.FC = () => {
             isLoading={isLoading}
             handleGoogleLogin={handleGoogleLogin}
             handleFacebookLogin={handleFacebookLogin}
-            handleMagicLinkLogin={handleMagicLinkLogin}
+            handleEmailPasswordAuth={handleEmailPasswordAuth}
           />
           
           <StatCards />
