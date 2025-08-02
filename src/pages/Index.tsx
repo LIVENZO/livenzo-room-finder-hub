@@ -102,7 +102,7 @@ const Index: React.FC = () => {
             isLoading={isLoading}
             handleGoogleLogin={handleGoogleLogin}
             handleFacebookLogin={handleFacebookLogin}
-            handleMagicLinkLogin={handleMagicLinkLogin}
+            handleInstantEmailLogin={handleMagicLinkLogin}
           />
           
           <StatCards />

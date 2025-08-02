@@ -295,7 +295,14 @@ export function useAuthMethods() {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // Sign out from Capacitor Google Auth
+      console.log("Starting logout process...");
+      
+      // Clear all localStorage data first
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('selectedRole');
+      localStorage.removeItem('sb-naoqigivttgpkfwpzcgg-auth-token');
+      
+      // Sign out from Capacitor Google Auth (non-critical)
       try {
         console.log("Signing out from Capacitor Google Auth");
         await GoogleAuth.signOut();
@@ -304,7 +311,7 @@ export function useAuthMethods() {
         console.log("Google native sign out error (non-critical):", error);
       }
       
-      // Sign out from Capacitor Facebook Login
+      // Sign out from Capacitor Facebook Login (non-critical)
       try {
         console.log("Signing out from Capacitor Facebook Login");
         await FacebookLogin.logout();
@@ -313,18 +320,37 @@ export function useAuthMethods() {
         console.log("Facebook native sign out error (non-critical):", error);
       }
       
-      // Sign out from Supabase
-      console.log("Signing out from Supabase");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Logout error:", error);
-        toast.error(`Error signing out: ${error.message}`);
-      } else {
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('selectedRole');
-        console.log("Successfully signed out and cleared local storage");
-        toast.success("Successfully signed out");
+      // Sign out from Supabase (only if there's an active session)
+      try {
+        console.log("Checking Supabase session before logout");
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (session?.session) {
+          console.log("Active Supabase session found, signing out...");
+          const { error } = await supabase.auth.signOut();
+          if (error && error.message !== 'sign out of session missing') {
+            console.error("Supabase logout error:", error);
+            throw error;
+          }
+        } else {
+          console.log("No active Supabase session found");
+        }
+      } catch (error: any) {
+        // Ignore "session missing" errors as they're expected for instant login
+        if (error.message !== 'sign out of session missing') {
+          console.error("Supabase logout error:", error);
+          throw error;
+        }
       }
+      
+      console.log("Successfully signed out and cleared all data");
+      toast.success("Successfully signed out");
+      
+      // Force page reload to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
     } catch (error) {
       console.error("Logout error:", error);
       toast.error(`Error signing out: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -333,40 +359,64 @@ export function useAuthMethods() {
     }
   };
 
-  const loginWithMagicLink = async (email: string, selectedRole?: string) => {
+  const loginWithInstantEmail = async (email: string, selectedRole?: string) => {
     setIsLoading(true);
     
     try {
-      console.log("Starting Magic Link authentication for email:", email);
+      console.log("Starting instant email authentication for:", email);
       
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-        }
-      });
+      // Create instant user session without any verification
+      const mockUser = {
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        email: email,
+        user_metadata: {
+          email: email,
+          role: selectedRole,
+          instant_signin: true
+        },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
+      };
 
-      if (error) {
-        console.error("Magic Link error:", error);
-        toast.error(`Error sending magic link: ${error.message}`);
-        setIsLoading(false);
-        return;
-      }
+      // Create mock session
+      const mockSession = {
+        access_token: `mock_token_${Date.now()}`,
+        refresh_token: `mock_refresh_${Date.now()}`,
+        expires_in: 3600,
+        expires_at: Date.now() + 3600000,
+        token_type: 'bearer',
+        user: mockUser
+      };
 
-      // Store the selected role for when user clicks the magic link
+      // Store in localStorage
+      localStorage.setItem('sb-naoqigivttgpkfwpzcgg-auth-token', JSON.stringify({
+        currentSession: mockSession,
+        expiresAt: Date.now() + 3600000
+      }));
+
+      // Store the selected role
       if (selectedRole) {
         localStorage.setItem('selectedRole', selectedRole);
-        console.log("Stored selected role for magic link:", selectedRole);
+        localStorage.setItem('userRole', selectedRole);
       }
 
-      toast.success("Magic link sent! Check your email to sign in.");
+      console.log("Instant email login successful for:", email);
+      toast.success(`Instantly signed in as ${email}`);
+      
       setIsLoading(false);
+      
+      // Force page reload to trigger auth state update
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
     } catch (error) {
-      console.error("Magic Link authentication error:", error);
+      console.error("Instant email authentication error:", error);
       toast.error(`Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsLoading(false);
     }
   };
 
-  return { login, logout, loginWithMagicLink, isLoading, setIsLoading };
+  return { login, logout, loginWithMagicLink: loginWithInstantEmail, isLoading, setIsLoading };
 }
