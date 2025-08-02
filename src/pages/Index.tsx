@@ -10,7 +10,7 @@ import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
 
 const Index: React.FC = () => {
-  const { user, login, isLoading, session, canChangeRole } = useAuth();
+  const { user, login, loginWithMagicLink, isLoading, session, canChangeRole } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
@@ -74,6 +74,12 @@ const Index: React.FC = () => {
     toast.info("Redirecting to Facebook sign-in...");
     await login('facebook', userRole);
   };
+
+  const handleMagicLinkLogin = async (email: string) => {
+    console.log("Magic Link login initiated for email:", email, "with role:", userRole);
+    localStorage.setItem('selectedRole', userRole);
+    await loginWithMagicLink(email, userRole);
+  };
   
   // Show a loading state while checking for existing session
   if (isLoading || checkingSession || isRedirecting) {
@@ -96,6 +102,7 @@ const Index: React.FC = () => {
             isLoading={isLoading}
             handleGoogleLogin={handleGoogleLogin}
             handleFacebookLogin={handleFacebookLogin}
+            handleMagicLinkLogin={handleMagicLinkLogin}
           />
           
           <StatCards />

@@ -6,6 +6,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (provider: string, selectedRole?: string) => void;
   logout: () => void;
+  loginWithMagicLink: (email: string, selectedRole?: string) => void;
   session: Session | null;
   userRole: string | null;
   isOwner: boolean;

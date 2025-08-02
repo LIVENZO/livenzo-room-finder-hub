@@ -8,6 +8,7 @@ export const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: () => {},
   logout: () => {},
+  loginWithMagicLink: () => {},
   session: null,
   userRole: null,
   isOwner: false,

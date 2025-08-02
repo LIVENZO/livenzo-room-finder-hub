@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
+import MagicLinkButton from './MagicLinkButton';
 
 interface LandingCardProps {
   userRole: string;
@@ -10,6 +11,7 @@ interface LandingCardProps {
   isLoading: boolean;
   handleGoogleLogin: () => void;
   handleFacebookLogin: () => void;
+  handleMagicLinkLogin: (email: string) => void;
 }
 
 const LandingCard: React.FC<LandingCardProps> = ({
@@ -18,7 +20,8 @@ const LandingCard: React.FC<LandingCardProps> = ({
   canChangeRole,
   isLoading,
   handleGoogleLogin,
-  handleFacebookLogin
+  handleFacebookLogin,
+  handleMagicLinkLogin
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
@@ -34,6 +37,22 @@ const LandingCard: React.FC<LandingCardProps> = ({
         setUserRole={setUserRole} 
         canChangeRole={canChangeRole} 
       />
+      
+      <MagicLinkButton 
+        onMagicLinkLogin={handleMagicLinkLogin}
+        isLoading={isLoading} 
+      />
+      
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
       
       <SocialLoginButtons 
         onGoogleLogin={handleGoogleLogin} 

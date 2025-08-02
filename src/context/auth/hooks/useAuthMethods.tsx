@@ -80,6 +80,41 @@ export function useAuthMethods() {
     }
   };
 
+  const loginWithMagicLink = async (email: string, selectedRole?: string) => {
+    setIsLoading(true);
+    
+    try {
+      console.log("Starting Magic Link authentication for email:", email);
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+
+      if (error) {
+        console.error("Magic Link error:", error);
+        toast.error(`Error sending magic link: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Store the selected role for when user clicks the magic link
+      if (selectedRole) {
+        localStorage.setItem('selectedRole', selectedRole);
+        console.log("Stored selected role for magic link:", selectedRole);
+      }
+
+      toast.success("Magic link sent! Check your email to sign in.");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Magic Link authentication error:", error);
+      toast.error(`Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsLoading(false);
+    }
+  };
+
   const login = async (provider: string, selectedRole?: string) => {
     setIsLoading(true);
     
@@ -333,5 +368,5 @@ export function useAuthMethods() {
     }
   };
 
-  return { login, logout, isLoading, setIsLoading };
+  return { login, logout, loginWithMagicLink, isLoading, setIsLoading };
 }
