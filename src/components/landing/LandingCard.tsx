@@ -40,7 +40,8 @@ const LandingCard: React.FC<LandingCardProps> = ({
       
       <MagicLinkButton 
         onMagicLinkLogin={handleMagicLinkLogin}
-        isLoading={isLoading} 
+        isLoading={isLoading}
+        selectedRole={userRole}
       />
       
       <div className="relative">
