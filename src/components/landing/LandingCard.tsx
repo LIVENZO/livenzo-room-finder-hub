@@ -11,7 +11,7 @@ interface LandingCardProps {
   isLoading: boolean;
   handleGoogleLogin: () => void;
   handleFacebookLogin: () => void;
-  handleInstantEmailLogin: (email: string) => void;
+  handleMagicLinkLogin: (email: string) => void;
 }
 
 const LandingCard: React.FC<LandingCardProps> = ({
@@ -21,7 +21,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
   isLoading,
   handleGoogleLogin,
   handleFacebookLogin,
-  handleInstantEmailLogin
+  handleMagicLinkLogin
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
@@ -39,7 +39,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
       />
       
       <MagicLinkButton 
-        onInstantEmailLogin={handleInstantEmailLogin}
+        onMagicLinkSent={handleMagicLinkLogin}
         isLoading={isLoading}
         selectedRole={userRole}
       />
