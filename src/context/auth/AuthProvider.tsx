@@ -23,7 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     signInWithPassword,
     signUpWithPassword,
-    resetPassword,
+    sendOTP,
+    verifyOTP,
     isLoading: authMethodsLoading,
     setIsLoading
   } = useAuthMethods();
@@ -105,7 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         signInWithPassword,
         signUpWithPassword,
-        resetPassword,
+        sendOTP,
+        verifyOTP,
       userRole: authState.userRole,
       isOwner: authState.isOwner,
       currentUser: authState.currentUser,

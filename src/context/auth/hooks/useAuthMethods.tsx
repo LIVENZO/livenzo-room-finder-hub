@@ -405,32 +405,60 @@ export function useAuthMethods() {
     }
   };
 
-  const resetPassword = async (email: string): Promise<void> => {
+  const sendOTP = async (email: string): Promise<void> => {
     try {
       setIsLoading(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        {
-          redirectTo: `${window.location.origin}/`,
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/`,
         }
-      );
+      });
 
       if (error) {
-        console.error('Password reset error:', error);
-        toast.error(`Failed to send reset email: ${error.message}`);
+        console.error('OTP send error:', error);
+        toast.error(`Failed to send OTP: ${error.message}`);
         throw error;
       } else {
-        toast.success('Password reset email sent! Check your inbox.');
+        console.log('OTP sent successfully');
       }
       
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('OTP send error:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { login, logout, signInWithPassword, signUpWithPassword, resetPassword, isLoading, setIsLoading };
+  const verifyOTP = async (email: string, token: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: token.trim(),
+        type: 'email'
+      });
+
+      if (error) {
+        console.error('OTP verification error:', error);
+        toast.error(`OTP verification failed: ${error.message}`);
+        throw error;
+      } else {
+        console.log('OTP verified successfully:', data);
+        toast.success('Successfully signed in!');
+      }
+      
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { login, logout, signInWithPassword, signUpWithPassword, sendOTP, verifyOTP, isLoading, setIsLoading };
 }

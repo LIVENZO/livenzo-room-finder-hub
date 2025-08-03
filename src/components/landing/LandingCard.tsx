@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
-import EmailPasswordForm from './EmailPasswordForm';
+import EmailOTPForm from './EmailPasswordForm';
 
 interface LandingCardProps {
   userRole: string;
@@ -11,10 +11,9 @@ interface LandingCardProps {
   isLoading: boolean;
   handleGoogleLogin: () => void;
   handleFacebookLogin: () => void;
-  handleEmailPasswordAuth: {
-    signIn: (email: string, password: string) => Promise<void>;
-    signUp: (email: string, password: string) => Promise<void>;
-    resetPassword: (email: string) => Promise<void>;
+  handleOTPAuth: {
+    sendOTP: (email: string) => Promise<void>;
+    verifyOTP: (email: string, token: string) => Promise<void>;
   };
 }
 
@@ -25,7 +24,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
   isLoading,
   handleGoogleLogin,
   handleFacebookLogin,
-  handleEmailPasswordAuth
+  handleOTPAuth
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
@@ -42,10 +41,9 @@ const LandingCard: React.FC<LandingCardProps> = ({
         canChangeRole={canChangeRole} 
       />
       
-      <EmailPasswordForm 
-        onSignIn={handleEmailPasswordAuth.signIn}
-        onSignUp={handleEmailPasswordAuth.signUp}
-        onResetPassword={handleEmailPasswordAuth.resetPassword}
+      <EmailOTPForm 
+        onSendOTP={handleOTPAuth.sendOTP}
+        onVerifyOTP={handleOTPAuth.verifyOTP}
         isLoading={isLoading}
       />
       

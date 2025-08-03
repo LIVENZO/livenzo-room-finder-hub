@@ -10,7 +10,7 @@ import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
 
 const Index: React.FC = () => {
-  const { user, login, signInWithPassword, signUpWithPassword, resetPassword, isLoading, session, canChangeRole } = useAuth();
+  const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
@@ -75,20 +75,15 @@ const Index: React.FC = () => {
     await login('facebook', userRole);
   };
 
-  const handleEmailPasswordAuth = {
-    signIn: async (email: string, password: string) => {
-      console.log("Email sign-in initiated for:", email, "with role:", userRole);
+  const handleOTPAuth = {
+    sendOTP: async (email: string) => {
+      console.log("OTP send initiated for:", email, "with role:", userRole);
       localStorage.setItem('selectedRole', userRole);
-      await signInWithPassword(email, password, userRole);
+      await sendOTP(email);
     },
-    signUp: async (email: string, password: string) => {
-      console.log("Email sign-up initiated for:", email, "with role:", userRole);
-      localStorage.setItem('selectedRole', userRole);
-      await signUpWithPassword(email, password, userRole);
-    },
-    resetPassword: async (email: string) => {
-      console.log("Password reset initiated for:", email);
-      await resetPassword(email);
+    verifyOTP: async (email: string, token: string) => {
+      console.log("OTP verification initiated for:", email, "with role:", userRole);
+      await verifyOTP(email, token);
     }
   };
   
@@ -113,7 +108,7 @@ const Index: React.FC = () => {
             isLoading={isLoading}
             handleGoogleLogin={handleGoogleLogin}
             handleFacebookLogin={handleFacebookLogin}
-            handleEmailPasswordAuth={handleEmailPasswordAuth}
+            handleOTPAuth={handleOTPAuth}
           />
           
           <StatCards />
