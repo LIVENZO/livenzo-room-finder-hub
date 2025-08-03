@@ -412,8 +412,7 @@ export function useAuthMethods() {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/`,
+          shouldCreateUser: true
         }
       });
 
