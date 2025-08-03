@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
-import EmailOTPForm from './EmailOTPForm';
+import PhoneOTPForm from './PhoneOTPForm';
 
 interface LandingCardProps {
   userRole: string;
@@ -12,8 +12,8 @@ interface LandingCardProps {
   handleGoogleLogin: () => void;
   handleFacebookLogin: () => void;
   handleOTPAuth: {
-    sendOTP: (email: string) => Promise<void>;
-    verifyOTP: (email: string, token: string) => Promise<void>;
+    sendOTP: (phoneNumber: string) => Promise<void>;
+    verifyOTP: (phoneNumber: string, token: string) => Promise<void>;
   };
 }
 
@@ -41,7 +41,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
         canChangeRole={canChangeRole} 
       />
       
-      <EmailOTPForm 
+      <PhoneOTPForm 
         onSendOTP={handleOTPAuth.sendOTP}
         onVerifyOTP={handleOTPAuth.verifyOTP}
         isLoading={isLoading}

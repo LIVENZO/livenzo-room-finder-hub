@@ -405,12 +405,12 @@ export function useAuthMethods() {
     }
   };
 
-  const sendOTP = async (email: string): Promise<void> => {
+  const sendOTP = async (phoneNumber: string): Promise<void> => {
     try {
       setIsLoading(true);
       
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        phone: phoneNumber.trim(),
         options: {
           shouldCreateUser: true
         }
@@ -432,14 +432,14 @@ export function useAuthMethods() {
     }
   };
 
-  const verifyOTP = async (email: string, token: string): Promise<void> => {
+  const verifyOTP = async (phoneNumber: string, token: string): Promise<void> => {
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
+        phone: phoneNumber.trim(),
         token: token.trim(),
-        type: 'email'
+        type: 'sms'
       });
 
       if (error) {
