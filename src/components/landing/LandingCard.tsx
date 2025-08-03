@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
-import EmailOTPForm from './EmailPasswordForm';
+import EmailOTPForm from './EmailOTPForm';
 
 interface LandingCardProps {
   userRole: string;
