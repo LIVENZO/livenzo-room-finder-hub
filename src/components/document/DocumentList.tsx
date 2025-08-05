@@ -107,86 +107,90 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
   };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Documents</CardTitle>
-        <CardDescription>
-          Manage uploaded documents
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {documents.length === 0 ? (
-          <div className="text-center p-4 text-gray-500">
-            No documents have been uploaded yet.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {documents.map((document) => (
-              <div
-                key={document.id}
-                className="border rounded-md p-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <File className="h-4 w-4" />
-                    <div>
-                      <p className="font-medium truncate max-w-[200px]">
-                        {document.file_name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {getDocumentTypeLabel(document.document_type)}
-                        </Badge>
-                        {getStatusBadge(document.status)}
+    <div className="w-full">
+      <Card className="w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Documents</CardTitle>
+          <CardDescription>
+            Manage uploaded documents
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4">
+          {documents.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground">
+              No documents have been uploaded yet.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {documents.map((document) => (
+                <div
+                  key={document.id}
+                  className="border rounded-lg p-4 bg-card"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <File className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">
+                          {document.file_name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {getDocumentTypeLabel(document.document_type)}
+                          </Badge>
+                          {getStatusBadge(document.status)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Uploaded on {format(new Date(document.created_at), 'MMM dd, yyyy')}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => viewDocument(document)}
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                    >
-                      View
-                    </Button>
                     
-                    {isOwner && document.status === 'submitted' && (
-                      <div className="flex gap-1">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="h-8 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
-                          onClick={() => handleReject(document.id)}
-                        >
-                          <X className="h-3 w-3 mr-1" /> Reject
-                        </Button>
-                        <Button 
-                          size="sm"
-                          className="h-8 bg-green-600 hover:bg-green-700"
-                          onClick={() => handleApprove(document.id)}
-                        >
-                          <Check className="h-3 w-3 mr-1" /> Approve
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => viewDocument(document)}
+                        className="text-sm"
+                      >
+                        View
+                      </Button>
+                      
+                      {isOwner && document.status === 'submitted' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-8 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                            onClick={() => handleReject(document.id)}
+                          >
+                            <X className="h-3 w-3 mr-1" /> Reject
+                          </Button>
+                          <Button 
+                            size="sm"
+                            className="h-8"
+                            onClick={() => handleApprove(document.id)}
+                          >
+                            <Check className="h-3 w-3 mr-1" /> Approve
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  
+                  {document.comments && (
+                    <div className="mt-4 text-sm bg-muted/50 p-3 rounded-md">
+                      <p className="font-medium mb-1">Comments:</p>
+                      <p className="text-muted-foreground">{document.comments}</p>
+                    </div>
+                  )}
                 </div>
-                {document.comments && (
-                  <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
-                    <p className="font-medium">Comments:</p>
-                    <p className="text-gray-700">{document.comments}</p>
-                  </div>
-                )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Uploaded on {format(new Date(document.created_at), 'MMM dd, yyyy')}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

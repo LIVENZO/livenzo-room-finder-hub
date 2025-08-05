@@ -20,17 +20,21 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   onDocumentStatusChanged
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <DocumentUpload 
-        userId={currentUserId} 
-        relationshipId={relationshipId}
-        onDocumentUploaded={onDocumentUploaded}
-      />
-      <DocumentList 
-        documents={documents}
-        isOwner={false}
-        onDocumentStatusChanged={onDocumentStatusChanged}
-      />
+    <div className="min-h-screen bg-background p-4 space-y-6">
+      <div className="max-w-4xl mx-auto">
+        <DocumentUpload 
+          userId={currentUserId} 
+          relationshipId={relationshipId}
+          onDocumentUploaded={onDocumentUploaded}
+        />
+      </div>
+      <div className="max-w-4xl mx-auto">
+        <DocumentList 
+          documents={documents}
+          isOwner={false}
+          onDocumentStatusChanged={onDocumentStatusChanged}
+        />
+      </div>
     </div>
   );
 };

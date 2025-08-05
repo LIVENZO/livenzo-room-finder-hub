@@ -15,7 +15,7 @@ import { RefreshCw } from 'lucide-react';
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { filteredRooms, filters, setFilters, isLoading, refreshRooms } = useRooms();
+  const { filteredRooms, filters, setFilters, isLoading, refreshRooms, clearAllFilters } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [location, setLocation] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -55,12 +55,15 @@ const FindRoom: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Find Your Perfect Room</h1>
           <Button 
-            onClick={refreshRooms}
+            onClick={() => {
+              clearAllFilters();
+              refreshRooms();
+            }}
             disabled={isLoading}
             className="flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            Show All Rooms
           </Button>
         </div>
         

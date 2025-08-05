@@ -7,6 +7,10 @@ export const useRoomFilters = (rooms: Room[]) => {
     maxPrice: 10000 // Set default max price to 10000
   });
 
+  const clearAllFilters = () => {
+    setFilters({});
+  };
+
   // Filter rooms based on user criteria
   const filteredRooms = useMemo(() => {
     return rooms.filter(room => {
@@ -49,5 +53,5 @@ export const useRoomFilters = (rooms: Room[]) => {
     });
   }, [rooms, filters]);
 
-  return { filters, setFilters, filteredRooms };
+  return { filters, setFilters, filteredRooms, clearAllFilters };
 };

@@ -51,7 +51,7 @@ const RenterComplaints: React.FC<RenterComplaintsProps> = ({ relationshipId }) =
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto px-4">
+    <div className="space-y-6 w-full">
       <ComplaintForm 
         relationshipId={relationshipId}
         ownerId={ownerId}

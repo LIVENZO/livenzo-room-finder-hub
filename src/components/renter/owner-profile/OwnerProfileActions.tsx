@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   FileText, 
-  MessageSquare, 
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,11 +24,6 @@ const OwnerProfileActions: React.FC<OwnerProfileActionsProps> = ({
     navigate(`/connections/${relationship.id}`);
   };
 
-  const handleChatWithOwner = () => {
-    if (isDisconnected) return;
-    navigate(`/chats/${relationship.chat_room_id}`);
-  };
-
   const handleRaiseComplaint = () => {
     if (isDisconnected) return;
     // For now, open chat - can be enhanced later with a dedicated complaint system
@@ -37,7 +31,7 @@ const OwnerProfileActions: React.FC<OwnerProfileActionsProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <Button 
         onClick={handleViewDocuments}
         variant="outline" 
@@ -56,16 +50,6 @@ const OwnerProfileActions: React.FC<OwnerProfileActionsProps> = ({
       >
         <AlertCircle className="h-6 w-6" />
         <span>Raise a Complaint</span>
-      </Button>
-      
-      <Button 
-        onClick={handleChatWithOwner}
-        variant="outline" 
-        className="h-16 flex-col space-y-2"
-        disabled={isDisconnected}
-      >
-        <MessageSquare className="h-6 w-6" />
-        <span>Chat with Owner</span>
       </Button>
     </div>
   );
