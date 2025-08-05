@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
 import PhoneOTPForm from './PhoneOTPForm';
-
 interface LandingCardProps {
   userRole: string;
   setUserRole: (role: string) => void;
@@ -16,7 +14,6 @@ interface LandingCardProps {
     verifyOTP: (phoneNumber: string, token: string) => Promise<void>;
   };
 }
-
 const LandingCard: React.FC<LandingCardProps> = ({
   userRole,
   setUserRole,
@@ -26,26 +23,15 @@ const LandingCard: React.FC<LandingCardProps> = ({
   handleFacebookLogin,
   handleOTPAuth
 }) => {
-  return (
-    <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
+  return <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
       <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-semibold">Welcome to Livenzo</h2>
-        <p className="text-gray-500">
-          Connect with room owners or find tenants for your property.
-        </p>
+        
+        
       </div>
       
-      <RoleSelector 
-        userRole={userRole} 
-        setUserRole={setUserRole} 
-        canChangeRole={canChangeRole} 
-      />
+      <RoleSelector userRole={userRole} setUserRole={setUserRole} canChangeRole={canChangeRole} />
       
-      <PhoneOTPForm 
-        onSendOTP={handleOTPAuth.sendOTP}
-        onVerifyOTP={handleOTPAuth.verifyOTP}
-        isLoading={isLoading}
-      />
+      <PhoneOTPForm onSendOTP={handleOTPAuth.sendOTP} onVerifyOTP={handleOTPAuth.verifyOTP} isLoading={isLoading} />
       
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -58,17 +44,9 @@ const LandingCard: React.FC<LandingCardProps> = ({
         </div>
       </div>
       
-      <SocialLoginButtons 
-        onGoogleLogin={handleGoogleLogin} 
-        onFacebookLogin={handleFacebookLogin}
-        isLoading={isLoading} 
-      />
+      <SocialLoginButtons onGoogleLogin={handleGoogleLogin} onFacebookLogin={handleFacebookLogin} isLoading={isLoading} />
       
-      <div className="text-sm text-gray-500">
-        By continuing, you agree to our Terms of Service and Privacy Policy.
-      </div>
-    </div>
-  );
+      
+    </div>;
 };
-
 export default LandingCard;
