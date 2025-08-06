@@ -289,7 +289,7 @@ const AnonymousChat = () => {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Can't find the perfect PG? Chat with a fellow Kotayan who's already living there!</h2>
+                <h2 className="text-2xl font-bold text-foreground">Talk to a Fellow Kotayan</h2>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   Connect anonymously with other renters. Share experiences, ask questions, or just chat!
                 </p>
