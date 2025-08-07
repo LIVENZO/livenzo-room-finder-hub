@@ -47,13 +47,13 @@ const Profile = () => {
   return (
     <Layout>
       <div className="w-full h-full min-h-screen">
-        <div className="w-full space-y-6 p-4">
+        <div className="w-full space-y-6">
           {/* Profile Completion Banner */}
           <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
           
           
           {/* Main Profile Card */}
-          <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">
+          <Card className="shadow-none border-0 bg-transparent w-full">
             <CardHeader className="pb-8 text-center md:text-left">
               <CardTitle className="text-2xl font-bold tracking-tight">
                 Your Profile

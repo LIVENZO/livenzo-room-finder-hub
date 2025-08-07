@@ -300,7 +300,7 @@ export const RenterPayments = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden px-1 sm:px-0">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Rent Payments</h2>

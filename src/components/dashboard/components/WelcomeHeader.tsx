@@ -12,7 +12,7 @@ const WelcomeHeader: React.FC = () => {
         <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">
           Property Owner Dashboard
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 w-full">
           Manage your properties, connect with renters, and grow your rental business with ease.
         </p>
       </div>

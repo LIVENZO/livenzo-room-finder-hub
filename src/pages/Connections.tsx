@@ -53,8 +53,8 @@ const Connections = () => {
   
   return (
     <Layout>
-      <div className="w-full h-full p-6">
-        <div className="mb-8">
+      <div className="w-full h-full">
+        <div className="mb-6 px-4">
           <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
           <p className="text-gray-500">{getPageDescription()}</p>
         </div>

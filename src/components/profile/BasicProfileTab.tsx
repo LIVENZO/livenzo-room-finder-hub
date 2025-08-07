@@ -41,7 +41,7 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
       </div>
       
       {/* Profile Form Section */}
-      <div className="max-w-2xl mx-auto">
+      <div className="w-full">
         <ProfileForm
           formValues={formValues}
           profile={profile}
@@ -51,7 +51,7 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
 
       {/* Owner ID Section */}
       {profile?.public_id && (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full">
           <div className="bg-muted/30 rounded-lg p-6 border">
             <UserIdDisplay publicId={profile.public_id} />
           </div>

@@ -45,7 +45,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
   }
 
   return (
-    <div className="w-full h-full space-y-6 p-4">
+    <div className="w-full h-full space-y-6">
       {/* Page Header */}
       <div className="text-center space-y-4">
         <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
