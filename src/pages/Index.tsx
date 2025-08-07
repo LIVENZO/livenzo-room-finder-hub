@@ -94,24 +94,28 @@ const Index: React.FC = () => {
   
   return (
     <Layout hideNav>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
-        <div className="max-w-md w-full mx-auto text-center space-y-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-primary">Livenzo</h1>
-            <p className="text-xl text-gray-600">Find Your Perfect Room Today</p>
+      <div className="w-full h-full min-h-screen flex flex-col justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="w-full flex-1 flex flex-col justify-center px-6 py-8 space-y-8">
+          <div className="space-y-3 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary">Livenzo</h1>
+            <p className="text-xl md:text-2xl text-gray-600">Find Your Perfect Room Today</p>
           </div>
           
-          <LandingCard 
-            userRole={userRole}
-            setUserRole={setUserRole}
-            canChangeRole={canChangeRole}
-            isLoading={isLoading}
-            handleGoogleLogin={handleGoogleLogin}
-            handleFacebookLogin={handleFacebookLogin}
-            handleOTPAuth={handleOTPAuth}
-          />
+          <div className="w-full">
+            <LandingCard 
+              userRole={userRole}
+              setUserRole={setUserRole}
+              canChangeRole={canChangeRole}
+              isLoading={isLoading}
+              handleGoogleLogin={handleGoogleLogin}
+              handleFacebookLogin={handleFacebookLogin}
+              handleOTPAuth={handleOTPAuth}
+            />
+          </div>
           
-          <StatCards />
+          <div className="w-full">
+            <StatCards />
+          </div>
         </div>
       </div>
     </Layout>
