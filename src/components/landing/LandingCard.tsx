@@ -23,7 +23,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
   handleFacebookLogin,
   handleOTPAuth
 }) => {
-  return <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6 mx-auto max-w-sm">
+  return <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
       <div className="space-y-2 text-center">
         
         

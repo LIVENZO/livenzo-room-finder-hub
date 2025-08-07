@@ -34,7 +34,7 @@ const Profile = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="w-full min-h-screen flex items-center justify-center px-4">
+        <div className="w-full h-full min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
             <p className="text-lg text-muted-foreground">Loading your profile...</p>
@@ -46,8 +46,8 @@ const Profile = () => {
   
   return (
     <Layout>
-      <div className="w-full min-h-screen">
-        <div className="max-w-4xl mx-auto space-y-6 px-4 py-6">
+      <div className="w-full h-full min-h-screen">
+        <div className="w-full space-y-6 p-4">
           {/* Profile Completion Banner */}
           <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
           
@@ -90,7 +90,7 @@ const Profile = () => {
                   </div>
                   
                   {/* Profile Form Section */}
-                  <div className="max-w-2xl mx-auto">
+                  <div className="w-full">
                     <ProfileForm
                       formValues={formValues}
                       profile={profile}
@@ -100,7 +100,7 @@ const Profile = () => {
 
                   {/* Room Number Display */}
                   {!isOwner && formValues.roomNumber && (
-                    <div className="max-w-2xl mx-auto">
+                    <div className="w-full">
                       <Card className="bg-secondary/30 border-secondary shadow-sm">
                         <CardContent className="p-6">
                           <div className="text-sm font-semibold text-secondary-foreground mb-2 uppercase tracking-wide">

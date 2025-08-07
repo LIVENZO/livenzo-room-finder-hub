@@ -20,7 +20,7 @@ const Connections = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="w-full h-full p-6">
           <div className="text-center p-8">
             <p className="text-lg">Loading...</p>
           </div>
@@ -32,7 +32,7 @@ const Connections = () => {
   if (!user?.id) {
     return (
       <Layout>
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="w-full h-full p-6">
           <div className="text-center p-8">
             <p className="text-lg">Please login to manage connections</p>
           </div>
@@ -53,7 +53,7 @@ const Connections = () => {
   
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="w-full h-full p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
           <p className="text-gray-500">{getPageDescription()}</p>

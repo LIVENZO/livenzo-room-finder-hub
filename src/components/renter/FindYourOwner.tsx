@@ -45,7 +45,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="w-full h-full space-y-6 p-4">
       {/* Page Header */}
       <div className="text-center space-y-4">
         <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
@@ -55,7 +55,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
         <h1 className="text-3xl font-bold text-gray-900">
           {declinedConnections.length > 0 ? "Connect with a New Owner" : "Find Your Owner"}
         </h1>
-        <p className="text-lg text-gray-600 max-w-md mx-auto">
+        <p className="text-lg text-gray-600">
           {declinedConnections.length > 0 
             ? "You've successfully disconnected from your previous owner. Enter the new owner's ID to connect again."
             : "Search for your PG/Hostel owner using their unique 10-character Owner ID"

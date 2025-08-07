@@ -57,7 +57,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto py-8">
+      <div className="w-full h-full p-6">
         <div className="text-center">
           <p className="text-lg">Loading renters...</p>
         </div>
@@ -66,7 +66,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-0">
+    <div className="w-full h-full space-y-6 p-4">
 
       <Tabs defaultValue="requests" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
