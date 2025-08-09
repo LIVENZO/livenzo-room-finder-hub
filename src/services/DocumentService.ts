@@ -56,7 +56,7 @@ export const uploadDocument = async (
     const hasPermission = await validateUserPermission(
       userId, 
       'write', 
-      'document', 
+      'relationship', 
       relationshipId
     );
     
