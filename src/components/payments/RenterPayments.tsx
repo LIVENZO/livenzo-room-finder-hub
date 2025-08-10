@@ -574,7 +574,7 @@ export const RenterPayments = () => {
                     </div>
                   )}
 
-                  {electricityOption === 'owner' && (
+                   {electricityOption === 'owner' && (
                     <div className="p-4 bg-white rounded-lg border border-orange-200">
                       <div className="text-sm text-gray-600 mb-3">
                         Your PG owner will calculate the electricity bill separately. 
@@ -583,6 +583,21 @@ export const RenterPayments = () => {
                       <div className="text-xs text-orange-600">
                         ✓ Owner will handle electricity billing
                       </div>
+                      <label className="block mt-3">
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">
+                          Electricity Bill Amount (₹) - Optional
+                        </span>
+                        <input
+                          type="number"
+                          value={electricityAmount || ''}
+                          onChange={(e) => setElectricityAmount(Number(e.target.value) || 0)}
+                          placeholder="Enter amount if known"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">
+                          You can add the electricity amount if your owner has told you the amount
+                        </div>
+                      </label>
                     </div>
                   )}
                 </CardContent>
