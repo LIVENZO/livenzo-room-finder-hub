@@ -17,7 +17,10 @@ import {
   Download, 
   CheckCircle, 
   Clock,
-  XCircle
+  XCircle,
+  Camera,
+  Calculator,
+  Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, isAfter, isBefore, addDays } from "date-fns";
@@ -66,6 +69,9 @@ export const RenterPayments = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [electricityOption, setElectricityOption] = useState<'upload' | 'owner' | null>(null);
+  const [electricityAmount, setElectricityAmount] = useState<number>(0);
+  const [meterPhoto, setMeterPhoto] = useState<File | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -229,7 +235,7 @@ export const RenterPayments = () => {
         ====================
         Payment ID: ${paymentId}
         Date: ${new Date().toLocaleDateString()}
-        Amount: ₹${currentRent?.current_amount.toLocaleString()}
+        Amount: ₹${((currentRent?.current_amount || 0) + electricityAmount).toLocaleString()}
         Property: ${rentalInfo?.propertyName}
         
         Thank you for your payment!
@@ -255,6 +261,10 @@ export const RenterPayments = () => {
   const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
     toast({ description: "Payment successful!" });
+    // Reset electricity options after successful payment
+    setElectricityOption(null);
+    setElectricityAmount(0);
+    setMeterPhoto(null);
     fetchCurrentRent();
     fetchPaymentStats();
     fetchRecentPayments();
@@ -480,12 +490,119 @@ export const RenterPayments = () => {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Electricity Bill Section */}
+            {currentRent.status !== 'paid' && (
+              <Card className="mb-6 border-orange-200 bg-orange-50">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
+                      <Zap className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-orange-800">Electricity Bill</CardTitle>
+                      <CardDescription className="text-orange-600">
+                        Please choose how to handle your electricity bill
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button
+                      variant={electricityOption === 'upload' ? 'default' : 'outline'}
+                      className={cn(
+                        "h-auto p-4 flex flex-col gap-2",
+                        electricityOption === 'upload' 
+                          ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                          : 'border-orange-300 hover:bg-orange-100'
+                      )}
+                      onClick={() => setElectricityOption('upload')}
+                    >
+                      <Camera className="h-6 w-6" />
+                      <span className="font-medium">Upload Meter Photo</span>
+                      <span className="text-xs opacity-80">Take a photo of your meter reading</span>
+                    </Button>
+                    
+                    <Button
+                      variant={electricityOption === 'owner' ? 'default' : 'outline'}
+                      className={cn(
+                        "h-auto p-4 flex flex-col gap-2",
+                        electricityOption === 'owner' 
+                          ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                          : 'border-orange-300 hover:bg-orange-100'
+                      )}
+                      onClick={() => setElectricityOption('owner')}
+                    >
+                      <Calculator className="h-6 w-6" />
+                      <span className="font-medium">Owner Will Calculate</span>
+                      <span className="text-xs opacity-80">PG owner calculates separately</span>
+                    </Button>
+                  </div>
+
+                  {electricityOption === 'upload' && (
+                    <div className="space-y-3 p-4 bg-white rounded-lg border border-orange-200">
+                      <label className="block">
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">
+                          Upload Meter Photo
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(e) => setMeterPhoto(e.target.files?.[0] || null)}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                        />
+                      </label>
+                      {meterPhoto && (
+                        <div className="text-sm text-green-600 flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          Photo selected: {meterPhoto.name}
+                        </div>
+                      )}
+                      <label className="block">
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">
+                          Electricity Bill Amount (₹)
+                        </span>
+                        <input
+                          type="number"
+                          value={electricityAmount || ''}
+                          onChange={(e) => setElectricityAmount(Number(e.target.value) || 0)}
+                          placeholder="Enter amount"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {electricityOption === 'owner' && (
+                    <div className="p-4 bg-white rounded-lg border border-orange-200">
+                      <div className="text-sm text-gray-600 mb-3">
+                        Your PG owner will calculate the electricity bill separately. 
+                        You can proceed with just the rent payment.
+                      </div>
+                      <div className="text-xs text-orange-600">
+                        ✓ Owner will handle electricity billing
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <div>
                 <p className="text-2xl font-bold">
-                  ₹{currentRent.current_amount.toLocaleString()}
+                  ₹{(currentRent.current_amount + electricityAmount).toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-600">Amount Due</p>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>Rent: ₹{currentRent.current_amount.toLocaleString()}</div>
+                  {electricityAmount > 0 && (
+                    <div className="text-orange-600">
+                      Electricity: ₹{electricityAmount.toLocaleString()}
+                    </div>
+                  )}
+                  <div className="font-medium">Total Amount Due</div>
+                </div>
               </div>
               <div className="text-left sm:text-right">
                 <p className="text-sm text-gray-600">Days {isAfter(new Date(currentRent.due_date), new Date()) ? 'remaining' : 'overdue'}</p>
@@ -494,40 +611,44 @@ export const RenterPayments = () => {
                 </p>
               </div>
             </div>
-            
-            {currentRent.status !== 'paid' && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  className="flex-1"
-                  onClick={() => setShowPaymentModal(true)}
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Pay Now
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleMarkAsPaid(currentRent.id)}
-                  disabled={markingAsPaid}
-                  className="w-full sm:w-auto"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {markingAsPaid ? 'Marking...' : 'Mark as Paid'}
-                </Button>
-              </div>
-            )}
 
-            {currentRent.status === 'paid' && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {currentRent.status !== 'paid' && electricityOption && (
+                <>
+                  <Button 
+                    onClick={() => setShowPaymentModal(true)}
+                    className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Proceed to Pay
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleMarkAsPaid(currentRent.id)}
+                    disabled={markingAsPaid}
+                    className="flex-1 sm:flex-none"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {markingAsPaid ? 'Marking...' : 'Mark as Paid'}
+                  </Button>
+                </>
+              )}
+              {currentRent.status !== 'paid' && !electricityOption && (
+                <div className="text-sm text-orange-600 text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  Please select an electricity bill option above to proceed with payment
+                </div>
+              )}
+              {currentRent.status === 'paid' && (
+                <Button 
                   variant="outline"
                   onClick={() => downloadReceipt(currentRent.id)}
-                  className="w-full sm:w-auto"
+                  className="flex-1 sm:flex-none"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download Receipt
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -608,15 +729,13 @@ export const RenterPayments = () => {
       )}
 
       {/* Payment Modal */}
-      {showPaymentModal && currentRent && rentalInfo && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          amount={Number(currentRent.current_amount)}
-          relationshipId={currentRent.relationship_id}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={((currentRent?.current_amount || 0) + electricityAmount)}
+        relationshipId={currentRent?.relationship_id || ''}
+      />
     </div>
   );
 };
