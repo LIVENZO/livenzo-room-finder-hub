@@ -280,15 +280,24 @@ export const RenterPayments = () => {
   const handleElectricityOptionSelect = (option: 'upload' | 'owner') => {
     setElectricityOption(option);
     setShowElectricityDialog(false);
-    setShowPaymentModal(true);
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setMeterPhoto(file);
-      toast({ description: "Meter photo uploaded successfully!" });
+    
+    if (option === 'upload') {
+      // Trigger file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          setMeterPhoto(file);
+          toast({ description: "Meter photo uploaded successfully!" });
+        }
+      };
+      input.click();
     }
+    
+    setShowPaymentModal(true);
   };
 
   const handleMarkAsPaid = async (rentId: string) => {
@@ -511,40 +520,6 @@ export const RenterPayments = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {/* Electricity Amount Display */}
-            {electricityOption && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium text-orange-800">Electricity Bill</span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {electricityOption === 'upload' ? '📸 Meter photo uploaded' : '🧾 Owner will calculate'}
-                  {electricityAmount > 0 && (
-                    <span className="ml-2 font-medium text-orange-700">
-                      • ₹{electricityAmount.toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                {electricityOption && (
-                  <div className="mt-3">
-                    <label className="block">
-                      <span className="text-sm font-medium text-gray-700 mb-2 block">
-                        Electricity Bill Amount (₹)
-                      </span>
-                      <input
-                        type="number"
-                        value={electricityAmount || ''}
-                        onChange={(e) => setElectricityAmount(Number(e.target.value) || 0)}
-                        placeholder="Enter electricity bill amount"
-                        className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <div>
                 <p className="text-2xl font-bold">
@@ -680,62 +655,135 @@ export const RenterPayments = () => {
         </div>
       )}
 
-      {/* Electricity Options Dialog */}
+      {/* Modern Electricity Options Dialog */}
       <Dialog open={showElectricityDialog} onOpenChange={setShowElectricityDialog}>
-        <DialogContent className="sm:max-w-md mx-4">
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent">
-              Electricity Bill Setup
-            </DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Choose how you'd like to handle your electricity bill
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <Button
-              onClick={() => handleElectricityOptionSelect('upload')}
-              className="w-full h-20 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl flex flex-col gap-2 transition-all duration-200 transform hover:scale-105"
-            >
-              <Camera className="h-8 w-8" />
-              <span className="font-semibold text-lg">📸 Upload My Meter Photo</span>
-              <span className="text-xs opacity-90">Take a photo of your meter reading</span>
-            </Button>
+        <DialogContent className="sm:max-w-md mx-4 p-0 border-0 bg-transparent shadow-none">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-6 shadow-2xl border border-slate-200/50">
+            <DialogHeader className="text-center mb-6">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+                Electricity Bill Setup
+              </DialogTitle>
+              <DialogDescription className="text-slate-600 mt-2 text-base">
+                Choose how you'd like to handle your electricity bill
+              </DialogDescription>
+            </DialogHeader>
             
-            <Button
-              onClick={() => handleElectricityOptionSelect('owner')}
-              className="w-full h-20 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl flex flex-col gap-2 transition-all duration-200 transform hover:scale-105"
-            >
-              <Calculator className="h-8 w-8" />
-              <span className="font-semibold text-lg">🧾 Owner Will Send Bill</span>
-              <span className="text-xs opacity-90">PG owner calculates separately</span>
-            </Button>
+            <div className="space-y-4">
+              <Button
+                onClick={() => handleElectricityOptionSelect('upload')}
+                className="w-full h-16 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                style={{ minHeight: '64px' }}
+              >
+                <div className="flex-shrink-0">
+                  <Camera className="h-8 w-8" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-lg">📸 Upload My Meter Photo</div>
+                  <div className="text-sm opacity-90">Take a photo of your meter reading</div>
+                </div>
+              </Button>
+              
+              <Button
+                onClick={() => handleElectricityOptionSelect('owner')}
+                className="w-full h-16 bg-gradient-to-br from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-800 rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border border-slate-300"
+                style={{ minHeight: '64px' }}
+              >
+                <div className="flex-shrink-0">
+                  <Calculator className="h-8 w-8" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-lg">🧾 Owner Will Send Bill</div>
+                  <div className="text-sm opacity-70">PG owner calculates separately</div>
+                </div>
+              </Button>
+            </div>
           </div>
-
-          {/* Hidden file input for photo upload */}
-          <input
-            type="file"
-            ref={(input) => {
-              if (input && electricityOption === 'upload') {
-                input.click();
-              }
-            }}
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
         </DialogContent>
       </Dialog>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
-        amount={((currentRent?.current_amount || 0) + electricityAmount)}
-        relationshipId={currentRent?.relationship_id || ''}
-      />
+      {/* Payment Modal with Electricity Amount Input */}
+      {showPaymentModal && (
+        <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+          <DialogContent className="sm:max-w-md mx-4">
+            <DialogHeader>
+              <DialogTitle>Complete Payment</DialogTitle>
+              <DialogDescription>
+                Add electricity bill amount and proceed with payment
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6 py-4">
+              {/* Electricity Option Display */}
+              <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-800">Electricity Bill</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {electricityOption === 'upload' ? '📸 Meter photo will be uploaded' : '🧾 Owner will calculate bill'}
+                  {meterPhoto && (
+                    <div className="mt-2 text-green-600 font-medium">
+                      ✓ Photo uploaded: {meterPhoto.name}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Electricity Amount Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Electricity Bill Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  value={electricityAmount || ''}
+                  onChange={(e) => setElectricityAmount(Number(e.target.value) || 0)}
+                  placeholder="Enter electricity bill amount"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg"
+                />
+              </div>
+
+              {/* Total Amount Display */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-sm text-blue-700 mb-1">Total Payment Amount</div>
+                <div className="text-2xl font-bold text-blue-800">
+                  ₹{((currentRent?.current_amount || 0) + electricityAmount).toLocaleString()}
+                </div>
+                <div className="text-sm text-blue-600 mt-1">
+                  Rent: ₹{(currentRent?.current_amount || 0).toLocaleString()} + 
+                  Electricity: ₹{electricityAmount.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <PaymentModal
+                  isOpen={false}
+                  onClose={() => setShowPaymentModal(false)}
+                  onSuccess={handlePaymentSuccess}
+                  amount={((currentRent?.current_amount || 0) + electricityAmount)}
+                  relationshipId={currentRent?.relationship_id || ''}
+                  trigger={
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Proceed to Pay
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
