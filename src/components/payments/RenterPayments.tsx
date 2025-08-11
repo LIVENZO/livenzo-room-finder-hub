@@ -764,21 +764,13 @@ export const RenterPayments = () => {
                 >
                   Cancel
                 </Button>
-                <PaymentModal
-                  isOpen={false}
-                  onClose={() => setShowPaymentModal(false)}
-                  onSuccess={handlePaymentSuccess}
-                  amount={((currentRent?.current_amount || 0) + electricityAmount)}
-                  relationshipId={currentRent?.relationship_id || ''}
-                  trigger={
-                    <Button
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Proceed to Pay
-                    </Button>
-                  }
-                />
+                <Button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Proceed to Pay
+                </Button>
               </div>
             </div>
           </DialogContent>
