@@ -312,6 +312,45 @@ export type Database = {
           },
         ]
       }
+      meter_photos: {
+        Row: {
+          billing_month: string
+          created_at: string
+          file_size: number
+          id: string
+          owner_id: string
+          photo_name: string
+          photo_url: string
+          relationship_id: string
+          renter_id: string
+          updated_at: string
+        }
+        Insert: {
+          billing_month?: string
+          created_at?: string
+          file_size: number
+          id?: string
+          owner_id: string
+          photo_name: string
+          photo_url: string
+          relationship_id: string
+          renter_id: string
+          updated_at?: string
+        }
+        Update: {
+          billing_month?: string
+          created_at?: string
+          file_size?: number
+          id?: string
+          owner_id?: string
+          photo_name?: string
+          photo_url?: string
+          relationship_id?: string
+          renter_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notices: {
         Row: {
           archived: boolean | null
@@ -665,6 +704,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           house_number: string | null
           id: string
@@ -686,9 +726,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           house_number?: string | null
-          id: string
+          id?: string
           is_owner_profile_complete?: boolean | null
           location_latitude?: number | null
           location_longitude?: number | null
@@ -707,6 +748,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           house_number?: string | null
           id?: string

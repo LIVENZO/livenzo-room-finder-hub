@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadMeterPhoto } from '@/services/MeterPhotoService';
+import { toast as toastNotification } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +76,8 @@ export const RenterPayments = () => {
   const [electricityOption, setElectricityOption] = useState<'upload' | 'owner' | null>(null);
   const [electricityAmount, setElectricityAmount] = useState<number>(0);
   const [meterPhoto, setMeterPhoto] = useState<File | null>(null);
+  const [meterPhotoUrl, setMeterPhotoUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -277,7 +281,7 @@ export const RenterPayments = () => {
     setShowElectricityDialog(true);
   };
 
-  const handleElectricityOptionSelect = (option: 'upload' | 'owner') => {
+  const handleElectricityOptionSelect = async (option: 'upload' | 'owner') => {
     setElectricityOption(option);
     setShowElectricityDialog(false);
     
@@ -287,11 +291,36 @@ export const RenterPayments = () => {
       input.type = 'file';
       input.accept = 'image/*';
       input.capture = 'environment';
-      input.onchange = (e) => {
+      input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           setMeterPhoto(file);
-          toast({ description: "Meter photo uploaded successfully!" });
+          setIsUploading(true);
+          
+          // Upload meter photo immediately
+          if (currentRent?.relationship_id && user?.id) {
+            // Get owner ID from relationship
+            const { data: relationship } = await supabase
+              .from('relationships')
+              .select('owner_id')
+              .eq('id', currentRent.relationship_id)
+              .single();
+              
+            if (relationship?.owner_id) {
+              const photoUrl = await uploadMeterPhoto(
+                file,
+                currentRent.relationship_id,
+                user.id,
+                relationship.owner_id
+              );
+              
+              if (photoUrl) {
+                setMeterPhotoUrl(photoUrl);
+                toastNotification.success('✓ Meter photo uploaded successfully!');
+              }
+            }
+          }
+          setIsUploading(false);
         }
       };
       input.click();
@@ -724,6 +753,20 @@ export const RenterPayments = () => {
                   {meterPhoto && (
                     <div className="mt-2 text-green-600 font-medium">
                       ✓ Photo uploaded: {meterPhoto.name}
+                      {meterPhotoUrl && (
+                        <div className="mt-1">
+                          <img 
+                            src={meterPhotoUrl} 
+                            alt="Meter photo" 
+                            className="w-20 h-20 object-cover rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {isUploading && (
+                    <div className="mt-2 text-blue-600 font-medium">
+                      📤 Uploading meter photo...
                     </div>
                   )}
                 </div>
