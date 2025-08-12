@@ -843,6 +843,46 @@ export type Database = {
           archived: boolean
         }[]
       }
+      get_room_details_for_authenticated: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          images: string[]
+          price: number
+          location: string
+          facilities: Json
+          owner_id: string
+          owner_phone: string
+          created_at: string
+          available: boolean
+          location_latitude: number
+          location_longitude: number
+          house_no: string
+          house_name: string
+        }[]
+      }
+      get_rooms_public: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          images: string[]
+          price: number
+          location: string
+          facilities: Json
+          owner_id: string
+          owner_phone: string
+          created_at: string
+          available: boolean
+          location_latitude: number
+          location_longitude: number
+          house_no: string
+          house_name: string
+        }[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
