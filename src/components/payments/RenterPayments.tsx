@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMeterPhoto } from '@/services/MeterPhotoService';
+import { MeterPhotoUpload } from '@/components/ui/MeterPhotoUpload';
 import { toast as toastNotification } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,11 +74,13 @@ export const RenterPayments = () => {
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showElectricityDialog, setShowElectricityDialog] = useState(false);
+  const [showMeterUpload, setShowMeterUpload] = useState(false);
   const [electricityOption, setElectricityOption] = useState<'upload' | 'owner' | null>(null);
   const [electricityAmount, setElectricityAmount] = useState<number>(0);
   const [meterPhoto, setMeterPhoto] = useState<File | null>(null);
   const [meterPhotoUrl, setMeterPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeRelationship, setActiveRelationship] = useState<any | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -102,7 +105,9 @@ export const RenterPayments = () => {
       if (relError) throw relError;
 
       if (relationships && relationships.length > 0) {
-        const relationshipId = relationships[0].id;
+        const relationship = relationships[0];
+        const relationshipId = relationship.id;
+        setActiveRelationship(relationship);
 
         // Get current rent status
         const { data: rentStatus, error: rentError } = await supabase
@@ -283,49 +288,22 @@ export const RenterPayments = () => {
 
   const handleElectricityOptionSelect = async (option: 'upload' | 'owner') => {
     setElectricityOption(option);
-    setShowElectricityDialog(false);
     
     if (option === 'upload') {
-      // Trigger file input
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-      input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          setMeterPhoto(file);
-          setIsUploading(true);
-          
-          // Upload meter photo immediately
-          if (currentRent?.relationship_id && user?.id) {
-            // Get owner ID from relationship
-            const { data: relationship } = await supabase
-              .from('relationships')
-              .select('owner_id')
-              .eq('id', currentRent.relationship_id)
-              .single();
-              
-            if (relationship?.owner_id) {
-              const photoUrl = await uploadMeterPhoto(
-                file,
-                currentRent.relationship_id,
-                user.id,
-                relationship.owner_id
-              );
-              
-              if (photoUrl) {
-                setMeterPhotoUrl(photoUrl);
-                toastNotification.success('✓ Meter photo uploaded successfully!');
-              }
-            }
-          }
-          setIsUploading(false);
-        }
-      };
-      input.click();
+      // Close electricity dialog and show meter upload
+      setShowElectricityDialog(false);
+      setShowMeterUpload(true);
+    } else {
+      // Close electricity dialog and show payment modal
+      setShowElectricityDialog(false);
+      setShowPaymentModal(true);
     }
-    
+  };
+
+  const handleMeterPhotoUploaded = (photoUrl: string, file: File) => {
+    setMeterPhoto(file);
+    setMeterPhotoUrl(photoUrl);
+    setShowMeterUpload(false);
     setShowPaymentModal(true);
   };
 
@@ -700,7 +678,7 @@ export const RenterPayments = () => {
             <div className="space-y-4">
               <Button
                 onClick={() => handleElectricityOptionSelect('upload')}
-                className="w-full h-16 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                className="w-full h-16 bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
                 style={{ minHeight: '64px' }}
               >
                 <div className="flex-shrink-0">
@@ -714,7 +692,7 @@ export const RenterPayments = () => {
               
               <Button
                 onClick={() => handleElectricityOptionSelect('owner')}
-                className="w-full h-16 bg-gradient-to-br from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-800 rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border border-slate-300"
+                className="w-full h-16 bg-gradient-to-br from-muted to-muted/80 hover:from-muted/80 hover:to-muted text-foreground rounded-xl flex items-center justify-start gap-4 p-6 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border border-border"
                 style={{ minHeight: '64px' }}
               >
                 <div className="flex-shrink-0">
@@ -730,6 +708,18 @@ export const RenterPayments = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Meter Photo Upload Modal */}
+      {activeRelationship && (
+        <MeterPhotoUpload
+          isOpen={showMeterUpload}
+          onClose={() => setShowMeterUpload(false)}
+          onPhotoUploaded={handleMeterPhotoUploaded}
+          relationshipId={activeRelationship.id}
+          renterId={user?.id || ''}
+          ownerId={activeRelationship.owner_id}
+        />
+      )}
+
       {/* Payment Modal with Electricity Amount Input */}
       {showPaymentModal && (
         <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
@@ -743,13 +733,13 @@ export const RenterPayments = () => {
             
             <div className="space-y-6 py-4">
               {/* Electricity Option Display */}
-              <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+              <div className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium text-orange-800">Electricity Bill</span>
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Electricity Bill</span>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {electricityOption === 'upload' ? '📸 Meter photo will be uploaded' : '🧾 Owner will calculate bill'}
+                <div className="text-sm text-muted-foreground">
+                  {electricityOption === 'upload' ? '📸 Meter photo uploaded' : '🧾 Owner will calculate bill'}
                   {meterPhoto && (
                     <div className="mt-2 text-green-600 font-medium">
                       ✓ Photo uploaded: {meterPhoto.name}
@@ -765,7 +755,7 @@ export const RenterPayments = () => {
                     </div>
                   )}
                   {isUploading && (
-                    <div className="mt-2 text-blue-600 font-medium">
+                    <div className="mt-2 text-primary font-medium">
                       📤 Uploading meter photo...
                     </div>
                   )}
@@ -787,12 +777,12 @@ export const RenterPayments = () => {
               </div>
 
               {/* Total Amount Display */}
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-sm text-blue-700 mb-1">Total Payment Amount</div>
-                <div className="text-2xl font-bold text-blue-800">
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="text-sm text-primary/80 mb-1">Total Payment Amount</div>
+                <div className="text-2xl font-bold text-foreground">
                   ₹{((currentRent?.current_amount || 0) + electricityAmount).toLocaleString()}
                 </div>
-                <div className="text-sm text-blue-600 mt-1">
+                <div className="text-sm text-muted-foreground mt-1">
                   Rent: ₹{(currentRent?.current_amount || 0).toLocaleString()} + 
                   Electricity: ₹{electricityAmount.toLocaleString()}
                 </div>

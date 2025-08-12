@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadImagesToStorage } from './storage/supabaseStorage';
 import { toast } from 'sonner';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 export interface MeterPhoto {
   id: string;
@@ -14,6 +16,143 @@ export interface MeterPhoto {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * Compress image file for faster upload
+ */
+const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions
+      const aspectRatio = img.width / img.height;
+      let { width, height } = img;
+      
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+          resolve(compressedFile);
+        } else {
+          resolve(file);
+        }
+      }, 'image/jpeg', quality);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+/**
+ * Take photo using device camera (mobile native)
+ */
+export const takeMeterPhoto = async (): Promise<File | null> => {
+  try {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web - trigger file input
+      return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'camera';
+        
+        input.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          resolve(file || null);
+        };
+        
+        input.click();
+      });
+    }
+
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+    });
+
+    if (!image.webPath) {
+      throw new Error('No image captured');
+    }
+
+    // Convert to File object
+    const response = await fetch(image.webPath);
+    const blob = await response.blob();
+    const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+    });
+
+    return file;
+  } catch (error) {
+    console.error('Error taking photo:', error);
+    toast.error('Failed to take photo');
+    return null;
+  }
+};
+
+/**
+ * Choose photo from gallery (mobile native)
+ */
+export const chooseMeterPhotoFromGallery = async (): Promise<File | null> => {
+  try {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web - trigger file input
+      return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        input.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          resolve(file || null);
+        };
+        
+        input.click();
+      });
+    }
+
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Photos,
+    });
+
+    if (!image.webPath) {
+      throw new Error('No image selected');
+    }
+
+    // Convert to File object
+    const response = await fetch(image.webPath);
+    const blob = await response.blob();
+    const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+    });
+
+    return file;
+  } catch (error) {
+    console.error('Error choosing photo:', error);
+    toast.error('Failed to choose photo');
+    return null;
+  }
+};
 
 /**
  * Upload meter photo for current billing month
@@ -33,8 +172,15 @@ export const uploadMeterPhoto = async (
       ownerId
     });
 
+    // Compress image for faster upload
+    const compressedFile = await compressImage(file);
+    console.log('Image compressed:', { 
+      originalSize: file.size, 
+      compressedSize: compressedFile.size 
+    });
+
     // Upload to storage
-    const uploadedUrls = await uploadImagesToStorage([file], renterId, 'user-uploads');
+    const uploadedUrls = await uploadImagesToStorage([compressedFile], renterId, 'user-uploads');
     
     if (uploadedUrls.length === 0) {
       console.error('No URLs returned from storage upload');
@@ -52,8 +198,8 @@ export const uploadMeterPhoto = async (
         renter_id: renterId,
         owner_id: ownerId,
         photo_url: photoUrl,
-        photo_name: file.name,
-        file_size: file.size,
+        photo_name: compressedFile.name,
+        file_size: compressedFile.size,
         billing_month: currentMonth
       })
       .select()
@@ -66,6 +212,7 @@ export const uploadMeterPhoto = async (
     }
 
     console.log('Meter photo uploaded and saved successfully:', data);
+    toast.success('Meter photo sent to owner successfully! 📸');
     return photoUrl;
   } catch (error) {
     console.error('Error in meter photo upload:', error);
