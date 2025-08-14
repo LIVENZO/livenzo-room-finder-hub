@@ -22,6 +22,7 @@ interface OwnerProfileTabsProps {
     totalRentalRooms: string;
     residentType: string;
     propertyLocation: string;
+    upiId: string;
   };
   uploadingImage: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;

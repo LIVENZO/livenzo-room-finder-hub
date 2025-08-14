@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { PaymentModal } from "./PaymentModal";
+import { UpiPaymentModal } from "./UpiPaymentModal";
 
 interface RentStatus {
   id: string;
@@ -45,6 +45,7 @@ interface RentalInfo {
   address: string;
   ownerName: string;
   ownerPhone: string;
+  ownerUpiId: string;
   monthlyRent: number;
 }
 
@@ -73,6 +74,7 @@ export const RenterPayments = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
   const [showElectricityDialog, setShowElectricityDialog] = useState(false);
   const [showMeterUpload, setShowMeterUpload] = useState(false);
   const [electricityOption, setElectricityOption] = useState<'upload' | 'owner' | null>(null);
@@ -158,7 +160,7 @@ export const RenterPayments = () => {
         const [ownerProfileResponse, rentStatusResponse] = await Promise.all([
           supabase
             .from('user_profiles')
-            .select('full_name, phone, property_name, property_location')
+            .select('full_name, phone, property_name, property_location, upi_id')
             .eq('id', relationship.owner_id)
             .single(),
           supabase
@@ -176,6 +178,7 @@ export const RenterPayments = () => {
           address: ownerProfile?.property_location || 'Address not available',
           ownerName: ownerProfile?.full_name || 'Owner',
           ownerPhone: ownerProfile?.phone || 'Phone not available',
+          ownerUpiId: ownerProfile?.upi_id || 'Not provided',
           monthlyRent: rentAmount
         });
       }
@@ -271,6 +274,7 @@ export const RenterPayments = () => {
 
   const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
+    setShowUpiModal(false);
     setShowElectricityDialog(false);
     toast({ description: "Payment successful!" });
     // Reset electricity options after successful payment
@@ -798,16 +802,42 @@ export const RenterPayments = () => {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={() => {
+                    // Show UPI modal if owner has UPI ID
+                    if (rentalInfo?.ownerUpiId && rentalInfo.ownerUpiId !== 'Not provided') {
+                      setShowPaymentModal(false);
+                      setShowUpiModal(true);
+                    } else {
+                      toast({ 
+                        title: "UPI ID Required", 
+                        description: "Owner needs to add UPI ID in their profile to accept payments",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  disabled={!rentalInfo?.ownerUpiId || rentalInfo.ownerUpiId === 'Not provided'}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Proceed to Pay
+                  Proceed to UPI Pay
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* UPI Payment Modal */}
+      {currentRent && rentalInfo && (
+        <UpiPaymentModal
+          isOpen={showUpiModal}
+          onClose={() => setShowUpiModal(false)}
+          amount={(currentRent.current_amount || 0) + electricityAmount}
+          relationshipId={currentRent.relationship_id}
+          ownerUpiId={rentalInfo.ownerUpiId}
+          ownerName={rentalInfo.ownerName}
+          onSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

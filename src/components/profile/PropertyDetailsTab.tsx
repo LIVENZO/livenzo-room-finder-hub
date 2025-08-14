@@ -11,6 +11,7 @@ interface PropertyDetailsTabProps {
     totalRentalRooms: string;
     residentType: string;
     propertyLocation: string;
+    upiId: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

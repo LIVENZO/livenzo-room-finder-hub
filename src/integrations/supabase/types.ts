@@ -720,6 +720,7 @@ export type Database = {
           room_number: string | null
           total_rental_rooms: number | null
           updated_at: string
+          upi_id: string | null
         }
         Insert: {
           accommodation_type?: string | null
@@ -742,6 +743,7 @@ export type Database = {
           room_number?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
+          upi_id?: string | null
         }
         Update: {
           accommodation_type?: string | null
@@ -764,6 +766,7 @@ export type Database = {
           room_number?: string | null
           total_rental_rooms?: number | null
           updated_at?: string
+          upi_id?: string | null
         }
         Relationships: []
       }

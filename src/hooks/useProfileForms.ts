@@ -16,6 +16,7 @@ interface OwnerFormValues {
   totalRentalRooms: string;
   residentType: string;
   propertyLocation: string;
+  upiId: string;
 }
 
 export const useProfileForms = (profile: UserProfile | null) => {
@@ -33,6 +34,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
     totalRentalRooms: '',
     residentType: '',
     propertyLocation: '',
+    upiId: '',
   });
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
         totalRentalRooms: profile.total_rental_rooms?.toString() || '',
         residentType: profile.resident_type || '',
         propertyLocation: profile.property_location || '',
+        upiId: profile.upi_id || '',
       });
     }
   }, [profile]);

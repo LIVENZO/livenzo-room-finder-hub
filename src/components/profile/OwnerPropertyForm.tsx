@@ -13,6 +13,7 @@ interface OwnerPropertyFormProps {
     totalRentalRooms: string;
     residentType: string;
     propertyLocation: string;
+    upiId: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -132,6 +133,21 @@ const OwnerPropertyForm: React.FC<OwnerPropertyFormProps> = ({
         {!formValues.propertyLocation && (
           <p className="text-xs text-red-500">Property location is required</p>
         )}
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="upiId">UPI ID for Rent Payments</Label>
+        <Input
+          id="upiId"
+          name="upiId"
+          value={formValues.upiId}
+          onChange={onInputChange}
+          placeholder="Enter your UPI ID (e.g., yourname@paytm)"
+          className="border-blue-200 focus:border-blue-400"
+        />
+        <p className="text-xs text-blue-600">
+          Add your UPI ID to receive rent payments directly from renters
+        </p>
       </div>
     </div>
   );
