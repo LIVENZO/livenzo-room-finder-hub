@@ -12,6 +12,7 @@ interface PropertyDetailsTabProps {
     residentType: string;
     propertyLocation: string;
     upiId: string;
+    upiPhoneNumber: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

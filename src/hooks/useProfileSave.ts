@@ -20,6 +20,7 @@ interface OwnerFormValues {
   residentType: string;
   propertyLocation: string;
   upiId: string;
+  upiPhoneNumber: string;
 }
 
 export const useProfileSave = (
@@ -54,6 +55,7 @@ export const useProfileSave = (
       updatedProfile.resident_type = ownerFormValues.residentType as 'Boys' | 'Girls' | 'Both' || null;
       updatedProfile.property_location = ownerFormValues.propertyLocation || null;
       updatedProfile.upi_id = ownerFormValues.upiId || null;
+      updatedProfile.upi_phone_number = ownerFormValues.upiPhoneNumber || null;
     }
     
     const result = await createOrUpdateUserProfile(updatedProfile);

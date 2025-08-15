@@ -13,6 +13,7 @@ interface UpiPaymentModalProps {
   initialAmount: number;
   relationshipId: string;
   ownerUpiId: string;
+  ownerPhoneNumber: string;
   ownerName: string;
   onSuccess: () => void;
 }
@@ -23,6 +24,7 @@ export const UpiPaymentModal = ({
   initialAmount, 
   relationshipId, 
   ownerUpiId, 
+  ownerPhoneNumber,
   ownerName,
   onSuccess 
 }: UpiPaymentModalProps) => {
@@ -33,8 +35,9 @@ export const UpiPaymentModal = ({
   const [amount, setAmount] = useState(initialAmount);
   const [showPaymentButtons, setShowPaymentButtons] = useState(false);
 
-  // Generate UPI payment URL
-  const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(`Rent Payment - ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`)}`;
+  // Generate UPI payment URL using phone number format
+  const upiPaymentId = ownerPhoneNumber ? `${ownerPhoneNumber}@upi` : ownerUpiId;
+  const upiUrl = `upi://pay?pa=${upiPaymentId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(`Rent Payment - ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`)}`;
 
   // Reset amount when modal opens
   useEffect(() => {
@@ -46,11 +49,12 @@ export const UpiPaymentModal = ({
 
   const handleCopyUpiId = async () => {
     try {
-      await navigator.clipboard.writeText(ownerUpiId);
+      const copyText = ownerPhoneNumber ? `${ownerPhoneNumber}@upi` : ownerUpiId;
+      await navigator.clipboard.writeText(copyText);
       setCopied(true);
       toast({
         title: "UPI ID Copied",
-        description: "UPI ID has been copied to clipboard",
+        description: "UPI payment ID has been copied to clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -164,9 +168,9 @@ export const UpiPaymentModal = ({
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Owner's UPI ID</p>
+                <p className="text-sm font-medium text-center">Owner's UPI Payment ID</p>
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <code className="flex-1 text-sm font-mono">{ownerUpiId}</code>
+                  <code className="flex-1 text-sm font-mono">{ownerPhoneNumber ? `${ownerPhoneNumber}@upi` : ownerUpiId}</code>
                   <Button
                     variant="ghost"
                     size="sm"

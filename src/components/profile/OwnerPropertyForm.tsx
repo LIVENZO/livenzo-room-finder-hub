@@ -14,6 +14,7 @@ interface OwnerPropertyFormProps {
     residentType: string;
     propertyLocation: string;
     upiId: string;
+    upiPhoneNumber: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -136,7 +137,28 @@ const OwnerPropertyForm: React.FC<OwnerPropertyFormProps> = ({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="upiId">UPI ID for Rent Payments</Label>
+        <Label htmlFor="upiPhoneNumber">UPI Phone Number for Rent Payments <span className="text-red-500">*</span></Label>
+        <Input
+          id="upiPhoneNumber"
+          name="upiPhoneNumber"
+          value={formValues.upiPhoneNumber}
+          onChange={onInputChange}
+          placeholder="Enter phone number (e.g., 9876543210)"
+          className={!formValues.upiPhoneNumber ? "border-red-300" : "border-blue-200 focus:border-blue-400"}
+          type="tel"
+          maxLength={10}
+          pattern="[0-9]{10}"
+        />
+        <p className="text-xs text-blue-600">
+          Enter your 10-digit phone number linked with UPI (Google Pay, PhonePe, Paytm, etc.)
+        </p>
+        {!formValues.upiPhoneNumber && (
+          <p className="text-xs text-red-500">UPI phone number is required for receiving payments</p>
+        )}
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="upiId">UPI ID (Optional)</Label>
         <Input
           id="upiId"
           name="upiId"
@@ -145,8 +167,8 @@ const OwnerPropertyForm: React.FC<OwnerPropertyFormProps> = ({
           placeholder="Enter your UPI ID (e.g., yourname@paytm)"
           className="border-blue-200 focus:border-blue-400"
         />
-        <p className="text-xs text-blue-600">
-          Add your UPI ID to receive rent payments directly from renters
+        <p className="text-xs text-gray-500">
+          Optional: Add UPI ID as backup payment method
         </p>
       </div>
     </div>

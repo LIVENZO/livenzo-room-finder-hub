@@ -22,6 +22,7 @@ export interface UserProfile {
   updated_at?: string;
   is_owner_profile_complete?: boolean;
   upi_id?: string | null;
+  upi_phone_number?: string | null;
 }
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {

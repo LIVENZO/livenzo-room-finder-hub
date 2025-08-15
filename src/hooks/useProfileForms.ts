@@ -17,6 +17,7 @@ interface OwnerFormValues {
   residentType: string;
   propertyLocation: string;
   upiId: string;
+  upiPhoneNumber: string;
 }
 
 export const useProfileForms = (profile: UserProfile | null) => {
@@ -35,6 +36,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
     residentType: '',
     propertyLocation: '',
     upiId: '',
+    upiPhoneNumber: '',
   });
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
         residentType: profile.resident_type || '',
         propertyLocation: profile.property_location || '',
         upiId: profile.upi_id || '',
+        upiPhoneNumber: profile.upi_phone_number || '',
       });
     }
   }, [profile]);

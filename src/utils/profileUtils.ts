@@ -35,9 +35,10 @@ export const isOwnerProfileComplete = (profile: UserProfile | null): boolean => 
   const hasValidRooms = !!profile.total_rental_rooms && profile.total_rental_rooms > 0;
   const hasResidentType = !!profile.resident_type;
   const hasPropertyLocation = !!profile.property_location && profile.property_location.trim().length > 0;
+  const hasUpiPhoneNumber = !!profile.upi_phone_number && profile.upi_phone_number.trim().length === 10;
   
   return hasAccommodationType && hasPropertyName && hasHouseNumber && 
-         hasValidRooms && hasResidentType && hasPropertyLocation;
+         hasValidRooms && hasResidentType && hasPropertyLocation && hasUpiPhoneNumber;
 };
 
 /**

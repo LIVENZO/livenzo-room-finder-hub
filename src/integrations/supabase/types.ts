@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -721,6 +721,7 @@ export type Database = {
           total_rental_rooms: number | null
           updated_at: string
           upi_id: string | null
+          upi_phone_number: string | null
         }
         Insert: {
           accommodation_type?: string | null
@@ -744,6 +745,7 @@ export type Database = {
           total_rental_rooms?: number | null
           updated_at?: string
           upi_id?: string | null
+          upi_phone_number?: string | null
         }
         Update: {
           accommodation_type?: string | null
@@ -767,6 +769,7 @@ export type Database = {
           total_rental_rooms?: number | null
           updated_at?: string
           upi_id?: string | null
+          upi_phone_number?: string | null
         }
         Relationships: []
       }
@@ -806,13 +809,13 @@ export type Database = {
     }
     Functions: {
       archive_previous_connection_data: {
-        Args: { renter_user_id: string; new_owner_id: string }
+        Args: { new_owner_id: string; renter_user_id: string }
         Returns: undefined
       }
       check_google_role_conflict: {
         Args: {
-          google_id_param: string
           email_param: string
+          google_id_param: string
           requested_role: string
         }
         Returns: boolean
@@ -836,54 +839,54 @@ export type Database = {
       get_active_renter_relationships: {
         Args: { renter_user_id: string }
         Returns: {
+          archived: boolean
+          chat_room_id: string
+          created_at: string
           id: string
           owner_id: string
           renter_id: string
           status: string
-          chat_room_id: string
-          created_at: string
           updated_at: string
-          archived: boolean
         }[]
       }
       get_room_details_for_authenticated: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
-          images: string[]
-          price: number
-          location: string
-          facilities: Json
-          owner_id: string
-          owner_phone: string
-          created_at: string
           available: boolean
+          created_at: string
+          description: string
+          facilities: Json
+          house_name: string
+          house_no: string
+          id: string
+          images: string[]
+          location: string
           location_latitude: number
           location_longitude: number
-          house_no: string
-          house_name: string
+          owner_id: string
+          owner_phone: string
+          price: number
+          title: string
         }[]
       }
       get_rooms_public: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
-          images: string[]
-          price: number
-          location: string
-          facilities: Json
-          owner_id: string
-          owner_phone: string
-          created_at: string
           available: boolean
+          created_at: string
+          description: string
+          facilities: Json
+          house_name: string
+          house_no: string
+          id: string
+          images: string[]
+          location: string
           location_latitude: number
           location_longitude: number
-          house_no: string
-          house_name: string
+          owner_id: string
+          owner_phone: string
+          price: number
+          title: string
         }[]
       }
       get_user_role: {
@@ -891,7 +894,7 @@ export type Database = {
         Returns: string
       }
       update_room_availability_for_owner: {
-        Args: { room_id: string; is_available: boolean }
+        Args: { is_available: boolean; room_id: string }
         Returns: undefined
       }
       validate_relationship_access: {

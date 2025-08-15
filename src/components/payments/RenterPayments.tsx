@@ -46,6 +46,7 @@ interface RentalInfo {
   ownerName: string;
   ownerPhone: string;
   ownerUpiId: string;
+  ownerPhoneNumber: string;
   monthlyRent: number;
 }
 
@@ -160,7 +161,7 @@ export const RenterPayments = () => {
         const [ownerProfileResponse, rentStatusResponse] = await Promise.all([
           supabase
             .from('user_profiles')
-            .select('full_name, phone, property_name, property_location, upi_id')
+            .select('full_name, phone, property_name, property_location, upi_id, upi_phone_number')
             .eq('id', relationship.owner_id)
             .single(),
           supabase
@@ -179,6 +180,7 @@ export const RenterPayments = () => {
           ownerName: ownerProfile?.full_name || 'Owner',
           ownerPhone: ownerProfile?.phone || 'Phone not available',
           ownerUpiId: ownerProfile?.upi_id || 'Not provided',
+          ownerPhoneNumber: ownerProfile?.upi_phone_number || '',
           monthlyRent: rentAmount
         });
       }
@@ -835,6 +837,7 @@ export const RenterPayments = () => {
           initialAmount={(currentRent.current_amount || 0) + electricityAmount}
           relationshipId={currentRent.relationship_id}
           ownerUpiId={rentalInfo.ownerUpiId}
+          ownerPhoneNumber={rentalInfo.ownerPhoneNumber || ''}
           ownerName={rentalInfo.ownerName}
           onSuccess={handlePaymentSuccess}
         />
