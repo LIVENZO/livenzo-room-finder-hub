@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 interface UpiPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number;
+  initialAmount: number;
   relationshipId: string;
   ownerUpiId: string;
   ownerName: string;
@@ -20,7 +20,7 @@ interface UpiPaymentModalProps {
 export const UpiPaymentModal = ({ 
   isOpen, 
   onClose, 
-  amount, 
+  initialAmount, 
   relationshipId, 
   ownerUpiId, 
   ownerName,
@@ -30,21 +30,19 @@ export const UpiPaymentModal = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [amount, setAmount] = useState(initialAmount);
+  const [showPaymentButtons, setShowPaymentButtons] = useState(false);
 
   // Generate UPI payment URL
   const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(`Rent Payment - ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`)}`;
 
-  // Auto-trigger UPI deep link when modal opens
+  // Reset amount when modal opens
   useEffect(() => {
-    if (isOpen && ownerUpiId && amount) {
-      // Small delay to ensure modal is fully rendered
-      const timer = setTimeout(() => {
-        handlePayWithUpi();
-      }, 500);
-      
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      setAmount(initialAmount);
+      setShowPaymentButtons(false);
     }
-  }, [isOpen, ownerUpiId, amount]);
+  }, [isOpen, initialAmount]);
 
   const handleCopyUpiId = async () => {
     try {
@@ -67,6 +65,7 @@ export const UpiPaymentModal = ({
   const handlePayWithUpi = () => {
     // Open UPI app with pre-filled details
     window.open(upiUrl, '_blank');
+    setShowPaymentButtons(true);
   };
 
   const handleConfirmPayment = async () => {
@@ -143,10 +142,20 @@ export const UpiPaymentModal = ({
           {/* Amount Card */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Amount to Pay</p>
-                <p className="text-3xl font-bold text-primary">₹{amount.toLocaleString()}</p>
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Rent Amount</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-2xl font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="text-3xl font-bold bg-transparent border-b-2 border-primary/30 text-center w-32 focus:outline-none focus:border-primary"
+                    disabled={showPaymentButtons}
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground">To: {ownerName}</p>
+                <p className="text-xs text-muted-foreground">You can edit the amount to include electricity bill if needed</p>
               </div>
             </CardContent>
           </Card>
@@ -175,46 +184,76 @@ export const UpiPaymentModal = ({
             </CardContent>
           </Card>
 
-          {/* Payment Steps */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm">Payment Status:</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-xs font-medium text-white">✓</div>
-                <span>UPI app opened automatically</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">2</div>
-                <span>Complete payment in your UPI app</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">3</div>
-                <span>Come back and tap "I Have Paid"</span>
+          {showPaymentButtons && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm">Payment Status:</h4>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-xs font-medium text-white">✓</div>
+                  <span>UPI app opened successfully</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">2</div>
+                  <span>Complete payment in your UPI app</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">3</div>
+                  <span>Come back and tap "Mark as Paid"</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3">
-            <Button 
-              onClick={handlePayWithUpi}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              <Smartphone className="mr-2 h-4 w-4" />
-              Open UPI App Again
-            </Button>
-            
-            <Button 
-              onClick={handleConfirmPayment}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-              size="lg"
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              I Have Paid ✓
-            </Button>
+            {!showPaymentButtons ? (
+              <>
+                <Button 
+                  onClick={handlePayWithUpi}
+                  className="w-full bg-primary hover:bg-primary/90"
+                  size="lg"
+                >
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  Pay via UPI App
+                </Button>
+                
+                <Button 
+                  onClick={handleCopyUpiId}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  {copied ? (
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="mr-2 h-4 w-4" />
+                  )}
+                  Copy UPI ID
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  onClick={handlePayWithUpi}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  Open UPI App Again
+                </Button>
+                
+                <Button 
+                  onClick={handleConfirmPayment}
+                  disabled={loading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  size="lg"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Mark as Paid
+                </Button>
+              </>
+            )}
             
             <Button 
               variant="ghost" 
@@ -225,9 +264,11 @@ export const UpiPaymentModal = ({
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Only confirm payment after successful transaction in your UPI app
-          </p>
+          {showPaymentButtons && (
+            <p className="text-xs text-muted-foreground text-center">
+              Only tap "Mark as Paid" after successful transaction in your UPI app
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

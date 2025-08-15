@@ -286,8 +286,8 @@ export const RenterPayments = () => {
     fetchRecentPayments();
   };
 
-  const handlePayNowClick = () => {
-    setShowElectricityDialog(true);
+  const handlePayNow = () => {
+    setShowUpiModal(true);
   };
 
   const handleElectricityOptionSelect = async (option: 'upload' | 'owner') => {
@@ -558,7 +558,7 @@ export const RenterPayments = () => {
               {currentRent.status !== 'paid' && (
                 <>
                   <Button 
-                    onClick={handlePayNowClick}
+                    onClick={handlePayNow}
                     className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                     size="lg"
                   >
@@ -832,7 +832,7 @@ export const RenterPayments = () => {
         <UpiPaymentModal
           isOpen={showUpiModal}
           onClose={() => setShowUpiModal(false)}
-          amount={(currentRent.current_amount || 0) + electricityAmount}
+          initialAmount={(currentRent.current_amount || 0) + electricityAmount}
           relationshipId={currentRent.relationship_id}
           ownerUpiId={rentalInfo.ownerUpiId}
           ownerName={rentalInfo.ownerName}
