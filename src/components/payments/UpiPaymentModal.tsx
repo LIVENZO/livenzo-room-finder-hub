@@ -34,6 +34,18 @@ export const UpiPaymentModal = ({
   // Generate UPI payment URL
   const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(`Rent Payment - ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`)}`;
 
+  // Auto-trigger UPI deep link when modal opens
+  useEffect(() => {
+    if (isOpen && ownerUpiId && amount) {
+      // Small delay to ensure modal is fully rendered
+      const timer = setTimeout(() => {
+        handlePayWithUpi();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, ownerUpiId, amount]);
+
   const handleCopyUpiId = async () => {
     try {
       await navigator.clipboard.writeText(ownerUpiId);
@@ -165,11 +177,11 @@ export const UpiPaymentModal = ({
 
           {/* Payment Steps */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">Payment Steps:</h4>
+            <h4 className="font-medium text-sm">Payment Status:</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">1</div>
-                <span>Tap "Pay with UPI App" to open your UPI app</span>
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-xs font-medium text-white">✓</div>
+                <span>UPI app opened automatically</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">2</div>
@@ -186,22 +198,22 @@ export const UpiPaymentModal = ({
           <div className="flex flex-col gap-3">
             <Button 
               onClick={handlePayWithUpi}
+              variant="outline"
               className="w-full"
               size="lg"
             >
               <Smartphone className="mr-2 h-4 w-4" />
-              Pay with UPI App
+              Open UPI App Again
             </Button>
             
             <Button 
               onClick={handleConfirmPayment}
               disabled={loading}
-              variant="outline"
-              className="w-full"
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
               size="lg"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              I Have Paid
+              I Have Paid ✓
             </Button>
             
             <Button 

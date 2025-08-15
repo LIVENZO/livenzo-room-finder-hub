@@ -298,9 +298,9 @@ export const RenterPayments = () => {
       setShowElectricityDialog(false);
       setShowMeterUpload(true);
     } else {
-      // Close electricity dialog and show payment modal
+      // Close electricity dialog and show UPI payment modal directly
       setShowElectricityDialog(false);
-      setShowPaymentModal(true);
+      setShowUpiModal(true);
     }
   };
 
@@ -308,7 +308,7 @@ export const RenterPayments = () => {
     setMeterPhoto(file);
     setMeterPhotoUrl(photoUrl);
     setShowMeterUpload(false);
-    setShowPaymentModal(true);
+    setShowUpiModal(true);
   };
 
   const handleMarkAsPaid = async (rentId: string) => {
