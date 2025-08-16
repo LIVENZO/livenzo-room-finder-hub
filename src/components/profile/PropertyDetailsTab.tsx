@@ -13,6 +13,7 @@ interface PropertyDetailsTabProps {
     propertyLocation: string;
     upiId: string;
     upiPhoneNumber: string;
+    razorpayMerchantId: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

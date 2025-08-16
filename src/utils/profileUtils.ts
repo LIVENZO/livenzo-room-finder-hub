@@ -36,9 +36,11 @@ export const isOwnerProfileComplete = (profile: UserProfile | null): boolean => 
   const hasResidentType = !!profile.resident_type;
   const hasPropertyLocation = !!profile.property_location && profile.property_location.trim().length > 0;
   const hasUpiPhoneNumber = !!profile.upi_phone_number && profile.upi_phone_number.trim().length === 10;
+  const hasRazorpayMerchantId = !!profile.razorpay_merchant_id && profile.razorpay_merchant_id.trim().length > 0;
   
   return hasAccommodationType && hasPropertyName && hasHouseNumber && 
-         hasValidRooms && hasResidentType && hasPropertyLocation && hasUpiPhoneNumber;
+         hasValidRooms && hasResidentType && hasPropertyLocation && 
+         hasUpiPhoneNumber && hasRazorpayMerchantId;
 };
 
 /**

@@ -18,6 +18,7 @@ interface OwnerFormValues {
   propertyLocation: string;
   upiId: string;
   upiPhoneNumber: string;
+  razorpayMerchantId: string;
 }
 
 export const useProfileForms = (profile: UserProfile | null) => {
@@ -37,6 +38,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
     propertyLocation: '',
     upiId: '',
     upiPhoneNumber: '',
+    razorpayMerchantId: '',
   });
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export const useProfileForms = (profile: UserProfile | null) => {
         propertyLocation: profile.property_location || '',
         upiId: profile.upi_id || '',
         upiPhoneNumber: profile.upi_phone_number || '',
+        razorpayMerchantId: profile.razorpay_merchant_id || '',
       });
     }
   }, [profile]);

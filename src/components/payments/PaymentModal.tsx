@@ -12,7 +12,8 @@ interface PaymentModalProps {
   onClose: () => void;
   amount: number;
   relationshipId: string;
-  onSuccess: () => void;
+  onSuccess: (paymentDetails?: any) => void;
+  onFailure?: (error: string) => void;
 }
 
 declare global {
@@ -21,7 +22,7 @@ declare global {
   }
 }
 
-export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSuccess }: PaymentModalProps) => {
+export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSuccess, onFailure }: PaymentModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -78,14 +79,16 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
               description: "Your rent payment has been processed successfully",
             });
 
-            onSuccess();
+            onSuccess(response);
           } catch (error) {
             console.error('Payment verification failed:', error);
+            const errorMessage = "Payment verification failed. Please contact support if amount was deducted.";
             toast({
               title: "Payment Verification Failed",
-              description: "Payment may have been processed but verification failed. Please contact support.",
+              description: errorMessage,
               variant: "destructive",
             });
+            onFailure?.(errorMessage);
           }
         },
         prefill: {
@@ -97,6 +100,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
         modal: {
           ondismiss: () => {
             setLoading(false);
+            onFailure?.("Payment cancelled by user");
           }
         }
       };
@@ -106,11 +110,13 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
       
     } catch (error) {
       console.error('Payment initiation failed:', error);
+      const errorMessage = "Failed to initiate payment. Please check your connection and try again.";
       toast({
         title: "Payment Failed",
-        description: "Failed to initiate payment. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+      onFailure?.(errorMessage);
       setLoading(false);
     }
   };

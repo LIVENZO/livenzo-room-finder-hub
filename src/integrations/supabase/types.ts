@@ -716,6 +716,7 @@ export type Database = {
           property_location: string | null
           property_name: string | null
           public_id: string | null
+          razorpay_merchant_id: string | null
           resident_type: string | null
           room_number: string | null
           total_rental_rooms: number | null
@@ -740,6 +741,7 @@ export type Database = {
           property_location?: string | null
           property_name?: string | null
           public_id?: string | null
+          razorpay_merchant_id?: string | null
           resident_type?: string | null
           room_number?: string | null
           total_rental_rooms?: number | null
@@ -764,6 +766,7 @@ export type Database = {
           property_location?: string | null
           property_name?: string | null
           public_id?: string | null
+          razorpay_merchant_id?: string | null
           resident_type?: string | null
           room_number?: string | null
           total_rental_rooms?: number | null

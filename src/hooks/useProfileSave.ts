@@ -21,6 +21,7 @@ interface OwnerFormValues {
   propertyLocation: string;
   upiId: string;
   upiPhoneNumber: string;
+  razorpayMerchantId: string;
 }
 
 export const useProfileSave = (
@@ -56,6 +57,7 @@ export const useProfileSave = (
       updatedProfile.property_location = ownerFormValues.propertyLocation || null;
       updatedProfile.upi_id = ownerFormValues.upiId || null;
       updatedProfile.upi_phone_number = ownerFormValues.upiPhoneNumber || null;
+      updatedProfile.razorpay_merchant_id = ownerFormValues.razorpayMerchantId || null;
     }
     
     const result = await createOrUpdateUserProfile(updatedProfile);

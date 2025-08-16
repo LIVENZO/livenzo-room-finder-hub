@@ -23,6 +23,7 @@ export interface UserProfile {
   is_owner_profile_complete?: boolean;
   upi_id?: string | null;
   upi_phone_number?: string | null;
+  razorpay_merchant_id?: string | null;
 }
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {

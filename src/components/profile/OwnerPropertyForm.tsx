@@ -15,6 +15,7 @@ interface OwnerPropertyFormProps {
     propertyLocation: string;
     upiId: string;
     upiPhoneNumber: string;
+    razorpayMerchantId: string;
   };
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -170,6 +171,25 @@ const OwnerPropertyForm: React.FC<OwnerPropertyFormProps> = ({
         <p className="text-xs text-gray-500">
           Optional: Add UPI ID as backup payment method
         </p>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="razorpayMerchantId">Razorpay Merchant ID *</Label>
+        <Input
+          id="razorpayMerchantId"
+          name="razorpayMerchantId"
+          value={formValues.razorpayMerchantId}
+          onChange={onInputChange}
+          placeholder="Enter your Razorpay Merchant ID"
+          className={!formValues.razorpayMerchantId ? "border-red-300" : ""}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Get this from your Razorpay Dashboard → Settings → API Keys
+        </p>
+        {!formValues.razorpayMerchantId && (
+          <p className="text-xs text-red-500">Razorpay Merchant ID is required for receiving payments</p>
+        )}
       </div>
     </div>
   );

@@ -30,7 +30,9 @@ import { useToast } from "@/hooks/use-toast";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { UpiPaymentModal } from "./UpiPaymentModal";
+import { PaymentModal } from "./PaymentModal";
+import { PaymentSuccessModal } from "./PaymentSuccessModal";
+import { PaymentFailureModal } from "./PaymentFailureModal";
 
 interface RentStatus {
   id: string;
@@ -75,7 +77,10 @@ export const RenterPayments = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [paymentError, setPaymentError] = useState<string>("");
+  const [lastPaymentDetails, setLastPaymentDetails] = useState<any>(null);
   const [showElectricityDialog, setShowElectricityDialog] = useState(false);
   const [showMeterUpload, setShowMeterUpload] = useState(false);
   const [electricityOption, setElectricityOption] = useState<'upload' | 'owner' | null>(null);
@@ -274,11 +279,20 @@ export const RenterPayments = () => {
     }
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (paymentDetails?: any) => {
     setShowPaymentModal(false);
-    setShowUpiModal(false);
     setShowElectricityDialog(false);
-    toast({ description: "Payment successful!" });
+    
+    if (paymentDetails) {
+      setLastPaymentDetails({
+        amount: (currentRent?.current_amount || 0) + electricityAmount,
+        transactionId: paymentDetails.razorpay_payment_id || 'N/A',
+        date: new Date().toISOString(),
+        propertyName: rentalInfo?.propertyName
+      });
+      setShowSuccessModal(true);
+    }
+    
     // Reset electricity options after successful payment
     setElectricityOption(null);
     setElectricityAmount(0);
@@ -288,8 +302,14 @@ export const RenterPayments = () => {
     fetchRecentPayments();
   };
 
+  const handlePaymentFailure = (error: string) => {
+    setShowPaymentModal(false);
+    setPaymentError(error);
+    setShowFailureModal(true);
+  };
+
   const handlePayNow = () => {
-    setShowUpiModal(true);
+    setShowPaymentModal(true);
   };
 
   const handleElectricityOptionSelect = async (option: 'upload' | 'owner') => {
@@ -300,9 +320,9 @@ export const RenterPayments = () => {
       setShowElectricityDialog(false);
       setShowMeterUpload(true);
     } else {
-      // Close electricity dialog and show UPI payment modal directly
+      // Close electricity dialog and show payment modal directly
       setShowElectricityDialog(false);
-      setShowUpiModal(true);
+      setShowPaymentModal(true);
     }
   };
 
@@ -310,7 +330,7 @@ export const RenterPayments = () => {
     setMeterPhoto(file);
     setMeterPhotoUrl(photoUrl);
     setShowMeterUpload(false);
-    setShowUpiModal(true);
+    setShowPaymentModal(true);
   };
 
   const handleMarkAsPaid = async (rentId: string) => {
@@ -805,23 +825,17 @@ export const RenterPayments = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    // Show UPI modal if owner has UPI ID
-                    if (rentalInfo?.ownerUpiId && rentalInfo.ownerUpiId !== 'Not provided') {
-                      setShowPaymentModal(false);
-                      setShowUpiModal(true);
-                    } else {
-                      toast({ 
-                        title: "UPI ID Required", 
-                        description: "Owner needs to add UPI ID in their profile to accept payments",
-                        variant: "destructive"
-                      });
+                    setShowPaymentModal(false);
+                    if (currentRent) {
+                      // Create a new payment modal with the right amount
+                      setTimeout(() => setShowPaymentModal(true), 100);
                     }
                   }}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                  disabled={!rentalInfo?.ownerUpiId || rentalInfo.ownerUpiId === 'Not provided'}
+                  disabled={!currentRent}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Proceed to UPI Pay
+                  Proceed to Pay
                 </Button>
               </div>
             </div>
@@ -829,17 +843,43 @@ export const RenterPayments = () => {
         </Dialog>
       )}
 
-      {/* UPI Payment Modal */}
-      {currentRent && rentalInfo && (
-        <UpiPaymentModal
-          isOpen={showUpiModal}
-          onClose={() => setShowUpiModal(false)}
-          initialAmount={(currentRent.current_amount || 0) + electricityAmount}
+      {/* Razorpay Payment Modal */}
+      {showPaymentModal && currentRent && !showElectricityDialog && !showMeterUpload && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          amount={(currentRent.current_amount || 0) + electricityAmount}
           relationshipId={currentRent.relationship_id}
-          ownerUpiId={rentalInfo.ownerUpiId}
-          ownerPhoneNumber={rentalInfo.ownerPhoneNumber || ''}
-          ownerName={rentalInfo.ownerName}
           onSuccess={handlePaymentSuccess}
+          onFailure={handlePaymentFailure}
+        />
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && lastPaymentDetails && (
+        <PaymentSuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          paymentDetails={lastPaymentDetails}
+          onDownloadReceipt={() => downloadReceipt(lastPaymentDetails.transactionId)}
+          onGoHome={() => {
+            setShowSuccessModal(false);
+            navigate('/dashboard');
+          }}
+        />
+      )}
+
+      {/* Failure Modal */}
+      {showFailureModal && (
+        <PaymentFailureModal
+          isOpen={showFailureModal}
+          onClose={() => setShowFailureModal(false)}
+          onRetry={() => {
+            setShowFailureModal(false);
+            setShowPaymentModal(true);
+          }}
+          errorMessage={paymentError}
+          amount={(currentRent?.current_amount || 0) + electricityAmount}
         />
       )}
     </div>
