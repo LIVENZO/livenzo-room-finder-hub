@@ -70,13 +70,8 @@ export const OwnerPaymentsTab = () => {
           status,
           payment_method,
           razorpay_payment_id,
-          relationships!inner(
-            renter_id,
-            user_profiles!relationships_renter_id_fkey(
-              full_name,
-              room_number
-            )
-          )
+          renter_id,
+          relationships!inner(owner_id)
         `)
         .eq('relationships.owner_id', user?.id)
         .order('payment_date', { ascending: false });
@@ -88,16 +83,30 @@ export const OwnerPaymentsTab = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const formattedPayments: PaymentRecord[] = data?.map(payment => ({
-        id: payment.id,
-        amount: Number(payment.amount),
-        payment_date: payment.payment_date,
-        status: payment.status as 'paid' | 'pending' | 'failed',
-        payment_method: payment.payment_method,
-        razorpay_payment_id: payment.razorpay_payment_id,
-        renter_name: payment.relationships?.user_profiles?.full_name || 'Unknown',
-        room_number: payment.relationships?.user_profiles?.room_number
-      })) || [];
+      // Get unique renter IDs to fetch their profiles
+      const renterIds = [...new Set(data?.map(p => p.renter_id) || [])];
+      
+      // Fetch renter profiles separately
+      const { data: renterProfiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, room_number')
+        .in('id', renterIds);
+
+      if (profileError) throw profileError;
+
+      const formattedPayments: PaymentRecord[] = data?.map(payment => {
+        const renterProfile = renterProfiles?.find(p => p.id === payment.renter_id);
+        return {
+          id: payment.id,
+          amount: Number(payment.amount),
+          payment_date: payment.payment_date,
+          status: payment.status as 'paid' | 'pending' | 'failed',
+          payment_method: payment.payment_method,
+          razorpay_payment_id: payment.razorpay_payment_id,
+          renter_name: renterProfile?.full_name || 'Unknown',
+          room_number: renterProfile?.room_number
+        };
+      }) || [];
 
       setPayments(formattedPayments);
     } catch (error) {
