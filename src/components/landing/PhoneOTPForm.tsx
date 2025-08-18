@@ -117,58 +117,93 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-medium">Enter OTP</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          We sent a 6-digit code to {phoneNumber}
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/20">
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-card rounded-2xl shadow-lg border p-8 space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl font-bold text-foreground">Verify Phone</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Enter the 6-digit code sent to your phone
+            </p>
+            <p className="text-sm font-medium text-primary">
+              {phoneNumber}
+            </p>
+          </div>
 
-      <form onSubmit={handleVerifyOTP} className="space-y-3">
-        <div className="flex justify-center">
-          <InputOTP value={otp} onChange={setOtp} maxLength={6}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+          <form onSubmit={handleVerifyOTP} className="space-y-8">
+            {/* OTP Input */}
+            <div className="flex justify-center">
+              <InputOTP 
+                value={otp} 
+                onChange={setOtp} 
+                maxLength={6}
+                className="gap-3"
+              >
+                <InputOTPGroup className="gap-3">
+                  <InputOTPSlot 
+                    index={0} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                  <InputOTPSlot 
+                    index={1} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                  <InputOTPSlot 
+                    index={2} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                  <InputOTPSlot 
+                    index={3} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                  <InputOTPSlot 
+                    index={4} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                  <InputOTPSlot 
+                    index={5} 
+                    className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                  />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {/* Verify Button */}
+            <Button 
+              type="submit"
+              size="lg"
+              className="w-full h-12 text-base font-semibold rounded-xl"
+              disabled={isLoading || otp.length !== 6}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              ) : null}
+              Verify OTP
+            </Button>
+          </form>
+
+          {/* Footer Actions */}
+          <div className="space-y-4 text-center">
+            <button
+              type="button"
+              onClick={() => handleSendOTP({ preventDefault: () => {} } as React.FormEvent)}
+              className="text-primary font-medium hover:underline transition-colors disabled:opacity-50"
+              disabled={isLoading}
+            >
+              Resend OTP
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleBackToPhone}
+              className="block w-full text-sm text-muted-foreground hover:text-primary transition-colors"
+              disabled={isLoading}
+            >
+              ← Back to phone number
+            </button>
+          </div>
         </div>
-
-        <Button 
-          type="submit"
-          className="w-full"
-          disabled={isLoading || otp.length !== 6}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
-          Verify OTP
-        </Button>
-      </form>
-
-      <div className="flex flex-col space-y-2 text-center">
-        <button
-          type="button"
-          onClick={handleBackToPhone}
-          className="text-sm text-muted-foreground hover:text-primary hover:underline"
-          disabled={isLoading}
-        >
-          Back to phone number
-        </button>
-        
-        <button
-          type="button"
-          onClick={() => handleSendOTP({ preventDefault: () => {} } as React.FormEvent)}
-          className="text-sm text-primary hover:underline"
-          disabled={isLoading}
-        >
-          Resend OTP
-        </button>
       </div>
     </div>
   );
