@@ -85,62 +85,58 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
     setPhoneNumber(formatted);
   };
 
-  if (!otpSent) {
-    return (
-      <div className="space-y-4">
-        <form onSubmit={handleSendOTP} className="space-y-3">
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="tel"
-              placeholder="Enter phone number (+123456789)"
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              disabled={isLoading}
-              className="pl-10"
-            />
-          </div>
-
-          <Button 
-            type="submit"
-            className="w-full"
-            disabled={isLoading || !phoneNumber.trim()}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : null}
-            Send OTP
-          </Button>
-        </form>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/20">
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-card rounded-2xl shadow-lg border p-8 space-y-8">
+    <div className="space-y-6">
+      {/* Phone Number Input Section */}
+      <form onSubmit={handleSendOTP} className="space-y-3">
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="tel"
+            placeholder="Enter phone number (+123456789)"
+            value={phoneNumber}
+            onChange={handlePhoneChange}
+            disabled={isLoading || otpSent}
+            className="pl-10"
+          />
+        </div>
+
+        <Button 
+          type="submit"
+          className="w-full"
+          disabled={isLoading || !phoneNumber.trim() || otpSent}
+        >
+          {isLoading && !otpSent ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : null}
+          Send OTP
+        </Button>
+      </form>
+
+      {/* OTP Verification Section - Shows after OTP is sent */}
+      {otpSent && (
+        <div className="bg-card/50 rounded-2xl border p-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="text-center space-y-3">
-            <h2 className="text-2xl font-bold text-foreground">Verify Phone</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Enter the 6-digit code sent to your phone
+            <h3 className="text-lg font-semibold text-foreground">Verify Your Phone</h3>
+            <p className="text-sm text-muted-foreground">
+              Enter the 6-digit OTP sent to your phone
             </p>
             <p className="text-sm font-medium text-primary">
               {phoneNumber}
             </p>
           </div>
 
-          <form onSubmit={handleVerifyOTP} className="space-y-8">
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
             {/* OTP Input */}
             <div className="flex justify-center">
               <InputOTP 
                 value={otp} 
                 onChange={setOtp} 
                 maxLength={6}
-                className="gap-3"
+                className="gap-2"
               >
-                <InputOTPGroup className="gap-3">
+                <InputOTPGroup className="gap-2">
                   <InputOTPSlot 
                     index={0} 
                     className="w-12 h-12 text-lg font-bold rounded-xl border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20" 
@@ -173,10 +169,10 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
             <Button 
               type="submit"
               size="lg"
-              className="w-full h-12 text-base font-semibold rounded-xl"
+              className="w-full h-12 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90"
               disabled={isLoading || otp.length !== 6}
             >
-              {isLoading ? (
+              {isLoading && otpSent ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
               ) : null}
               Verify OTP
@@ -184,11 +180,11 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
           </form>
 
           {/* Footer Actions */}
-          <div className="space-y-4 text-center">
+          <div className="text-center space-y-3">
             <button
               type="button"
               onClick={() => handleSendOTP({ preventDefault: () => {} } as React.FormEvent)}
-              className="text-primary font-medium hover:underline transition-colors disabled:opacity-50"
+              className="text-primary text-sm font-medium hover:underline transition-colors disabled:opacity-50"
               disabled={isLoading}
             >
               Resend OTP
@@ -197,14 +193,14 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
             <button
               type="button"
               onClick={handleBackToPhone}
-              className="block w-full text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="block w-full text-xs text-muted-foreground hover:text-primary transition-colors"
               disabled={isLoading}
             >
-              ← Back to phone number
+              ← Use different phone number
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
