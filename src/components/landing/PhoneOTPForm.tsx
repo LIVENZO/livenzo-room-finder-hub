@@ -54,10 +54,10 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
     try {
       await onSendOTP(phoneNumber);
       setOtpSent(true);
-      toast.success('OTP sent successfully! Enter the code below.');
+      toast.success('OTP sent successfully!');
     } catch (error) {
       console.error('Failed to send OTP:', error);
-      // Error handling is done in the auth method, but ensure state stays correct
+      toast.error('Failed to send OTP. Please try again.');
       setOtpSent(false);
     }
   };
@@ -118,12 +118,12 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
 
       {/* OTP Verification Section - Shows directly below phone input */}
       {otpSent && (
-        <div className="space-y-6 pt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
+        <div className="space-y-4 pt-6 border-t border-border/50 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">Enter the 6-digit code sent to your phone</h3>
-            <p className="text-sm font-medium text-primary">
-              {phoneNumber}
+            <h3 className="text-lg font-semibold text-foreground">Enter the 6-digit OTP sent to your phone</h3>
+            <p className="text-sm font-medium text-muted-foreground">
+              Sent to {phoneNumber}
             </p>
           </div>
 
@@ -134,29 +134,29 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
                 value={otp} 
                 onChange={setOtp} 
                 maxLength={6}
-                className="gap-3"
+                className="gap-2"
               >
-                <InputOTPGroup className="gap-3">
+                <InputOTPGroup className="gap-2">
                   {[0, 1, 2, 3, 4, 5].map((index) => (
                     <InputOTPSlot 
                       key={index}
                       index={index} 
-                      className="w-14 h-14 text-xl font-bold rounded-2xl border-2 border-input bg-background transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50" 
+                      className="w-12 h-12 text-lg font-bold rounded-xl border-2 border-input bg-background transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 md:w-14 md:h-14 md:text-xl" 
                     />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>
 
-            {/* Verify Button - Large Purple Button */}
+            {/* Verify Button */}
             <Button 
               type="submit"
               size="lg"
-              className="w-full h-14 text-lg font-semibold rounded-2xl bg-primary hover:bg-primary/90 transition-all duration-200"
+              className="w-full h-12 text-base font-semibold rounded-xl"
               disabled={isLoading || otp.length !== 6}
             >
               {isLoading && otpSent ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-3" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
               Verify OTP
             </Button>
