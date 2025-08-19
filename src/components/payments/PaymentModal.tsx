@@ -95,7 +95,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
           email: user?.email || '',
         },
         theme: {
-          color: '#3B82F6'
+          color: '#8B5CF6'
         },
         modal: {
           ondismiss: () => {
