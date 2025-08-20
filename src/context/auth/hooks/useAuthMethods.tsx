@@ -405,25 +405,40 @@ export function useAuthMethods() {
     }
   };
 
-  const sendOTP = async (phoneNumber: string): Promise<void> => {
+  const sendOTP = async (identifier: string): Promise<void> => {
     try {
       setIsLoading(true);
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phoneNumber.trim(),
-        options: {
-          shouldCreateUser: true
-        }
-      });
 
-      if (error) {
-        console.error('OTP send error:', error);
-        toast.error(`Failed to send OTP: ${error.message}`);
-        throw error;
+      const isEmail = identifier.includes('@');
+      const cleaned = identifier.trim();
+
+      if (isEmail) {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: cleaned,
+          options: {
+            shouldCreateUser: true,
+          }
+        });
+        if (error) {
+          console.error('OTP send (email) error:', error);
+          toast.error(`Failed to send OTP: ${error.message}`);
+          throw error;
+        }
       } else {
-        console.log('OTP sent successfully');
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: cleaned,
+          options: {
+            shouldCreateUser: true,
+          }
+        });
+        if (error) {
+          console.error('OTP send (phone) error:', error);
+          toast.error(`Failed to send OTP: ${error.message}`);
+          throw error;
+        }
       }
-      
+
+      console.log('OTP sent successfully');
     } catch (error) {
       console.error('OTP send error:', error);
       throw error;
@@ -432,15 +447,30 @@ export function useAuthMethods() {
     }
   };
 
-  const verifyOTP = async (phoneNumber: string, token: string): Promise<void> => {
+  const verifyOTP = async (identifier: string, token: string): Promise<void> => {
     try {
       setIsLoading(true);
-      
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: phoneNumber.trim(),
-        token: token.trim(),
-        type: 'sms'
-      });
+
+      const isEmail = identifier.includes('@');
+      const cleanedId = identifier.trim();
+      const cleanedToken = token.replace(/\s+/g, '').trim();
+
+      let params: any;
+      if (isEmail) {
+        params = {
+          email: cleanedId,
+          token: cleanedToken,
+          type: 'email' as const,
+        };
+      } else {
+        params = {
+          phone: cleanedId,
+          token: cleanedToken,
+          type: 'sms' as const,
+        };
+      }
+
+      const { data, error } = await supabase.auth.verifyOtp(params);
 
       if (error) {
         console.error('OTP verification error:', error);
@@ -450,7 +480,7 @@ export function useAuthMethods() {
         console.log('OTP verified successfully:', data);
         toast.success('Successfully signed in!');
       }
-      
+
     } catch (error) {
       console.error('OTP verification error:', error);
       throw error;

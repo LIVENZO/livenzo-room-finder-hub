@@ -8,8 +8,8 @@ export interface AuthContextType {
   logout: () => void;
   signInWithPassword: (email: string, password: string, selectedRole?: string) => Promise<void>;
   signUpWithPassword: (email: string, password: string, selectedRole?: string) => Promise<void>;
-  sendOTP: (email: string) => Promise<void>;
-  verifyOTP: (email: string, token: string) => Promise<void>;
+  sendOTP: (identifier: string) => Promise<void>;
+  verifyOTP: (identifier: string, token: string) => Promise<void>;
   session: Session | null;
   userRole: string | null;
   isOwner: boolean;
