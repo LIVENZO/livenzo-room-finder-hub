@@ -411,6 +411,7 @@ export function useAuthMethods() {
 
       const isEmail = identifier.includes('@');
       const cleaned = identifier.trim();
+      console.log('[OTP] sendOTP called with', { identifier: cleaned, isEmail });
 
       if (isEmail) {
         const { error } = await supabase.auth.signInWithOtp({
@@ -420,7 +421,7 @@ export function useAuthMethods() {
           }
         });
         if (error) {
-          console.error('OTP send (email) error:', error);
+          console.error('[OTP] send (email) error:', error);
           toast.error(`Failed to send OTP: ${error.message}`);
           throw error;
         }
@@ -432,15 +433,15 @@ export function useAuthMethods() {
           }
         });
         if (error) {
-          console.error('OTP send (phone) error:', error);
+          console.error('[OTP] send (phone) error:', error);
           toast.error(`Failed to send OTP: ${error.message}`);
           throw error;
         }
       }
 
-      console.log('OTP sent successfully');
+      console.log('[OTP] OTP send request completed');
     } catch (error) {
-      console.error('OTP send error:', error);
+      console.error('[OTP] send error:', error);
       throw error;
     } finally {
       setIsLoading(false);
