@@ -426,6 +426,15 @@ export function useAuthMethods() {
           throw error;
         }
       } else {
+        // Enforce E.164 format (e.g., +91XXXXXXXXXX) and persist phone for verification
+        if (!cleaned.startsWith('+')) {
+          toast.error('Please enter phone in international format, e.g., +91XXXXXXXXXX');
+          setIsLoading(false);
+          return;
+        }
+
+        localStorage.setItem('lastOtpPhone', cleaned);
+
         const { error } = await supabase.auth.signInWithOtp({
           phone: cleaned,
           options: {
@@ -471,8 +480,17 @@ export function useAuthMethods() {
           type: 'email' as const,
         };
       } else {
+        // Always use the exact phone used during Send OTP
+        const storedPhone = localStorage.getItem('lastOtpPhone')?.trim();
+        const phoneToVerify = storedPhone || cleanedId;
+
+        if (!phoneToVerify || !phoneToVerify.startsWith('+')) {
+          toast.error('Please use a valid phone number in international format, e.g., +91XXXXXXXXXX');
+          throw new Error('Invalid phone format');
+        }
+
         verifyParams = {
-          phone: cleanedId,
+          phone: phoneToVerify,
           token: cleanedToken,
           type: 'sms' as const,
         };
@@ -484,16 +502,19 @@ export function useAuthMethods() {
 
       if (error) {
         console.error('[OTP] verification error:', error);
-        toast.error(`OTP verification failed: ${error.message}`);
+        const message = (error as any)?.message?.toLowerCase().includes('invalid')
+          ? 'Invalid OTP, please try again'
+          : 'Invalid OTP, please try again';
+        toast.error(message);
         throw error;
       } else {
         console.log('[OTP] verified successfully:', data);
         toast.success('Successfully signed in!');
         
-        // Navigate to dashboard after successful verification
+        // Navigate to home after successful verification
         setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
+          window.location.href = '/';
+        }, 600);
       }
 
     } catch (error) {
