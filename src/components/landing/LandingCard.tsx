@@ -57,14 +57,13 @@ const LandingCard: React.FC<LandingCardProps> = ({
       return;
     }
 
+    setOtpSent(true);
     try {
       await handleOTPAuth.sendOTP(phoneNumber);
-      setOtpSent(true);
       toast.success('OTP sent successfully!');
     } catch (error) {
       console.error('Failed to send OTP:', error);
-      toast.error('Failed to send OTP. Please try again.');
-      setOtpSent(false);
+      toast.error('Failed to send OTP. You can still enter the code if received, or try resending.');
     }
   };
 
@@ -142,6 +141,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
                 value={otp} 
                 onChange={setOtp} 
                 maxLength={6}
+                autoFocus
                 className="gap-2"
               >
                 <InputOTPGroup className="gap-2">
