@@ -122,6 +122,18 @@ const LandingCard: React.FC<LandingCardProps> = ({
           {otpSent ? 'OTP Sent' : 'Send OTP'}
         </Button>
       </form>
+      {!otpSent && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setOtpSent(true)}
+            className="text-primary text-sm font-medium hover:underline transition-colors"
+          >
+            Already have a code? Enter OTP
+          </button>
+        </div>
+      )}
+
 
       {/* OTP Verification Section - Shows directly below phone input */}
       {otpSent && (
