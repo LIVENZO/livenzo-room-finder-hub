@@ -456,34 +456,48 @@ export function useAuthMethods() {
       const cleanedId = identifier.trim();
       const cleanedToken = token.replace(/\s+/g, '').trim();
 
-      let params: any;
+      console.log('[OTP] verifyOTP called with', { 
+        identifier: cleanedId, 
+        isEmail, 
+        tokenLength: cleanedToken.length 
+      });
+
+      let verifyParams: any;
+      
       if (isEmail) {
-        params = {
+        verifyParams = {
           email: cleanedId,
           token: cleanedToken,
           type: 'email' as const,
         };
       } else {
-        params = {
+        verifyParams = {
           phone: cleanedId,
           token: cleanedToken,
           type: 'sms' as const,
         };
       }
 
-      const { data, error } = await supabase.auth.verifyOtp(params);
+      console.log('[OTP] Calling Supabase verifyOtp with params:', verifyParams);
+
+      const { data, error } = await supabase.auth.verifyOtp(verifyParams);
 
       if (error) {
-        console.error('OTP verification error:', error);
+        console.error('[OTP] verification error:', error);
         toast.error(`OTP verification failed: ${error.message}`);
         throw error;
       } else {
-        console.log('OTP verified successfully:', data);
+        console.log('[OTP] verified successfully:', data);
         toast.success('Successfully signed in!');
+        
+        // Navigate to dashboard after successful verification
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
       }
 
     } catch (error) {
-      console.error('OTP verification error:', error);
+      console.error('[OTP] verification error:', error);
       throw error;
     } finally {
       setIsLoading(false);
