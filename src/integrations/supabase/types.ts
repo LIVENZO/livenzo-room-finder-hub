@@ -698,12 +698,52 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           accommodation_type: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
+          data_classification: Json | null
           email: string | null
           full_name: string | null
           house_number: string | null
@@ -729,6 +769,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          data_classification?: Json | null
           email?: string | null
           full_name?: string | null
           house_number?: string | null
@@ -754,6 +795,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          data_classification?: Json | null
           email?: string | null
           full_name?: string | null
           house_number?: string | null
@@ -852,6 +894,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_room_details_for_authenticated: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -895,6 +941,17 @@ export type Database = {
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
+      }
+      log_security_event: {
+        Args: {
+          p_details?: Json
+          p_event_type: string
+          p_resource_id?: string
+          p_resource_type?: string
+          p_severity?: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }
