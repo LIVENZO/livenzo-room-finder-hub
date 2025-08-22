@@ -3,6 +3,7 @@ import { Room } from '@/types/room';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { mapDbRoomToRoom } from '@/utils/roomUtils';
+import { securityAudit } from '@/services/security/securityAudit';
 
 // Fetch all rooms using secure functions based on authentication status
 export const fetchRooms = async (): Promise<Room[]> => {
@@ -22,10 +23,12 @@ export const fetchRooms = async (): Promise<Room[]> => {
     if (error) {
       console.error('Error fetching rooms:', error);
       toast.error(`Error fetching rooms: ${error.message}`);
+      await securityAudit.logUnauthorizedAccess('rooms', 'fetch');
       return [];
     }
     
     console.log(`Rooms fetched: ${data ? data.length : 0}`);
+    await securityAudit.logDataAccess('rooms', 'all', user ? 'fetch_authenticated' : 'fetch_public');
     
     // Map and transform the data to ensure proper typing
     return data ? data.map(room => mapDbRoomToRoom(room)) : [];
