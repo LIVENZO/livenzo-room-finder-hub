@@ -857,6 +857,10 @@ export type Database = {
         Args: { new_owner_id: string; renter_user_id: string }
         Returns: undefined
       }
+      can_access_user_profile: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       check_google_role_conflict: {
         Args: {
           email_param: string
@@ -941,6 +945,10 @@ export type Database = {
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
+      }
+      log_profile_access_attempt: {
+        Args: { access_granted: boolean; target_user_id: string }
+        Returns: undefined
       }
       log_security_event: {
         Args: {
