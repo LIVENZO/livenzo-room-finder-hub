@@ -49,6 +49,13 @@ const handler = async (req: Request): Promise<Response> => {
       .digest('hex');
 
     if (expectedSignature !== razorpaySignature) {
+      console.error('Payment signature verification failed:', {
+        expectedSignature,
+        receivedSignature: razorpaySignature,
+        orderId: razorpayOrderId,
+        paymentId: razorpayPaymentId,
+        userId: user.id
+      });
       throw new Error('Invalid payment signature');
     }
 
@@ -68,7 +75,17 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (updateError || !payment) {
-      console.error('Payment update error:', updateError);
+      console.error('Payment update error:', {
+        error: updateError,
+        paymentId,
+        userId: user.id,
+        razorpayPaymentId,
+        attemptedUpdate: {
+          razorpay_payment_id: razorpayPaymentId,
+          status: 'paid',
+          payment_status: 'completed'
+        }
+      });
       throw new Error('Failed to update payment record');
     }
 
@@ -110,9 +127,41 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in verify-payment:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Payment verification failed with details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      userId: user?.id,
+      razorpayPaymentId,
+      razorpayOrderId,
+      paymentId,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Enhanced error messages for different failure types
+    let errorMessage = 'Payment verification failed';
+    let statusCode = 500;
+    
+    if (error.message.includes('Invalid payment signature')) {
+      errorMessage = 'Payment verification failed: Invalid signature';
+      statusCode = 400;
+    } else if (error.message.includes('Unauthorized')) {
+      errorMessage = 'Authentication required';
+      statusCode = 401;
+    } else if (error.message.includes('Razorpay secret not configured')) {
+      errorMessage = 'Payment service configuration error';
+      statusCode = 503;
+    } else if (error.message.includes('Failed to update payment record')) {
+      errorMessage = 'Database error: Unable to update payment status';
+      statusCode = 502;
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: statusCode,
     });
   }
 };

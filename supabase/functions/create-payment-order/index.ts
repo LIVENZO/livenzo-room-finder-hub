@@ -96,8 +96,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!orderResponse.ok) {
       const errorText = await orderResponse.text();
-      console.error('Razorpay order creation failed:', errorText);
-      throw new Error('Failed to create payment order');
+      console.error('Razorpay order creation failed:', {
+        status: orderResponse.status,
+        statusText: orderResponse.statusText,
+        error: errorText,
+        keyId: razorpayKeyId ? 'Present' : 'Missing',
+        keySecret: razorpayKeySecret ? 'Present' : 'Missing',
+        amount: amount,
+        relationshipId: relationshipId
+      });
+      
+      // Parse Razorpay error for better user feedback
+      let razorpayError = 'Unknown payment gateway error';
+      try {
+        const errorJson = JSON.parse(errorText);
+        razorpayError = errorJson.error?.description || errorJson.message || razorpayError;
+      } catch (parseError) {
+        console.error('Failed to parse Razorpay error:', parseError);
+      }
+      
+      throw new Error(`Failed to create payment order: ${razorpayError}`);
     }
 
     const orderData = await orderResponse.json();
@@ -137,9 +155,40 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in create-payment-order:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      userId: user?.id,
+      relationshipId,
+      amount,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Enhanced error messages for different failure types
+    let errorMessage = 'Payment order creation failed';
+    let statusCode = 500;
+    
+    if (error.message.includes('Invalid relationship')) {
+      errorMessage = 'Access denied: Invalid relationship or user permissions';
+      statusCode = 403;
+    } else if (error.message.includes('Razorpay credentials')) {
+      errorMessage = 'Payment service configuration error';
+      statusCode = 503;
+    } else if (error.message.includes('Failed to create payment order')) {
+      errorMessage = 'Payment gateway error: Unable to create order';
+      statusCode = 502;
+    } else if (error.message.includes('Unauthorized')) {
+      errorMessage = 'Authentication required';
+      statusCode = 401;
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: statusCode,
     });
   }
 };
