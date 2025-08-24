@@ -31,7 +31,13 @@ export const OwnerUpiSettings = () => {
   }, [user]);
 
   const fetchUpiDetails = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot fetch UPI details');
+      setLoading(false);
+      return;
+    }
+    
+    console.log('Fetching UPI details for user:', user.id);
     
     try {
       const { data, error } = await supabase
@@ -41,14 +47,19 @@ export const OwnerUpiSettings = () => {
         .eq('is_active', true)
         .maybeSingle();
 
+      console.log('UPI fetch result:', { data, error });
+
       if (error) throw error;
 
       if (data) {
         setUpiDetails(data);
         setUpiId(data.upi_id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching UPI details:', error);
+      if (error?.message?.includes('row-level security')) {
+        toast({ description: "Please log in to access UPI settings", variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
@@ -75,6 +86,12 @@ export const OwnerUpiSettings = () => {
       return;
     }
 
+    if (!user) {
+      toast({ description: "Please log in to save UPI details", variant: "destructive" });
+      return;
+    }
+
+    console.log('Starting UPI save process for user:', user.id);
     setSaving(true);
     try {
       let qrCodeUrl = upiDetails?.qr_code_url;
@@ -136,9 +153,21 @@ export const OwnerUpiSettings = () => {
       toast({ description: "UPI details saved successfully!" });
       setQrFile(null);
       fetchUpiDetails();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving UPI details:', error);
-      toast({ description: "Failed to save UPI details", variant: "destructive" });
+      let errorMessage = "Failed to save UPI details";
+      
+      if (error?.message) {
+        if (error.message.includes('row-level security')) {
+          errorMessage = "Permission denied. Please ensure you're logged in.";
+        } else if (error.message.includes('duplicate key')) {
+          errorMessage = "UPI details already exist. Please try updating instead.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      toast({ description: errorMessage, variant: "destructive" });
     } finally {
       setSaving(false);
     }
