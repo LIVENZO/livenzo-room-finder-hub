@@ -74,7 +74,7 @@ export const UpiPaymentModal = ({
 
       // Upload proof image if provided
       if (proofFile) {
-        const fileName = `manual-payment-${Date.now()}-${proofFile.name}`;
+        const fileName = `${user?.id}-manual-payment-${Date.now()}-${proofFile.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('user-uploads')
           .upload(fileName, proofFile);

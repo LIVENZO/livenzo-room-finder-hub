@@ -316,8 +316,12 @@ export const RenterPayments = () => {
 
   const fetchOwnerUpiDetails = async () => {
     try {
-      if (!activeRelationship?.owner_id) return;
+      if (!activeRelationship?.owner_id) {
+        console.log('No active relationship or owner_id:', activeRelationship);
+        return;
+      }
 
+      console.log('Fetching UPI details for owner:', activeRelationship.owner_id);
       const { data, error } = await supabase
         .from('owner_upi_details')
         .select('*')
@@ -325,7 +329,12 @@ export const RenterPayments = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching owner UPI details:', error);
+        throw error;
+      }
+      
+      console.log('Owner UPI details fetched:', data);
       setOwnerUpiDetails(data);
     } catch (error) {
       console.error('Error fetching owner UPI details:', error);
