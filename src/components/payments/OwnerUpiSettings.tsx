@@ -99,7 +99,8 @@ export const OwnerUpiSettings = () => {
 
       // Upload new QR code if provided
       if (qrFile) {
-        const fileName = `upi-qr-${user?.id}-${Date.now()}-${qrFile.name}`;
+        // Format filename with user ID prefix to match storage policy
+        const fileName = `${user.id}-upi-qr-${Date.now()}-${qrFile.name}`;
         
         // Delete old QR code if exists
         if (qrCodeFileName) {
