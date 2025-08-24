@@ -24,6 +24,8 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { PaymentsList } from "./PaymentsList";
+import { OwnerUpiSettings } from "./OwnerUpiSettings";
+import { ManualPaymentVerification } from "./ManualPaymentVerification";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -608,6 +610,12 @@ ${payments.map(p =>
           </div>
         </CardContent>
       </Card>
+
+      {/* UPI Settings */}
+      <OwnerUpiSettings />
+
+      {/* Manual Payment Verification */}
+      <ManualPaymentVerification />
 
       {/* Payments List */}
       <PaymentsList

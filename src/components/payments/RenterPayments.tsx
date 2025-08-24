@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils";
 import { PaymentModal } from "./PaymentModal";
 import { PaymentSuccessModal } from "./PaymentSuccessModal";
 import { PaymentFailureModal } from "./PaymentFailureModal";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import { UpiPaymentModal } from "./UpiPaymentModal";
 
 interface RentStatus {
   id: string;
@@ -76,9 +78,12 @@ export const RenterPayments = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
+  const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailureModal, setShowFailureModal] = useState(false);
+  const [ownerUpiDetails, setOwnerUpiDetails] = useState<any>(null);
   const [paymentError, setPaymentError] = useState<string>("");
   const [lastPaymentDetails, setLastPaymentDetails] = useState<any>(null);
   const [showElectricityDialog, setShowElectricityDialog] = useState(false);
@@ -96,6 +101,7 @@ export const RenterPayments = () => {
       fetchRentalInfo();
       fetchPaymentStats();
       fetchRecentPayments();
+      fetchOwnerUpiDetails();
     }
   }, [user, selectedYear]);
 
@@ -308,8 +314,53 @@ export const RenterPayments = () => {
     setShowFailureModal(true);
   };
 
+  const fetchOwnerUpiDetails = async () => {
+    try {
+      if (!activeRelationship?.owner_id) return;
+
+      const { data, error } = await supabase
+        .from('owner_upi_details')
+        .select('*')
+        .eq('owner_id', activeRelationship.owner_id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) throw error;
+      setOwnerUpiDetails(data);
+    } catch (error) {
+      console.error('Error fetching owner UPI details:', error);
+    }
+  };
+
   const handlePayNow = () => {
+    setShowPaymentMethodSelector(true);
+  };
+
+  const handleSelectRazorpay = () => {
+    setShowPaymentMethodSelector(false);
     setShowPaymentModal(true);
+  };
+
+  const handleSelectUpiDirect = () => {
+    setShowPaymentMethodSelector(false);
+    if (ownerUpiDetails) {
+      setShowUpiModal(true);
+    } else {
+      toast({ 
+        description: "Owner has not set up UPI direct payments yet", 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleUpiPaymentSuccess = () => {
+    setShowUpiModal(false);
+    toast({
+      title: "Payment Submitted",
+      description: "Your payment proof has been submitted for verification",
+    });
+    fetchCurrentRent();
+    fetchRecentPayments();
   };
 
   const handleElectricityOptionSelect = async (option: 'upload' | 'owner') => {
@@ -866,6 +917,31 @@ export const RenterPayments = () => {
             setShowSuccessModal(false);
             navigate('/dashboard');
           }}
+        />
+      )}
+
+      {/* Payment Method Selector */}
+      {showPaymentMethodSelector && currentRent && (
+        <PaymentMethodSelector
+          isOpen={showPaymentMethodSelector}
+          onClose={() => setShowPaymentMethodSelector(false)}
+          amount={(currentRent.current_amount || 0) + electricityAmount}
+          onSelectRazorpay={handleSelectRazorpay}
+          onSelectUpiDirect={handleSelectUpiDirect}
+        />
+      )}
+
+      {/* UPI Direct Payment Modal */}
+      {showUpiModal && currentRent && ownerUpiDetails && (
+        <UpiPaymentModal
+          isOpen={showUpiModal}
+          onClose={() => setShowUpiModal(false)}
+          amount={(currentRent.current_amount || 0) + electricityAmount}
+          relationshipId={currentRent.relationship_id}
+          ownerUpiId={ownerUpiDetails.upi_id}
+          ownerQrCodeUrl={ownerUpiDetails.qr_code_url}
+          ownerName={rentalInfo?.ownerName || 'Owner'}
+          onSuccess={handleUpiPaymentSuccess}
         />
       )}
 

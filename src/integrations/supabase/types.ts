@@ -274,6 +274,60 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          owner_id: string
+          proof_file_name: string | null
+          proof_image_url: string | null
+          relationship_id: string
+          renter_id: string
+          status: string
+          submitted_at: string
+          transaction_id: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id: string
+          proof_file_name?: string | null
+          proof_image_url?: string | null
+          relationship_id: string
+          renter_id: string
+          status?: string
+          submitted_at?: string
+          transaction_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          proof_file_name?: string | null
+          proof_image_url?: string | null
+          relationship_id?: string
+          renter_id?: string
+          status?: string
+          submitted_at?: string
+          transaction_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -375,6 +429,39 @@ export type Database = {
           message?: string
           owner_id?: string
           renter_id?: string
+        }
+        Relationships: []
+      }
+      owner_upi_details: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_id: string
+          qr_code_file_name: string | null
+          qr_code_url: string | null
+          updated_at: string
+          upi_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id: string
+          qr_code_file_name?: string | null
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id?: string
+          qr_code_file_name?: string | null
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id?: string
         }
         Relationships: []
       }
