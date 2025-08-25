@@ -9,6 +9,8 @@ import { Copy, QrCode, Upload, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
 
 interface UpiPaymentModalProps {
   isOpen: boolean;
@@ -144,9 +146,25 @@ export const UpiPaymentModal = ({
     return upiUrl;
   };
 
-  const handlePayWithUpi = () => {
+  const handlePayWithUpi = async () => {
     const upiUrl = generateUpiUrl();
-    window.location.href = upiUrl;
+    
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // On mobile devices, open UPI links externally
+        await Browser.open({ 
+          url: upiUrl,
+          windowName: '_system'
+        });
+      } else {
+        // On web, try to open UPI link
+        window.location.href = upiUrl;
+      }
+    } catch (error) {
+      console.error('Error opening UPI app:', error);
+      // Fallback to window.location for web compatibility
+      window.location.href = upiUrl;
+    }
   };
 
   return (
