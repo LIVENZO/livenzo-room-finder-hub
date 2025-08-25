@@ -151,19 +151,39 @@ export const UpiPaymentModal = ({
     
     try {
       if (Capacitor.isNativePlatform()) {
-        // Use App plugin to open UPI deep link with native app chooser
-        await App.openUrl({ url: upiUrl });
+        // Use window.open with _system target to trigger native intent chooser
+        // This works better than App.openUrl for UPI deep links on Android
+        const opened = window.open(upiUrl, '_system');
+        
+        if (opened) {
+          // Show success message that UPI app should open
+          toast({
+            title: "Opening UPI App",
+            description: "UPI app should open now. Complete the payment and return to submit proof.",
+          });
+        } else {
+          throw new Error('Failed to open UPI app');
+        }
       } else {
-        // On web, try to open UPI link
+        // On web platforms, try to open UPI link
         window.location.href = upiUrl;
       }
     } catch (error) {
       console.error('Error opening UPI app:', error);
-      toast({
-        title: "No UPI App Found",
-        description: "No UPI app found. Please install Google Pay, PhonePe, Paytm, or BHIM.",
-        variant: "destructive",
-      });
+      
+      if (Capacitor.isNativePlatform()) {
+        toast({
+          title: "No UPI App Found",
+          description: "No UPI app installed. Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "UPI Not Supported",
+          description: "UPI payments work best on mobile. Please use a mobile device or try Razorpay.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
