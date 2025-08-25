@@ -101,9 +101,15 @@ export const RenterPayments = () => {
       fetchRentalInfo();
       fetchPaymentStats();
       fetchRecentPayments();
-      fetchOwnerUpiDetails();
     }
   }, [user, selectedYear]);
+
+  // Fetch owner's UPI details when the active relationship becomes available
+  useEffect(() => {
+    if (user && activeRelationship?.owner_id) {
+      fetchOwnerUpiDetails();
+    }
+  }, [user, activeRelationship?.owner_id]);
 
   const fetchCurrentRent = async () => {
     try {
