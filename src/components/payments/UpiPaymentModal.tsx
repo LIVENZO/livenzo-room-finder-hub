@@ -9,7 +9,7 @@ import { Copy, QrCode, Upload, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Browser } from "@capacitor/browser";
+import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 
 interface UpiPaymentModalProps {
@@ -142,7 +142,7 @@ export const UpiPaymentModal = ({
   };
 
   const generateUpiUrl = () => {
-    const upiUrl = `upi://pay?pa=${ownerUpiId}&am=${amount}&cu=INR&tn=Rent Payment`;
+    const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
     return upiUrl;
   };
 
@@ -151,19 +151,19 @@ export const UpiPaymentModal = ({
     
     try {
       if (Capacitor.isNativePlatform()) {
-        // On mobile devices, open UPI links externally
-        await Browser.open({ 
-          url: upiUrl,
-          windowName: '_system'
-        });
+        // Use App plugin to open UPI deep link with native app chooser
+        await App.openUrl({ url: upiUrl });
       } else {
         // On web, try to open UPI link
         window.location.href = upiUrl;
       }
     } catch (error) {
       console.error('Error opening UPI app:', error);
-      // Fallback to window.location for web compatibility
-      window.location.href = upiUrl;
+      toast({
+        title: "No UPI App Found",
+        description: "No UPI app found. Please install Google Pay, PhonePe, Paytm, or BHIM.",
+        variant: "destructive",
+      });
     }
   };
 
