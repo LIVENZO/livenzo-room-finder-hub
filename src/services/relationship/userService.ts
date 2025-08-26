@@ -11,10 +11,10 @@ export const findUserById = async (publicId: string): Promise<UserProfile | null
       .from("user_profiles")
       .select("id, full_name, avatar_url, public_id");
 
-    // Search by public_id using prefix matching for shorter inputs
+    // Search by public_id using prefix matching for shorter inputs (case-insensitive)
     if (publicId.length <= 10) {
       console.log("Searching by public_id prefix for:", publicId);
-      query = query.filter('public_id', 'like', `${publicId}%`);
+      query = query.ilike('public_id', `${publicId}%`).limit(1);
     } else {
       console.log("Searching by exact public_id match for:", publicId);
       query = query.eq("public_id", publicId);

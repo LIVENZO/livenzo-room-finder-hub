@@ -23,12 +23,13 @@ export const useUserSearch = (currentUserId: string) => {
     
     // Validate input length (should be up to 10 characters for public ID)
     const trimmedId = searchId.trim();
-    if (trimmedId.length < 3) {
+    const normalizedId = trimmedId.toLowerCase();
+    if (normalizedId.length < 3) {
       toast.error("Owner ID must be at least 3 characters");
       return;
     }
     
-    if (trimmedId.length > 10) {
+    if (normalizedId.length > 10) {
       toast.error("Owner ID cannot be more than 10 characters");
       return;
     }
@@ -37,7 +38,7 @@ export const useUserSearch = (currentUserId: string) => {
     setRequestError(null);
     
     try {
-      const user = await findUserById(trimmedId);
+      const user = await findUserById(normalizedId);
       if (user) {
         console.log("Found user:", user);
         setFoundUser(user);
