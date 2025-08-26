@@ -15,7 +15,8 @@ interface ProfileActionsProps {
 const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, saving, onSave, isOwner = false }) => {
   const basicComplete = isProfileComplete(profile);
   const ownerComplete = isOwner ? isOwnerProfileComplete(profile) : true;
-  const fullyComplete = basicComplete && ownerComplete;
+  // Actions enablement depends on basic profile only
+  const fullyComplete = basicComplete;
 
   return (
     <div className="w-full space-y-6">
@@ -24,8 +25,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, saving, onSave
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <p className="text-base text-amber-800 font-medium leading-relaxed">
             {!basicComplete && "Please complete your basic profile information. "}
-            {isOwner && !ownerComplete && "Please complete your property details. "}
-            A complete profile is required for full access to all features.
+            {isOwner && !ownerComplete && "Property details are only required when listing rooms or managing connections."}
           </p>
         </div>
       )}

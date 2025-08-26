@@ -13,7 +13,8 @@ interface ProfileCompletionBannerProps {
 const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = ({ profile, isOwner = false }) => {
   const basicComplete = isProfileComplete(profile);
   const ownerComplete = isOwner ? isOwnerProfileComplete(profile) : true;
-  const fullyComplete = basicComplete && ownerComplete;
+  // For banner, consider basic profile completion only; owner details are optional
+  const fullyComplete = basicComplete;
   
   if (fullyComplete) {
     return (
@@ -37,8 +38,11 @@ const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = ({ profi
       <AlertCircle className="h-4 w-4 text-amber-600" />
       <AlertTitle className="text-amber-700">Profile Incomplete</AlertTitle>
       <AlertDescription className="text-amber-600">
-        Please complete your {missingFields.join(" and ")} to unlock all features.
-        {isOwner && " Property details are required for listing rooms and managing connections."}
+        { !basicComplete ? (
+          <>Please complete your name and phone number to unlock account features.</>
+        ) : (
+          isOwner && !ownerComplete && <>Property details are optional and only required when listing rooms or managing connections.</>
+        ) }
       </AlertDescription>
     </Alert>
   );
