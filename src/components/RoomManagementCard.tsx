@@ -28,14 +28,15 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
     setUpdatingRoom(room.id);
     
     try {
-      const { error } = await supabase
-        .from('rooms')
-        .update({ available: checked })
-        .eq('id', room.id);
+      // Use the dedicated function for owners to update room availability
+      const { error } = await supabase.rpc('update_room_availability_for_owner', {
+        room_id: room.id,
+        is_available: checked
+      });
       
       if (error) {
         console.error('Error updating room availability:', error);
-        toast.error('Failed to update availability');
+        toast.error(`Failed to update availability: ${error.message}`);
         return;
       }
       
