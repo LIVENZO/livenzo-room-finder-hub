@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { format, isBefore } from "date-fns";
 
-// Simple helper functions since date-fns export seems to have issues
+// Simple date helper functions
 const isAfter = (date1: Date, date2: Date) => date1.getTime() > date2.getTime();
 const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 import { useNavigate } from "react-router-dom";
