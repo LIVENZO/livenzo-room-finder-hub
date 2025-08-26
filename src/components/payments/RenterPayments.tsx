@@ -27,7 +27,11 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { format, isAfter, isBefore, addDays } from "date-fns";
+import { format, isBefore } from "date-fns";
+
+// Simple helper functions since date-fns export seems to have issues
+const isAfter = (date1: Date, date2: Date) => date1.getTime() > date2.getTime();
+const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PaymentModal } from "./PaymentModal";

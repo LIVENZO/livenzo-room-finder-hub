@@ -26,7 +26,13 @@ export const isOwnerProfileComplete = (profile: UserProfile | null): boolean => 
   if (!profile) return false;
   
   // Check basic profile completion first
-  if (!isProfileComplete(profile)) return false;
+  if (!isProfileComplete(profile)) {
+    console.log("Basic profile not complete:", { 
+      full_name: profile.full_name, 
+      phone: profile.phone 
+    });
+    return false;
+  }
   
   // Check owner-specific required fields
   const hasAccommodationType = !!profile.accommodation_type;
@@ -37,6 +43,31 @@ export const isOwnerProfileComplete = (profile: UserProfile | null): boolean => 
   const hasPropertyLocation = !!profile.property_location && profile.property_location.trim().length > 0;
   const hasUpiPhoneNumber = !!profile.upi_phone_number && profile.upi_phone_number.trim().length === 10;
   const hasRazorpayMerchantId = !!profile.razorpay_merchant_id && profile.razorpay_merchant_id.trim().length > 0;
+  
+  // Debug missing fields
+  const missingFields = [];
+  if (!hasAccommodationType) missingFields.push('accommodation_type');
+  if (!hasPropertyName) missingFields.push('property_name');
+  if (!hasHouseNumber) missingFields.push('house_number');
+  if (!hasValidRooms) missingFields.push('total_rental_rooms');
+  if (!hasResidentType) missingFields.push('resident_type');
+  if (!hasPropertyLocation) missingFields.push('property_location');
+  if (!hasUpiPhoneNumber) missingFields.push('upi_phone_number');
+  if (!hasRazorpayMerchantId) missingFields.push('razorpay_merchant_id');
+  
+  if (missingFields.length > 0) {
+    console.log("Owner profile missing fields:", missingFields);
+    console.log("Profile data:", {
+      accommodation_type: profile.accommodation_type,
+      property_name: profile.property_name,
+      house_number: profile.house_number,
+      total_rental_rooms: profile.total_rental_rooms,
+      resident_type: profile.resident_type,
+      property_location: profile.property_location,
+      upi_phone_number: profile.upi_phone_number,
+      razorpay_merchant_id: profile.razorpay_merchant_id
+    });
+  }
   
   return hasAccommodationType && hasPropertyName && hasHouseNumber && 
          hasValidRooms && hasResidentType && hasPropertyLocation && 
