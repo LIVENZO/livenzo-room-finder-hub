@@ -43,6 +43,21 @@ const ListRoom: React.FC = () => {
       owner_phone: '',
     },
   });
+
+  // Restore form data if returning from location setup
+  useEffect(() => {
+    const savedData = localStorage.getItem('list-room-form-data');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        form.reset(parsedData);
+        localStorage.removeItem('list-room-form-data'); // Clear after restoring
+        toast.success('Your form data has been restored. You can now publish your room.');
+      } catch (error) {
+        console.error('Error restoring form data:', error);
+      }
+    }
+  }, [form]);
   
   // Redirect if not logged in or not an owner
   useEffect(() => {
@@ -71,15 +86,21 @@ const ListRoom: React.FC = () => {
         typeof profile.location_latitude === "number" &&
         typeof profile.location_longitude === "number";
       if (!hasValidLocation) {
-        toast.info('Set your property location before listing a room.');
-        // Pass intended backTo via state
+        // Save current form data before redirecting
+        const currentValues = form.getValues();
+        localStorage.setItem('list-room-form-data', JSON.stringify({
+          ...currentValues,
+          imageFiles: imageFiles.length, // Store count for reference
+        }));
+        
+        toast.info('Please set your location before publishing your room.');
         navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
       } else {
         setProfileChecked(true);
       }
     };
     checkLocation();
-  }, [user, navigate]);
+  }, [user, navigate, form, imageFiles]);
   
   // Only render the page after checking the location
   if (!user || !profileChecked) return null;

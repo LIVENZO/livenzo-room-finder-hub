@@ -30,6 +30,7 @@ interface OwnerProfileTabsProps {
   onOwnerSelectChange: (field: string, value: string) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLocationSaved: () => void;
+  defaultTab?: string;
 }
 
 const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
@@ -42,10 +43,11 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
   onOwnerInputChange,
   onOwnerSelectChange,
   onImageUpload,
-  onLocationSaved
+  onLocationSaved,
+  defaultTab = 'basic'
 }) => {
   return (
-    <Tabs defaultValue="basic" className="w-full">
+    <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50 rounded-lg p-1">
         <TabsTrigger 
           value="basic" 

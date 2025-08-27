@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -12,8 +13,11 @@ import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import UserIdDisplay from '@/components/profile/UserIdDisplay';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
+import { toast } from 'sonner';
 
 const Profile = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const {
     profile,
     loading,
@@ -30,6 +34,22 @@ const Profile = () => {
     user,
     isOwner
   } = useProfileManagement();
+
+  // Handle return navigation after profile completion
+  useEffect(() => {
+    const returnTo = searchParams.get('returnTo');
+    if (returnTo && profile) {
+      // Check if profile is now complete for the required action
+      const isBasicComplete = profile.full_name && profile.phone;
+      
+      if (isBasicComplete) {
+        toast.success('Profile completed! Redirecting back...');
+        setTimeout(() => {
+          navigate(returnTo, { replace: true });
+        }, 1000);
+      }
+    }
+  }, [profile, searchParams, navigate]);
   
   if (loading) {
     return (
@@ -76,6 +96,7 @@ const Profile = () => {
                   onOwnerSelectChange={handleOwnerSelectChange}
                   onImageUpload={handleImageUpload}
                   onLocationSaved={handleLocationSaved}
+                  defaultTab={searchParams.get('tab') || 'basic'}
                 />
               ) : (
                 <div className="space-y-8">

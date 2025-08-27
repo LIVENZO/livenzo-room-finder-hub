@@ -7,6 +7,8 @@ import {
   updateRelationshipStatus,
   type Relationship 
 } from '@/services/relationship';
+import { fetchUserProfile } from '@/services/UserProfileService';
+import { isProfileComplete } from '@/utils/profileUtils';
 
 export const useRentersManagement = (currentUserId: string) => {
   const navigate = useNavigate();
@@ -35,6 +37,20 @@ export const useRentersManagement = (currentUserId: string) => {
   }, [fetchRelationships]);
 
   const handleAccept = async (relationshipId: string) => {
+    // Check if basic profile is complete before accepting
+    try {
+      const profile = await fetchUserProfile(currentUserId);
+      if (!isProfileComplete(profile)) {
+        toast.info('Please complete your basic profile information before accepting a renter\'s request.');
+        navigate('/profile?tab=basic&returnTo=/connections');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking profile:', error);
+      toast.error('Unable to verify profile. Please try again.');
+      return;
+    }
+
     setProcessingIds(prev => [...prev, relationshipId]);
     try {
       await updateRelationshipStatus(relationshipId, 'accepted');
