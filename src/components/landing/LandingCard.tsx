@@ -32,16 +32,26 @@ const LandingCard: React.FC<LandingCardProps> = ({
   const [otpSent, setOtpSent] = useState(false);
 
   const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length > 0 && !value.startsWith('+')) {
-      return '+' + cleaned;
+    
+    // Limit to 10 digits for Indian numbers
+    if (cleaned.length > 10) {
+      return cleaned.substring(0, 10);
     }
-    return value;
+    
+    return cleaned;
   };
 
   const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    // Validate 10-digit Indian phone number
+    const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
+  };
+
+  const getFullPhoneNumber = (phone: string) => {
+    // Always add +91 prefix for Indian numbers
+    return `+91${phone}`;
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -53,13 +63,14 @@ const LandingCard: React.FC<LandingCardProps> = ({
     }
 
     if (!validatePhoneNumber(phoneNumber)) {
-      toast.error('Please enter a valid phone number with country code (e.g., +1234567890)');
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
+    const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     setOtpSent(true);
     try {
-      await handleOTPAuth.sendOTP(phoneNumber);
+      await handleOTPAuth.sendOTP(fullPhoneNumber);
       toast.success('OTP sent successfully!');
     } catch (error) {
       console.error('Failed to send OTP:', error);
@@ -75,8 +86,9 @@ const LandingCard: React.FC<LandingCardProps> = ({
       return;
     }
 
+    const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     try {
-      await handleOTPAuth.verifyOTP(phoneNumber, otp);
+      await handleOTPAuth.verifyOTP(fullPhoneNumber, otp);
     } catch (error) {
       console.error('Failed to verify OTP:', error);
     }
@@ -98,16 +110,22 @@ const LandingCard: React.FC<LandingCardProps> = ({
       
       {/* Phone Number Input Section */}
       <form onSubmit={handleSendOTP} className="space-y-4">
-        <div className="relative">
-          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="tel"
-            placeholder="Enter phone number (+1234567890)"
-            value={phoneNumber}
-            onChange={handlePhoneChange}
-            disabled={isLoading || otpSent}
-            className="pl-10 h-12 text-base rounded-xl"
-          />
+        <div className="flex">
+          <div className="flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-xl text-muted-foreground">
+            +91
+          </div>
+          <div className="relative flex-1">
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="tel"
+              placeholder="Enter 10-digit phone number"
+              value={phoneNumber}
+              onChange={handlePhoneChange}
+              disabled={isLoading || otpSent}
+              className="pl-10 h-12 text-base rounded-l-none rounded-r-xl border-l-0"
+              maxLength={10}
+            />
+          </div>
         </div>
 
         <Button 
@@ -129,7 +147,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
             onClick={() => setOtpSent(true)}
             className="text-primary text-sm font-medium hover:underline transition-colors"
           >
-            Already have a code? Enter OTP
+            Enter OTP
           </button>
         </div>
       )}
@@ -142,7 +160,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
           <div className="text-center space-y-2">
             <h3 className="text-lg font-semibold text-foreground">Enter OTP</h3>
             <p className="text-sm font-medium text-muted-foreground">
-              Sent to {phoneNumber}
+              Sent to +91{phoneNumber}
             </p>
           </div>
 
@@ -182,16 +200,35 @@ const LandingCard: React.FC<LandingCardProps> = ({
             </Button>
           </form>
 
-          {/* Resend OTP Link */}
-          <div className="text-center">
+          {/* Resend OTP and Edit Phone Number Links */}
+          <div className="text-center space-y-2">
             <button
               type="button"
-              onClick={() => handleSendOTP({ preventDefault: () => {} } as React.FormEvent)}
+              onClick={() => {
+                if (!phoneNumber.trim()) {
+                  toast.error('Please enter your phone number');
+                  return;
+                }
+                handleSendOTP({ preventDefault: () => {} } as React.FormEvent);
+              }}
               className="text-primary text-sm font-medium hover:underline transition-colors disabled:opacity-50"
               disabled={isLoading}
             >
               Resend OTP
             </button>
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setOtpSent(false);
+                  setOtp('');
+                }}
+                className="text-muted-foreground text-sm hover:underline transition-colors"
+                disabled={isLoading}
+              >
+                Change phone number
+              </button>
+            </div>
           </div>
         </div>
       )}
