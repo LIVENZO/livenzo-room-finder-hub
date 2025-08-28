@@ -249,11 +249,38 @@ export const QRPaymentModal = ({
             </div>
           </div>
 
-          {/* Instruction */}
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-800 text-center">
-              Scan the QR in your UPI app or copy UPI ID to complete payment safely.
-            </p>
+          {/* UPI App Helper */}
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Try to open common UPI apps
+                const upiApps = [
+                  'tez://upi', // Google Pay
+                  'phonepe://upi', // PhonePe
+                  'paytmmp://upi', // Paytm
+                ];
+                
+                // Try to open the first available UPI app
+                for (const app of upiApps) {
+                  try {
+                    window.open(app, '_system');
+                    break;
+                  } catch (error) {
+                    continue;
+                  }
+                }
+              }}
+              className="w-full"
+            >
+              Open UPI App
+            </Button>
+            
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-800 text-center">
+                If details are not auto-filled, please scan the QR or paste the UPI ID inside your UPI app.
+              </p>
+            </div>
           </div>
 
           {/* Payment Proof Section */}
