@@ -38,7 +38,7 @@ import { PaymentModal } from "./PaymentModal";
 import { PaymentSuccessModal } from "./PaymentSuccessModal";
 import { PaymentFailureModal } from "./PaymentFailureModal";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
-import { UpiPaymentModal } from "./UpiPaymentModal";
+import { QRPaymentModal } from "./QRPaymentModal";
 
 interface RentStatus {
   id: string;
@@ -351,8 +351,19 @@ export const RenterPayments = () => {
     }
   };
 
-  const handlePayNow = () => {
-    setShowPaymentMethodSelector(true);
+  const handlePayNow = async () => {
+    // First, fetch owner UPI details to check for QR code
+    await fetchOwnerUpiDetails();
+    
+    // Always show QR payment modal directly (no method selector)
+    if (ownerUpiDetails?.upi_id) {
+      setShowUpiModal(true);
+    } else {
+      toast({ 
+        description: "Owner has not set up UPI payments yet", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleSelectRazorpay = () => {
@@ -950,9 +961,9 @@ export const RenterPayments = () => {
         />
       )}
 
-      {/* UPI Direct Payment Modal */}
+      {/* QR Direct Payment Modal */}
       {showUpiModal && currentRent && ownerUpiDetails && (
-        <UpiPaymentModal
+        <QRPaymentModal
           isOpen={showUpiModal}
           onClose={() => setShowUpiModal(false)}
           amount={(currentRent.current_amount || 0) + electricityAmount}
