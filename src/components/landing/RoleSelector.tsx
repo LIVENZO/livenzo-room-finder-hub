@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Home, User } from 'lucide-react';
 
 interface RoleSelectorProps {
   userRole: string;
@@ -14,27 +15,110 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
   canChangeRole 
 }) => {
   return (
-    <div className="space-y-4">
-      <p className="font-medium text-gray-700">I am a:</p>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+          Choose Your Role
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Select how you'll be using our platform
+        </p>
+      </div>
+      
       <RadioGroup 
         value={userRole} 
         onValueChange={setUserRole} 
-        className="flex flex-col space-y-2"
+        className="flex flex-col space-y-4"
         disabled={!canChangeRole}
       >
-        <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-gray-50">
-          <RadioGroupItem value="owner" id="owner" />
-          <label htmlFor="owner" className="w-full cursor-pointer">Property Owner</label>
+        {/* Property Owner Option */}
+        <div className="relative group animate-pulse-scale-owner">
+          <input 
+            type="radio" 
+            value="owner" 
+            id="owner" 
+            className="sr-only peer" 
+            checked={userRole === 'owner'}
+            onChange={() => setUserRole('owner')}
+            disabled={!canChangeRole}
+          />
+          <label 
+            htmlFor="owner" 
+            className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:text-primary-foreground peer-checked:shadow-large group-hover:scale-[1.02]"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0 p-3 bg-primary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
+                <Home className="w-6 h-6 text-primary peer-checked:text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="text-lg font-semibold text-primary peer-checked:text-white transition-colors duration-300">
+                  Property Owner
+                </h3>
+                <p className="text-sm text-primary-600 peer-checked:text-primary-100 mt-1 transition-colors duration-300">
+                  List and manage your properties
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <RadioGroupItem 
+                  value="owner" 
+                  className="border-primary-400 text-primary data-[state=checked]:bg-white data-[state=checked]:text-primary" 
+                />
+              </div>
+            </div>
+          </label>
         </div>
-        <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-gray-50">
-          <RadioGroupItem value="renter" id="renter" />
-          <label htmlFor="renter" className="w-full cursor-pointer">Renter</label>
+
+        {/* Renter Option */}
+        <div className="relative group animate-pulse-scale-renter">
+          <input 
+            type="radio" 
+            value="renter" 
+            id="renter" 
+            className="sr-only peer" 
+            checked={userRole === 'renter'}
+            onChange={() => setUserRole('renter')}
+            disabled={!canChangeRole}
+          />
+          <label 
+            htmlFor="renter" 
+            className="block w-full p-6 bg-gradient-to-br from-secondary-50 to-secondary-100 border-2 border-secondary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-secondary-300 peer-checked:bg-gradient-secondary peer-checked:border-secondary-500 peer-checked:text-secondary-foreground peer-checked:shadow-large group-hover:scale-[1.02]"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0 p-3 bg-secondary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
+                <User className="w-6 h-6 text-secondary-600 peer-checked:text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="text-lg font-semibold text-secondary-700 peer-checked:text-white transition-colors duration-300">
+                  Renter
+                </h3>
+                <p className="text-sm text-secondary-600 peer-checked:text-secondary-100 mt-1 transition-colors duration-300">
+                  Find and rent your ideal property
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <RadioGroupItem 
+                  value="renter" 
+                  className="border-secondary-400 text-secondary-600 data-[state=checked]:bg-white data-[state=checked]:text-secondary-600" 
+                />
+              </div>
+            </div>
+          </label>
         </div>
       </RadioGroup>
       
       {!canChangeRole && (
-        <div className="text-amber-600 text-sm mt-2 bg-amber-50 p-2 rounded-md">
-          Your role is locked to your Google account. To change roles, please sign in with a different Google account.
+        <div className="bg-accent-100 border border-accent-300 text-accent-700 text-sm p-4 rounded-lg animate-fade-in">
+          <div className="flex items-start space-x-2">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium">Role Locked</p>
+              <p className="mt-1">Your role is connected to your account. Sign in with a different account to change roles.</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
