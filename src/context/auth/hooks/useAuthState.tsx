@@ -19,7 +19,7 @@ export function useAuthState() {
 
   // Handle role setup for a user
   const setupUserRole = useCallback(async (currentUser: User) => {
-    if (!currentUser.email || !AUTH_CONFIG.AUTH_ENABLED) return;
+    if ((!currentUser.email && !currentUser.phone) || !AUTH_CONFIG.AUTH_ENABLED) return;
     
     try {
       // Fetch user role from database
@@ -38,7 +38,7 @@ export function useAuthState() {
         // User has a role in database
         setUserRole(roleData.role);
         localStorage.setItem('userRole', roleData.role);
-        storeUserRole(currentUser.email, roleData.role);
+        storeUserRole(currentUser.email || currentUser.phone, roleData.role);
         setCanChangeRole(false);
       } else {
         // No role found in database, this should not happen due to trigger
@@ -57,10 +57,13 @@ export function useAuthState() {
     }
   }, []);
 
-  // Ensure user has a role assignment (fallback for OAuth flows)
+  // Ensure user has a role assignment (for both OAuth and phone/email flows)
   const ensureUserRoleAssignment = useCallback(async (user: User, selectedRole: string) => {
     try {
       const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
+      const userEmail = user.email || user.phone; // Use phone as fallback if no email
+      
+      console.log("Ensuring role assignment for user:", userEmail, "role:", selectedRole, "auth method:", user.app_metadata?.provider);
       
       // Check if user already has a role assignment
       const { data: existingRole, error } = await supabase
@@ -71,22 +74,24 @@ export function useAuthState() {
 
       if (error && error.code === 'PGRST116') {
         // No role assignment found, create one
-        console.log("Creating role assignment for user:", user.email, "role:", selectedRole);
+        console.log("Creating role assignment for user:", userEmail, "role:", selectedRole);
         
         const { error: insertError } = await supabase
           .from('user_role_assignments')
           .insert({
             user_id: user.id,
-            email: user.email,
+            email: userEmail, // This will handle both email and phone users
             role: selectedRole,
-            google_id: googleId
+            google_id: googleId // This will be null for phone auth, which is fine
           });
 
         if (insertError) {
           console.error('Error creating role assignment:', insertError);
         } else {
-          console.log("Successfully created role assignment");
+          console.log("Successfully created role assignment for", selectedRole);
         }
+      } else if (existingRole) {
+        console.log("User already has role assignment:", existingRole.role);
       }
     } catch (error) {
       console.error('Error ensuring user role assignment:', error);
@@ -226,7 +231,7 @@ export function useAuthState() {
         setUser(currentSession.user);
         
         // Set up user role from database
-        if (currentSession.user.email) {
+        if (currentSession.user.email || currentSession.user.phone) {
           await setupUserRole(currentSession.user);
         }
         

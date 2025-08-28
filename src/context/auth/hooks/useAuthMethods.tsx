@@ -509,12 +509,15 @@ export function useAuthMethods() {
         throw error;
       } else {
         console.log('[OTP] verified successfully:', data);
+        
+        // Get the selected role from localStorage (set during role selection)
+        const selectedRole = localStorage.getItem('selectedRole') || 'renter';
+        console.log('[OTP] Using selected role for phone auth:', selectedRole);
+        
         toast.success('Successfully signed in!');
         
-        // Navigate to home after successful verification
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 600);
+        // Don't redirect immediately - let the auth state handler process the role assignment
+        // The auth state change will trigger role assignment and redirect to dashboard
       }
 
     } catch (error) {
