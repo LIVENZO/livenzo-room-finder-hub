@@ -254,33 +254,44 @@ export const QRPaymentModal = ({
             <Button 
               variant="outline" 
               onClick={() => {
-                // Try to open common UPI apps
-                const upiApps = [
-                  'tez://upi', // Google Pay
-                  'phonepe://upi', // PhonePe
-                  'paytmmp://upi', // Paytm
-                ];
-                
-                // Try to open the first available UPI app
-                for (const app of upiApps) {
-                  try {
-                    window.open(app, '_system');
-                    break;
-                  } catch (error) {
-                    continue;
-                  }
+                try {
+                  // Construct UPI intent URL with payment details
+                  const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
+                  
+                  // Try to open UPI intent
+                  window.location.href = upiUrl;
+                  
+                  // Show success message
+                  toast({
+                    title: "Opening UPI App",
+                    description: "If the app doesn't open, please scan the QR or copy UPI ID below.",
+                  });
+                } catch (error) {
+                  console.error('Error opening UPI app:', error);
+                  toast({
+                    title: "Unable to open UPI app",
+                    description: "Please scan the QR code or copy the UPI ID to complete payment.",
+                    variant: "destructive"
+                  });
                 }
               }}
               className="w-full"
             >
-              Open UPI App
+              Pay ₹{amount.toLocaleString()} via UPI
             </Button>
             
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-800 text-center">
-                If details are not auto-filled, please scan the QR or paste the UPI ID inside your UPI app.
+                If auto-payment fails, please scan the QR or copy the UPI ID below.
               </p>
             </div>
+          </div>
+
+          {/* Manual Payment Options */}
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-800 text-center">
+              Scan the QR in your UPI app or copy UPI ID to complete payment safely.
+            </p>
           </div>
 
           {/* Payment Proof Section */}
