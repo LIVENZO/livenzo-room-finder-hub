@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -14,7 +13,6 @@ import UserIdDisplay from '@/components/profile/UserIdDisplay';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
 import { toast } from 'sonner';
-
 const Profile = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -41,31 +39,27 @@ const Profile = () => {
     if (returnTo && profile) {
       // Check if profile is now complete for the required action
       const isBasicComplete = profile.full_name && profile.phone;
-      
       if (isBasicComplete) {
         toast.success('Profile completed! Redirecting back...');
         setTimeout(() => {
-          navigate(returnTo, { replace: true });
+          navigate(returnTo, {
+            replace: true
+          });
         }, 1000);
       }
     }
   }, [profile, searchParams, navigate]);
-  
   if (loading) {
-    return (
-      <Layout>
+    return <Layout>
         <div className="w-full h-full min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
             <p className="text-lg text-muted-foreground">Loading your profile...</p>
           </div>
         </div>
-      </Layout>
-    );
+      </Layout>;
   }
-  
-  return (
-    <Layout>
+  return <Layout>
       <div className="w-full h-full min-h-screen">
         <div className="w-full space-y-6">
           {/* Profile Completion Banner */}
@@ -74,54 +68,22 @@ const Profile = () => {
           
           {/* Main Profile Card */}
           <Card className="shadow-none border-0 bg-transparent w-full">
-            <CardHeader className="pb-8 text-center md:text-left">
-              <CardTitle className="text-2xl font-bold tracking-tight">
-                Your Profile
-              </CardTitle>
-              <CardDescription className="text-lg text-muted-foreground leading-relaxed mt-2">
-                Update your personal information and how you appear to others
-              </CardDescription>
-            </CardHeader>
+            
             
             <CardContent className="space-y-10">
-              {isOwner ? (
-                <OwnerProfileTabs
-                  profile={profile}
-                  user={user}
-                  formValues={formValues}
-                  ownerFormValues={ownerFormValues}
-                  uploadingImage={uploadingImage}
-                  onInputChange={handleInputChange}
-                  onOwnerInputChange={handleOwnerInputChange}
-                  onOwnerSelectChange={handleOwnerSelectChange}
-                  onImageUpload={handleImageUpload}
-                  onLocationSaved={handleLocationSaved}
-                  defaultTab={searchParams.get('tab') || 'basic'}
-                />
-              ) : (
-                <div className="space-y-8">
+              {isOwner ? <OwnerProfileTabs profile={profile} user={user} formValues={formValues} ownerFormValues={ownerFormValues} uploadingImage={uploadingImage} onInputChange={handleInputChange} onOwnerInputChange={handleOwnerInputChange} onOwnerSelectChange={handleOwnerSelectChange} onImageUpload={handleImageUpload} onLocationSaved={handleLocationSaved} defaultTab={searchParams.get('tab') || 'basic'} /> : <div className="space-y-8">
                   {/* Profile Avatar Section */}
                   <div className="flex justify-center">
-                    <ProfileAvatar
-                      profile={profile}
-                      userEmail={user?.email}
-                      uploadingImage={uploadingImage}
-                      onImageUpload={handleImageUpload}
-                    />
+                    <ProfileAvatar profile={profile} userEmail={user?.email} uploadingImage={uploadingImage} onImageUpload={handleImageUpload} />
                   </div>
                   
                   {/* Profile Form Section */}
                   <div className="w-full">
-                    <ProfileForm
-                      formValues={formValues}
-                      profile={profile}
-                      onInputChange={handleInputChange}
-                    />
+                    <ProfileForm formValues={formValues} profile={profile} onInputChange={handleInputChange} />
                   </div>
 
                   {/* Room Number Display */}
-                  {!isOwner && formValues.roomNumber && (
-                    <div className="w-full">
+                  {!isOwner && formValues.roomNumber && <div className="w-full">
                       <Card className="bg-secondary/30 border-secondary shadow-sm">
                         <CardContent className="p-6">
                           <div className="text-sm font-semibold text-secondary-foreground mb-2 uppercase tracking-wide">
@@ -132,34 +94,23 @@ const Profile = () => {
                           </div>
                         </CardContent>
                       </Card>
-                    </div>
-                  )}
-                </div>
-              )}
+                    </div>}
+                </div>}
 
               {/* Property Information for Complete Owner Profiles */}
-              {isOwner && profile && isOwnerProfileComplete(profile) && (
-                <div className="border-t pt-8">
+              {isOwner && profile && isOwnerProfileComplete(profile) && <div className="border-t pt-8">
                   <OwnerPropertyDisplay profile={profile} />
-                </div>
-              )}
+                </div>}
             </CardContent>
             
             <CardFooter className="pt-8 pb-8 bg-muted/20">
               <div className="w-full">
-                <ProfileActions
-                  profile={profile}
-                  saving={saving}
-                  onSave={handleSave}
-                  isOwner={isOwner}
-                />
+                <ProfileActions profile={profile} saving={saving} onSave={handleSave} isOwner={isOwner} />
               </div>
             </CardFooter>
           </Card>
         </div>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default Profile;
