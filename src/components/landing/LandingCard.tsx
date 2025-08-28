@@ -97,7 +97,9 @@ const LandingCard: React.FC<LandingCardProps> = ({
       {/* Phone Number Input Section */}
       <form onSubmit={handleSendOTP} className="space-y-4">
         <div className="flex">
-          
+          <div className="flex items-center bg-muted px-3 rounded-l-xl border border-r-0 border-input">
+            <span className="text-sm font-medium text-foreground">+91</span>
+          </div>
           <div className="relative flex-1">
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input type="tel" placeholder="Enter 10-digit phone number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading || otpSent} className="pl-10 h-12 text-base rounded-l-none rounded-r-xl border-l-0" maxLength={10} />
