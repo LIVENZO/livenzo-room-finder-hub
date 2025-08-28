@@ -1,51 +1,27 @@
-
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Home, User } from 'lucide-react';
-
 interface RoleSelectorProps {
   userRole: string;
   setUserRole: (role: string) => void;
   canChangeRole: boolean;
 }
-
-const RoleSelector: React.FC<RoleSelectorProps> = ({ 
-  userRole, 
-  setUserRole, 
-  canChangeRole 
+const RoleSelector: React.FC<RoleSelectorProps> = ({
+  userRole,
+  setUserRole,
+  canChangeRole
 }) => {
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-          Choose Your Role
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Select how you'll be using our platform
-        </p>
+        
+        
       </div>
       
-      <RadioGroup 
-        value={userRole} 
-        onValueChange={setUserRole} 
-        className="flex flex-col space-y-4"
-        disabled={!canChangeRole}
-      >
+      <RadioGroup value={userRole} onValueChange={setUserRole} className="flex flex-col space-y-4" disabled={!canChangeRole}>
         {/* Property Owner Option */}
         <div className="relative group animate-pulse-scale-owner">
-          <input 
-            type="radio" 
-            value="owner" 
-            id="owner" 
-            className="sr-only peer" 
-            checked={userRole === 'owner'}
-            onChange={() => setUserRole('owner')}
-            disabled={!canChangeRole}
-          />
-          <label 
-            htmlFor="owner" 
-            className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]"
-          >
+          <input type="radio" value="owner" id="owner" className="sr-only peer" checked={userRole === 'owner'} onChange={() => setUserRole('owner')} disabled={!canChangeRole} />
+          <label htmlFor="owner" className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 p-3 bg-primary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
                 <Home className="w-6 h-6 text-primary peer-checked:text-white" />
@@ -59,10 +35,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <RadioGroupItem 
-                  value="owner" 
-                  className="border-primary-400 text-primary data-[state=checked]:bg-white data-[state=checked]:text-primary" 
-                />
+                <RadioGroupItem value="owner" className="border-primary-400 text-primary data-[state=checked]:bg-white data-[state=checked]:text-primary" />
               </div>
             </div>
           </label>
@@ -70,19 +43,8 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
 
         {/* Renter Option */}
         <div className="relative group animate-pulse-scale-renter">
-          <input 
-            type="radio" 
-            value="renter" 
-            id="renter" 
-            className="sr-only peer" 
-            checked={userRole === 'renter'}
-            onChange={() => setUserRole('renter')}
-            disabled={!canChangeRole}
-          />
-          <label 
-            htmlFor="renter" 
-            className="block w-full p-6 bg-gradient-to-br from-secondary-50 to-secondary-100 border-2 border-secondary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-secondary-300 peer-checked:bg-gradient-secondary peer-checked:border-secondary-500 peer-checked:text-secondary-foreground peer-checked:shadow-large group-hover:scale-[1.02]"
-          >
+          <input type="radio" value="renter" id="renter" className="sr-only peer" checked={userRole === 'renter'} onChange={() => setUserRole('renter')} disabled={!canChangeRole} />
+          <label htmlFor="renter" className="block w-full p-6 bg-gradient-to-br from-secondary-50 to-secondary-100 border-2 border-secondary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-secondary-300 peer-checked:bg-gradient-secondary peer-checked:border-secondary-500 peer-checked:text-secondary-foreground peer-checked:shadow-large group-hover:scale-[1.02]">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 p-3 bg-secondary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
                 <User className="w-6 h-6 text-secondary-600 peer-checked:text-white" />
@@ -96,18 +58,14 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <RadioGroupItem 
-                  value="renter" 
-                  className="border-secondary-400 text-secondary-600 data-[state=checked]:bg-white data-[state=checked]:text-secondary-600" 
-                />
+                <RadioGroupItem value="renter" className="border-secondary-400 text-secondary-600 data-[state=checked]:bg-white data-[state=checked]:text-secondary-600" />
               </div>
             </div>
           </label>
         </div>
       </RadioGroup>
       
-      {!canChangeRole && (
-        <div className="bg-accent-100 border border-accent-300 text-accent-700 text-sm p-4 rounded-lg animate-fade-in">
+      {!canChangeRole && <div className="bg-accent-100 border border-accent-300 text-accent-700 text-sm p-4 rounded-lg animate-fade-in">
           <div className="flex items-start space-x-2">
             <div className="flex-shrink-0 mt-0.5">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -119,10 +77,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
               <p className="mt-1">Your role is connected to your account. Sign in with a different account to change roles.</p>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
-
 export default RoleSelector;
