@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,57 +10,34 @@ import ComplaintsTab from './post-connection/ComplaintsTab';
 import RenterDisconnectButton from './RenterDisconnectButton';
 import { useNavigate } from 'react-router-dom';
 import { useRelationships } from '@/hooks/useRelationships';
-
 interface PostConnectionInterfaceProps {
   relationship: Relationship;
   currentUserId: string;
 }
-
 const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
   relationship,
   currentUserId
 }) => {
   const navigate = useNavigate();
-  
+
   // Use the relationship hook to get documents and handlers
   const {
     documents,
     handleDocumentUploaded
   } = useRelationships(currentUserId, false, relationship.id);
-
   const handleDisconnect = () => {
     // Navigate back to connections page after disconnect
     navigate('/connections');
   };
-
   const handleDocumentStatusChanged = () => {
     // Refresh documents when status changes
     handleDocumentUploaded();
   };
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
+  return <div className="max-w-4xl mx-auto space-y-6">
       {/* Connection Status Header */}
       <Card className="border-green-200 bg-green-50">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-                <div>
-                  <CardTitle className="text-xl text-green-800">
-                    Connected to Property Owner
-                  </CardTitle>
-                  <p className="text-sm text-green-600 mt-1">
-                    Your rental connection is active
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Badge className="bg-green-100 text-green-800 border-green-300">
-              Active Connection
-            </Badge>
-          </div>
+          
         </CardHeader>
         
         <CardContent className="space-y-4">
@@ -90,11 +66,7 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
 
           {/* Disconnect Button */}
           <div className="flex justify-center pt-2">
-            <RenterDisconnectButton
-              relationship={relationship}
-              onDisconnect={handleDisconnect}
-              className="w-auto"
-            />
+            <RenterDisconnectButton relationship={relationship} onDisconnect={handleDisconnect} className="w-auto" />
           </div>
         </CardContent>
       </Card>
@@ -113,21 +85,13 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
         </TabsList>
 
         <TabsContent value="documents" className="mt-6">
-          <DocumentsTab 
-            currentUserId={currentUserId}
-            relationshipId={relationship.id}
-            documents={documents}
-            onDocumentUploaded={handleDocumentUploaded}
-            onDocumentStatusChanged={handleDocumentStatusChanged}
-          />
+          <DocumentsTab currentUserId={currentUserId} relationshipId={relationship.id} documents={documents} onDocumentUploaded={handleDocumentUploaded} onDocumentStatusChanged={handleDocumentStatusChanged} />
         </TabsContent>
 
         <TabsContent value="complaints" className="mt-6">
           <ComplaintsTab relationshipId={relationship.id} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default PostConnectionInterface;
