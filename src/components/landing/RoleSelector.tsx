@@ -44,7 +44,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
           />
           <label 
             htmlFor="owner" 
-            className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:text-primary-foreground peer-checked:shadow-large group-hover:scale-[1.02]"
+            className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]"
           >
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0 p-3 bg-primary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
@@ -54,7 +54,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <h3 className="text-lg font-semibold text-primary peer-checked:text-white transition-colors duration-300">
                   Property Owner
                 </h3>
-                <p className="text-sm text-primary-600 peer-checked:text-primary-100 mt-1 transition-colors duration-300">
+                <p className="text-sm text-primary-600 peer-checked:text-white/90 mt-1 transition-colors duration-300">
                   List and manage your properties
                 </p>
               </div>
