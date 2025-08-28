@@ -68,15 +68,21 @@ export const OwnerUpiSettings = () => {
   const handleQrFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('File selected:', { name: file.name, size: file.size, type: file.type });
+      
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        console.log('File too large:', file.size);
         toast({ description: "QR code image should be less than 2MB", variant: "destructive" });
         return;
       }
       if (!file.type.startsWith('image/')) {
+        console.log('Invalid file type:', file.type);
         toast({ description: "Please upload an image file", variant: "destructive" });
         return;
       }
+      console.log('File validation passed, setting file');
       setQrFile(file);
+      toast({ description: "QR code selected. Click 'Save UPI Details' to upload." });
     }
   };
 
@@ -99,28 +105,40 @@ export const OwnerUpiSettings = () => {
 
       // Upload new QR code if provided
       if (qrFile) {
+        console.log('Starting QR code upload process');
+        
         // Format filename with user ID prefix to match storage policy
-        const fileName = `${user.id}-upi-qr-${Date.now()}-${qrFile.name}`;
+        const fileName = `${user.id}/upi-qr-${Date.now()}-${qrFile.name}`;
+        console.log('Upload filename:', fileName);
         
         // Delete old QR code if exists
         if (qrCodeFileName) {
-          await supabase.storage
+          console.log('Deleting old QR code:', qrCodeFileName);
+          const { error: deleteError } = await supabase.storage
             .from('user-uploads')
             .remove([qrCodeFileName]);
+          
+          if (deleteError) {
+            console.log('Error deleting old QR code:', deleteError);
+          }
         }
 
+        console.log('Uploading new QR code file:', qrFile.name, 'Size:', qrFile.size);
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('user-uploads')
           .upload(fileName, qrFile);
 
+        console.log('Upload result:', { uploadData, uploadError });
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
           .from('user-uploads')
           .getPublicUrl(fileName);
 
+        console.log('Public URL data:', urlData);
         qrCodeUrl = urlData.publicUrl;
         qrCodeFileName = fileName;
+        console.log('QR code upload successful, URL:', qrCodeUrl);
       }
 
       if (upiDetails) {
