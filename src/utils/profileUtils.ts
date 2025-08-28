@@ -101,6 +101,24 @@ export const requireCompleteProfile = (
 };
 
 /**
+ * Checks if an owner has set their location (required for room listing)
+ * @param profile The user profile to check
+ * @returns Boolean indicating if the location is set
+ */
+export const isOwnerLocationSet = (profile: UserProfile | null): boolean => {
+  if (!profile) return false;
+  
+  // Check both latitude and longitude presence and ensure they're not null/0/undefined
+  const hasValidLocation =
+    !!profile?.location_latitude &&
+    !!profile?.location_longitude &&
+    typeof profile.location_latitude === "number" &&
+    typeof profile.location_longitude === "number";
+    
+  return hasValidLocation;
+};
+
+/**
  * Creates a redirect function that checks owner profile completion and redirects if incomplete
  * @param navigate React Router navigate function
  * @param profile User profile to check
@@ -116,6 +134,32 @@ export const requireCompleteOwnerProfile = (
     if (!isOwnerProfileComplete(profile)) {
       toast.error("Please complete your property details before continuing");
       navigate("/profile");
+      return false;
+    }
+    
+    if (onComplete) {
+      onComplete();
+    }
+    return true;
+  };
+};
+
+/**
+ * Creates a redirect function that checks if owner location is set and redirects if not
+ * @param navigate React Router navigate function
+ * @param profile User profile to check
+ * @param onComplete Optional callback to run if location is set
+ * @returns Function that handles the redirection logic
+ */
+export const requireOwnerLocationSet = (
+  navigate: (path: string) => void,
+  profile: UserProfile | null,
+  onComplete?: () => void
+): (() => boolean) => {
+  return () => {
+    if (!isOwnerLocationSet(profile)) {
+      toast.error("Please set your location before listing a room");
+      navigate("/set-location");
       return false;
     }
     

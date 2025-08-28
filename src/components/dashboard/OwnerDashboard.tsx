@@ -66,7 +66,7 @@ const OwnerDashboard: React.FC = () => {
     if (!user) return;
     
     try {
-      // First check if location is set
+      // Only check if location is set - no need for complete property details to list a room
       const profile = await fetchUserProfile(user.id);
       const hasValidLocation =
         !!profile?.location_latitude &&
@@ -80,11 +80,7 @@ const OwnerDashboard: React.FC = () => {
         return;
       }
       
-      // Then check if owner profile is complete
-      const profileComplete = requireOwnerComplete();
-      if (!profileComplete) return;
-      
-      // Location is set and profile is complete, proceed to listing
+      // Location is set, proceed to listing
       navigate('/list-room');
     } catch (error) {
       console.error('Error checking location:', error);
