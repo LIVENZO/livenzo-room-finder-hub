@@ -63,10 +63,9 @@ const LandingCard: React.FC<LandingCardProps> = ({
     try {
       await handleOTPAuth.sendOTP(fullPhoneNumber);
       toast.success('OTP sent successfully!');
-      // Automatically navigate to OTP verification screen
-      setTimeout(() => {
-        setOtpSent(true);
-      }, 300); // Small delay for smooth transition
+      // Immediately show OTP verification screen
+      setOtpSent(true);
+      setOtp(''); // Clear any previous OTP
     } catch (error) {
       console.error('Failed to send OTP:', error);
       toast.error('Failed to send OTP. Please try again.');
@@ -111,7 +110,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
 
 
       {/* OTP Verification Section - Shows directly below phone input */}
-      {otpSent && <div className="space-y-4 pt-6 border-t border-border/50 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
+      {otpSent && <div className="space-y-4 pt-6 border-t border-border/50 animate-fade-in duration-300">
           {/* Header */}
           <div className="text-center space-y-2">
             <h3 className="text-lg font-semibold text-foreground">Enter OTP</h3>
@@ -123,9 +122,22 @@ const LandingCard: React.FC<LandingCardProps> = ({
           <form onSubmit={handleVerifyOTP} className="space-y-6">
             {/* OTP Input - 6 individual boxes */}
             <div className="flex justify-center">
-              <InputOTP value={otp} onChange={setOtp} maxLength={6} autoFocus className="gap-2">
+              <InputOTP 
+                value={otp} 
+                onChange={setOtp} 
+                maxLength={6} 
+                autoFocus 
+                className="gap-2"
+                pattern="[0-9]*"
+              >
                 <InputOTPGroup className="gap-2">
-                  {[0, 1, 2, 3, 4, 5].map(index => <InputOTPSlot key={index} index={index} className="w-12 h-12 text-lg font-bold rounded-xl border-2 border-input bg-background transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 md:w-14 md:h-14 md:text-xl" />)}
+                  {[0, 1, 2, 3, 4, 5].map(index => 
+                    <InputOTPSlot 
+                      key={index} 
+                      index={index} 
+                      className="w-12 h-12 text-lg font-bold rounded-xl border-2 border-input bg-background transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 md:w-14 md:h-14 md:text-xl" 
+                    />
+                  )}
                 </InputOTPGroup>
               </InputOTP>
             </div>
@@ -139,15 +151,24 @@ const LandingCard: React.FC<LandingCardProps> = ({
 
           {/* Resend OTP and Edit Phone Number Links */}
           <div className="text-center space-y-2">
-            <button type="button" onClick={() => {
-          if (!phoneNumber.trim()) {
-            toast.error('Please enter your phone number');
-            return;
-          }
-          handleSendOTP({
-            preventDefault: () => {}
-          } as React.FormEvent);
-        }} className="text-primary text-sm font-medium hover:underline transition-colors disabled:opacity-50" disabled={isLoading}>
+            <button 
+              type="button" 
+              onClick={async () => {
+                if (!phoneNumber.trim()) {
+                  toast.error('Please enter your phone number');
+                  return;
+                }
+                const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
+                try {
+                  await handleOTPAuth.sendOTP(fullPhoneNumber);
+                  toast.success('OTP resent successfully!');
+                } catch (error) {
+                  toast.error('Failed to resend OTP. Please try again.');
+                }
+              }} 
+              className="text-primary text-sm font-medium hover:underline transition-colors disabled:opacity-50" 
+              disabled={isLoading}
+            >
               Resend OTP
             </button>
             <div>
