@@ -21,21 +21,21 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
         {/* Property Owner Option */}
         <div className="relative group animate-pulse-scale-owner">
           <input type="radio" value="owner" id="owner" className="sr-only peer" checked={userRole === 'owner'} onChange={() => setUserRole('owner')} disabled={!canChangeRole} />
-          <label htmlFor="owner" className="block w-full p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-gradient-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]">
+          <label htmlFor="owner" className="block w-full p-6 bg-gray-100 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]">
             <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 p-3 bg-primary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
-                <Home className="w-6 h-6 text-primary peer-checked:text-white" />
+              <div className="flex-shrink-0 p-3 bg-gray-200 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
+                <Home className="w-6 h-6 text-black peer-checked:text-white" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-lg font-semibold text-primary peer-checked:text-white transition-colors duration-300">
+                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
                   Property Owner
                 </h3>
-                <p className="text-sm text-primary-600 peer-checked:text-white transition-colors duration-300">
+                <p className="text-sm text-black peer-checked:text-white transition-colors duration-300">
                   List and manage your properties
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <RadioGroupItem value="owner" className="border-primary-400 text-primary data-[state=checked]:bg-white data-[state=checked]:text-primary" />
+                <RadioGroupItem value="owner" className="border-gray-400 text-black data-[state=checked]:bg-white data-[state=checked]:text-primary" />
               </div>
             </div>
           </label>
@@ -44,21 +44,21 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
         {/* Renter Option */}
         <div className="relative group animate-pulse-scale-renter">
           <input type="radio" value="renter" id="renter" className="sr-only peer" checked={userRole === 'renter'} onChange={() => setUserRole('renter')} disabled={!canChangeRole} />
-          <label htmlFor="renter" className="block w-full p-6 bg-gradient-to-br from-secondary-50 to-secondary-100 border-2 border-secondary-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-secondary-300 peer-checked:bg-gradient-secondary peer-checked:border-secondary-500 peer-checked:text-secondary-foreground peer-checked:shadow-large group-hover:scale-[1.02]">
+          <label htmlFor="renter" className="block w-full p-6 bg-gray-100 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:shadow-medium hover:border-primary-300 peer-checked:bg-primary peer-checked:border-primary-500 peer-checked:shadow-large group-hover:scale-[1.02]">
             <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 p-3 bg-secondary-100 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
-                <User className="w-6 h-6 text-secondary-600 peer-checked:text-white" />
+              <div className="flex-shrink-0 p-3 bg-gray-200 rounded-lg peer-checked:bg-white/20 transition-colors duration-300">
+                <User className="w-6 h-6 text-black peer-checked:text-white" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-lg font-semibold text-secondary-700 peer-checked:text-white transition-colors duration-300">
+                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
                   Renter
                 </h3>
-                <p className="text-sm text-secondary-600 peer-checked:text-secondary-100 mt-1 transition-colors duration-300">
+                <p className="text-sm text-black peer-checked:text-white mt-1 transition-colors duration-300">
                   Find and rent your ideal property
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <RadioGroupItem value="renter" className="border-secondary-400 text-secondary-600 data-[state=checked]:bg-white data-[state=checked]:text-secondary-600" />
+                <RadioGroupItem value="renter" className="border-gray-400 text-black data-[state=checked]:bg-white data-[state=checked]:text-primary" />
               </div>
             </div>
           </label>
