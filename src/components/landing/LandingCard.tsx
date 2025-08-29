@@ -62,12 +62,14 @@ const LandingCard: React.FC<LandingCardProps> = ({
     const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     try {
       await handleOTPAuth.sendOTP(fullPhoneNumber);
-      setOtpSent(true);
       toast.success('OTP sent successfully!');
+      // Automatically navigate to OTP verification screen
+      setTimeout(() => {
+        setOtpSent(true);
+      }, 300); // Small delay for smooth transition
     } catch (error) {
       console.error('Failed to send OTP:', error);
-      setOtpSent(true);
-      toast.error('Failed to send OTP. You can still enter the code if received, or try resending.');
+      toast.error('Failed to send OTP. Please try again.');
     }
   };
   const handleVerifyOTP = async (e: React.FormEvent) => {
@@ -106,11 +108,6 @@ const LandingCard: React.FC<LandingCardProps> = ({
           Send OTP
         </Button>
       </form>
-      {!otpSent && <div className="text-center">
-          <button type="button" onClick={() => setOtpSent(true)} className="text-primary text-sm font-medium hover:underline transition-colors">
-            Enter OTP
-          </button>
-        </div>}
 
 
       {/* OTP Verification Section - Shows directly below phone input */}
