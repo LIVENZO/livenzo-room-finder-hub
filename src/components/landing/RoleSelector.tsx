@@ -30,7 +30,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <h3 className="text-lg font-semibold text-primary peer-checked:text-white transition-colors duration-300">
                   Property Owner
                 </h3>
-                <p className="text-sm text-primary-600 peer-checked:text-white/90 mt-1 transition-colors duration-300">
+                <p className="text-sm text-primary-600 peer-checked:text-white transition-colors duration-300">
                   List and manage your properties
                 </p>
               </div>

@@ -102,13 +102,13 @@ const LandingCard: React.FC<LandingCardProps> = ({
           </div>
           <div className="relative flex-1">
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input type="tel" placeholder="Enter 10-digit phone number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading || otpSent} className="pl-10 h-12 text-base rounded-l-none rounded-r-xl border-l-0" maxLength={10} />
+            <Input type="tel" placeholder="Phone Number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading || otpSent} className="pl-10 h-12 text-base rounded-l-none rounded-r-xl border-l-0" maxLength={10} />
           </div>
         </div>
 
-        <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || !phoneNumber.trim() || otpSent}>
-          {isLoading && !otpSent ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          {otpSent ? 'OTP Sent' : 'Send OTP'}
+        <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || !phoneNumber.trim()}>
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          Send OTP
         </Button>
       </form>
       {!otpSent && <div className="text-center">
