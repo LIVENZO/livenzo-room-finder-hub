@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, QrCode, Upload, Loader2, Check } from "lucide-react";
+import { Copy, QrCode, Upload, Loader2, Check, Download } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,47 @@ export const UpiPaymentModal = ({
         return;
       }
       setProofFile(file);
+    }
+  };
+
+  const handleDownloadQRCode = async () => {
+    try {
+      if (!ownerQrCodeUrl) {
+        toast({ description: "QR code not available for download", variant: "destructive" });
+        return;
+      }
+
+      // Create a temporary link to download the QR code
+      const link = document.createElement('a');
+      
+      try {
+        // For external URLs, we need to fetch and create blob
+        const response = await fetch(ownerQrCodeUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        link.href = blobUrl;
+        link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+        toast({ description: "QR code downloaded successfully!" });
+      } catch (fetchError) {
+        // Fallback: direct link download
+        link.href = ownerQrCodeUrl;
+        link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ description: "QR code download initiated!" });
+      }
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      toast({ description: "Failed to download QR code", variant: "destructive" });
     }
   };
 
@@ -189,15 +230,15 @@ export const UpiPaymentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Pay via UPI Direct</DialogTitle>
           <DialogDescription>
             Pay directly to your owner using any UPI app
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           <Card>
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
@@ -227,13 +268,23 @@ export const UpiPaymentModal = ({
 
             {/* QR Code Section */}
             {ownerQrCodeUrl && (
-              <div className="text-center p-3 border rounded-lg">
-                <p className="font-medium mb-2">Scan QR Code</p>
+              <div className="text-center p-3 border rounded-lg space-y-3">
+                <p className="font-medium">Scan QR Code</p>
                 <img 
                   src={ownerQrCodeUrl} 
                   alt="UPI QR Code" 
                   className="mx-auto w-32 h-32 object-contain border rounded"
                 />
+                
+                {/* Download QR Code Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadQRCode}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download QR Code
+                </Button>
               </div>
             )}
 
@@ -295,6 +346,9 @@ export const UpiPaymentModal = ({
             </div>
           </div>
 
+        </div>
+        
+        <div className="flex-shrink-0 space-y-3 border-t pt-4">
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel

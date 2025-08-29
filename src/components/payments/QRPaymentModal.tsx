@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, Upload, Loader2, Check, QrCode } from "lucide-react";
+import { Copy, Upload, Loader2, Check, QrCode, Download } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -100,6 +100,51 @@ export const QRPaymentModal = ({
     }
   };
 
+  const handleDownloadQRCode = async () => {
+    try {
+      let imageUrl = '';
+      
+      if (ownerQrCodeUrl) {
+        imageUrl = ownerQrCodeUrl;
+      } else if (generatedQrCode) {
+        imageUrl = generatedQrCode;
+      } else {
+        toast({ description: "QR code not available for download", variant: "destructive" });
+        return;
+      }
+
+      // Create a temporary link to download the QR code
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
+      
+      // For data URLs (generated QR codes), we can directly trigger download
+      if (imageUrl.startsWith('data:')) {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ description: "QR code downloaded successfully!" });
+      } else {
+        // For external URLs, we need to fetch and create blob
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        link.href = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+        toast({ description: "QR code downloaded successfully!" });
+      }
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      toast({ description: "Failed to download QR code", variant: "destructive" });
+    }
+  };
+
   const handleSubmitPayment = async () => {
     if (!transactionId.trim()) {
       toast({ description: "Please enter the transaction ID", variant: "destructive" });
@@ -180,15 +225,15 @@ export const QRPaymentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Pay via UPI</DialogTitle>
           <DialogDescription>
             Scan QR code or copy UPI ID to complete payment
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           <Card>
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
@@ -229,6 +274,19 @@ export const QRPaymentModal = ({
             
             {/* Hidden canvas for QR generation */}
             <canvas ref={canvasRef} className="hidden" />
+            
+            {/* Download QR Code Button */}
+            {(ownerQrCodeUrl || generatedQrCode) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadQRCode}
+                className="mt-2"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download QR Code
+              </Button>
+            )}
           </div>
 
           {/* UPI ID Section */}
@@ -341,6 +399,9 @@ export const QRPaymentModal = ({
             </div>
           </div>
 
+        </div>
+        
+        <div className="flex-shrink-0 space-y-3 border-t pt-4">
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
