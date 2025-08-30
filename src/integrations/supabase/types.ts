@@ -479,6 +479,7 @@ export type Database = {
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
           relationship_id: string | null
+          rent_id: string | null
           renter_id: string
           status: string
           transaction_id: string | null
@@ -497,6 +498,7 @@ export type Database = {
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           relationship_id?: string | null
+          rent_id?: string | null
           renter_id: string
           status?: string
           transaction_id?: string | null
@@ -515,6 +517,7 @@ export type Database = {
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
           relationship_id?: string | null
+          rent_id?: string | null
           renter_id?: string
           status?: string
           transaction_id?: string | null
@@ -533,6 +536,13 @@ export type Database = {
             columns: ["relationship_id"]
             isOneToOne: false
             referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_rent_id_fkey"
+            columns: ["rent_id"]
+            isOneToOne: false
+            referencedRelation: "rent_status"
             referencedColumns: ["id"]
           },
         ]
