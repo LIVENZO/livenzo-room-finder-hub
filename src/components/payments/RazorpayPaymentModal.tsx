@@ -176,7 +176,7 @@ export const RazorpayPaymentModal = ({
               Cancel
             </Button>
             <Button
-              onClick={handlePayment}
+              onClick={() => handlePayment()}
               className="flex-1"
               disabled={isProcessing}
             >
