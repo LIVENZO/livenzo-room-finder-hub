@@ -43,9 +43,9 @@ const handler = async (req: Request): Promise<Response> => {
       .from('relationships')
       .select('*')
       .eq('id', relationshipId)
-      .eq('renter_id', user.id)
       .eq('status', 'accepted')
       .eq('archived', false)
+      .or(`renter_id.eq.${user.id},owner_id.eq.${user.id}`)
       .maybeSingle();
 
     if (relationshipError) {
@@ -162,37 +162,30 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in create-payment-order:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      userId: user?.id,
-      relationshipId,
-      amount,
-      timestamp: new Date().toISOString()
-    });
-    
+    // Avoid referencing variables that might be undefined
+    const safeMessage = (error as Error)?.message || 'Unknown error';
+
     // Enhanced error messages for different failure types
     let errorMessage = 'Payment order creation failed';
     let statusCode = 500;
     
-    if (error.message.includes('Invalid relationship')) {
+    if (safeMessage.includes('Invalid relationship')) {
       errorMessage = 'Access denied: Invalid relationship or user permissions';
       statusCode = 403;
-    } else if (error.message.includes('Razorpay credentials')) {
+    } else if (safeMessage.includes('Razorpay credentials')) {
       errorMessage = 'Payment service configuration error';
       statusCode = 503;
-    } else if (error.message.includes('Failed to create payment order')) {
+    } else if (safeMessage.includes('Failed to create payment order')) {
       errorMessage = 'Payment gateway error: Unable to create order';
       statusCode = 502;
-    } else if (error.message.includes('Unauthorized')) {
+    } else if (safeMessage.includes('Unauthorized')) {
       errorMessage = 'Authentication required';
       statusCode = 401;
     }
     
     return new Response(JSON.stringify({ 
       error: errorMessage,
-      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+      debug: (Deno.env.get('NODE_ENV') === 'development') ? safeMessage : undefined
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: statusCode,

@@ -42,11 +42,26 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Razorpay secret not configured');
     }
 
-    const crypto = await import("node:crypto");
-    const expectedSignature = crypto
-      .createHmac('sha256', razorpayKeySecret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest('hex');
+    // Use Web Crypto API for HMAC SHA-256
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(razorpayKeySecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signatureData = `${razorpayOrderId}|${razorpayPaymentId}`;
+    const expectedSignatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(signatureData)
+    );
+
+    const expectedSignature = Array.from(new Uint8Array(expectedSignatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
 
     if (expectedSignature !== razorpaySignature) {
       console.error('Payment signature verification failed:', {

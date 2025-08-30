@@ -21,7 +21,11 @@ serve(async (req) => {
     );
 
     const body = await req.text();
-    const signature = req.headers.get("x-razorpay-signature");
+    if (!body) {
+      console.error('Webhook has empty body');
+      return new Response('No body', { status: 400, headers: corsHeaders });
+    }
+    const signature = req.headers.get("x-razorpay-signature") || req.headers.get("X-Razorpay-Signature");
     
     console.log('Webhook signature:', signature);
 
@@ -49,7 +53,7 @@ serve(async (req) => {
 
       if (hexSignature !== signature) {
         console.error('Invalid webhook signature');
-        return new Response("Invalid signature", { status: 400 });
+        return new Response("Invalid signature", { status: 400, headers: corsHeaders });
       }
     }
 
@@ -84,6 +88,7 @@ serve(async (req) => {
         .from("payments")
         .update({
           payment_status: "paid",
+          status: "paid",
           razorpay_payment_id: payment.id,
           transaction_id: payment.id,
           updated_at: new Date().toISOString(),
@@ -117,7 +122,7 @@ serve(async (req) => {
         }
       }
 
-      return new Response("OK", { status: 200 });
+      return new Response("OK", { status: 200, headers: corsHeaders });
     }
 
     // Handle payment failed event
@@ -131,6 +136,7 @@ serve(async (req) => {
         .from("payments")
         .update({
           payment_status: "failed",
+          status: "failed",
           razorpay_payment_id: payment.id,
           updated_at: new Date().toISOString(),
         })
@@ -142,14 +148,14 @@ serve(async (req) => {
       }
 
       console.log('Failed payment updated successfully via webhook');
-      return new Response("OK", { status: 200 });
+      return new Response("OK", { status: 200, headers: corsHeaders });
     }
 
     console.log('Unhandled webhook event:', event.event);
-    return new Response("Event not handled", { status: 200 });
+    return new Response("Event not handled", { status: 200, headers: corsHeaders });
 
   } catch (error) {
     console.error("Error processing webhook:", error);
-    return new Response("Webhook processing failed", { status: 500 });
+    return new Response("Webhook processing failed", { status: 500, headers: corsHeaders });
   }
 });

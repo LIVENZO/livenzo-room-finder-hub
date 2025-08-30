@@ -75,7 +75,7 @@ export const OwnerPaymentsList = () => {
   const handleVerifyPayment = async (paymentId: string) => {
     const { error } = await supabase
       .from("payments")
-      .update({ payment_status: "paid" })
+      .update({ payment_status: "paid", status: "paid", updated_at: new Date().toISOString() })
       .eq("id", paymentId);
 
     if (error) {

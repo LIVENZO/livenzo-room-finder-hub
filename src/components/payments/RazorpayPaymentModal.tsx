@@ -34,14 +34,15 @@ export const RazorpayPaymentModal = ({
 }: RazorpayPaymentModalProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePayment = async () => {
+  const handlePayment = async (customAmount?: number) => {
     setIsProcessing(true);
     
     try {
+      const payAmount = typeof customAmount === 'number' ? customAmount : amount;
       // Create payment order in Supabase
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-payment-order', {
         body: { 
-          amount,
+          amount: payAmount,
           relationshipId,
           rentId,
           paymentMethod: 'razorpay'
