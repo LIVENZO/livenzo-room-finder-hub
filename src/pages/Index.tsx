@@ -87,8 +87,8 @@ const Index: React.FC = () => {
     }
   };
   
-  // Show a loading state while checking for existing session
-  if (isLoading || checkingSession || isRedirecting) {
+  // Show a loading state while checking for existing session or redirect
+  if (checkingSession || isRedirecting) {
     return <LoadingState isRedirecting={isRedirecting} />;
   }
   

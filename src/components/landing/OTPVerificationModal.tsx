@@ -93,6 +93,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
                 onChange={setOtp} 
                 maxLength={6} 
                 autoFocus 
+                inputMode="numeric"
                 className="gap-2"
                 pattern="[0-9]*"
               >
