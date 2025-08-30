@@ -134,10 +134,6 @@ const handler = async (req: Request): Promise<Response> => {
       message: error.message,
       stack: error.stack,
       name: error.name,
-      userId: user?.id,
-      razorpayPaymentId,
-      razorpayOrderId,
-      paymentId,
       timestamp: new Date().toISOString()
     });
     

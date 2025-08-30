@@ -25,6 +25,7 @@ import {
   Calculator,
   Zap
 } from "lucide-react";
+import { PaymentHistoryList } from "./PaymentHistoryList";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format, isBefore } from "date-fns";
@@ -441,11 +442,13 @@ export const RenterPayments = () => {
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-24 bg-gray-200 rounded"></div>
               ))}
-            </div>
           </div>
         </div>
       </div>
-    );
+
+      <PaymentHistoryList />
+    </div>
+  );
   }
 
   return (
