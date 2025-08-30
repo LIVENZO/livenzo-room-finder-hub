@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Phone, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
+import OTPVerificationModal from './OTPVerificationModal';
+
 interface LandingCardProps {
   userRole: string;
   setUserRole: (role: string) => void;
@@ -18,6 +19,7 @@ interface LandingCardProps {
     verifyOTP: (phoneNumber: string, token: string) => Promise<void>;
   };
 }
+
 const LandingCard: React.FC<LandingCardProps> = ({
   userRole,
   setUserRole,
@@ -28,8 +30,8 @@ const LandingCard: React.FC<LandingCardProps> = ({
   handleOTPAuth
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
@@ -40,15 +42,18 @@ const LandingCard: React.FC<LandingCardProps> = ({
     }
     return cleaned;
   };
+
   const validatePhoneNumber = (phone: string) => {
     // Validate 10-digit Indian phone number
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
   };
+
   const getFullPhoneNumber = (phone: string) => {
     // Always add +91 prefix for Indian numbers
     return `+91${phone}`;
   };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneNumber.trim()) {
@@ -63,139 +68,102 @@ const LandingCard: React.FC<LandingCardProps> = ({
     try {
       await handleOTPAuth.sendOTP(fullPhoneNumber);
       toast.success('OTP sent successfully!');
-      // Immediately show OTP verification screen
-      setOtpSent(true);
-      setOtp(''); // Clear any previous OTP
+      // Immediately open OTP verification modal
+      setOtpModalOpen(true);
     } catch (error) {
       console.error('Failed to send OTP:', error);
       toast.error('Failed to send OTP. Please try again.');
     }
   };
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp.trim() || otp.length !== 6) {
-      toast.error('Please enter the 6-digit OTP');
-      return;
-    }
+
+  const handleVerifyOTP = async (otp: string) => {
     const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     try {
       await handleOTPAuth.verifyOTP(fullPhoneNumber, otp);
+      setOtpModalOpen(false);
     } catch (error) {
       console.error('Failed to verify OTP:', error);
+      throw error; // Let the modal handle the error display
     }
   };
+
+  const handleResendOTP = async () => {
+    const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
+    await handleOTPAuth.sendOTP(fullPhoneNumber);
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setPhoneNumber(formatted);
   };
-  return <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
-      <div className="space-y-2 text-center">
-        
-        
-      </div>
-      
-      <RoleSelector userRole={userRole} setUserRole={setUserRole} canChangeRole={canChangeRole} />
-      
-      {/* Phone Number Input Section */}
-      <form onSubmit={handleSendOTP} className="space-y-4">
-        <div className="w-full">
-          <Input type="tel" placeholder="Phone Number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading} className="w-full h-12 text-base rounded-xl" maxLength={10} />
+
+  const handleCloseOTPModal = () => {
+    setOtpModalOpen(false);
+  };
+
+  return (
+    <>
+      <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
+        <div className="space-y-2 text-center">
+          {/* Title and description can be added here if needed */}
         </div>
-
-        <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || !phoneNumber.trim()}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Send OTP
-        </Button>
-      </form>
-
-
-      {/* OTP Verification Section - Shows directly below phone input */}
-      {otpSent && <div className="space-y-4 pt-6 border-t border-border/50 animate-fade-in duration-300">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">Enter OTP</h3>
-            <p className="text-sm font-medium text-muted-foreground">
-              Sent to +91{phoneNumber}
-            </p>
+        
+        <RoleSelector userRole={userRole} setUserRole={setUserRole} canChangeRole={canChangeRole} />
+        
+        {/* Phone Number Input Section */}
+        <form onSubmit={handleSendOTP} className="space-y-4">
+          <div className="w-full">
+            <Input 
+              type="tel" 
+              placeholder="Phone Number" 
+              value={phoneNumber} 
+              onChange={handlePhoneChange} 
+              disabled={isLoading} 
+              className="w-full h-12 text-base rounded-xl" 
+              maxLength={10} 
+            />
           </div>
 
-          <form onSubmit={handleVerifyOTP} className="space-y-6">
-            {/* OTP Input - 6 individual boxes */}
-            <div className="flex justify-center">
-              <InputOTP 
-                value={otp} 
-                onChange={setOtp} 
-                maxLength={6} 
-                autoFocus 
-                className="gap-2"
-                pattern="[0-9]*"
-              >
-                <InputOTPGroup className="gap-2">
-                  {[0, 1, 2, 3, 4, 5].map(index => 
-                    <InputOTPSlot 
-                      key={index} 
-                      index={index} 
-                      className="w-12 h-12 text-lg font-bold rounded-xl border-2 border-input bg-background transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 md:w-14 md:h-14 md:text-xl" 
-                    />
-                  )}
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-
-            {/* Verify Button */}
-            <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || otp.length !== 6}>
-              {isLoading && otpSent ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Verify OTP
-            </Button>
-          </form>
-
-          {/* Resend OTP and Edit Phone Number Links */}
-          <div className="text-center space-y-2">
-            <button 
-              type="button" 
-              onClick={async () => {
-                if (!phoneNumber.trim()) {
-                  toast.error('Please enter your phone number');
-                  return;
-                }
-                const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
-                try {
-                  await handleOTPAuth.sendOTP(fullPhoneNumber);
-                  toast.success('OTP resent successfully!');
-                } catch (error) {
-                  toast.error('Failed to resend OTP. Please try again.');
-                }
-              }} 
-              className="text-primary text-sm font-medium hover:underline transition-colors disabled:opacity-50" 
-              disabled={isLoading}
-            >
-              Resend OTP
-            </button>
-            <div>
-              <button type="button" onClick={() => {
-            setOtpSent(false);
-            setOtp('');
-          }} className="text-muted-foreground text-sm hover:underline transition-colors" disabled={isLoading}>
-                Change phone number
-              </button>
-            </div>
+          <Button 
+            type="submit" 
+            size="lg" 
+            className="w-full h-12 text-base font-semibold rounded-xl" 
+            disabled={isLoading || !phoneNumber.trim()}
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Send OTP
+          </Button>
+        </form>
+        
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
-        </div>}
-      
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
+        
+        <SocialLoginButtons 
+          onGoogleLogin={handleGoogleLogin} 
+          onFacebookLogin={handleFacebookLogin} 
+          isLoading={isLoading} 
+        />
       </div>
-      
-      <SocialLoginButtons onGoogleLogin={handleGoogleLogin} onFacebookLogin={handleFacebookLogin} isLoading={isLoading} />
-      
-      
-    </div>;
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        isOpen={otpModalOpen}
+        onClose={handleCloseOTPModal}
+        phoneNumber={phoneNumber}
+        isLoading={isLoading}
+        onVerifyOTP={handleVerifyOTP}
+        onResendOTP={handleResendOTP}
+      />
+    </>
+  );
 };
+
 export default LandingCard;
