@@ -141,7 +141,27 @@ export const UpiPaymentModal = ({
 
       if (relError) throw relError;
 
-      // Submit manual payment record
+      // Also create a record in the main payments table
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          renter_id: user?.id,
+          owner_id: relationship.owner_id,
+          relationship_id: relationshipId,
+          amount: amount,
+          status: 'pending',
+          payment_status: 'pending',
+          payment_method: 'upi_manual',
+          transaction_id: transactionId.trim(),
+          payment_date: new Date().toISOString()
+        });
+
+      if (paymentError) {
+        console.error('Error creating payment record:', paymentError);
+        throw paymentError;
+      }
+
+      // Submit manual payment record for owner verification
       const { error: insertError } = await supabase
         .from('manual_payments')
         .insert({

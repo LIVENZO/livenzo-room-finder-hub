@@ -39,6 +39,7 @@ import { PaymentSuccessModal } from "./PaymentSuccessModal";
 import { PaymentFailureModal } from "./PaymentFailureModal";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { QRPaymentModal } from "./QRPaymentModal";
+import { RazorpayPaymentModal } from "./RazorpayPaymentModal";
 
 interface RentStatus {
   id: string;
@@ -84,6 +85,7 @@ export const RenterPayments = () => {
   const [markingAsPaid, setMarkingAsPaid] = useState(false);
   const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailureModal, setShowFailureModal] = useState(false);
@@ -355,20 +357,13 @@ export const RenterPayments = () => {
     // First, fetch owner UPI details to check for QR code
     await fetchOwnerUpiDetails();
     
-    // Always show QR payment modal directly (no method selector)
-    if (ownerUpiDetails?.upi_id) {
-      setShowUpiModal(true);
-    } else {
-      toast({ 
-        description: "Owner has not set up UPI payments yet", 
-        variant: "destructive" 
-      });
-    }
+    // Show payment method selector instead of going directly to UPI
+    setShowPaymentMethodSelector(true);
   };
 
   const handleSelectRazorpay = () => {
     setShowPaymentMethodSelector(false);
-    setShowPaymentModal(true);
+    setShowRazorpayModal(true);
   };
 
   const handleSelectUpiDirect = () => {
@@ -925,14 +920,21 @@ export const RenterPayments = () => {
       )}
 
       {/* Razorpay Payment Modal */}
-      {showPaymentModal && currentRent && !showElectricityDialog && !showMeterUpload && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
+      {showRazorpayModal && currentRent && (
+        <RazorpayPaymentModal
+          isOpen={showRazorpayModal}
+          onClose={() => setShowRazorpayModal(false)}
           amount={(currentRent.current_amount || 0) + electricityAmount}
           relationshipId={currentRent.relationship_id}
-          onSuccess={handlePaymentSuccess}
-          onFailure={handlePaymentFailure}
+          rentId={currentRent.id}
+          onSuccess={(paymentDetails) => {
+            setShowRazorpayModal(false);
+            handlePaymentSuccess(paymentDetails);
+          }}
+          onFailure={(error) => {
+            setShowRazorpayModal(false);
+            handlePaymentFailure(error);
+          }}
         />
       )}
 

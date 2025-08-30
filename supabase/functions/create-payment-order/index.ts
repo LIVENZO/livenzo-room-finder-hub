@@ -9,6 +9,8 @@ const corsHeaders = {
 interface PaymentOrderRequest {
   amount: number;
   relationshipId: string;
+  rentId?: string;
+  paymentMethod?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Unauthorized');
     }
 
-    const { amount, relationshipId }: PaymentOrderRequest = await req.json();
+    const { amount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
 
     console.log('Creating payment order for:', { amount, relationshipId, userId: user.id });
 
@@ -127,10 +129,15 @@ const handler = async (req: Request): Promise<Response> => {
         renter_id: user.id,
         owner_id: relationship.owner_id,
         relationship_id: relationshipId,
+        rent_id: rentId,
         amount: amount,
         razorpay_order_id: orderData.id,
         status: 'pending',
-        payment_status: 'pending'
+        payment_status: 'pending',
+        payment_method: paymentMethod,
+        payment_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -143,10 +150,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Payment order created successfully:', orderData.id);
 
     return new Response(JSON.stringify({
-      orderId: orderData.id,
+      razorpayOrderId: orderData.id,
+      razorpayKeyId: razorpayKeyId,
       amount: orderData.amount,
       currency: orderData.currency,
-      keyId: razorpayKeyId,
       paymentId: payment.id
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -65,8 +65,9 @@ const handler = async (req: Request): Promise<Response> => {
       .update({
         razorpay_payment_id: razorpayPaymentId,
         status: 'paid',
-        payment_status: 'completed',
-        payment_method: 'upi',
+        payment_status: 'paid',
+        payment_method: 'razorpay',
+        transaction_id: razorpayPaymentId,
         updated_at: new Date().toISOString()
       })
       .eq('id', paymentId)
@@ -89,30 +90,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to update payment record');
     }
 
-    // Update rent status to paid and set next due date
-    const nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    nextMonth.setDate(1); // Set to first day of next month
-    
-    const { error: rentStatusError } = await supabaseClient
-      .from('rent_status')
-      .update({
-        status: 'paid',
-        last_payment_id: payment.id,
-        due_date: nextMonth.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        updated_at: new Date().toISOString()
-      })
-      .eq('relationship_id', payment.relationship_id);
+    // Update rent status to paid and set next due date if this was a rent payment
+    if (payment.rent_id) {
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1); // Set to first day of next month
+      
+      const { error: rentStatusError } = await supabaseClient
+        .from('rent_status')
+        .update({
+          status: 'paid',
+          last_payment_id: payment.id,
+          due_date: nextMonth.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', payment.rent_id);
 
-    if (rentStatusError) {
-      console.error('Rent status update error:', rentStatusError);
+      if (rentStatusError) {
+        console.error('Rent status update error:', rentStatusError);
+      }
     }
 
     console.log('Payment verified and processed successfully:', {
       paymentId: payment.id,
       razorpayPaymentId,
       relationshipId: payment.relationship_id,
-      nextDueDate: nextMonth.toISOString().split('T')[0]
+      rentId: payment.rent_id
     });
 
     console.log('Payment verified successfully:', razorpayPaymentId);
