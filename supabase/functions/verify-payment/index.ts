@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface VerifyPaymentRequest {
+interface PaymentVerificationRequest {
   razorpayPaymentId: string;
   razorpayOrderId: string;
   razorpaySignature: string;
@@ -14,6 +14,8 @@ interface VerifyPaymentRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Verify payment function called');
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,119 +34,99 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Get user from token
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header provided');
+    }
 
-    if (!user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !data.user) {
+      console.error('Auth error:', authError);
       throw new Error('Unauthorized');
     }
 
-    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentId }: VerifyPaymentRequest = await req.json();
+    const user = data.user;
+    console.log('Authenticated user:', user.id);
 
-    // Verify signature
-    const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-    if (!razorpayKeySecret) {
-      throw new Error('Razorpay secret not configured');
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentId }: PaymentVerificationRequest = await req.json();
+
+    // Validate required parameters
+    if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature || !paymentId) {
+      throw new Error('Missing required parameters for payment verification');
     }
 
-    // Use Web Crypto API for HMAC SHA-256
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
+    console.log('Verifying payment:', { razorpayPaymentId, razorpayOrderId, paymentId });
+
+    // Verify Razorpay signature
+    const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    if (!razorpayKeySecret) {
+      throw new Error('Payment service configuration error');
+    }
+
+    // Create signature verification string
+    const signatureString = `${razorpayOrderId}|${razorpayPaymentId}`;
+    
+    // Convert secret to Uint8Array
+    const keyBytes = new TextEncoder().encode(razorpayKeySecret);
+    const messageBytes = new TextEncoder().encode(signatureString);
+    
+    // Create HMAC SHA256 hash
+    const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(razorpayKeySecret),
+      keyBytes,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']
     );
-
-    const signatureData = `${razorpayOrderId}|${razorpayPaymentId}`;
-    const expectedSignatureBuffer = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(signatureData)
-    );
-
-    const expectedSignature = Array.from(new Uint8Array(expectedSignatureBuffer))
+    
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+    const expectedSignature = Array.from(new Uint8Array(signature))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
     if (expectedSignature !== razorpaySignature) {
-      console.error('Payment signature verification failed:', {
-        expectedSignature,
-        receivedSignature: razorpaySignature,
-        orderId: razorpayOrderId,
-        paymentId: razorpayPaymentId,
-        userId: user.id
-      });
+      console.error('Payment signature verification failed');
       throw new Error('Invalid payment signature');
     }
 
-    // Update payment record
+    console.log('Payment signature verified successfully');
+
+    // Update payment record in database
     const { data: payment, error: updateError } = await supabaseClient
       .from('payments')
       .update({
         razorpay_payment_id: razorpayPaymentId,
         status: 'paid',
-        payment_status: 'paid',
-        payment_method: 'razorpay',
-        transaction_id: razorpayPaymentId,
         updated_at: new Date().toISOString()
       })
       .eq('id', paymentId)
-      .eq('renter_id', user.id)
+      .eq('renter_id', user.id) // Ensure user can only update their own payments
       .select()
       .single();
 
-    if (updateError || !payment) {
-      console.error('Payment update error:', {
-        error: updateError,
-        paymentId,
-        userId: user.id,
-        razorpayPaymentId,
-        attemptedUpdate: {
-          razorpay_payment_id: razorpayPaymentId,
-          status: 'paid',
-          payment_status: 'completed'
-        }
-      });
+    if (updateError) {
+      console.error('Database update error:', updateError);
       throw new Error('Failed to update payment record');
     }
 
-    // Update rent status to paid and set next due date if this was a rent payment
-    if (payment.rent_id) {
-      const nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      nextMonth.setDate(1); // Set to first day of next month
-      
-      const { error: rentStatusError } = await supabaseClient
-        .from('rent_status')
-        .update({
-          status: 'paid',
-          last_payment_id: payment.id,
-          due_date: nextMonth.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', payment.rent_id);
-
-      if (rentStatusError) {
-        console.error('Rent status update error:', rentStatusError);
-      }
+    if (!payment) {
+      console.error('Payment record not found or access denied');
+      throw new Error('Payment record not found or access denied');
     }
 
-    console.log('Payment verified and processed successfully:', {
-      paymentId: payment.id,
-      razorpayPaymentId,
-      relationshipId: payment.relationship_id,
-      rentId: payment.rent_id
-    });
-
-    console.log('Payment verified successfully:', razorpayPaymentId);
+    console.log('Payment verification completed successfully:', payment.id);
 
     return new Response(JSON.stringify({
       success: true,
-      payment: payment
+      payment: {
+        id: payment.id,
+        status: payment.status,
+        amount: payment.amount,
+        razorpayPaymentId: razorpayPaymentId,
+        razorpayOrderId: razorpayOrderId
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
@@ -152,34 +134,32 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in verify-payment:', error);
-    console.error('Payment verification failed with details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Enhanced error messages for different failure types
+    const safeMessage = (error as Error)?.message || 'Unknown error';
+
     let errorMessage = 'Payment verification failed';
     let statusCode = 500;
     
-    if (error.message.includes('Invalid payment signature')) {
+    if (safeMessage.includes('Invalid payment signature')) {
       errorMessage = 'Payment verification failed: Invalid signature';
       statusCode = 400;
-    } else if (error.message.includes('Unauthorized')) {
+    } else if (safeMessage.includes('Payment service configuration')) {
+      errorMessage = 'Payment service temporarily unavailable';
+      statusCode = 503;
+    } else if (safeMessage.includes('Unauthorized')) {
       errorMessage = 'Authentication required';
       statusCode = 401;
-    } else if (error.message.includes('Razorpay secret not configured')) {
-      errorMessage = 'Payment service configuration error';
-      statusCode = 503;
-    } else if (error.message.includes('Failed to update payment record')) {
-      errorMessage = 'Database error: Unable to update payment status';
-      statusCode = 502;
+    } else if (safeMessage.includes('Missing required parameters')) {
+      errorMessage = safeMessage;
+      statusCode = 400;
+    } else if (safeMessage.includes('Payment record not found')) {
+      errorMessage = 'Payment record not found or access denied';
+      statusCode = 404;
     }
     
     return new Response(JSON.stringify({ 
+      success: false,
       error: errorMessage,
-      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+      debug: safeMessage
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: statusCode,

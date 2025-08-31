@@ -39,35 +39,35 @@ export const RazorpayPaymentModal = ({
     
     try {
       const payAmount = typeof customAmount === 'number' ? customAmount : amount;
-      // Create payment order in Supabase with a timeout fallback
+      
+      // Get authentication token
       const { data: sessionData } = await supabase.auth.getSession();
-      const authHeader = sessionData?.session?.access_token
-        ? { Authorization: `Bearer ${sessionData.session.access_token}` }
-        : undefined;
+      if (!sessionData?.session?.access_token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
 
-      const timeout = (ms: number) => new Promise((_, rej) => setTimeout(() => rej(new Error('Payment service timeout')), ms));
-      const result: any = await Promise.race([
-        supabase.functions.invoke('create-payment-order', {
-          body: { 
-            amount: payAmount,
-            relationshipId,
-            rentId,
-            paymentMethod: 'razorpay'
-          },
-          headers: authHeader
-        }),
-        timeout(15000)
-      ]);
+      // Create payment order with proper error handling
+      const result = await supabase.functions.invoke('create-payment-order', {
+        body: { 
+          amount: payAmount,
+          relationshipId,
+          rentId,
+          paymentMethod: 'razorpay'
+        },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
 
-      const orderData = result?.data;
-      const orderError = result?.error;
+      const { data: orderData, error: orderError } = result;
 
       if (orderError) {
         console.error('Error creating payment order:', orderError);
-        throw new Error(orderError.message || 'Failed to create payment order');
+        throw new Error(orderError.error || 'Failed to create payment order');
       }
 
-      if (!orderData || !orderData.razorpayOrderId) {
+      if (!orderData?.success || !orderData?.razorpayOrderId) {
+        console.error('Invalid response:', orderData);
         throw new Error('Invalid payment order response');
       }
 

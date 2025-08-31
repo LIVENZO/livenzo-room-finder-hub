@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/auth";
-import { RenterPayments } from "@/components/payments/RenterPayments";
+import { PayRentSection } from "@/components/renter/PayRentSection";
 import { OwnerPayments } from "@/components/payments/OwnerPayments";
 import Layout from "@/components/Layout";
 
@@ -9,7 +9,7 @@ const Payments = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        {isOwner ? <OwnerPayments /> : <RenterPayments />}
+        {isOwner ? <OwnerPayments /> : <PayRentSection />}
       </div>
     </Layout>
   );

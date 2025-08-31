@@ -14,6 +14,8 @@ interface PaymentOrderRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Create payment order function called');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,16 +34,32 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Get user from token
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header provided');
+    }
 
-    if (!user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !data.user) {
+      console.error('Auth error:', authError);
       throw new Error('Unauthorized');
     }
 
+    const user = data.user;
+    console.log('Authenticated user:', user.id);
+
     const { amount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
+
+    // Validate required parameters
+    if (!amount || !relationshipId) {
+      throw new Error('Missing required parameters: amount and relationshipId');
+    }
+
+    if (amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
 
     console.log('Creating payment order for:', { amount, relationshipId, userId: user.id });
 
@@ -62,14 +80,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!relationship) {
       console.error('No valid relationship found for user:', user.id, 'relationshipId:', relationshipId);
-      
-      // Debug: Let's check what relationships exist for this user
-      const { data: debugRelationships } = await supabaseClient
-        .from('relationships')
-        .select('*')
-        .eq('renter_id', user.id);
-      
-      console.error('Available relationships for user:', debugRelationships);
       throw new Error('Invalid relationship or access denied');
     }
 
@@ -80,7 +90,8 @@ const handler = async (req: Request): Promise<Response> => {
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
     
     if (!razorpayKeyId || !razorpayKeySecret) {
-      throw new Error('Razorpay credentials not configured');
+      console.error('Razorpay credentials missing');
+      throw new Error('Payment service configuration error');
     }
 
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
@@ -92,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amount * 100, // Convert to paise
+        amount: Math.round(amount * 100), // Convert to paise and ensure integer
         currency: 'INR',
         receipt: `rent_${relationshipId}_${Date.now()}`,
         notes: {
@@ -108,15 +119,10 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Razorpay order creation failed:', {
         status: orderResponse.status,
         statusText: orderResponse.statusText,
-        error: errorText,
-        keyId: razorpayKeyId ? 'Present' : 'Missing',
-        keySecret: razorpayKeySecret ? 'Present' : 'Missing',
-        amount: amount,
-        relationshipId: relationshipId
+        error: errorText
       });
       
-      // Parse Razorpay error for better user feedback
-      let razorpayError = 'Unknown payment gateway error';
+      let razorpayError = 'Payment gateway error';
       try {
         const errorJson = JSON.parse(errorText);
         razorpayError = errorJson.error?.description || errorJson.message || razorpayError;
@@ -128,6 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const orderData = await orderResponse.json();
+    console.log('Razorpay order created:', orderData.id);
 
     // Store payment record in database
     const { data: payment, error: paymentError } = await supabaseClient
@@ -136,11 +143,9 @@ const handler = async (req: Request): Promise<Response> => {
         renter_id: user.id,
         owner_id: relationship.owner_id,
         relationship_id: relationshipId,
-        rent_id: rentId,
         amount: amount,
         razorpay_order_id: orderData.id,
         status: 'pending',
-        payment_status: 'pending',
         payment_method: paymentMethod,
         payment_date: new Date().toISOString(),
         created_at: new Date().toISOString(),
@@ -154,9 +159,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to store payment record');
     }
 
-    console.log('Payment order created successfully:', orderData.id);
+    console.log('Payment record created:', payment.id);
 
     return new Response(JSON.stringify({
+      success: true,
       razorpayOrderId: orderData.id,
       razorpayKeyId: razorpayKeyId,
       amount: orderData.amount,
@@ -169,30 +175,32 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in create-payment-order:', error);
-    // Avoid referencing variables that might be undefined
     const safeMessage = (error as Error)?.message || 'Unknown error';
 
-    // Enhanced error messages for different failure types
     let errorMessage = 'Payment order creation failed';
     let statusCode = 500;
     
     if (safeMessage.includes('Invalid relationship')) {
       errorMessage = 'Access denied: Invalid relationship or user permissions';
       statusCode = 403;
-    } else if (safeMessage.includes('Razorpay credentials')) {
-      errorMessage = 'Payment service configuration error';
+    } else if (safeMessage.includes('Payment service configuration')) {
+      errorMessage = 'Payment service temporarily unavailable';
       statusCode = 503;
     } else if (safeMessage.includes('Failed to create payment order')) {
-      errorMessage = 'Payment gateway error: Unable to create order';
+      errorMessage = safeMessage;
       statusCode = 502;
     } else if (safeMessage.includes('Unauthorized')) {
       errorMessage = 'Authentication required';
       statusCode = 401;
+    } else if (safeMessage.includes('Missing required parameters')) {
+      errorMessage = safeMessage;
+      statusCode = 400;
     }
     
     return new Response(JSON.stringify({ 
+      success: false,
       error: errorMessage,
-      debug: (Deno.env.get('NODE_ENV') === 'development') ? safeMessage : undefined
+      debug: safeMessage
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: statusCode,
