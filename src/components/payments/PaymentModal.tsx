@@ -54,12 +54,12 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
 
       // Initialize Razorpay payment
       const options = {
-        key: orderData.keyId,
+        key: orderData.razorpayKeyId,
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Livenzo',
         description: `Rent Payment for ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`,
-        order_id: orderData.orderId,
+        order_id: orderData.razorpayOrderId,
         handler: async (response: any) => {
           try {
             // Verify payment

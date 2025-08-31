@@ -65,7 +65,7 @@ export const RazorpayPaymentModal = ({
       script.onload = () => {
         const options = {
           key: orderData.razorpayKeyId,
-          amount: amount * 100, // Razorpay expects amount in paise
+          amount: orderData.amount, // Amount in paise from backend order
           currency: 'INR',
           name: 'Livenzo',
           description: 'Rent Payment',
