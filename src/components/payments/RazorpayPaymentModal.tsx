@@ -39,20 +39,28 @@ export const RazorpayPaymentModal = ({
     
     try {
       const payAmount = typeof customAmount === 'number' ? customAmount : amount;
-      // Create payment order in Supabase
+      // Create payment order in Supabase with a timeout fallback
       const { data: sessionData } = await supabase.auth.getSession();
       const authHeader = sessionData?.session?.access_token
         ? { Authorization: `Bearer ${sessionData.session.access_token}` }
         : undefined;
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-payment-order', {
-        body: { 
-          amount: payAmount,
-          relationshipId,
-          rentId,
-          paymentMethod: 'razorpay'
-        },
-        headers: authHeader
-      });
+
+      const timeout = (ms: number) => new Promise((_, rej) => setTimeout(() => rej(new Error('Payment service timeout')), ms));
+      const result: any = await Promise.race([
+        supabase.functions.invoke('create-payment-order', {
+          body: { 
+            amount: payAmount,
+            relationshipId,
+            rentId,
+            paymentMethod: 'razorpay'
+          },
+          headers: authHeader
+        }),
+        timeout(15000)
+      ]);
+
+      const orderData = result?.data;
+      const orderError = result?.error;
 
       if (orderError) {
         console.error('Error creating payment order:', orderError);
@@ -63,11 +71,8 @@ export const RazorpayPaymentModal = ({
         throw new Error('Invalid payment order response');
       }
 
-      // Load Razorpay script
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => {
+      // Load Razorpay script (reuse if already loaded)
+      if (window.Razorpay) {
         const options = {
           key: orderData.razorpayKeyId,
           amount: orderData.amount, // Amount in paise from backend order
@@ -114,22 +119,71 @@ export const RazorpayPaymentModal = ({
               onFailure('Payment cancelled');
             }
           },
-          theme: {
-            color: '#3B82F6'
-          }
+          theme: { color: '#3B82F6' }
         };
 
         const rzp = new window.Razorpay(options);
         rzp.open();
         setIsProcessing(false);
-      };
-      
-      script.onerror = () => {
-        setIsProcessing(false);
-        onFailure('Failed to load payment gateway');
-      };
-      
-      document.body.appendChild(script);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const options = {
+            key: orderData.razorpayKeyId,
+            amount: orderData.amount, // Amount in paise from backend order
+            currency: 'INR',
+            name: 'Livenzo',
+            description: 'Rent Payment',
+            order_id: orderData.razorpayOrderId,
+            handler: async (response: any) => {
+              try {
+                const { data: sessionData2 } = await supabase.auth.getSession();
+                const authHeader2 = sessionData2?.session?.access_token
+                  ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
+                  : undefined;
+                const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+                  body: {
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpayOrderId: response.razorpay_order_id,
+                    razorpaySignature: response.razorpay_signature,
+                    paymentId: orderData.paymentId
+                  },
+                  headers: authHeader2
+                });
+
+                if (verifyError) {
+                  console.error('Payment verification failed:', verifyError);
+                  onFailure('Payment verification failed. Please contact support.');
+                  return;
+                }
+
+                onSuccess({ ...response, paymentId: orderData.paymentId });
+              } catch (error) {
+                console.error('Payment verification error:', error);
+                onFailure('Payment verification failed. Please contact support.');
+              }
+            },
+            modal: {
+              ondismiss: () => {
+                setIsProcessing(false);
+                onFailure('Payment cancelled');
+              }
+            },
+            theme: { color: '#3B82F6' }
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+          setIsProcessing(false);
+        };
+        script.onerror = () => {
+          setIsProcessing(false);
+          onFailure('Failed to load payment gateway');
+        };
+        document.body.appendChild(script);
+      }
 
     } catch (error) {
       console.error('Payment error:', error);
