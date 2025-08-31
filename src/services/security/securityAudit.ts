@@ -37,11 +37,11 @@ class SecurityAuditService {
     }
   }
 
-  async logDataAccess(resourceType: string, resourceId: string, action: string): Promise<void> {
+  async logDataAccess(resourceType: string, resourceId: string | null, action: string): Promise<void> {
     await this.logSecurityEvent({
       event_type: 'data_access',
       resource_type: resourceType,
-      resource_id: resourceId,
+      resource_id: resourceId as any,
       details: { action },
       severity: 'low'
     });

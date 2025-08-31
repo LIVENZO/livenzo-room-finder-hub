@@ -30,9 +30,15 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
   const handlePayment = async () => {
     setLoading(true);
     try {
-      // Create payment order
+      // Ensure auth header and create payment order
+      const { data: sessionData } = await supabase.auth.getSession();
+      const authHeader = sessionData?.session?.access_token
+        ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+        : undefined;
+
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-payment-order', {
-        body: { amount, relationshipId }
+        body: { amount, relationshipId },
+        headers: authHeader
       });
 
       if (orderError) {
@@ -63,13 +69,18 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
         handler: async (response: any) => {
           try {
             // Verify payment
+            const { data: sessionData2 } = await supabase.auth.getSession();
+            const authHeader2 = sessionData2?.session?.access_token
+              ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
+              : undefined;
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
               body: {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
                 paymentId: orderData.paymentId
-              }
+              },
+              headers: authHeader2
             });
 
             if (verifyError) throw verifyError;

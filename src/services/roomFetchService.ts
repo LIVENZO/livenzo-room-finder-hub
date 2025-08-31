@@ -28,7 +28,7 @@ export const fetchRooms = async (): Promise<Room[]> => {
     }
     
     console.log(`Rooms fetched: ${data ? data.length : 0}`);
-    await securityAudit.logDataAccess('rooms', 'all', user ? 'fetch_authenticated' : 'fetch_public');
+    await securityAudit.logDataAccess('rooms', null, user ? 'fetch_authenticated' : 'fetch_public');
     
     // Map and transform the data to ensure proper typing
     return data ? data.map(room => mapDbRoomToRoom(room)) : [];
