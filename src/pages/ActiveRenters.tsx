@@ -103,9 +103,12 @@ const ActiveRenters: React.FC = () => {
             new Date(recentPayment[0].payment_date).getFullYear() === currentYear;
 
           // Use rental agreement data first, fallback to rent_status
-          const rentData = rentalAgreement || rentStatus?.[0];
+          const rentAmount = rentalAgreement?.monthly_rent || rentStatus?.[0]?.current_amount || 0;
+          const dueDate = rentalAgreement?.due_date || rentStatus?.[0]?.due_date;
+          const rentStatusValue = rentalAgreement?.status || rentStatus?.[0]?.status;
+          
           const paymentStatus: 'paid' | 'unpaid' | 'pending' = hasRecentPayment ? 'paid' : 
-                        rentData?.status === 'pending' ? 'pending' : 'unpaid';
+                        rentStatusValue === 'pending' ? 'pending' : 'unpaid';
 
           return {
             id: rel.id,
@@ -116,8 +119,8 @@ const ActiveRenters: React.FC = () => {
               room_number: renterProfile?.room_number
             },
             paymentStatus,
-            amount: rentalAgreement?.monthly_rent || rentStatus?.[0]?.current_amount || 0,
-            dueDate: rentalAgreement?.due_date || rentStatus?.[0]?.due_date,
+            amount: rentAmount,
+            dueDate: dueDate,
             lastPaymentDate: recentPayment?.[0]?.payment_date,
             latestPayment: recentPayment?.[0] ? {
               amount: Number(recentPayment[0].amount),

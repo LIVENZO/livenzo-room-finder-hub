@@ -682,6 +682,7 @@ export type Database = {
       rental_agreements: {
         Row: {
           created_at: string | null
+          due_date: string | null
           end_date: string | null
           id: string
           monthly_rent: number
@@ -694,6 +695,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          due_date?: string | null
           end_date?: string | null
           id?: string
           monthly_rent: number
@@ -706,6 +708,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          due_date?: string | null
           end_date?: string | null
           id?: string
           monthly_rent?: number
