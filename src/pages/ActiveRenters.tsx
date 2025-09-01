@@ -79,7 +79,7 @@ const ActiveRenters: React.FC = () => {
             .limit(1);
 
           // Check rental agreement for amount and due date
-          const { data: rentalAgreement } = await supabase
+          const { data: rentalAgreement, error: agreementError } = await supabase
             .from('rental_agreements')
             .select('monthly_rent, due_date, status')
             .eq('renter_id', rel.renter_id)
@@ -90,7 +90,7 @@ const ActiveRenters: React.FC = () => {
             .maybeSingle();
 
           // Fallback to rent_status if no rental agreement
-          const { data: rentStatus } = await supabase
+          const { data: rentStatus, error: rentError } = await supabase
             .from('rent_status')
             .select('current_amount, status, due_date')
             .eq('relationship_id', rel.id)
@@ -102,10 +102,14 @@ const ActiveRenters: React.FC = () => {
             new Date(recentPayment[0].payment_date).getMonth() === currentMonth &&
             new Date(recentPayment[0].payment_date).getFullYear() === currentYear;
 
+          // Safely extract data, handling potential errors
+          const agreementData = !agreementError && rentalAgreement ? rentalAgreement : null;
+          const statusData = !rentError && rentStatus?.[0] ? rentStatus[0] : null;
+          
           // Use rental agreement data first, fallback to rent_status
-          const rentAmount = rentalAgreement?.monthly_rent || rentStatus?.[0]?.current_amount || 0;
-          const dueDate = rentalAgreement?.due_date || rentStatus?.[0]?.due_date;
-          const rentStatusValue = rentalAgreement?.status || rentStatus?.[0]?.status;
+          const rentAmount = (agreementData as any)?.monthly_rent || statusData?.current_amount || 0;
+          const dueDate = (agreementData as any)?.due_date || statusData?.due_date;
+          const rentStatusValue = (agreementData as any)?.status || statusData?.status;
           
           const paymentStatus: 'paid' | 'unpaid' | 'pending' = hasRecentPayment ? 'paid' : 
                         rentStatusValue === 'pending' ? 'pending' : 'unpaid';
