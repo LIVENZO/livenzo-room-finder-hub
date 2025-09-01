@@ -86,6 +86,22 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         throw error;
       }
 
+      // Also update the rent status in the payments table for consistency
+      await supabase
+        .from('payments')
+        .update({ 
+          rent_id: relationship.id,
+          due_date: dueDate.toISOString()
+        })
+        .eq('renter_id', renterId)
+        .eq('owner_id', ownerId)
+        .is('rent_id', null);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
       toast({
         title: "✅ Monthly rent set successfully",
         description: `Monthly rent of ₹${amount} set for ${renterName}`

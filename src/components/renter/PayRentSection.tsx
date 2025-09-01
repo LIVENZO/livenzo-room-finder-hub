@@ -39,6 +39,30 @@ export const PayRentSection = () => {
     }
   }, [user]);
 
+  // Add real-time subscription for rent_status updates
+  useEffect(() => {
+    if (!user || !activeRelationship) return;
+
+    const subscription = supabase
+      .channel('rent_status_changes')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'rent_status',
+          filter: `relationship_id=eq.${activeRelationship.id}`
+        },
+        () => {
+          fetchActiveRelationship();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, activeRelationship]);
+
   const fetchActiveRelationship = async () => {
     try {
       setIsLoading(true);
@@ -62,11 +86,14 @@ export const PayRentSection = () => {
       }
 
       if (!relationship) {
+        console.log('No active relationship found for renter:', user.id);
         setActiveRelationship(null);
         setRentStatus(null);
         setOwnerInfo(null);
         return;
       }
+
+      console.log('Found relationship:', relationship.id, 'for renter:', user.id);
 
       setActiveRelationship(relationship);
       
@@ -90,6 +117,7 @@ export const PayRentSection = () => {
       }
 
       setRentStatus(rentStatusData);
+      console.log('Rent status data:', rentStatusData);
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load rental information');
