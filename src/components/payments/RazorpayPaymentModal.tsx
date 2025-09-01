@@ -63,7 +63,8 @@ export const RazorpayPaymentModal = ({
 
       if (orderError) {
         console.error('Error creating payment order:', orderError);
-        throw new Error(orderError.error || 'Failed to create payment order');
+        const message = (orderError as any)?.message || (orderError as any)?.error || 'Failed to create payment order';
+        throw new Error(message);
       }
 
       if (!orderData?.success || !orderData?.razorpayOrderId) {

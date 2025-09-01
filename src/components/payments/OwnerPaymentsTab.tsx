@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { OwnerUpiSettings } from "@/components/payments/OwnerUpiSettings";
 
 interface PaymentRecord {
   id: string;
@@ -230,6 +231,9 @@ export const OwnerPaymentsTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Payment Settings */}
+      <OwnerUpiSettings />
+
       {/* Stats Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">

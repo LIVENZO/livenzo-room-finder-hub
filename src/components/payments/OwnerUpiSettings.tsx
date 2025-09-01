@@ -24,6 +24,7 @@ export const OwnerUpiSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [upiId, setUpiId] = useState("");
+  const [upiPhone, setUpiPhone] = useState("");
   const [qrFile, setQrFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -54,6 +55,17 @@ export const OwnerUpiSettings = () => {
       if (data) {
         setUpiDetails(data);
         setUpiId(data.upi_id);
+      }
+
+      // Fetch phone number from user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('upi_phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profileError && profile) {
+        setUpiPhone(profile.upi_phone_number || "");
       }
     } catch (error: any) {
       console.error('Error fetching UPI details:', error);
@@ -169,6 +181,17 @@ export const OwnerUpiSettings = () => {
         if (error) throw error;
       }
 
+      // Always update phone number in user profile (optional field)
+      const { error: profileUpdateError } = await supabase
+        .from('user_profiles')
+        .update({
+          upi_phone_number: upiPhone.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (profileUpdateError) throw profileUpdateError;
+
       toast({ description: "UPI details saved successfully!" });
       setQrFile(null);
       fetchUpiDetails();
@@ -266,6 +289,21 @@ export const OwnerUpiSettings = () => {
           />
           <p className="text-sm text-muted-foreground">
             Enter your UPI ID that renters will use for direct payments
+          </p>
+        </div>
+
+        {/* UPI Phone Number (optional) */}
+        <div className="space-y-3">
+          <Label htmlFor="upiPhone">UPI Phone Number (optional)</Label>
+          <Input
+            id="upiPhone"
+            type="tel"
+            placeholder="Enter registered UPI phone number"
+            value={upiPhone}
+            onChange={(e) => setUpiPhone(e.target.value)}
+          />
+          <p className="text-sm text-muted-foreground">
+            This helps renters verify your UPI ID and receive SMS confirmations.
           </p>
         </div>
 
