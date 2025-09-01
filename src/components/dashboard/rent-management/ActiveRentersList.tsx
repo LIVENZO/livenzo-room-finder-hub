@@ -152,6 +152,16 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
                 </span>
                 {getStatusBadge(renter.paymentStatus)}
               </div>
+              
+              {/* Due Date Display */}
+              {renter.dueDate && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Due: {new Date(renter.dueDate).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              )}
 
               {/* Meter Photos Display */}
               {renter.relationshipId && meterPhotos[renter.relationshipId] && meterPhotos[renter.relationshipId].length > 0 && (
@@ -184,15 +194,16 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
               )}
             </div>
             
-            {/* Right: Add Payment Button */}
+            {/* Right: Add Payment Button - Mobile Friendly */}
             <div className="flex-shrink-0">
               <Button
                 onClick={() => onAddPayment(renter.renter.id, renter.renter.full_name || 'Unknown')}
-                className="min-h-[48px] px-6 font-semibold transition-all duration-200"
+                className="h-9 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-all duration-200"
                 size="sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Payment
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden xs:inline sm:ml-1">Add Payment</span>
+                <span className="xs:hidden">Add</span>
               </Button>
             </div>
           </div>

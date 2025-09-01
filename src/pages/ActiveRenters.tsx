@@ -78,7 +78,18 @@ const ActiveRenters: React.FC = () => {
             .order('payment_date', { ascending: false })
             .limit(1);
 
-          // Check rent status
+          // Check rental agreement for amount and due date
+          const { data: rentalAgreement } = await supabase
+            .from('rental_agreements')
+            .select('monthly_rent, due_date, status')
+            .eq('renter_id', rel.renter_id)
+            .eq('owner_id', user?.id)
+            .eq('status', 'active')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Fallback to rent_status if no rental agreement
           const { data: rentStatus } = await supabase
             .from('rent_status')
             .select('current_amount, status, due_date')
@@ -91,8 +102,10 @@ const ActiveRenters: React.FC = () => {
             new Date(recentPayment[0].payment_date).getMonth() === currentMonth &&
             new Date(recentPayment[0].payment_date).getFullYear() === currentYear;
 
+          // Use rental agreement data first, fallback to rent_status
+          const rentData = rentalAgreement || rentStatus?.[0];
           const paymentStatus: 'paid' | 'unpaid' | 'pending' = hasRecentPayment ? 'paid' : 
-                        rentStatus?.[0]?.status === 'pending' ? 'pending' : 'unpaid';
+                        rentData?.status === 'pending' ? 'pending' : 'unpaid';
 
           return {
             id: rel.id,
@@ -103,8 +116,8 @@ const ActiveRenters: React.FC = () => {
               room_number: renterProfile?.room_number
             },
             paymentStatus,
-            amount: rentStatus?.[0]?.current_amount || 0, // No default amount - will be set by owner
-            dueDate: rentStatus?.[0]?.due_date,
+            amount: rentalAgreement?.monthly_rent || rentStatus?.[0]?.current_amount || 0,
+            dueDate: rentalAgreement?.due_date || rentStatus?.[0]?.due_date,
             lastPaymentDate: recentPayment?.[0]?.payment_date,
             latestPayment: recentPayment?.[0] ? {
               amount: Number(recentPayment[0].amount),

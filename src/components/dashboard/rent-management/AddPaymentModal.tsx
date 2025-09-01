@@ -85,11 +85,12 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       }
 
       if (existingAgreement) {
-        // Update only the monthly_rent (and timestamps), do not touch foreign keys or status
+        // Update only the monthly_rent, due_date (and timestamps), do not touch foreign keys or status
         const { error: updateAgreementError } = await supabase
           .from('rental_agreements')
           .update({
             monthly_rent: Number(amount),
+            due_date: dueDate.toISOString().split('T')[0], // Store due date in rental agreement
             status: 'active',
             updated_at: new Date().toISOString(),
           })
@@ -109,6 +110,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             owner_id: ownerId,
             renter_id: renterId,
             monthly_rent: Number(amount),
+            due_date: dueDate.toISOString().split('T')[0], // Store due date in rental agreement
             start_date: new Date().toISOString(),
             status: 'active',
           });
