@@ -68,8 +68,31 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         return;
       }
 
+      // Get or create a property_id - for simplicity using a default/first property
+      // In real app, you'd select which property this rental is for
+      const property_id = crypto.randomUUID(); // Generate a property ID for this rental agreement
+
+      // Create/update rental agreement (the main fix)
+      const { error: agreementError } = await supabase
+        .from('rental_agreements')
+        .upsert({
+          property_id: property_id,
+          owner_id: ownerId,
+          renter_id: renterId,
+          monthly_rent: Number(amount),
+          start_date: new Date().toISOString(),
+          status: 'active'
+        }, {
+          onConflict: 'property_id,renter_id'
+        });
+
+      if (agreementError) {
+        console.error('Error creating rental agreement:', agreementError);
+        throw agreementError;
+      }
+
       // Update or insert rent_status for this relationship
-      const { error } = await supabase
+      const { error: rentStatusError } = await supabase
         .from('rent_status')
         .upsert({
           relationship_id: relationship.id,
@@ -81,13 +104,13 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           onConflict: 'relationship_id'
         });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (rentStatusError) {
+        console.error('Supabase rent_status error:', rentStatusError);
+        throw rentStatusError;
       }
 
       // Also update the rent status in the payments table for consistency
-      await supabase
+      const { error: paymentsError } = await supabase
         .from('payments')
         .update({ 
           rent_id: relationship.id,
@@ -97,9 +120,9 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         .eq('owner_id', ownerId)
         .is('rent_id', null);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (paymentsError) {
+        console.error('Supabase payments error:', paymentsError);
+        // Don't throw here - payments update is optional
       }
 
       toast({

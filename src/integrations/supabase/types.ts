@@ -679,6 +679,45 @@ export type Database = {
           },
         ]
       }
+      rental_agreements: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          id: string
+          monthly_rent: number
+          owner_id: string
+          property_id: string
+          renter_id: string
+          start_date: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          monthly_rent: number
+          owner_id: string
+          property_id: string
+          renter_id: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          monthly_rent?: number
+          owner_id?: string
+          property_id?: string
+          renter_id?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       renters: {
         Row: {
           created_at: string

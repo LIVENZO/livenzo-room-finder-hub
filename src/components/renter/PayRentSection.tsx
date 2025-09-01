@@ -30,6 +30,7 @@ export const PayRentSection = () => {
   const [activeRelationship, setActiveRelationship] = useState<Relationship | null>(null);
   const [rentStatus, setRentStatus] = useState<RentStatus | null>(null);
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
+  const [rentalAgreement, setRentalAgreement] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -39,18 +40,28 @@ export const PayRentSection = () => {
     }
   }, [user]);
 
-  // Add real-time subscription for rent_status updates
+  // Add real-time subscription for rental agreements and rent_status updates
   useEffect(() => {
-    if (!user || !activeRelationship) return;
+    if (!user) return;
 
     const subscription = supabase
-      .channel('rent_status_changes')
+      .channel('rental_data_changes')
       .on('postgres_changes', 
         {
           event: '*',
           schema: 'public',
-          table: 'rent_status',
-          filter: `relationship_id=eq.${activeRelationship.id}`
+          table: 'rental_agreements',
+          filter: `renter_id=eq.${user.id}`
+        },
+        () => {
+          fetchActiveRelationship();
+        }
+      )
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'rent_status'
         },
         () => {
           fetchActiveRelationship();
@@ -61,12 +72,27 @@ export const PayRentSection = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [user, activeRelationship]);
+  }, [user]);
 
   const fetchActiveRelationship = async () => {
     try {
       setIsLoading(true);
       
+      // NEW: First check rental_agreements table for active rental
+      const { data: agreementData, error: agreementError } = await supabase
+        .from('rental_agreements')
+        .select('*')
+        .eq('renter_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (agreementError && agreementError.code !== 'PGRST116') {
+        console.error('Error fetching rental agreement:', agreementError);
+      }
+
+      setRentalAgreement(agreementData);
+      console.log('Rental agreement data:', agreementData);
+
       // Fetch relationship with owner profile data
       const { data: relationship, error: relationshipError } = await supabase
         .from('relationships')
@@ -85,39 +111,54 @@ export const PayRentSection = () => {
         return;
       }
 
-      if (!relationship) {
-        console.log('No active relationship found for renter:', user.id);
+      // NEW: Check if we have a rental agreement even without a relationship
+      if (!relationship && !agreementData) {
+        console.log('No active relationship or rental agreement found for renter:', user.id);
         setActiveRelationship(null);
         setRentStatus(null);
         setOwnerInfo(null);
+        setRentalAgreement(null);
         return;
       }
 
-      console.log('Found relationship:', relationship.id, 'for renter:', user.id);
+      console.log('Found relationship:', relationship?.id, 'and agreement:', agreementData?.id, 'for renter:', user.id);
 
       setActiveRelationship(relationship);
       
       // Set owner info
-      const owner = Array.isArray(relationship.user_profiles) 
-        ? relationship.user_profiles[0] 
-        : relationship.user_profiles;
-      setOwnerInfo(owner || { full_name: 'Property Owner' });
+      if (relationship) {
+        const owner = Array.isArray(relationship.user_profiles) 
+          ? relationship.user_profiles[0] 
+          : relationship.user_profiles;
+        setOwnerInfo(owner || { full_name: 'Property Owner' });
 
-      // Fetch rent status for this relationship
-      const { data: rentStatusData, error: rentError } = await supabase
-        .from('rent_status')
-        .select('*')
-        .eq('relationship_id', relationship.id)
-        .maybeSingle();
+        // Fetch rent status for this relationship
+        const { data: rentStatusData, error: rentError } = await supabase
+          .from('rent_status')
+          .select('*')
+          .eq('relationship_id', relationship.id)
+          .maybeSingle();
 
-      if (rentError && rentError.code !== 'PGRST116') {
-        console.error('Error fetching rent status:', rentError);
-        toast.error('Failed to load rent details');
-        return;
+        if (rentError && rentError.code !== 'PGRST116') {
+          console.error('Error fetching rent status:', rentError);
+          toast.error('Failed to load rent details');
+          return;
+        }
+
+        setRentStatus(rentStatusData);
+        console.log('Rent status data:', rentStatusData);
+      } else if (agreementData) {
+        // Get owner info from rental agreement
+        const { data: ownerProfile, error: ownerError } = await supabase
+          .from('user_profiles')
+          .select('full_name, property_name')
+          .eq('id', agreementData.owner_id)
+          .maybeSingle();
+
+        if (!ownerError) {
+          setOwnerInfo(ownerProfile || { full_name: 'Property Owner' });
+        }
       }
-
-      setRentStatus(rentStatusData);
-      console.log('Rent status data:', rentStatusData);
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load rental information');
@@ -140,7 +181,8 @@ export const PayRentSection = () => {
     );
   }
 
-  if (!activeRelationship) {
+  // NEW: Only show "No Active Rental" if neither relationship nor rental agreement exists
+  if (!activeRelationship && !rentalAgreement) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-8">
@@ -162,14 +204,15 @@ export const PayRentSection = () => {
         </TabsList>
         
         <TabsContent value="pay-rent" className="space-y-4">
-          {rentStatus ? (
+          {/* NEW: Show rental agreement data if available, fallback to rent_status */}
+          {rentalAgreement || rentStatus ? (
             <RentPaymentCard
-              relationshipId={activeRelationship.id}
-              amount={rentStatus.current_amount}
+              relationshipId={activeRelationship?.id || rentalAgreement?.id}
+              amount={rentalAgreement?.monthly_rent || rentStatus?.current_amount}
               ownerName={ownerInfo?.full_name || 'Property Owner'}
               propertyName={ownerInfo?.property_name || 'Rental Property'}
-              dueDate={rentStatus.due_date}
-              status={rentStatus.status}
+              dueDate={rentStatus?.due_date || new Date().toISOString().split('T')[0]}
+              status={rentalAgreement?.status || rentStatus?.status || 'active'}
             />
           ) : (
             <Card>
