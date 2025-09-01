@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ActiveRentersList, { MeterPhoto } from './ActiveRentersList';
 import RentSummaryCards from './RentSummaryCards';
-// Note: AddPaymentModal will be handled separately or replaced with existing payment flow
+import AddPaymentModal from './AddPaymentModal';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
 
 interface RentStats {
@@ -279,28 +279,16 @@ const RentManagementDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Add Payment Modal - TO BE IMPLEMENTED */}
-      {showAddPaymentModal && selectedRenter && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Add Payment for {selectedRenter.name}</h3>
-            <p className="text-gray-600 mb-4">Payment modal will be implemented here</p>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setShowAddPaymentModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 rounded"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handlePaymentAdded}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Add Payment
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Add Payment Modal */}
+      {showAddPaymentModal && selectedRenter && user?.id && (
+        <AddPaymentModal
+          isOpen={showAddPaymentModal}
+          onClose={() => setShowAddPaymentModal(false)}
+          renterName={selectedRenter.name}
+          renterId={selectedRenter.id}
+          ownerId={user.id}
+          onPaymentSaved={handlePaymentAdded}
+        />
       )}
     </div>
   );

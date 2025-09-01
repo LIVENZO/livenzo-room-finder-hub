@@ -13,8 +13,23 @@ interface Relationship {
   status: string;
 }
 
+interface RentStatus {
+  id: string;
+  relationship_id: string;
+  current_amount: number;
+  due_date: string;
+  status: string;
+}
+
+interface OwnerInfo {
+  full_name: string;
+  property_name?: string;
+}
+
 export const PayRentSection = () => {
   const [activeRelationship, setActiveRelationship] = useState<Relationship | null>(null);
+  const [rentStatus, setRentStatus] = useState<RentStatus | null>(null);
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -28,21 +43,53 @@ export const PayRentSection = () => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      // Fetch relationship with owner profile data
+      const { data: relationship, error: relationshipError } = await supabase
         .from('relationships')
-        .select('*')
+        .select(`
+          *,
+          user_profiles!relationships_owner_id_fkey(full_name, property_name)
+        `)
         .eq('renter_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching relationship:', error);
+      if (relationshipError) {
+        console.error('Error fetching relationship:', relationshipError);
         toast.error('Failed to load rental information');
         return;
       }
 
-      setActiveRelationship(data);
+      if (!relationship) {
+        setActiveRelationship(null);
+        setRentStatus(null);
+        setOwnerInfo(null);
+        return;
+      }
+
+      setActiveRelationship(relationship);
+      
+      // Set owner info
+      const owner = Array.isArray(relationship.user_profiles) 
+        ? relationship.user_profiles[0] 
+        : relationship.user_profiles;
+      setOwnerInfo(owner || { full_name: 'Property Owner' });
+
+      // Fetch rent status for this relationship
+      const { data: rentStatusData, error: rentError } = await supabase
+        .from('rent_status')
+        .select('*')
+        .eq('relationship_id', relationship.id)
+        .maybeSingle();
+
+      if (rentError && rentError.code !== 'PGRST116') {
+        console.error('Error fetching rent status:', rentError);
+        toast.error('Failed to load rent details');
+        return;
+      }
+
+      setRentStatus(rentStatusData);
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load rental information');
@@ -87,14 +134,25 @@ export const PayRentSection = () => {
         </TabsList>
         
         <TabsContent value="pay-rent" className="space-y-4">
-          <RentPaymentCard
-            relationshipId={activeRelationship.id}
-            amount={12000} // Default rent amount - this could be fetched from a rent_status table
-            ownerName="Property Owner"
-            propertyName="Rental Property"
-            dueDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()} // 7 days from now
-            status="pending"
-          />
+          {rentStatus ? (
+            <RentPaymentCard
+              relationshipId={activeRelationship.id}
+              amount={rentStatus.current_amount}
+              ownerName={ownerInfo?.full_name || 'Property Owner'}
+              propertyName={ownerInfo?.property_name || 'Rental Property'}
+              dueDate={rentStatus.due_date}
+              status={rentStatus.status}
+            />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <h3 className="text-lg font-semibold mb-2">No Rent Set</h3>
+                <p className="text-muted-foreground text-center">
+                  Your owner hasn't set a monthly rent amount yet. Please contact them to set up rent payments.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         
         <TabsContent value="history" className="space-y-4">
