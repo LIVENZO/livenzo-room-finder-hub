@@ -104,7 +104,6 @@ export const PayRentSection = () => {
         `)
         .eq('renter_id', user.id)
         .eq('status', 'accepted')
-        .eq('archived', false)
         .maybeSingle();
 
       if (relationshipError) {
@@ -113,8 +112,20 @@ export const PayRentSection = () => {
         return;
       }
 
-      // NEW: Check if we have a rental agreement even without a relationship
-      if (!relationship && !agreementData) {
+      // NEW: If no direct relationship row found but an agreement exists, try to find matching relationship by owner/renter
+      let effectiveRelationship: any = relationship;
+      if (!effectiveRelationship && agreementData) {
+        const { data: relByParties } = await supabase
+          .from('relationships')
+          .select('*')
+          .eq('renter_id', user.id)
+          .eq('owner_id', agreementData.owner_id)
+          .eq('status', 'accepted')
+          .maybeSingle();
+        effectiveRelationship = relByParties || null;
+      }
+
+      if (!effectiveRelationship && !agreementData) {
         console.log('No active relationship or rental agreement found for renter:', user.id);
         setActiveRelationship(null);
         setRentStatus(null);
@@ -123,22 +134,22 @@ export const PayRentSection = () => {
         return;
       }
 
-      console.log('Found relationship:', relationship?.id, 'and agreement:', agreementData?.id, 'for renter:', user.id);
+      console.log('Found relationship:', effectiveRelationship?.id, 'and agreement:', agreementData?.id, 'for renter:', user.id);
 
-      setActiveRelationship(relationship);
+      setActiveRelationship(effectiveRelationship);
       
       // Set owner info
-      if (relationship) {
-        const owner = Array.isArray(relationship.user_profiles) 
-          ? relationship.user_profiles[0] 
-          : relationship.user_profiles;
+      if (effectiveRelationship) {
+        const owner = Array.isArray(effectiveRelationship.user_profiles) 
+          ? effectiveRelationship.user_profiles[0] 
+          : (effectiveRelationship as any).user_profiles;
         setOwnerInfo(owner || { full_name: 'Property Owner' });
 
         // Fetch rent status for this relationship
         const { data: rentStatusData, error: rentError } = await supabase
           .from('rent_status')
           .select('*')
-          .eq('relationship_id', relationship.id)
+          .eq('relationship_id', effectiveRelationship.id)
           .maybeSingle();
 
         if (rentError && rentError.code !== 'PGRST116') {
@@ -209,7 +220,7 @@ export const PayRentSection = () => {
           {/* NEW: Show rental agreement data if available, fallback to rent_status */}
           {rentalAgreement || rentStatus ? (
             <RentPaymentCard
-              relationshipId={activeRelationship?.id || rentalAgreement?.id}
+              relationshipId={activeRelationship?.id}
               amount={rentalAgreement?.monthly_rent || rentStatus?.current_amount}
               ownerName={ownerInfo?.full_name || 'Property Owner'}
               propertyName={ownerInfo?.property_name || 'Rental Property'}

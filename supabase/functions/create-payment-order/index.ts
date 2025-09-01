@@ -69,7 +69,6 @@ const handler = async (req: Request): Promise<Response> => {
       .select('*')
       .eq('id', relationshipId)
       .eq('status', 'accepted')
-      .eq('archived', false)
       .or(`renter_id.eq.${user.id},owner_id.eq.${user.id}`)
       .maybeSingle();
 

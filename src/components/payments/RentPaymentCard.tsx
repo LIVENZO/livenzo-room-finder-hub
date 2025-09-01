@@ -5,7 +5,7 @@ import { PayRentButton } from "./PayRentButton";
 import { format } from "date-fns";
 
 interface RentPaymentCardProps {
-  relationshipId: string;
+  relationshipId?: string;
   amount: number;
   dueDate?: string;
   status?: string;
@@ -99,7 +99,7 @@ export const RentPaymentCard = ({
           </div>
         )}
 
-        {status !== 'paid' && (
+        {status !== 'paid' && relationshipId && (
           <PayRentButton 
             amount={amount}
             relationshipId={relationshipId}
