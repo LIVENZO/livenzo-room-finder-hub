@@ -99,13 +99,13 @@ export const RentPaymentCard = ({
           </div>
         )}
 
-        {status !== 'paid' && (
-          <PayRentButton 
-            amount={amount}
-            relationshipId={relationshipId || 'temp'}
-            className="w-full"
-          />
-        )}
+{status !== 'paid' && (
+  <PayRentButton 
+    amount={amount}
+    relationshipId={relationshipId}
+    className="w-full"
+  />
+)}
       </CardContent>
     </Card>
   );

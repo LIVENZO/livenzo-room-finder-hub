@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface PaymentOrderRequest {
   amount: number;
-  relationshipId: string;
+  relationshipId?: string;
   rentId?: string;
   paymentMethod?: string;
 }
@@ -50,55 +50,63 @@ const handler = async (req: Request): Promise<Response> => {
     const user = data.user;
     console.log('Authenticated user:', user.id);
 
-    const { amount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
+const { amount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
 
-    // Validate required parameters
-    if (!amount || !relationshipId) {
-      throw new Error('Missing required parameters: amount and relationshipId');
-    }
+// Validate required parameters
+if (!amount) {
+  throw new Error('Missing required parameter: amount');
+}
 
-    if (amount <= 0) {
-      throw new Error('Amount must be greater than 0');
-    }
+if (amount <= 0) {
+  throw new Error('Amount must be greater than 0');
+}
 
     console.log('Creating payment order for:', { amount, relationshipId, userId: user.id });
 
-    // Verify the relationship belongs to the user and is active
-    // 1) Try by provided relationshipId
-    const { data: relationshipById, error: relationshipError } = await supabaseClient
-      .from('relationships')
-      .select('*')
-      .eq('id', relationshipId)
-      .eq('status', 'accepted')
-      .or(`renter_id.eq.${user.id},owner_id.eq.${user.id}`)
-      .maybeSingle();
+// Verify the relationship belongs to the user and is active
+// Try by provided relationshipId when available
+let relationship = null as any;
+if (relationshipId) {
+  const { data: relationshipById, error: relationshipError } = await supabaseClient
+    .from('relationships')
+    .select('*')
+    .eq('id', relationshipId)
+    .eq('status', 'accepted')
+    .eq('archived', false)
+    .or(`renter_id.eq.${user.id},owner_id.eq.${user.id}`)
+    .maybeSingle();
 
-    if (relationshipError) {
-      console.error('Relationship query error:', relationshipError);
-      throw new Error('Database error while verifying relationship');
-    }
+  if (relationshipError) {
+    console.error('Relationship query error:', relationshipError);
+    throw new Error('Database error while verifying relationship');
+  }
 
-    let relationship = relationshipById;
+  relationship = relationshipById;
+} else {
+  console.log('No relationshipId provided, resolving latest accepted relationship for renter:', user.id);
+}
 
-    // 2) Fallback: if not found by id, pick the most recent accepted relationship for this renter
-    if (!relationship) {
-      console.log('No relationship found by id, falling back to renter lookup for user:', user.id);
-      const { data: fallbackRel, error: fallbackError } = await supabaseClient
-        .from('relationships')
-        .select('*')
-        .eq('renter_id', user.id)
-        .eq('status', 'accepted')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
 
-      if (fallbackError) {
-        console.error('Fallback relationship query error:', fallbackError);
-        throw new Error('Database error while verifying relationship');
-      }
+// 2) Fallback: if not found by id, pick the most recent accepted relationship for this renter
+if (!relationship) {
+  console.log('No relationship found by id, falling back to renter lookup for user:', user.id);
+  const { data: fallbackRel, error: fallbackError } = await supabaseClient
+    .from('relationships')
+    .select('*')
+    .eq('renter_id', user.id)
+    .eq('status', 'accepted')
+    .eq('archived', false)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-      relationship = fallbackRel || null;
-    }
+  if (fallbackError) {
+    console.error('Fallback relationship query error:', fallbackError);
+    throw new Error('Database error while verifying relationship');
+  }
+
+  relationship = fallbackRel || null;
+}
 
     if (!relationship) {
       console.error('No valid relationship found for user:', user.id, 'relationshipId:', relationshipId);

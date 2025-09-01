@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 interface PayRentButtonProps {
   amount: number;
-  relationshipId: string;
+  relationshipId?: string;
   disabled?: boolean;
   className?: string;
 }

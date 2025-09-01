@@ -10,7 +10,7 @@ interface RazorpayPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
-  relationshipId: string;
+  relationshipId?: string;
   rentId?: string;
   onSuccess: (paymentDetails: any) => void;
   onFailure: (error: string) => void;
