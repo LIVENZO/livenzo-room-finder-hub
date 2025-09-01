@@ -68,27 +68,55 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         return;
       }
 
-      // Get or create a property_id - for simplicity using a default/first property
-      // In real app, you'd select which property this rental is for
-      const property_id = crypto.randomUUID(); // Generate a property ID for this rental agreement
-
-      // Create/update rental agreement (the main fix)
-      const { error: agreementError } = await supabase
+      // Create or update rental agreement (update monthly_rent only, keep linkage intact)
+      // 1) Try to find existing active agreement between this owner and renter
+      const { data: existingAgreement, error: findAgreementError } = await supabase
         .from('rental_agreements')
-        .upsert({
-          property_id: property_id,
-          owner_id: ownerId,
-          renter_id: renterId,
-          monthly_rent: Number(amount),
-          start_date: new Date().toISOString(),
-          status: 'active'
-        }, {
-          onConflict: 'property_id,renter_id'
-        });
+        .select('*')
+        .eq('owner_id', ownerId)
+        .eq('renter_id', renterId)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (agreementError) {
-        console.error('Error creating rental agreement:', agreementError);
-        throw agreementError;
+      if (findAgreementError && findAgreementError.code !== 'PGRST116') {
+        console.error('Error checking existing agreement:', findAgreementError);
+      }
+
+      if (existingAgreement) {
+        // Update only the monthly_rent (and timestamps), do not touch foreign keys or status
+        const { error: updateAgreementError } = await supabase
+          .from('rental_agreements')
+          .update({
+            monthly_rent: Number(amount),
+            status: 'active',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingAgreement.id);
+
+        if (updateAgreementError) {
+          console.error('Error updating rental agreement:', updateAgreementError);
+          throw updateAgreementError;
+        }
+      } else {
+        // Create a new agreement with a stable property_id for this pair
+        const property_id = crypto.randomUUID();
+        const { error: insertAgreementError } = await supabase
+          .from('rental_agreements')
+          .insert({
+            property_id,
+            owner_id: ownerId,
+            renter_id: renterId,
+            monthly_rent: Number(amount),
+            start_date: new Date().toISOString(),
+            status: 'active',
+          });
+
+        if (insertAgreementError) {
+          console.error('Error creating rental agreement:', insertAgreementError);
+          throw insertAgreementError;
+        }
       }
 
       // Update or insert rent_status for this relationship

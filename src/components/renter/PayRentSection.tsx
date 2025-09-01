@@ -78,12 +78,14 @@ export const PayRentSection = () => {
     try {
       setIsLoading(true);
       
-      // NEW: First check rental_agreements table for active rental
+      // Check rental_agreements table for latest active agreement (avoid multi-row errors)
       const { data: agreementData, error: agreementError } = await supabase
         .from('rental_agreements')
         .select('*')
         .eq('renter_id', user.id)
         .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (agreementError && agreementError.code !== 'PGRST116') {
