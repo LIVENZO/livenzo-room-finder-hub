@@ -217,15 +217,15 @@ export const PayRentSection = () => {
         </TabsList>
         
         <TabsContent value="pay-rent" className="space-y-4">
-          {/* NEW: Show rental agreement data if available, fallback to rent_status */}
+          {/* Show rental agreement data if available, fallback to rent_status */}
           {rentalAgreement || rentStatus ? (
             <RentPaymentCard
-              relationshipId={activeRelationship?.id}
+              relationshipId={activeRelationship?.id || rentalAgreement?.id || 'fallback'}
               amount={rentalAgreement?.monthly_rent || rentStatus?.current_amount}
               ownerName={ownerInfo?.full_name || 'Property Owner'}
               propertyName={ownerInfo?.property_name || 'Rental Property'}
               dueDate={rentalAgreement?.due_date || rentStatus?.due_date || new Date().toISOString().split('T')[0]}
-              status={rentalAgreement?.status || rentStatus?.status || 'active'}
+              status={rentalAgreement?.status || rentStatus?.status || 'pending'}
             />
           ) : (
             <Card>

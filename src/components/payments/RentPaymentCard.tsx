@@ -99,10 +99,10 @@ export const RentPaymentCard = ({
           </div>
         )}
 
-        {status !== 'paid' && relationshipId && (
+        {status !== 'paid' && (
           <PayRentButton 
             amount={amount}
-            relationshipId={relationshipId}
+            relationshipId={relationshipId || 'temp'}
             className="w-full"
           />
         )}
