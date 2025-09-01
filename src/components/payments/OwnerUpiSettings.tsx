@@ -192,7 +192,39 @@ export const OwnerUpiSettings = () => {
 
       if (profileUpdateError) throw profileUpdateError;
 
-      toast({ description: "UPI details saved successfully!" });
+      // Create Razorpay account for Route if UPI ID is provided and account doesn't exist
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('razorpay_account_id, full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!userProfile?.razorpay_account_id && user?.email) {
+        try {
+          toast({ description: "Creating payment account..." });
+          const { data: accountData, error: accountError } = await supabase.functions.invoke('create-owner-account', {
+            body: {
+              upiId: upiId.trim(),
+              ownerName: userProfile?.full_name || 'Property Owner',
+              phone: upiPhone.trim() || undefined
+            }
+          });
+
+          if (accountError) {
+            console.error('Error creating Razorpay account:', accountError);
+            toast({ description: "UPI saved but failed to create payment account. Please contact support.", variant: "destructive" });
+          } else {
+            console.log('Razorpay account created:', accountData);
+            toast({ description: "UPI details saved and automatic payments enabled!" });
+          }
+        } catch (error) {
+          console.error('Error in account creation:', error);
+          toast({ description: "UPI saved but failed to create payment account. Please contact support.", variant: "destructive" });
+        }
+      } else {
+        toast({ description: "UPI details saved successfully!" });
+      }
+
       setQrFile(null);
       fetchUpiDetails();
     } catch (error: any) {

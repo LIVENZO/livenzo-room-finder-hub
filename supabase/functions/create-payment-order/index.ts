@@ -106,6 +106,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('Valid relationship found:', relationship.id);
+    
+    // Get owner's Razorpay account ID for Route
+    const { data: ownerProfile, error: ownerError } = await supabaseClient
+      .from('user_profiles')
+      .select('razorpay_account_id, full_name')
+      .eq('id', relationship.owner_id)
+      .maybeSingle();
+
+    if (ownerError) {
+      console.error('Owner profile query error:', ownerError);
+      throw new Error('Database error while fetching owner details');
+    }
+
+    console.log('Owner profile found:', ownerProfile);
+    
     // Create Razorpay order
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
@@ -117,22 +132,47 @@ const handler = async (req: Request): Promise<Response> => {
 
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
     
+    // Prepare order payload
+    const orderPayload: any = {
+      amount: Math.round(amount * 100), // Convert to paise and ensure integer
+      currency: 'INR',
+      receipt: `rent_${relationship.id}_${Date.now()}`,
+      notes: {
+        relationship_id: relationship.id,
+        renter_id: user.id,
+        owner_id: relationship.owner_id,
+      }
+    };
+
+    // Add transfers if owner has Razorpay account (Route enabled)
+    if (ownerProfile?.razorpay_account_id) {
+      orderPayload.transfers = [
+        {
+          account: ownerProfile.razorpay_account_id,
+          amount: Math.round(amount * 100), // Transfer 100% to owner
+          currency: 'INR',
+          notes: {
+            name: ownerProfile.full_name || 'Property Owner',
+            roll_no: relationship.id
+          },
+          linked_account_notes: [
+            'Rent payment from ' + user.id
+          ],
+          on_hold: false
+        }
+      ];
+      console.log('Route enabled - transferring to account:', ownerProfile.razorpay_account_id);
+    } else {
+      console.log('Route not enabled - collecting to main account');
+    }
+    
     const orderResponse = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        amount: Math.round(amount * 100), // Convert to paise and ensure integer
-        currency: 'INR',
-        receipt: `rent_${relationship.id}_${Date.now()}`,
-        notes: {
-          relationship_id: relationship.id,
-          renter_id: user.id,
-          owner_id: relationship.owner_id,
-        }
-      }),
+      body: JSON.stringify(orderPayload),
     });
 
     if (!orderResponse.ok) {
