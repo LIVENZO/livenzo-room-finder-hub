@@ -6,135 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-razorpay-signature",
 };
 
-// Function to initiate payout to owner's UPI ID
-async function initiateOwnerPayout(supabaseClient: any, paymentRecord: any, razorpayPayment: any) {
-  console.log('Initiating automatic payout for payment:', paymentRecord.id);
-
-  // Get owner's profile with UPI details
-  const { data: ownerProfile, error: ownerError } = await supabaseClient
-    .from('user_profiles')
-    .select('upi_id, full_name')
-    .eq('id', paymentRecord.owner_id)
-    .single();
-
-  if (ownerError || !ownerProfile) {
-    console.error('Error fetching owner profile:', ownerError);
-    throw new Error('Owner profile not found');
-  }
-
-  if (!ownerProfile.upi_id) {
-    console.error('Owner UPI ID not found for owner:', paymentRecord.owner_id);
-    throw new Error('Owner UPI ID not configured');
-  }
-
-  console.log('Owner UPI ID found:', ownerProfile.upi_id);
-
-  const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
-  const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-  
-  if (!razorpayKeyId || !razorpayKeySecret) {
-    throw new Error('Razorpay credentials not configured');
-  }
-
-  const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
-
-  // Step 1: Create Fund Account for UPI if it doesn't exist
-  const fundAccountPayload = {
-    account_type: 'vpa',
-    vpa: {
-      address: ownerProfile.upi_id
-    },
-    contact: {
-      name: ownerProfile.full_name || 'Property Owner',
-      email: `owner_${paymentRecord.owner_id}@livenzo.com`,
-      contact: '9999999999', // Placeholder - you can update this
-      type: 'vendor'
-    }
-  };
-
-  console.log('Creating fund account for UPI:', ownerProfile.upi_id);
-
-  const fundAccountResponse = await fetch('https://api.razorpay.com/v1/fund_accounts', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(fundAccountPayload),
-  });
-
-  if (!fundAccountResponse.ok) {
-    const errorText = await fundAccountResponse.text();
-    console.error('Fund account creation failed:', {
-      status: fundAccountResponse.status,
-      error: errorText
-    });
-    throw new Error(`Fund account creation failed: ${errorText}`);
-  }
-
-  const fundAccount = await fundAccountResponse.json();
-  console.log('Fund account created successfully:', fundAccount.id);
-
-  // Step 2: Create Payout
-  const payoutAmount = Math.round(parseFloat(paymentRecord.amount) * 100); // Convert to paise
-  
-  const payoutPayload = {
-    fund_account_id: fundAccount.id,
-    amount: payoutAmount,
-    currency: 'INR',
-    mode: 'UPI',
-    purpose: 'payout',
-    notes: {
-      payment_id: paymentRecord.id,
-      rent_payment: 'true',
-      owner_id: paymentRecord.owner_id,
-      renter_id: paymentRecord.renter_id
-    }
-  };
-
-  console.log('Creating payout of ₹', paymentRecord.amount, 'to UPI:', ownerProfile.upi_id);
-
-  const payoutResponse = await fetch('https://api.razorpay.com/v1/payouts', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payoutPayload),
-  });
-
-  if (!payoutResponse.ok) {
-    const errorText = await payoutResponse.text();
-    console.error('Payout creation failed:', {
-      status: payoutResponse.status,
-      error: errorText
-    });
-    throw new Error(`Payout creation failed: ${errorText}`);
-  }
-
-  const payout = await payoutResponse.json();
-  console.log('Payout initiated successfully:', {
-    payoutId: payout.id,
-    amount: payout.amount,
-    status: payout.status,
-    upiId: ownerProfile.upi_id
-  });
-
-  // Log the payout in database for tracking
-  const { error: logError } = await supabaseClient
-    .from('payments')
-    .update({
-      transaction_id: `${paymentRecord.transaction_id}_payout_${payout.id}`,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', paymentRecord.id);
-
-  if (logError) {
-    console.error('Error logging payout details:', logError);
-  }
-
-  return payout;
-}
+// Note: No longer needed since payments go directly to owner's UPI ID
+// Previously this function was used for automatic payouts via Razorpay Route
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -252,13 +125,8 @@ serve(async (req) => {
         }
       }
 
-      // Initiate automatic payout to owner
-      try {
-        await initiateOwnerPayout(supabaseClient, updatedPayment, payment);
-      } catch (payoutError) {
-        console.error('Payout failed but payment was successful:', payoutError);
-        // Don't fail the webhook - payment was successful, payout can be retried
-      }
+      // Payment goes directly to owner's UPI ID, no need for separate payout
+      console.log('Payment completed successfully. Money transferred directly to owner via UPI.');
 
       return new Response("OK", { status: 200, headers: corsHeaders });
     }

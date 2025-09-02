@@ -115,10 +115,10 @@ if (!relationship) {
 
     console.log('Valid relationship found:', relationship.id);
     
-    // Get owner's Razorpay account ID for Route
+    // Get owner's UPI ID for direct payment
     const { data: ownerProfile, error: ownerError } = await supabaseClient
       .from('user_profiles')
-      .select('razorpay_account_id, full_name')
+      .select('upi_id, full_name')
       .eq('id', relationship.owner_id)
       .maybeSingle();
 
@@ -127,9 +127,15 @@ if (!relationship) {
       throw new Error('Database error while fetching owner details');
     }
 
-    console.log('Owner profile found:', ownerProfile);
+    // Validate owner has UPI ID configured
+    if (!ownerProfile?.upi_id) {
+      console.error('Owner UPI ID not configured for owner:', relationship.owner_id);
+      throw new Error('Owner UPI ID not configured. Please ask the owner to update their payment settings.');
+    }
+
+    console.log('Owner profile found with UPI ID:', ownerProfile.upi_id);
     
-    // Create Razorpay order
+    // Create Razorpay order with UPI direct payment
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
     
@@ -140,39 +146,26 @@ if (!relationship) {
 
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
     
-    // Prepare order payload
+    // Create order for UPI direct payment to owner
     const orderPayload: any = {
       amount: Math.round(amount * 100), // Convert to paise and ensure integer
       currency: 'INR',
       receipt: `rent_${relationship.id}_${Date.now()}`,
+      method: 'upi',
+      customer: {
+        name: 'Rent Payment',
+        contact: '9999999999' // Placeholder contact
+      },
       notes: {
         relationship_id: relationship.id,
         renter_id: user.id,
         owner_id: relationship.owner_id,
+        owner_upi_id: ownerProfile.upi_id,
+        payment_type: 'direct_upi_rent'
       }
     };
 
-    // Add transfers if owner has Razorpay account (Route enabled)
-    if (ownerProfile?.razorpay_account_id) {
-      orderPayload.transfers = [
-        {
-          account: ownerProfile.razorpay_account_id,
-          amount: Math.round(amount * 100), // Transfer 100% to owner
-          currency: 'INR',
-          notes: {
-            name: ownerProfile.full_name || 'Property Owner',
-            roll_no: relationship.id
-          },
-          linked_account_notes: [
-            'Rent payment from ' + user.id
-          ],
-          on_hold: false
-        }
-      ];
-      console.log('Route enabled - transferring to account:', ownerProfile.razorpay_account_id);
-    } else {
-      console.log('Route not enabled - collecting to main account');
-    }
+    console.log('Creating UPI order for direct payment to owner UPI:', ownerProfile.upi_id);
     
     const orderResponse = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
