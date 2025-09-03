@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { RazorpayPaymentModal } from "./RazorpayPaymentModal";
+import { UpiPaymentModal } from "./UpiPaymentModal";
 import { toast } from "sonner";
 
 interface PayRentButtonProps {
@@ -17,11 +19,17 @@ export const PayRentButton = ({
   disabled = false,
   className = ""
 }: PayRentButtonProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(false);
+  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
+  const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fixed UPI ID for Livenzo
+  const LIVENZO_UPI_ID = "7488698970@ybl";
+
   const handlePaymentSuccess = (paymentDetails: any) => {
-    setIsModalOpen(false);
+    setIsRazorpayModalOpen(false);
+    setIsUpiModalOpen(false);
     setIsLoading(false);
     toast.success(`Payment of ₹${amount} completed successfully!`);
     
@@ -32,7 +40,8 @@ export const PayRentButton = ({
   };
 
   const handlePaymentFailure = (error: string) => {
-    setIsModalOpen(false);
+    setIsRazorpayModalOpen(false);
+    setIsUpiModalOpen(false);
     setIsLoading(false);
     toast.error(`Payment failed: ${error}`);
   };
@@ -40,7 +49,18 @@ export const PayRentButton = ({
   const handlePayClick = () => {
     if (disabled) return;
     setIsLoading(true);
-    setIsModalOpen(true);
+    setIsMethodSelectorOpen(true);
+    setIsLoading(false);
+  };
+
+  const handleSelectRazorpay = () => {
+    setIsMethodSelectorOpen(false);
+    setIsRazorpayModalOpen(true);
+  };
+
+  const handleSelectUpiDirect = () => {
+    setIsMethodSelectorOpen(false);
+    setIsUpiModalOpen(true);
   };
 
   return (
@@ -64,16 +84,37 @@ export const PayRentButton = ({
         )}
       </Button>
 
+      <PaymentMethodSelector
+        isOpen={isMethodSelectorOpen}
+        onClose={() => setIsMethodSelectorOpen(false)}
+        amount={amount}
+        onSelectRazorpay={handleSelectRazorpay}
+        onSelectUpiDirect={handleSelectUpiDirect}
+      />
+
       <RazorpayPaymentModal
-        isOpen={isModalOpen}
+        isOpen={isRazorpayModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
+          setIsRazorpayModalOpen(false);
           setIsLoading(false);
         }}
         amount={amount}
         relationshipId={relationshipId}
         onSuccess={handlePaymentSuccess}
         onFailure={handlePaymentFailure}
+      />
+
+      <UpiPaymentModal
+        isOpen={isUpiModalOpen}
+        onClose={() => {
+          setIsUpiModalOpen(false);
+          setIsLoading(false);
+        }}
+        amount={amount}
+        relationshipId={relationshipId || ""}
+        ownerUpiId={LIVENZO_UPI_ID}
+        ownerName="Livenzo"
+        onSuccess={() => handlePaymentSuccess({})}
       />
     </>
   );

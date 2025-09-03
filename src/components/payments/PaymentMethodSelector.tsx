@@ -88,7 +88,7 @@ export const PaymentMethodSelector = ({
                           Manual
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">Pay directly to owner's UPI</p>
+                      <p className="text-sm text-muted-foreground">Pay directly to Livenzo UPI</p>
                       <p className="text-xs text-muted-foreground">No processing fees • Manual verification</p>
                     </div>
                   </div>

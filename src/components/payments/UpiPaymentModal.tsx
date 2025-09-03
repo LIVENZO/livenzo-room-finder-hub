@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import QRCode from "qrcode";
 
 interface UpiPaymentModalProps {
   isOpen: boolean;
@@ -18,7 +19,6 @@ interface UpiPaymentModalProps {
   amount: number;
   relationshipId: string;
   ownerUpiId: string;
-  ownerQrCodeUrl?: string;
   ownerName: string;
   onSuccess: () => void;
 }
@@ -29,7 +29,6 @@ export const UpiPaymentModal = ({
   amount, 
   relationshipId, 
   ownerUpiId, 
-  ownerQrCodeUrl, 
   ownerName,
   onSuccess 
 }: UpiPaymentModalProps) => {
@@ -40,6 +39,31 @@ export const UpiPaymentModal = ({
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
   const [copied, setCopied] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
+
+  // Generate QR code when modal opens
+  const generateQRCode = async () => {
+    try {
+      const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
+      const qrDataUrl = await QRCode.toDataURL(upiUrl, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeDataUrl(qrDataUrl);
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && !qrCodeDataUrl) {
+      generateQRCode();
+    }
+  }, [isOpen, ownerUpiId, amount, ownerName]);
 
   const handleCopyUpiId = async () => {
     try {
@@ -65,39 +89,19 @@ export const UpiPaymentModal = ({
 
   const handleDownloadQRCode = async () => {
     try {
-      if (!ownerQrCodeUrl) {
+      if (!qrCodeDataUrl) {
         toast({ description: "QR code not available for download", variant: "destructive" });
         return;
       }
 
       // Create a temporary link to download the QR code
       const link = document.createElement('a');
-      
-      try {
-        // For external URLs, we need to fetch and create blob
-        const response = await fetch(ownerQrCodeUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        
-        link.href = blobUrl;
-        link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up blob URL
-        URL.revokeObjectURL(blobUrl);
-        toast({ description: "QR code downloaded successfully!" });
-      } catch (fetchError) {
-        // Fallback: direct link download
-        link.href = ownerQrCodeUrl;
-        link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ description: "QR code download initiated!" });
-      }
+      link.href = qrCodeDataUrl;
+      link.download = `livenzo-payment-qr-${amount}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ description: "QR code downloaded successfully!" });
     } catch (error) {
       console.error('Error downloading QR code:', error);
       toast({ description: "Failed to download QR code", variant: "destructive" });
@@ -287,11 +291,11 @@ export const UpiPaymentModal = ({
             </div>
 
             {/* QR Code Section */}
-            {ownerQrCodeUrl && (
+            {qrCodeDataUrl && (
               <div className="text-center p-3 border rounded-lg space-y-3">
                 <p className="font-medium">Scan QR Code</p>
                 <img 
-                  src={ownerQrCodeUrl} 
+                  src={qrCodeDataUrl} 
                   alt="UPI QR Code" 
                   className="mx-auto w-32 h-32 object-contain border rounded"
                 />
