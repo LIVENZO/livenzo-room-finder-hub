@@ -303,16 +303,37 @@ export const QRPaymentModal = ({
             {/* Hidden canvas for QR generation */}
             <canvas ref={canvasRef} className="hidden" />
             
-            {/* Download QR Code Button */}
+            {/* Scan QR & Pay Button */}
             {(ownerQrCodeUrl || generatedQrCode) && (
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
-                onClick={handleDownloadQRCode}
+                onClick={() => {
+                  try {
+                    // Construct UPI intent URL with payment details
+                    const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
+                    
+                    // Open UPI app directly
+                    window.location.href = upiUrl;
+                    
+                    // Show success message
+                    toast({
+                      title: "Opening UPI App",
+                      description: "Complete payment and return to submit proof below.",
+                    });
+                  } catch (error) {
+                    console.error('Error opening UPI app:', error);
+                    toast({
+                      title: "Unable to open UPI app",
+                      description: "Please copy the UPI ID to complete payment.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
                 className="mt-2"
               >
-                <Download className="mr-2 h-4 w-4" />
-                Download QR Code
+                <QrCode className="mr-2 h-4 w-4" />
+                Scan QR & Pay via UPI
               </Button>
             )}
           </div>
