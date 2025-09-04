@@ -94,14 +94,33 @@ export const UpiPaymentModal = ({
         return;
       }
 
-      // Create a temporary link to download the QR code
-      const link = document.createElement('a');
-      link.href = qrCodeDataUrl;
-      link.download = `livenzo-payment-qr-${amount}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast({ description: "QR code downloaded successfully!" });
+      const filename = `livenzo-payment-qr-${amount}.png`;
+
+      // Check if we're in Android WebView
+      const isAndroidWebView = typeof (window as any).Android !== 'undefined';
+
+      if (isAndroidWebView) {
+        // Convert data URL to blob for Android
+        const response = await fetch(qrCodeDataUrl);
+        const blob = await response.blob();
+        
+        const reader = new FileReader();
+        reader.onload = function() {
+          const base64data = (reader.result as string).split(',')[1]; // remove data: prefix
+          (window as any).Android.downloadQRCode(base64data, filename);
+          toast({ description: "QR code downloaded successfully!" });
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        // Standard web download
+        const link = document.createElement('a');
+        link.href = qrCodeDataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ description: "QR code downloaded successfully!" });
+      }
     } catch (error) {
       console.error('Error downloading QR code:', error);
       toast({ description: "Failed to download QR code", variant: "destructive" });

@@ -113,31 +113,59 @@ export const QRPaymentModal = ({
         return;
       }
 
-      // Create a temporary link to download the QR code
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
+      const filename = `payment-qr-${ownerName.replace(/\s+/g, '-')}-${amount}.png`;
       
-      // For data URLs (generated QR codes), we can directly trigger download
-      if (imageUrl.startsWith('data:')) {
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ description: "QR code downloaded successfully!" });
+      // Check if we're in Android WebView
+      const isAndroidWebView = typeof (window as any).Android !== 'undefined';
+
+      if (isAndroidWebView) {
+        // Handle Android WebView downloads
+        let blob: Blob;
+        
+        if (imageUrl.startsWith('data:')) {
+          // Convert data URL to blob
+          const response = await fetch(imageUrl);
+          blob = await response.blob();
+        } else {
+          // Fetch external URL and convert to blob
+          const response = await fetch(imageUrl);
+          blob = await response.blob();
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function() {
+          const base64data = (reader.result as string).split(',')[1]; // remove data: prefix
+          (window as any).Android.downloadQRCode(base64data, filename);
+          toast({ description: "QR code downloaded successfully!" });
+        };
+        reader.readAsDataURL(blob);
       } else {
-        // For external URLs, we need to fetch and create blob
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
+        // Standard web download
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = filename;
         
-        link.href = blobUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up blob URL
-        URL.revokeObjectURL(blobUrl);
-        toast({ description: "QR code downloaded successfully!" });
+        // For data URLs (generated QR codes), we can directly trigger download
+        if (imageUrl.startsWith('data:')) {
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          toast({ description: "QR code downloaded successfully!" });
+        } else {
+          // For external URLs, we need to fetch and create blob
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          
+          link.href = blobUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Clean up blob URL
+          URL.revokeObjectURL(blobUrl);
+          toast({ description: "QR code downloaded successfully!" });
+        }
       }
     } catch (error) {
       console.error('Error downloading QR code:', error);
