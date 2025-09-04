@@ -45,7 +45,8 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
 
   const handleGetDirections = () => {
     if (mapsUrls?.directionsUrl) {
-      window.open(mapsUrls.directionsUrl, "_blank");
+      // Use window.location.href for better Android WebView compatibility
+      window.location.href = mapsUrls.directionsUrl;
     }
   };
 
