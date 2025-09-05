@@ -1027,65 +1027,16 @@ export type Database = {
       }
     }
     Views: {
-      rooms_public_view: {
-        Row: {
-          available: boolean | null
-          created_at: string | null
-          description: string | null
-          facilities: Json | null
-          house_name: string | null
-          house_no: string | null
-          id: string | null
-          images: string[] | null
-          location: string | null
-          location_latitude: number | null
-          location_longitude: number | null
-          owner_id: string | null
-          owner_phone: string | null
-          price: number | null
-          title: string | null
-        }
-        Insert: {
-          available?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          facilities?: Json | null
-          house_name?: string | null
-          house_no?: string | null
-          id?: string | null
-          images?: string[] | null
-          location?: string | null
-          location_latitude?: number | null
-          location_longitude?: number | null
-          owner_id?: string | null
-          owner_phone?: never
-          price?: number | null
-          title?: string | null
-        }
-        Update: {
-          available?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          facilities?: Json | null
-          house_name?: string | null
-          house_no?: string | null
-          id?: string | null
-          images?: string[] | null
-          location?: string | null
-          location_latitude?: number | null
-          location_longitude?: number | null
-          owner_id?: string | null
-          owner_phone?: never
-          price?: number | null
-          title?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       archive_previous_connection_data: {
         Args: { new_owner_id: string; renter_user_id: string }
         Returns: undefined
+      }
+      can_access_owner_contact: {
+        Args: { room_owner_id: string }
+        Returns: boolean
       }
       can_access_user_profile: {
         Args: { target_user_id: string }
