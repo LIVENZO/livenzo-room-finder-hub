@@ -432,6 +432,41 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_upi_details: {
         Row: {
           created_at: string
@@ -992,7 +1027,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      rooms_public_view: {
+        Row: {
+          available: boolean | null
+          created_at: string | null
+          description: string | null
+          facilities: Json | null
+          house_name: string | null
+          house_no: string | null
+          id: string | null
+          images: string[] | null
+          location: string | null
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string | null
+          owner_phone: string | null
+          price: number | null
+          title: string | null
+        }
+        Insert: {
+          available?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          facilities?: Json | null
+          house_name?: string | null
+          house_no?: string | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id?: string | null
+          owner_phone?: never
+          price?: number | null
+          title?: string | null
+        }
+        Update: {
+          available?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          facilities?: Json | null
+          house_name?: string | null
+          house_no?: string | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id?: string | null
+          owner_phone?: never
+          price?: number | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       archive_previous_connection_data: {
