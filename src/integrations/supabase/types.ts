@@ -1142,6 +1142,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_user_by_public_id: {
+        Args: { search_public_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          public_id: string
+        }[]
+      }
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }
         Returns: undefined
