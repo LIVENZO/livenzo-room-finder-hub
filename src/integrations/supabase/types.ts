@@ -449,6 +449,7 @@ export type Database = {
           message: string
           owner_id: string
           renter_id: string
+          title: string | null
         }
         Insert: {
           archived?: boolean | null
@@ -457,6 +458,7 @@ export type Database = {
           message: string
           owner_id: string
           renter_id: string
+          title?: string | null
         }
         Update: {
           archived?: boolean | null
@@ -465,6 +467,7 @@ export type Database = {
           message?: string
           owner_id?: string
           renter_id?: string
+          title?: string | null
         }
         Relationships: []
       }
