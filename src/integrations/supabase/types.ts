@@ -274,6 +274,35 @@ export type Database = {
         }
         Relationships: []
       }
+      fcm_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          token: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          token: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          token?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fcm_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manual_payments: {
         Row: {
           amount: number
@@ -1027,7 +1056,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      rooms_public_view: {
+        Row: {
+          available: boolean | null
+          created_at: string | null
+          description: string | null
+          facilities: Json | null
+          house_name: string | null
+          house_no: string | null
+          id: string | null
+          images: string[] | null
+          location: string | null
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string | null
+          owner_phone: string | null
+          price: number | null
+          title: string | null
+        }
+        Insert: {
+          available?: never
+          created_at?: string | null
+          description?: string | null
+          facilities?: Json | null
+          house_name?: string | null
+          house_no?: string | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id?: string | null
+          owner_phone?: never
+          price?: number | null
+          title?: string | null
+        }
+        Update: {
+          available?: never
+          created_at?: string | null
+          description?: string | null
+          facilities?: Json | null
+          house_name?: string | null
+          house_no?: string | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id?: string | null
+          owner_phone?: never
+          price?: number | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       archive_previous_connection_data: {
@@ -1121,6 +1203,18 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
+        }[]
+      }
+      get_safe_profile_data: {
+        Args: { profile_user_id: string }
+        Returns: {
+          accommodation_type: string
+          avatar_url: string
+          full_name: string
+          id: string
+          property_name: string
+          public_id: string
+          resident_type: string
         }[]
       }
       get_user_role: {
