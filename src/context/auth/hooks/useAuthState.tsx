@@ -178,6 +178,18 @@ export function useAuthState() {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
+      // Expose user globally for Android WebView access
+      if (currentSession?.user) {
+        (window as any).supabaseUser = {
+          id: currentSession.user.id,
+          email: currentSession.user.email,
+          phone: currentSession.user.phone,
+          user_metadata: currentSession.user.user_metadata,
+          created_at: currentSession.user.created_at
+        };
+        console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
+      }
+      
       if (currentSession?.user) {
         // Use setTimeout to handle async operation without making callback async
         setTimeout(async () => {
@@ -214,6 +226,11 @@ export function useAuthState() {
       setCanChangeRole(true);
       localStorage.removeItem('userRole');
       localStorage.removeItem('selectedRole');
+      
+      // Clear global user object on logout
+      (window as any).supabaseUser = null;
+      console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
+      
       toast.info("You've been signed out.");
     }
     
@@ -230,6 +247,16 @@ export function useAuthState() {
         setSession(currentSession);
         setUser(currentSession.user);
         
+        // Expose user globally for Android WebView access on initial session check
+        (window as any).supabaseUser = {
+          id: currentSession.user.id,
+          email: currentSession.user.email,
+          phone: currentSession.user.phone,
+          user_metadata: currentSession.user.user_metadata,
+          created_at: currentSession.user.created_at
+        };
+        console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
+        
         // Set up user role from database
         if (currentSession.user.email || currentSession.user.phone) {
           await setupUserRole(currentSession.user);
@@ -237,6 +264,10 @@ export function useAuthState() {
         
         // Redirect to dashboard if we have a valid session
         redirectToDashboard();
+      } else {
+        // Clear global user object if no session
+        (window as any).supabaseUser = null;
+        console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
       }
     } catch (error) {
       console.error("Error checking session:", error);
