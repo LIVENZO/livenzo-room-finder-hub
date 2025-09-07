@@ -97,6 +97,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user, session, isLoading, userRole]);
   
+  // Mirror authenticated user to window.supabaseUser for WebView access
+  React.useEffect(() => {
+    try {
+      if (authState?.user) {
+        (window as any).supabaseUser = {
+          id: (authState.user as any).id,
+          email: (authState.user as any).email,
+          phone: (authState.user as any).phone,
+          user_metadata: (authState.user as any).user_metadata,
+          created_at: (authState.user as any).created_at
+        };
+      } else {
+        (window as any).supabaseUser = null;
+      }
+      console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
+    } catch (e) {
+      console.error("Failed to set window.supabaseUser", e);
+    }
+  }, [authState?.user, authState?.session]);
+  
   return (
     <AuthContext.Provider value={{ 
       user: authState.user, 
