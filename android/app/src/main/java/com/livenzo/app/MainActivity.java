@@ -10,7 +10,7 @@ import com.getcapacitor.BridgeActivity;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends BridgeActivity {
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "LIVENZO_DEBUG";
     public static WebView webViewInstance;
 
     @Override

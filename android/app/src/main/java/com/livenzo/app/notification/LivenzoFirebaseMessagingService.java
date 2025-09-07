@@ -17,7 +17,7 @@ import com.livenzo.app.MainActivity;
 import com.livenzo.app.R;
 
 public class LivenzoFirebaseMessagingService extends FirebaseMessagingService {
-    private static final String TAG = "LivenzoFCM";
+    private static final String TAG = "LIVENZO_DEBUG";
     private static final String CHANNEL_ID = "livenzo_notifications";
     private static final String CHANNEL_NAME = "Livenzo Notifications";
     private static final String CHANNEL_DESCRIPTION = "Notifications for Livenzo app";

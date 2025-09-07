@@ -33,10 +33,13 @@ export const fetchRenterNotices = async (): Promise<Notice[]> => {
 // Fetch all active connections for an owner
 export const fetchOwnerConnections = async (ownerId: string): Promise<string[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const targetOwnerId = user?.id ?? ownerId;
+
     const { data, error } = await supabase
       .from("relationships")
       .select("renter_id")
-      .eq("owner_id", ownerId)
+      .eq("owner_id", targetOwnerId)
       .eq("status", "accepted");
 
     if (error) {
@@ -44,7 +47,7 @@ export const fetchOwnerConnections = async (ownerId: string): Promise<string[]> 
       return [];
     }
 
-    return data.map(connection => connection.renter_id);
+    return (data || []).map((connection: any) => connection.renter_id);
   } catch (error) {
     console.error("Exception fetching connections:", error);
     return [];
@@ -57,8 +60,14 @@ export const sendNoticeToAllRenters = async (
   message: string
 ): Promise<boolean> => {
   try {
-    // Get all connected renters
-    const renterIds = await fetchOwnerConnections(ownerId);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to send notices");
+      return false;
+    }
+
+    // Get all connected renters for the authenticated owner
+    const renterIds = await fetchOwnerConnections(user.id);
     
     if (renterIds.length === 0) {
       toast.error("No connected renters found");
@@ -66,8 +75,8 @@ export const sendNoticeToAllRenters = async (
     }
 
     // Create notice records for each renter
-    const notices = renterIds.map(renterId => ({
-      owner_id: ownerId,
+    const notices = renterIds.map((renterId: string) => ({
+      owner_id: user.id,
       renter_id: renterId,
       message
     }));
