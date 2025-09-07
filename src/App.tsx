@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
+import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import SetLocation from "./pages/SetLocation";
 
 import Index from "./pages/Index";
@@ -27,11 +28,17 @@ import ActiveRenters from "./pages/ActiveRenters";
 
 const queryClient = new QueryClient();
 
+const FCMWrapper = () => {
+  useFCMRegistration();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
+          <FCMWrapper />
           <Toaster />
           <Sonner />
           <BrowserRouter>

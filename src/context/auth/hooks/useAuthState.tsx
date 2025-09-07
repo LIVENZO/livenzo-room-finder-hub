@@ -188,6 +188,38 @@ export function useAuthState() {
           created_at: currentSession.user.created_at
         };
         console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
+        
+        // Register FCM token for push notifications
+        const registerFCMToken = async () => {
+          try {
+            // Check if we're in a WebView (Android)
+            if ((window as any).Android && (window as any).Android.getFCMToken) {
+              const token = (window as any).Android.getFCMToken();
+              if (token) {
+                console.log("Registering FCM token from Android WebView:", token.substring(0, 20) + '...');
+                
+                // Save FCM token to Supabase
+                const { error } = await supabase
+                  .from("fcm_tokens")
+                  .upsert(
+                    { user_id: currentSession.user.id, token },
+                    { onConflict: "user_id,token", ignoreDuplicates: true }
+                  );
+                
+                if (error) {
+                  console.error("Error saving FCM token:", error);
+                } else {
+                  console.log("FCM token registered successfully");
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Error registering FCM token:", error);
+          }
+        };
+        
+        // Register FCM token after a short delay to ensure auth is fully established
+        setTimeout(registerFCMToken, 1000);
       }
       
       if (currentSession?.user) {

@@ -1,0 +1,19 @@
+// Add Firebase configuration to your project root
+// This file should be placed at: android/build.gradle
+
+buildscript {
+    ext.kotlin_version = '1.7.10'
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Firebase
+        classpath 'com.google.gms:google-services:4.3.15'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
