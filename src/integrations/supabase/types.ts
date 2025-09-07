@@ -298,6 +298,13 @@ export type Database = {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "safe_profile_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fcm_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -487,6 +494,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profile_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
@@ -1110,6 +1124,36 @@ export type Database = {
         }
         Relationships: []
       }
+      safe_profile_view: {
+        Row: {
+          accommodation_type: string | null
+          avatar_url: string | null
+          full_name: string | null
+          id: string | null
+          property_name: string | null
+          public_id: string | null
+          resident_type: string | null
+        }
+        Insert: {
+          accommodation_type?: string | null
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          property_name?: string | null
+          public_id?: string | null
+          resident_type?: string | null
+        }
+        Update: {
+          accommodation_type?: string | null
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          property_name?: string | null
+          public_id?: string | null
+          resident_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       archive_previous_connection_data: {
@@ -1203,18 +1247,6 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
-        }[]
-      }
-      get_safe_profile_data: {
-        Args: { profile_user_id: string }
-        Returns: {
-          accommodation_type: string
-          avatar_url: string
-          full_name: string
-          id: string
-          property_name: string
-          public_id: string
-          resident_type: string
         }[]
       }
       get_user_role: {
