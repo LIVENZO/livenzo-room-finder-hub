@@ -1249,6 +1249,12 @@ export type Database = {
           title: string
         }[]
       }
+      get_user_fcm_tokens: {
+        Args: { target_user_id: string }
+        Returns: {
+          token: string
+        }[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
