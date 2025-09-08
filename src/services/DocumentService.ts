@@ -5,6 +5,10 @@ import { uploadFilesSecure } from "./storage/secureStorage";
 import { validateAuthentication, validateUserPermission } from "./security/authValidator";
 import { validateText, validateUserId } from "./security/inputValidator";
 
+// Supabase REST details (public anon key is safe to use in frontend)
+const SUPABASE_URL = "https://naoqigivttgpkfwpzcgg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw";
+
 export type DocumentType = 'id_proof' | 'income_proof' | 'lease_agreement' | 'reference';
 
 export interface Document {
@@ -76,32 +80,48 @@ export const uploadDocument = async (
     const filePath = fileUrls[0];
     console.log('File uploaded to storage:', filePath);
     
-    // Create a document record in the database
-    const { data, error } = await supabase
-      .from("documents")
-      .insert({
-        relationship_id: relationshipId,
-        user_id: userId,
-        document_type: documentType,
-        file_path: filePath,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        status: 'submitted'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating document record:", {
-        message: (error as any)?.message,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-        code: (error as any)?.code,
-      });
-      toast.error(`Failed to record document in database: ${(error as any)?.message || 'Unknown error'}`);
+    // Prepare insert payload and perform REST insert with full headers
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      console.error("No access token available for document insert");
+      toast.error("Authentication failed. Please log in again.");
       return null;
     }
+
+    const payload = {
+      relationship_id: relationshipId,
+      user_id: userId,
+      document_type: documentType,
+      file_path: filePath,
+      file_name: file.name,
+      file_type: file.type,
+      file_size: file.size,
+      status: 'submitted' as const,
+    };
+
+    console.debug('Inserting document payload:', payload);
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (resp.status !== 201) {
+      const errText = await resp.text();
+      console.error('Failed to create document record:', { status: resp.status, statusText: resp.statusText, body: errText, payload });
+      toast.error(`Failed to record document in database.`);
+      return null;
+    }
+
+    const json = await resp.json().catch(() => null);
+    const data = Array.isArray(json) ? json[0] : json;
 
     console.log('Document record created:', data);
     toast.success("Document uploaded successfully");

@@ -2,6 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Supabase REST details (public anon key is safe to use in frontend)
+const SUPABASE_URL = "https://naoqigivttgpkfwpzcgg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw";
+
 export interface Complaint {
   id: string;
   relationship_id: string;
@@ -30,32 +34,40 @@ export const submitComplaint = async (
       return null;
     }
 
-    const { data, error } = await supabase
-      .from("complaints")
-      .insert({
-        relationship_id: relationshipId,
-        renter_id: session.user.id,
-        owner_id: ownerId,
-        title,
-        description,
-        status: 'pending'
-      })
-      .select()
-      .single();
+    const payload = {
+      relationship_id: relationshipId,
+      renter_id: session.user.id,
+      owner_id: ownerId,
+      title,
+      description,
+      status: 'pending' as const,
+    };
 
-    if (error) {
-      console.error("Error submitting complaint:", {
-        message: (error as any)?.message,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-        code: (error as any)?.code,
-      });
-      toast.error(`Failed to submit complaint: ${(error as any)?.message || 'Unknown error'}`);
+    console.debug("Submitting complaint payload:", payload);
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${session.access_token}`,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (resp.status !== 201) {
+      const errText = await resp.text();
+      console.error("Failed to submit complaint:", { status: resp.status, statusText: resp.statusText, body: errText, payload });
+      toast.error("Failed to submit complaint");
       return null;
     }
 
+    const json = await resp.json().catch(() => null);
+    const created = Array.isArray(json) ? json[0] : json;
+
     toast.success("Complaint submitted successfully");
-    return data as Complaint;
+    return created as Complaint;
   } catch (error: any) {
     console.error("Exception submitting complaint:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to submit complaint");
