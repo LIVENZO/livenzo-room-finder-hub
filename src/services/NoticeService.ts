@@ -109,44 +109,29 @@ export const sendNoticeToRenter = async (
   message: string
 ): Promise<boolean> => {
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    const ownerUserId = sessionData.session?.user?.id;
-
-    if (!accessToken || !ownerUserId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       toast.error("You must be logged in to send notices");
       return false;
     }
 
-    // Always use the authenticated user's ID for RLS compliance
-    const payload = { owner_id: ownerUserId, renter_id: renterId, message };
-    console.debug("Sending notice payload:", payload);
-
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/notices`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        Prefer: "return=representation"
-      },
-      body: JSON.stringify(payload)
+    const { data, error } = await supabase.rpc('create_owner_notice', {
+      p_renter_id: renterId,
+      p_message: message,
+      p_title: null
     });
 
-    if (resp.status !== 201) {
-      const errText = await resp.text();
-      console.error("Failed to send notice:", { status: resp.status, statusText: resp.statusText, body: errText });
-      toast.error("Failed to send notice. Please try again.");
+    if (error) {
+      console.error('Failed to send notice via RPC:', error);
+      toast.error(`Failed to send notice: ${error.message || 'Unknown error'}`);
       return false;
     }
 
-    const json = await resp.json().catch(() => null);
-    console.debug("Notice sent response:", json);
-    toast.success("Notice sent successfully!");
+    toast.success('Notice sent successfully!');
     return true;
   } catch (error: any) {
-    console.error("Exception sending single notice:", { message: error?.message, stack: error?.stack });
-    toast.error("Failed to send notice. Please try again.");
+    console.error('Exception sending single notice:', { message: error?.message, stack: error?.stack });
+    toast.error('Failed to send notice. Please try again.');
     return false;
   }
 };

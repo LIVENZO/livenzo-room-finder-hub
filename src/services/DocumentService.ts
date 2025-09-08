@@ -102,29 +102,23 @@ export const uploadDocument = async (
 
     console.debug('Inserting document payload:', payload);
 
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/documents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${accessToken}`,
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify(payload),
+    const { data, error } = await supabase.rpc('create_document_record', {
+      p_relationship_id: relationshipId,
+      p_document_type: documentType,
+      p_file_path: filePath,
+      p_file_name: file.name,
+      p_file_type: file.type,
+      p_file_size: file.size
     });
 
-    if (resp.status !== 201) {
-      const errText = await resp.text();
-      console.error('Failed to create document record:', { status: resp.status, statusText: resp.statusText, body: errText, payload });
-      toast.error(`Failed to record document in database.`);
+    if (error) {
+      console.error('Failed to create document record via RPC:', error);
+      toast.error('Failed to record document in database.');
       return null;
     }
 
-    const json = await resp.json().catch(() => null);
-    const data = Array.isArray(json) ? json[0] : json;
-
     console.log('Document record created:', data);
-    toast.success("Document uploaded successfully");
+    toast.success('Document uploaded successfully');
     return data as Document;
   } catch (error) {
     console.error("Exception uploading document:", error);

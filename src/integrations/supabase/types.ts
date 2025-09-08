@@ -1183,6 +1183,43 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_document_record: {
+        Args: {
+          p_document_type: string
+          p_file_name: string
+          p_file_path: string
+          p_file_size: number
+          p_file_type: string
+          p_relationship_id: string
+        }
+        Returns: {
+          archived: boolean | null
+          comments: string | null
+          created_at: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          relationship_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+      }
+      create_owner_notice: {
+        Args: { p_message: string; p_renter_id: string; p_title?: string }
+        Returns: {
+          archived: boolean | null
+          created_at: string
+          id: string
+          message: string
+          owner_id: string
+          renter_id: string
+          title: string | null
+        }
+      }
       ensure_unique_public_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1285,6 +1322,26 @@ export type Database = {
           id: string
           public_id: string
         }[]
+      }
+      submit_complaint: {
+        Args: {
+          p_description: string
+          p_owner_id: string
+          p_relationship_id: string
+          p_title: string
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          owner_id: string
+          relationship_id: string
+          renter_id: string
+          response: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
       }
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }

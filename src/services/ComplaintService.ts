@@ -27,47 +27,27 @@ export const submitComplaint = async (
   description: string
 ): Promise<Complaint | null> => {
   try {
-    // Check authentication
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error("Please log in to submit complaints");
       return null;
     }
 
-    const payload = {
-      relationship_id: relationshipId,
-      renter_id: session.user.id,
-      owner_id: ownerId,
-      title,
-      description,
-      status: 'pending' as const,
-    };
-
-    console.debug("Submitting complaint payload:", payload);
-
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${session.access_token}`,
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify(payload),
+    const { data, error } = await supabase.rpc('submit_complaint', {
+      p_relationship_id: relationshipId,
+      p_owner_id: ownerId,
+      p_title: title,
+      p_description: description
     });
 
-    if (resp.status !== 201) {
-      const errText = await resp.text();
-      console.error("Failed to submit complaint:", { status: resp.status, statusText: resp.statusText, body: errText, payload });
-      toast.error("Failed to submit complaint");
+    if (error) {
+      console.error('Failed to submit complaint via RPC:', error);
+      toast.error(`Failed to submit complaint: ${error.message || 'Unknown error'}`);
       return null;
     }
 
-    const json = await resp.json().catch(() => null);
-    const created = Array.isArray(json) ? json[0] : json;
-
     toast.success("Complaint submitted successfully");
-    return created as Complaint;
+    return (data as any) as Complaint;
   } catch (error: any) {
     console.error("Exception submitting complaint:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to submit complaint");
