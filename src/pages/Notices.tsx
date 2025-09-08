@@ -59,6 +59,33 @@ const Notices: React.FC = () => {
     loadNotices();
   }, [user, connectedOwnerId]);
 
+  // Step 3: Realtime subscription for new notices
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('public:notices-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notices',
+          filter: `renter_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newNotice = payload.new as Notice;
+          if (connectedOwnerId && newNotice.owner_id !== connectedOwnerId) return;
+          setNotices((prev) => [newNotice, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, connectedOwnerId]);
+
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/');

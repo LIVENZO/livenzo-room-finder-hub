@@ -2,6 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Supabase REST details (public anon key is safe to use in frontend)
+const SUPABASE_URL = "https://naoqigivttgpkfwpzcgg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw";
+
 export interface Notice {
   id: string;
   owner_id: string;
@@ -94,6 +98,48 @@ export const sendNoticeToAllRenters = async (
   } catch (error) {
     console.error("Exception sending notices:", error);
     toast.error("Failed to send notices");
+    return false;
+  }
+};
+
+// Send a single notice to a specific renter using REST API (explicit headers and body)
+export const sendNoticeToRenter = async (
+  ownerId: string,
+  renterId: string,
+  message: string
+): Promise<boolean> => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      toast.error("You must be logged in to send notices");
+      return false;
+    }
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/notices`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({ owner_id: ownerId, renter_id: renterId, message })
+    });
+
+    if (resp.status !== 201) {
+      const errText = await resp.text();
+      console.error("Failed to send notice:", resp.status, errText);
+      toast.error("Failed to send notice. Please try again.");
+      return false;
+    }
+
+    toast.success("Notice sent successfully!");
+    return true;
+  } catch (error) {
+    console.error("Exception sending single notice:", error);
+    toast.error("Failed to send notice. Please try again.");
     return false;
   }
 };
