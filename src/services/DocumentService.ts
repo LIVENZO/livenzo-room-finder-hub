@@ -93,8 +93,13 @@ export const uploadDocument = async (
       .single();
 
     if (error) {
-      console.error("Error creating document record:", error);
-      toast.error("Failed to record document in database");
+      console.error("Error creating document record:", {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
+      toast.error(`Failed to record document in database: ${(error as any)?.message || 'Unknown error'}`);
       return null;
     }
 

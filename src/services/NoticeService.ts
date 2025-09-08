@@ -111,11 +111,16 @@ export const sendNoticeToRenter = async (
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token;
+    const ownerUserId = sessionData.session?.user?.id;
 
-    if (!accessToken) {
+    if (!accessToken || !ownerUserId) {
       toast.error("You must be logged in to send notices");
       return false;
     }
+
+    // Always use the authenticated user's ID for RLS compliance
+    const payload = { owner_id: ownerUserId, renter_id: renterId, message };
+    console.debug("Sending notice payload:", payload);
 
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/notices`, {
       method: "POST",
@@ -125,20 +130,22 @@ export const sendNoticeToRenter = async (
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation"
       },
-      body: JSON.stringify({ owner_id: ownerId, renter_id: renterId, message })
+      body: JSON.stringify(payload)
     });
 
     if (resp.status !== 201) {
       const errText = await resp.text();
-      console.error("Failed to send notice:", resp.status, errText);
+      console.error("Failed to send notice:", { status: resp.status, statusText: resp.statusText, body: errText });
       toast.error("Failed to send notice. Please try again.");
       return false;
     }
 
+    const json = await resp.json().catch(() => null);
+    console.debug("Notice sent response:", json);
     toast.success("Notice sent successfully!");
     return true;
-  } catch (error) {
-    console.error("Exception sending single notice:", error);
+  } catch (error: any) {
+    console.error("Exception sending single notice:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to send notice. Please try again.");
     return false;
   }

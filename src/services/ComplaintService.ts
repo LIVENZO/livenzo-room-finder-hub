@@ -44,15 +44,20 @@ export const submitComplaint = async (
       .single();
 
     if (error) {
-      console.error("Error submitting complaint:", error);
-      toast.error("Failed to submit complaint");
+      console.error("Error submitting complaint:", {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
+      toast.error(`Failed to submit complaint: ${(error as any)?.message || 'Unknown error'}`);
       return null;
     }
 
     toast.success("Complaint submitted successfully");
     return data as Complaint;
-  } catch (error) {
-    console.error("Exception submitting complaint:", error);
+  } catch (error: any) {
+    console.error("Exception submitting complaint:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to submit complaint");
     return null;
   }
@@ -76,14 +81,19 @@ export const fetchComplaintsForRelationship = async (relationshipId: string): Pr
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching complaints:", error);
-      toast.error("Failed to load complaints");
+      console.error("Error fetching complaints:", {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
+      toast.error(`Failed to load complaints: ${(error as any)?.message || 'Unknown error'}`);
       return [];
     }
 
     return data as Complaint[];
-  } catch (error) {
-    console.error("Exception fetching complaints:", error);
+  } catch (error: any) {
+    console.error("Exception fetching complaints:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to load complaints");
     return [];
   }
@@ -108,15 +118,20 @@ export const updateComplaintResponse = async (
       .single();
 
     if (error) {
-      console.error("Error updating complaint:", error);
-      toast.error("Failed to update complaint");
+      console.error("Error updating complaint:", {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
+      toast.error(`Failed to update complaint: ${(error as any)?.message || 'Unknown error'}`);
       return null;
     }
 
     toast.success("Response sent successfully");
     return data as Complaint;
-  } catch (error) {
-    console.error("Exception updating complaint:", error);
+  } catch (error: any) {
+    console.error("Exception updating complaint:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to update complaint");
     return null;
   }
@@ -139,15 +154,20 @@ export const updateComplaintStatus = async (
       .single();
 
     if (error) {
-      console.error("Error updating complaint status:", error);
-      toast.error("Failed to update complaint status");
+      console.error("Error updating complaint status:", {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
+      toast.error(`Failed to update complaint status: ${(error as any)?.message || 'Unknown error'}`);
       return null;
     }
 
     toast.success("Complaint status updated");
     return data as Complaint;
-  } catch (error) {
-    console.error("Exception updating complaint status:", error);
+  } catch (error: any) {
+    console.error("Exception updating complaint status:", { message: error?.message, stack: error?.stack });
     toast.error("Failed to update complaint status");
     return null;
   }
