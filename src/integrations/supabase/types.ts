@@ -965,6 +965,7 @@ export type Database = {
           created_at: string
           data_classification: Json | null
           email: string | null
+          fcm_token: string | null
           full_name: string | null
           house_number: string | null
           id: string
@@ -992,6 +993,7 @@ export type Database = {
           created_at?: string
           data_classification?: Json | null
           email?: string | null
+          fcm_token?: string | null
           full_name?: string | null
           house_number?: string | null
           id?: string
@@ -1019,6 +1021,7 @@ export type Database = {
           created_at?: string
           data_classification?: Json | null
           email?: string | null
+          fcm_token?: string | null
           full_name?: string | null
           house_number?: string | null
           id?: string
