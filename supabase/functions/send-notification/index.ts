@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { encode } from "https://deno.land/std@0.192.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,15 +31,33 @@ async function createJWT(clientEmail: string, privateKey: string, scope: string)
     iat: now,
   };
 
-  const encodedHeader = encode(JSON.stringify(header));
-  const encodedPayload = encode(JSON.stringify(payload));
+  // Base64url encode (without padding)
+  const base64UrlEncode = (data: string): string => {
+    return btoa(data)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const signingInput = `${encodedHeader}.${encodedPayload}`;
 
-  // Import the private key
+  // Parse the private key properly
   const keyData = privateKey.replace(/\\n/g, '\n');
+  
+  // Remove the header and footer from PEM
+  const pemContents = keyData
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
+  
+  // Convert to binary
+  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    new TextEncoder().encode(keyData),
+    binaryKey,
     {
       name: 'RSASSA-PKCS1-v1_5',
       hash: 'SHA-256',
@@ -56,7 +73,8 @@ async function createJWT(clientEmail: string, privateKey: string, scope: string)
     new TextEncoder().encode(signingInput)
   );
 
-  const encodedSignature = encode(new Uint8Array(signature));
+  // Base64url encode the signature
+  const encodedSignature = base64UrlEncode(String.fromCharCode(...new Uint8Array(signature)));
   return `${signingInput}.${encodedSignature}`;
 }
 
