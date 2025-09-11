@@ -89,7 +89,7 @@ const OwnerDashboard: React.FC = () => {
   };
 
   const handleViewListingsClick = () => {
-    requireOwnerComplete(() => navigate('/my-listings'));
+    navigate('/my-listings');
   };
 
   const handleManageConnectionsClick = () => {
