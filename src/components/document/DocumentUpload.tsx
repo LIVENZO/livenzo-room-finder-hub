@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [documentType, setDocumentType] = useState<DocumentType>('id_proof');
   const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError(null);
     if (e.target.files && e.target.files[0]) {
@@ -99,12 +100,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   {fileError}
                 </div>}
             </div> : <div className="flex items-center justify-center border-2 border-dashed rounded-md p-6">
-              <label htmlFor="document-file" className="flex flex-col items-center gap-2 cursor-pointer">
+              <label htmlFor="document-file" className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-6 w-6 text-gray-400" />
                 <span className="text-sm text-gray-600">Click to select a file</span>
                 <span className="text-xs text-gray-500">PDF, JPEG, PNG only (max 5MB)</span>
               </label>
-              <Input id="document-file" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
+              <Input ref={fileInputRef} id="document-file" type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
             </div>}
         </div>
       </CardContent>
