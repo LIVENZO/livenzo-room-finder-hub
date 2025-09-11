@@ -78,7 +78,7 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       icon: <MessageSquare className="h-4 w-4" />,
       renterOnly: true,
       showNotificationBadge: unreadMessageCount > 0,
-      label: "Talk to Fellow Kotayan",
+      label: "Talk to Fellow Student",
     },
     {
       title: "Profile",

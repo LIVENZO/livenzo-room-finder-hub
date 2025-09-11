@@ -42,7 +42,7 @@ const RenterDashboard: React.FC = () => {
   }, {
     title: 'Messages',
     icon: MessageSquare,
-    path: '/chats',
+    path: '/anonymous-chat',
     count: '2'
   }, {
     title: 'Nearby',

@@ -99,12 +99,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   {fileError}
                 </div>}
             </div> : <div className="flex items-center justify-center border-2 border-dashed rounded-md p-6">
-              <label className="flex flex-col items-center gap-2 cursor-pointer">
+              <label htmlFor="document-file" className="flex flex-col items-center gap-2 cursor-pointer">
                 <Upload className="h-6 w-6 text-gray-400" />
                 <span className="text-sm text-gray-600">Click to select a file</span>
                 <span className="text-xs text-gray-500">PDF, JPEG, PNG only (max 5MB)</span>
-                <Input id="document-file" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
               </label>
+              <Input id="document-file" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
             </div>}
         </div>
       </CardContent>
