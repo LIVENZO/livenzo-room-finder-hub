@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Mirror authenticated user to window.supabaseUser for WebView access
   React.useEffect(() => {
     try {
-      if (authState?.user) {
+      if (authState?.user && authState?.session) {
         (window as any).supabaseUser = {
           id: (authState.user as any).id,
           email: (authState.user as any).email,
@@ -108,8 +108,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           user_metadata: (authState.user as any).user_metadata,
           created_at: (authState.user as any).created_at
         };
+        (window as any).supabaseAccessToken = authState.session.access_token;
+        
+        // Send user data to Android WebView if available
+        if ((window as any).Android && (window as any).supabaseUser && (window as any).supabaseAccessToken) {
+          console.log('LIVENZO_DEBUG: Sending userId and accessToken to Android');
+          (window as any).Android.sendUserData((window as any).supabaseUser.id, (window as any).supabaseAccessToken);
+        }
       } else {
         (window as any).supabaseUser = null;
+        (window as any).supabaseAccessToken = null;
       }
       console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
     } catch (e) {
