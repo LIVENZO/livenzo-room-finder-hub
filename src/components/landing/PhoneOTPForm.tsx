@@ -61,9 +61,9 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
       await onSendOTP(fullPhoneNumber);
       setOtpSent(true);
       toast.success('OTP sent successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send OTP:', error);
-      toast.error('Failed to send OTP. Please try again.');
+      toast.error(error?.message || 'Failed to send OTP. Please try again.');
       setOtpSent(false);
     }
   };
