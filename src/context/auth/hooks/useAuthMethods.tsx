@@ -6,6 +6,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { FacebookLogin } from '@capacitor-community/facebook-login';
 import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
+import { sendFirebaseOTP, verifyFirebaseOTP, clearConfirmationResult } from '@/config/firebase';
 
 // Function to check for role conflicts before authentication
 const checkRoleConflict = async (googleId: string | null, email: string | null, selectedRole: string): Promise<boolean> => {
@@ -406,51 +407,13 @@ export function useAuthMethods() {
   };
 
   const sendOTP = async (identifier: string): Promise<void> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
-      const isEmail = identifier.includes('@');
-      const cleaned = identifier.trim();
-      console.log('[OTP] sendOTP called with', { identifier: cleaned, isEmail });
-
-      if (isEmail) {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: cleaned,
-          options: {
-            shouldCreateUser: true,
-          }
-        });
-        if (error) {
-          console.error('[OTP] send (email) error:', error);
-          toast.error(`Failed to send OTP: ${error.message}`);
-          throw error;
-        }
-      } else {
-        // Enforce E.164 format (e.g., +91XXXXXXXXXX) and persist phone for verification
-        if (!cleaned.startsWith('+')) {
-          toast.error('Please enter phone in international format, e.g., +91XXXXXXXXXX');
-          setIsLoading(false);
-          return;
-        }
-
-        localStorage.setItem('lastOtpPhone', cleaned);
-
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: cleaned,
-          options: {
-            shouldCreateUser: true,
-          }
-        });
-        if (error) {
-          console.error('[OTP] send (phone) error:', error);
-          toast.error(`Failed to send OTP: ${error.message}`);
-          throw error;
-        }
-      }
-
-      console.log('[OTP] OTP send request completed');
-    } catch (error) {
-      console.error('[OTP] send error:', error);
+      await sendFirebaseOTP(identifier);
+      toast.success('OTP sent successfully!');
+    } catch (error: any) {
+      console.error('Error sending OTP:', error);
+      toast.error(error.message || 'Failed to send OTP. Please try again.');
       throw error;
     } finally {
       setIsLoading(false);
@@ -458,70 +421,48 @@ export function useAuthMethods() {
   };
 
   const verifyOTP = async (identifier: string, token: string): Promise<void> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
-      const isEmail = identifier.includes('@');
-      const cleanedId = identifier.trim();
-      const cleanedToken = token.replace(/\s+/g, '').trim();
-
-      console.log('[OTP] verifyOTP called with', { 
-        identifier: cleanedId, 
-        isEmail, 
-        tokenLength: cleanedToken.length 
+      const selectedRole = localStorage.getItem('selectedRole') || 'renter';
+      
+      // Verify OTP with Firebase
+      const { uid, phoneNumber } = await verifyFirebaseOTP(token);
+      
+      // Convert Firebase UID to Supabase session
+      const response = await supabase.functions.invoke('firebase-auth-convert', {
+        body: {
+          firebaseUid: uid,
+          phoneNumber: phoneNumber,
+          selectedRole: selectedRole
+        }
       });
 
-      let verifyParams: any;
+      if (response.error) {
+        console.error('Firebase auth conversion error:', response.error);
+        throw new Error('Failed to create user session');
+      }
+
+      const { access_token, refresh_token } = response.data;
       
-      if (isEmail) {
-        verifyParams = {
-          email: cleanedId,
-          token: cleanedToken,
-          type: 'email' as const,
-        };
-      } else {
-        // Always use the exact phone used during Send OTP
-        const storedPhone = localStorage.getItem('lastOtpPhone')?.trim();
-        const phoneToVerify = storedPhone || cleanedId;
+      // Set the session in Supabase
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token,
+        refresh_token
+      });
 
-        if (!phoneToVerify || !phoneToVerify.startsWith('+')) {
-          toast.error('Please use a valid phone number in international format, e.g., +91XXXXXXXXXX');
-          throw new Error('Invalid phone format');
-        }
-
-        verifyParams = {
-          phone: phoneToVerify,
-          token: cleanedToken,
-          type: 'sms' as const,
-        };
+      if (sessionError) {
+        console.error('Session setting error:', sessionError);
+        throw sessionError;
       }
 
-      console.log('[OTP] Calling Supabase verifyOtp with params:', verifyParams);
-
-      const { data, error } = await supabase.auth.verifyOtp(verifyParams);
-
-      if (error) {
-        console.error('[OTP] verification error:', error);
-        const message = (error as any)?.message?.toLowerCase().includes('invalid')
-          ? 'Invalid OTP, please try again'
-          : 'Invalid OTP, please try again';
-        toast.error(message);
-        throw error;
-      } else {
-        console.log('[OTP] verified successfully:', data);
-        
-        // Get the selected role from localStorage (set during role selection)
-        const selectedRole = localStorage.getItem('selectedRole') || 'renter';
-        console.log('[OTP] Using selected role for phone auth:', selectedRole);
-        
-        toast.success('Successfully signed in!');
-        
-        // Don't redirect immediately - let the auth state handler process the role assignment
-        // The auth state change will trigger role assignment and redirect to dashboard
-      }
-
-    } catch (error) {
-      console.error('[OTP] verification error:', error);
+      console.log('OTP verified and session created successfully');
+      toast.success('Phone number verified successfully!');
+      
+      
+    } catch (error: any) {
+      console.error('Error verifying OTP:', error);
+      clearConfirmationResult();
+      toast.error(error.message || 'Invalid OTP. Please try again.');
       throw error;
     } finally {
       setIsLoading(false);

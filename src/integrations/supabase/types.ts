@@ -297,18 +297,45 @@ export type Database = {
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "safe_profile_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
+      }
+      firebase_user_mappings: {
+        Row: {
+          created_at: string | null
+          firebase_uid: string
+          id: string
+          phone_number: string | null
+          supabase_user_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          firebase_uid: string
+          id?: string
+          phone_number?: string | null
+          supabase_user_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          firebase_uid?: string
+          id?: string
+          phone_number?: string | null
+          supabase_user_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       manual_payments: {
         Row: {

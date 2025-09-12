@@ -17,6 +17,9 @@ secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
 [functions.create-payment-order]
 verify_jwt = true
 
+[functions.firebase-auth-convert]
+verify_jwt = false
+
 [functions.verify-payment]
 verify_jwt = true
 
