@@ -1074,7 +1074,7 @@ export type Database = {
       user_role_assignments: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           google_id: string | null
           id: string
           role: string
@@ -1083,7 +1083,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           google_id?: string | null
           id?: string
           role: string
@@ -1092,7 +1092,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           google_id?: string | null
           id?: string
           role?: string

@@ -47,106 +47,108 @@ Deno.serve(async (req) => {
 
     console.log('Processing Firebase auth for:', { firebaseUid, phoneNumber, selectedRole });
 
-    // Check if Firebase UID already exists
-    const { data: existingMapping } = await supabase
-      .from('firebase_user_mappings')
-      .select('supabase_user_id')
-      .eq('firebase_uid', firebaseUid)
-      .single();
+  // Check if Firebase UID already exists
+  const { data: existingMapping } = await supabase
+    .from('firebase_user_mappings')
+    .select('supabase_user_id')
+    .eq('firebase_uid', firebaseUid)
+    .single();
 
-    let supabaseUserId: string;
+  let supabaseUserId: string;
 
-    if (existingMapping) {
-      // User already exists, use existing Supabase user ID
-      supabaseUserId = existingMapping.supabase_user_id;
-      console.log('Found existing user mapping:', supabaseUserId);
-    } else {
-      // Create new Supabase user via admin API
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        phone: phoneNumber,
-        phone_confirmed: true,
-        user_metadata: {
-          role: selectedRole,
-          firebase_uid: firebaseUid
-        }
-      });
-
-      if (createError || !newUser.user) {
-        console.error('Error creating Supabase user:', createError);
-        return new Response(JSON.stringify({ error: 'Failed to create user account' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      supabaseUserId = newUser.user.id;
-      console.log('Created new Supabase user:', supabaseUserId);
-
-      // Create Firebase UID mapping
-      const { error: mappingError } = await supabase
-        .from('firebase_user_mappings')
-        .insert({
-          supabase_user_id: supabaseUserId,
-          firebase_uid: firebaseUid,
-          phone_number: phoneNumber
-        });
-
-      if (mappingError) {
-        console.error('Error creating Firebase mapping:', mappingError);
-        // Continue anyway as user is created
-      }
-
-      // Create user role assignment
-      const { error: roleError } = await supabase
-        .from('user_role_assignments')
-        .insert({
-          user_id: supabaseUserId,
-          email: phoneNumber, // Using phone as email placeholder
-          role: selectedRole
-        });
-
-      if (roleError) {
-        console.error('Error creating role assignment:', roleError);
-        // Continue anyway
-      }
-    }
-
-    // Generate Supabase session token
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+  if (existingMapping) {
+    // User already exists, use existing Supabase user ID
+    supabaseUserId = existingMapping.supabase_user_id;
+    console.log('Found existing user mapping:', supabaseUserId);
+  } else {
+    // Create new Supabase user via admin API
+    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       phone: phoneNumber,
-      options: {
-        redirectTo: `${req.headers.get('origin') || 'http://localhost:3000'}/`
+      phone_confirmed: true,
+      user_metadata: {
+        role: selectedRole,
+        firebase_uid: firebaseUid
       }
     });
 
-    if (sessionError || !sessionData.properties?.action_link) {
-      console.error('Error generating session:', sessionError);
-      return new Response(JSON.stringify({ error: 'Failed to generate session' }), {
+    if (createError || !newUser.user) {
+      console.error('Error creating Supabase user:', createError);
+      return new Response(JSON.stringify({ error: 'Failed to create user account' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Extract the token from the magic link
-    const actionLink = sessionData.properties.action_link;
-    const url = new URL(actionLink);
-    const accessToken = url.searchParams.get('access_token');
-    const refreshToken = url.searchParams.get('refresh_token');
+    supabaseUserId = newUser.user.id;
+    console.log('Created new Supabase user:', supabaseUserId);
 
-    if (!accessToken || !refreshToken) {
-      console.error('Failed to extract tokens from magic link');
+    // Create Firebase UID mapping
+    const { error: mappingError } = await supabase
+      .from('firebase_user_mappings')
+      .insert({
+        supabase_user_id: supabaseUserId,
+        firebase_uid: firebaseUid,
+        phone_number: phoneNumber
+      });
+
+    if (mappingError) {
+      console.error('Error creating Firebase mapping:', mappingError);
+      // Continue anyway as user is created
+    }
+
+    // Create user role assignment (without email for phone-only users)
+    const { error: roleError } = await supabase
+      .from('user_role_assignments')
+      .insert({
+        user_id: supabaseUserId,
+        role: selectedRole
+      });
+
+    if (roleError) {
+      console.error('Error creating role assignment:', roleError);
+      // Continue anyway
+    }
+  }
+
+  // Create session for the user directly using GoTrue Admin API
+  try {
+    // Make direct call to create session
+    const createSessionUrl = `${supabaseUrl}/auth/v1/admin/users/${supabaseUserId}/session`;
+    const createSessionResponse = await fetch(createSessionUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceKey
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!createSessionResponse.ok) {
+      const errorText = await createSessionResponse.text();
+      console.error('Failed to create session:', errorText);
+      return new Response(JSON.stringify({ error: 'Failed to create session' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const sessionResult = await createSessionResponse.json();
+    const { access_token, refresh_token } = sessionResult;
+
+    if (!access_token || !refresh_token) {
+      console.error('No tokens returned from session creation');
       return new Response(JSON.stringify({ error: 'Failed to generate valid session tokens' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('Successfully processed Firebase auth, returning session tokens');
+    console.log('Successfully created session for phone-only user');
 
     return new Response(JSON.stringify({
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token,
+      refresh_token,
       user: {
         id: supabaseUserId,
         phone: phoneNumber,
@@ -157,6 +159,13 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
+  } catch (sessionError) {
+    console.error('Error creating session:', sessionError);
+    return new Response(JSON.stringify({ error: 'Failed to create user session' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
   } catch (error) {
     console.error('Firebase auth conversion error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
