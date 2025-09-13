@@ -425,14 +425,13 @@ export function useAuthMethods() {
     try {
       const selectedRole = localStorage.getItem('selectedRole') || 'renter';
       
-      // Verify OTP with Firebase
-      const { uid, phoneNumber } = await verifyFirebaseOTP(token);
+      // Verify OTP with Firebase and get ID token
+      const { idToken } = await verifyFirebaseOTP(token);
       
-      // Convert Firebase UID to Supabase session
+      // Convert Firebase ID token to Supabase session
       const response = await supabase.functions.invoke('firebase-auth-convert', {
         body: {
-          firebaseUid: uid,
-          phoneNumber: phoneNumber,
+          firebaseIdToken: idToken,
           selectedRole: selectedRole
         }
       });

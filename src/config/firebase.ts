@@ -106,7 +106,7 @@ export const sendFirebaseOTP = async (phoneNumber: string): Promise<void> => {
 };
 
 // Verify OTP via Firebase
-export const verifyFirebaseOTP = async (otp: string): Promise<{ uid: string; phoneNumber: string }> => {
+export const verifyFirebaseOTP = async (otp: string): Promise<{ idToken: string; uid: string; phoneNumber: string }> => {
   try {
     if (!confirmationResult) {
       throw new Error('No OTP session found. Please request a new OTP.');
@@ -119,7 +119,11 @@ export const verifyFirebaseOTP = async (otp: string): Promise<{ uid: string; pho
       throw new Error('Phone number not found in Firebase user');
     }
 
+    // Get the ID token for Supabase conversion
+    const idToken = await user.getIdToken();
+
     return {
+      idToken,
       uid: user.uid,
       phoneNumber: user.phoneNumber,
     };

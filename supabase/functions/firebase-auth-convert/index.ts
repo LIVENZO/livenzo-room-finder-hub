@@ -6,8 +6,7 @@ const corsHeaders = {
 };
 
 interface FirebaseAuthRequest {
-  firebaseUid: string;
-  phoneNumber: string;
+  firebaseIdToken: string;
   selectedRole?: string;
 }
 
@@ -36,136 +35,98 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { firebaseUid, phoneNumber, selectedRole = 'renter' }: FirebaseAuthRequest = await req.json();
+    const { firebaseIdToken, selectedRole = 'renter' }: FirebaseAuthRequest = await req.json();
 
-    if (!firebaseUid || !phoneNumber) {
-      return new Response(JSON.stringify({ error: 'Firebase UID and phone number are required' }), {
+    if (!firebaseIdToken) {
+      return new Response(JSON.stringify({ error: 'Firebase ID token is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('Processing Firebase auth for:', { firebaseUid, phoneNumber, selectedRole });
+    console.log('Processing Firebase ID token for Supabase conversion:', { selectedRole });
 
-  // Check if Firebase UID already exists
-  const { data: existingMapping } = await supabase
-    .from('firebase_user_mappings')
-    .select('supabase_user_id')
-    .eq('firebase_uid', firebaseUid)
-    .single();
-
-  let supabaseUserId: string;
-
-  if (existingMapping) {
-    // User already exists, use existing Supabase user ID
-    supabaseUserId = existingMapping.supabase_user_id;
-    console.log('Found existing user mapping:', supabaseUserId);
-  } else {
-    // Create new Supabase user via admin API
-    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      phone: phoneNumber,
-      phone_confirmed: true,
-      user_metadata: {
-        role: selectedRole,
-        firebase_uid: firebaseUid
-      }
-    });
-
-    if (createError || !newUser.user) {
-      console.error('Error creating Supabase user:', createError);
-      return new Response(JSON.stringify({ error: 'Failed to create user account' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    supabaseUserId = newUser.user.id;
-    console.log('Created new Supabase user:', supabaseUserId);
-
-    // Create Firebase UID mapping
-    const { error: mappingError } = await supabase
-      .from('firebase_user_mappings')
-      .insert({
-        supabase_user_id: supabaseUserId,
-        firebase_uid: firebaseUid,
-        phone_number: phoneNumber
-      });
-
-    if (mappingError) {
-      console.error('Error creating Firebase mapping:', mappingError);
-      // Continue anyway as user is created
-    }
-
-    // Create user role assignment (without email for phone-only users)
-    const { error: roleError } = await supabase
-      .from('user_role_assignments')
-      .insert({
-        user_id: supabaseUserId,
-        role: selectedRole
-      });
-
-    if (roleError) {
-      console.error('Error creating role assignment:', roleError);
-      // Continue anyway
-    }
-  }
-
-  // Create session for the user directly using GoTrue Admin API
-  try {
-    // Make direct call to create session
-    const createSessionUrl = `${supabaseUrl}/auth/v1/admin/users/${supabaseUserId}/session`;
-    const createSessionResponse = await fetch(createSessionUrl, {
+    // Use Supabase GoTrue token exchange with grant_type=id_token
+    const tokenExchangeUrl = `${supabaseUrl}/auth/v1/token?grant_type=id_token`;
+    const tokenResponse = await fetch(tokenExchangeUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${supabaseServiceKey}`,
         'Content-Type': 'application/json',
-        'apikey': supabaseServiceKey
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        id_token: firebaseIdToken,
+        provider: 'firebase',
+        user_metadata: {
+          role: selectedRole
+        }
+      })
     });
 
-    if (!createSessionResponse.ok) {
-      const errorText = await createSessionResponse.text();
-      console.error('Failed to create session:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to create session' }), {
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Failed to exchange Firebase token:', errorText);
+      return new Response(JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const sessionResult = await createSessionResponse.json();
-    const { access_token, refresh_token } = sessionResult;
+    const tokenResult = await tokenResponse.json();
+    console.log('Token exchange successful');
 
-    if (!access_token || !refresh_token) {
-      console.error('No tokens returned from session creation');
-      return new Response(JSON.stringify({ error: 'Failed to generate valid session tokens' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Extract user info from the Firebase ID token
+    let phoneNumber = null;
+    let firebaseUid = null;
+    try {
+      const payload = JSON.parse(atob(firebaseIdToken.split('.')[1]));
+      phoneNumber = payload.phone_number;
+      firebaseUid = payload.sub;
+    } catch (e) {
+      console.warn('Could not parse Firebase ID token payload:', e);
     }
 
-    console.log('Successfully created session for phone-only user');
+    // Store user role assignment if we have the user
+    if (tokenResult.user?.id) {
+      const { error: roleError } = await supabase
+        .from('user_role_assignments')
+        .upsert({
+          user_id: tokenResult.user.id,
+          role: selectedRole
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (roleError) {
+        console.error('Error creating role assignment:', roleError);
+      }
+
+      // Store Firebase mapping if we have the Firebase UID
+      if (firebaseUid) {
+        const { error: mappingError } = await supabase
+          .from('firebase_user_mappings')
+          .upsert({
+            supabase_user_id: tokenResult.user.id,
+            firebase_uid: firebaseUid,
+            phone_number: phoneNumber
+          }, {
+            onConflict: 'firebase_uid'
+          });
+
+        if (mappingError) {
+          console.error('Error creating Firebase mapping:', mappingError);
+        }
+      }
+    }
 
     return new Response(JSON.stringify({
-      access_token,
-      refresh_token,
-      user: {
-        id: supabaseUserId,
-        phone: phoneNumber,
-        role: selectedRole
-      }
+      access_token: tokenResult.access_token,
+      refresh_token: tokenResult.refresh_token,
+      user: tokenResult.user
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-
-  } catch (sessionError) {
-    console.error('Error creating session:', sessionError);
-    return new Response(JSON.stringify({ error: 'Failed to create user session' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
   } catch (error) {
     console.error('Firebase auth conversion error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
