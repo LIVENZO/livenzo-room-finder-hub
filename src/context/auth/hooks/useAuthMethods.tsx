@@ -424,45 +424,49 @@ export function useAuthMethods() {
     setIsLoading(true);
     try {
       const selectedRole = localStorage.getItem('selectedRole') || 'renter';
-      
-      // Verify OTP with Firebase and get ID token
-      const { idToken } = await verifyFirebaseOTP(token);
-      
-      // Convert Firebase ID token to Supabase session
-      const response = await supabase.functions.invoke('firebase-auth-convert', {
-        body: {
-          firebaseIdToken: idToken,
-          selectedRole: selectedRole
-        }
-      });
 
-      if (response.error) {
-        console.error('Firebase auth conversion error:', response.error);
-        throw new Error('Failed to create user session');
+      // 1) Verify OTP with Firebase and get fresh ID token
+      let idToken: string;
+      try {
+        const verifyRes = await verifyFirebaseOTP(token);
+        idToken = verifyRes.idToken;
+      } catch (e: any) {
+        console.error('Firebase OTP verification failed:', e);
+        clearConfirmationResult();
+        toast.error('Invalid OTP, please try again.');
+        throw e;
       }
 
-      const { access_token, refresh_token } = response.data;
-      
-      // Set the session in Supabase
+      // 2) Exchange Firebase ID token for Supabase session via Edge Function
+      const { data, error } = await supabase.functions.invoke('firebase-auth-convert', {
+        body: {
+          idToken,
+          selectedRole,
+        },
+      });
+
+      if (error) {
+        console.error('Supabase session creation failed:', error);
+        toast.error('Unable to sign in, please try again later.');
+        throw error;
+      }
+
+      const { access_token, refresh_token } = data as { access_token: string; refresh_token: string };
+
+      // 3) Set the session in Supabase so it persists across restarts
       const { error: sessionError } = await supabase.auth.setSession({
         access_token,
-        refresh_token
+        refresh_token,
       });
 
       if (sessionError) {
-        console.error('Session setting error:', sessionError);
+        console.error('Setting Supabase session failed:', sessionError);
+        toast.error('Unable to sign in, please try again later.');
         throw sessionError;
       }
 
-      console.log('OTP verified and session created successfully');
+      console.log('OTP verified and Supabase session created successfully');
       toast.success('Phone number verified successfully!');
-      
-      
-    } catch (error: any) {
-      console.error('Error verifying OTP:', error);
-      clearConfirmationResult();
-      toast.error(error.message || 'Invalid OTP. Please try again.');
-      throw error;
     } finally {
       setIsLoading(false);
     }

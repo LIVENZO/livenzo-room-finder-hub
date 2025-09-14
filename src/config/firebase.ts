@@ -119,8 +119,8 @@ export const verifyFirebaseOTP = async (otp: string): Promise<{ idToken: string;
       throw new Error('Phone number not found in Firebase user');
     }
 
-    // Get the ID token for Supabase conversion
-    const idToken = await user.getIdToken();
+    // Get a fresh ID token for Supabase conversion (force refresh)
+    const idToken = await user.getIdToken(true);
 
     return {
       idToken,

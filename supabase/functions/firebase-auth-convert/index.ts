@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 interface FirebaseAuthRequest {
-  firebaseIdToken: string;
+  idToken?: string;
+  firebaseIdToken?: string;
   selectedRole?: string;
 }
 
@@ -35,14 +36,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { firebaseIdToken, selectedRole = 'renter' }: FirebaseAuthRequest = await req.json();
+const body: FirebaseAuthRequest = await req.json();
+const idToken = body.idToken ?? body.firebaseIdToken;
+const selectedRole = body.selectedRole ?? 'renter';
 
-    if (!firebaseIdToken) {
-      return new Response(JSON.stringify({ error: 'Firebase ID token is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+if (!idToken) {
+  return new Response(JSON.stringify({ error: 'ID token is required' }), {
+    status: 400,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
 
     console.log('Processing Firebase ID token for Supabase conversion:', { selectedRole });
 
@@ -55,7 +58,7 @@ Deno.serve(async (req) => {
         'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
       },
       body: JSON.stringify({
-        id_token: firebaseIdToken,
+        id_token: idToken,
         provider: 'firebase',
         user_metadata: {
           role: selectedRole
@@ -66,10 +69,11 @@ Deno.serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Failed to exchange Firebase token:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      const status = tokenResponse.status;
+      return new Response(
+        JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session', details: errorText }),
+        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const tokenResult = await tokenResponse.json();
@@ -79,7 +83,7 @@ Deno.serve(async (req) => {
     let phoneNumber = null;
     let firebaseUid = null;
     try {
-      const payload = JSON.parse(atob(firebaseIdToken.split('.')[1]));
+      const payload = JSON.parse(atob(idToken.split('.')[1]));
       phoneNumber = payload.phone_number;
       firebaseUid = payload.sub;
     } catch (e) {
