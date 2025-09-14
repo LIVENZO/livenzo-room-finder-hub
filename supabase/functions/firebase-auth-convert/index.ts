@@ -49,35 +49,28 @@ if (!idToken) {
 
     console.log('Processing Firebase ID token for Supabase conversion:', { selectedRole });
 
-    // Use Supabase GoTrue token exchange with grant_type=id_token
-    const tokenExchangeUrl = `${supabaseUrl}/auth/v1/token?grant_type=id_token`;
-    const tokenResponse = await fetch(tokenExchangeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
-      },
-      body: JSON.stringify({
-        id_token: idToken,
-        provider: 'firebase',
-        user_metadata: {
-          role: selectedRole
-        }
-      })
+    // Sign in to Supabase using the Firebase ID token via GoTrue
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithIdToken({
+      provider: 'firebase',
+      token: idToken,
     });
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Failed to exchange Firebase token:', errorText);
-      const status = tokenResponse.status;
+    if (signInError || !signInData?.session) {
+      const details = signInError?.message ?? 'No session returned from signInWithIdToken';
+      console.error('Failed to exchange Firebase token:', details);
       return new Response(
-        JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session', details: errorText }),
-        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session', details }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const tokenResult = await tokenResponse.json();
-    console.log('Token exchange successful');
+    const tokenResult = {
+      access_token: signInData.session.access_token,
+      refresh_token: signInData.session.refresh_token,
+      user: signInData.user
+    };
+    console.log('Token exchange successful via signInWithIdToken');
+
 
     // Extract user info from the Firebase ID token
     let phoneNumber = null;
