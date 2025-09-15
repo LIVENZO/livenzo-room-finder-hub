@@ -49,27 +49,41 @@ if (!idToken) {
 
     console.log('Processing Firebase ID token for Supabase conversion:', { selectedRole });
 
-    // Sign in to Supabase using the Firebase ID token via GoTrue
+    // Sign in to Supabase using the Firebase ID token via signInWithIdToken
+    console.log('Calling supabase.auth.signInWithIdToken with provider: firebase');
     const { data: signInData, error: signInError } = await supabase.auth.signInWithIdToken({
       provider: 'firebase',
       token: idToken,
     });
 
-    if (signInError || !signInData?.session) {
-      const details = signInError?.message ?? 'No session returned from signInWithIdToken';
-      console.error('Failed to exchange Firebase token:', details);
+    if (signInError) {
+      console.error('signInWithIdToken error:', signInError);
       return new Response(
-        JSON.stringify({ error: 'Failed to exchange Firebase token for Supabase session', details }),
+        JSON.stringify({ 
+          error: 'Failed to exchange Firebase token for Supabase session', 
+          details: signInError.message 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    if (!signInData?.session || !signInData.session.access_token || !signInData.session.refresh_token) {
+      console.error('No valid session returned from signInWithIdToken:', signInData);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to create session', 
+          details: 'No session data returned from authentication' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('signInWithIdToken successful, session created');
     const tokenResult = {
       access_token: signInData.session.access_token,
       refresh_token: signInData.session.refresh_token,
       user: signInData.user
     };
-    console.log('Token exchange successful via signInWithIdToken');
 
 
     // Extract user info from the Firebase ID token
