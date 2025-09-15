@@ -993,6 +993,7 @@ export type Database = {
           data_classification: Json | null
           email: string | null
           fcm_token: string | null
+          firebase_uid: string | null
           full_name: string | null
           house_number: string | null
           id: string
@@ -1021,6 +1022,7 @@ export type Database = {
           data_classification?: Json | null
           email?: string | null
           fcm_token?: string | null
+          firebase_uid?: string | null
           full_name?: string | null
           house_number?: string | null
           id?: string
@@ -1049,6 +1051,7 @@ export type Database = {
           data_classification?: Json | null
           email?: string | null
           fcm_token?: string | null
+          firebase_uid?: string | null
           full_name?: string | null
           house_number?: string | null
           id?: string

@@ -1,0 +1,153 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Send, Bell } from 'lucide-react';
+
+export const NotificationTester: React.FC = () => {
+  const [firebaseUid, setFirebaseUid] = useState('');
+  const [title, setTitle] = useState('Test Notification');
+  const [body, setBody] = useState('This is a test notification from Livenzo app!');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const sendTestNotification = async () => {
+    if (!firebaseUid.trim() || !title.trim() || !body.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-notification-to-user', {
+        body: {
+          firebase_uid: firebaseUid,
+          title: title,
+          body: body,
+          data: {
+            test: true,
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Error sending notification:', error);
+        toast.error('Failed to send notification: ' + error.message);
+      } else {
+        console.log('Notification sent successfully:', data);
+        toast.success('Notification sent successfully!');
+      }
+    } catch (err) {
+      console.error('Exception sending notification:', err);
+      toast.error('Failed to send notification');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testCurrentUser = async () => {
+    if ((window as any).Android) {
+      const currentUID = (window as any).Android.getCurrentUserUID();
+      if (currentUID) {
+        setFirebaseUid(currentUID);
+        toast.success('Current user UID loaded');
+      } else {
+        toast.error('No current user found');
+      }
+    } else {
+      toast.error('Android interface not available');
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center">
+        <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+          <Bell className="h-6 w-6 text-primary" />
+        </div>
+        <CardTitle>Notification Tester</CardTitle>
+        <CardDescription>
+          Test sending push notifications to users
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="firebase-uid" className="text-sm font-medium">
+            Firebase UID
+          </label>
+          <div className="flex gap-2">
+            <Input
+              id="firebase-uid"
+              placeholder="Enter Firebase UID"
+              value={firebaseUid}
+              onChange={(e) => setFirebaseUid(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={testCurrentUser}
+              disabled={isLoading}
+            >
+              Current User
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="title" className="text-sm font-medium">
+            Title
+          </label>
+          <Input
+            id="title"
+            placeholder="Notification title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="body" className="text-sm font-medium">
+            Message
+          </label>
+          <Textarea
+            id="body"
+            placeholder="Notification message"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            disabled={isLoading}
+            rows={3}
+          />
+        </div>
+        
+        <Button 
+          onClick={sendTestNotification} 
+          disabled={!firebaseUid.trim() || !title.trim() || !body.trim() || isLoading}
+          className="w-full"
+        >
+          {isLoading ? (
+            <>
+              <Send className="mr-2 h-4 w-4 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="mr-2 h-4 w-4" />
+              Send Notification
+            </>
+          )}
+        </Button>
+        
+        <div className="text-xs text-muted-foreground text-center">
+          Make sure the user has the app installed and FCM token registered
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
