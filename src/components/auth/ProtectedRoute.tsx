@@ -1,7 +1,11 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
+import { FirebaseAuthFlow } from '@/components/auth/FirebaseAuthFlow';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import RoleSelector from '@/components/landing/RoleSelector';
+import Layout from '@/components/Layout';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole 
 }) => {
   const { user, isLoading, userRole } = useFirebaseAuth();
-  const location = useLocation();
+  const [selectedRole, setSelectedRole] = useState<string>('renter');
 
   if (isLoading) {
     return (
@@ -26,9 +30,38 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  const handleAuthSuccess = () => {
+    // Store the selected role
+    localStorage.setItem('selectedRole', selectedRole);
+    localStorage.setItem('userRole', selectedRole);
+    
+    toast.success("Authentication successful!");
+  };
+
   if (!user) {
-    // Redirect to login page with return path
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // Show inline sign-in instead of redirecting
+    return (
+      <Layout hideNav>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-6">
+          <div className="w-full max-w-md">
+            <div className="bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-bold text-primary">Welcome to Livenzo</h1>
+                <p className="text-muted-foreground">Please sign in to continue</p>
+              </div>
+              
+              <RoleSelector 
+                userRole={selectedRole}
+                setUserRole={setSelectedRole}
+                canChangeRole={true}
+              />
+              
+              <FirebaseAuthFlow onAuthSuccess={handleAuthSuccess} />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   if (requiredRole && userRole !== requiredRole) {

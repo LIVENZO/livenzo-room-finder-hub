@@ -1,95 +1,49 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/auth';
+import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
+import { FirebaseAuthFlow } from '@/components/auth/FirebaseAuthFlow';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import LoadingState from '@/components/landing/LoadingState';
-import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
-import { AUTH_CONFIG } from '@/config/auth';
+import RoleSelector from '@/components/landing/RoleSelector';
 
 const Index: React.FC = () => {
-  const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
+  const { user, isLoading, userRole } = useFirebaseAuth();
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<string>('renter');
-  const [checkingSession, setCheckingSession] = useState<boolean>(true);
+  const [selectedRole, setSelectedRole] = useState<string>('renter');
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
   
   useEffect(() => {
-    const checkAuth = async () => {
-      // If auth is disabled, redirect directly to dashboard
-      if (!AUTH_CONFIG.AUTH_ENABLED) {
-        console.log("Auth disabled, redirecting to dashboard");
-        setIsRedirecting(true);
-        
-        // Set default role if not already set
-        if (!localStorage.getItem('userRole')) {
-          localStorage.setItem('userRole', userRole);
-          console.log("Setting default user role:", userRole);
-        }
-        
-        navigate('/dashboard');
-        toast.success("Welcome to Livenzo!");
-        return;
-      }
+    // Check if we have a user and redirect if needed
+    if (user && userRole) {
+      console.log("User detected on index page, navigating to dashboard:", user.uid);
+      setIsRedirecting(true);
       
-      // Check if we have a user session and redirect if needed
-      if (session && user) {
-        console.log("User detected on index page, navigating to dashboard:", user.email);
-        setIsRedirecting(true);
-        
-        // Store the user role if it wasn't already set during login
-        if (!localStorage.getItem('userRole')) {
-          localStorage.setItem('userRole', userRole);
-          console.log("Setting default user role:", userRole);
-        }
-        
-        // Navigate directly to dashboard instead of using window.location
-        navigate('/dashboard');
-        const userName = user.email?.split('@')[0] || 'User';
-        toast.success(`Welcome, ${userName}!`);
-      } else {
-        console.log("No user detected on index page");
-        setCheckingSession(false);
-      }
-    };
+      // Navigate to dashboard
+      navigate('/dashboard');
+      toast.success("Welcome to Livenzo!");
+    }
+  }, [user, userRole, navigate]);
+  
+  const handleAuthSuccess = () => {
+    // Store the selected role
+    localStorage.setItem('selectedRole', selectedRole);
+    localStorage.setItem('userRole', selectedRole);
     
-    // Only run the check if we're done with initial loading
-    if (!isLoading) {
-      checkAuth();
-    }
-  }, [user, session, navigate, isLoading, userRole]);
-  
-  const handleGoogleLogin = async () => {
-    console.log("Google login button clicked with role:", userRole);
-    localStorage.setItem('selectedRole', userRole);
-    toast.info("Redirecting to Google sign-in...");
-    await login('google', userRole);
-  };
-
-  const handleFacebookLogin = async () => {
-    console.log("Facebook login button clicked with role:", userRole);
-    localStorage.setItem('selectedRole', userRole);
-    toast.info("Redirecting to Facebook sign-in...");
-    await login('facebook', userRole);
-  };
-
-  const handleOTPAuth = {
-    sendOTP: async (email: string) => {
-      console.log("OTP send initiated for:", email, "with role:", userRole);
-      localStorage.setItem('selectedRole', userRole);
-      await sendOTP(email);
-    },
-    verifyOTP: async (email: string, token: string) => {
-      console.log("OTP verification initiated for:", email, "with role:", userRole);
-      await verifyOTP(email, token);
-    }
+    // Navigation will be handled by the useEffect above
+    toast.success("Authentication successful!");
   };
   
-  // Show a loading state while checking for existing session or redirect
-  if (checkingSession || isRedirecting) {
+  // Show a loading state while redirecting
+  if (isRedirecting) {
     return <LoadingState isRedirecting={isRedirecting} />;
+  }
+
+  // If user is authenticated, they should be redirected by the useEffect
+  if (user && userRole) {
+    return <LoadingState isRedirecting={true} />;
   }
   
   return (
@@ -101,16 +55,16 @@ const Index: React.FC = () => {
             <p className="text-xl md:text-2xl text-gray-600">Find Your Perfect Room Today</p>
           </div>
           
-          <div className="w-full">
-            <LandingCard 
-              userRole={userRole}
-              setUserRole={setUserRole}
-              canChangeRole={canChangeRole}
-              isLoading={isLoading}
-              handleGoogleLogin={handleGoogleLogin}
-              handleFacebookLogin={handleFacebookLogin}
-              handleOTPAuth={handleOTPAuth}
-            />
+          <div className="w-full max-w-md mx-auto">
+            <div className="bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
+              <RoleSelector 
+                userRole={selectedRole}
+                setUserRole={setSelectedRole}
+                canChangeRole={true}
+              />
+              
+              <FirebaseAuthFlow onAuthSuccess={handleAuthSuccess} />
+            </div>
           </div>
           
           <div className="w-full">
