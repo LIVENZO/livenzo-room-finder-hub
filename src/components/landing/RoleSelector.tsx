@@ -30,9 +30,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
                   Property Owner
                 </h3>
-                <p className="text-sm text-black peer-checked:text-white transition-colors duration-300">
-                  List and manage your properties
-                </p>
+                
               </div>
               <div className="flex-shrink-0">
                 <RadioGroupItem value="owner" className="border-gray-400 text-black data-[state=checked]:bg-white data-[state=checked]:text-primary" />
@@ -53,9 +51,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
                   Renter
                 </h3>
-                <p className="text-sm text-black peer-checked:text-white mt-1 transition-colors duration-300">
-                  Find and rent your ideal property
-                </p>
+                
               </div>
               <div className="flex-shrink-0">
                 <RadioGroupItem value="renter" className="border-gray-400 text-black data-[state=checked]:bg-white data-[state=checked]:text-primary" />
