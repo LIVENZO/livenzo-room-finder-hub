@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
+import { useAuth } from '@/context/auth';
 import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
 import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
@@ -11,32 +11,35 @@ import { AUTH_CONFIG } from '@/config/auth';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, userRole, isLoading } = useFirebaseAuth();
+  const { user, userRole, isLoading, session } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      console.log("No authenticated user found, redirecting to login");
-      navigate('/');
-      toast.error("Please sign in to access the dashboard");
-      return;
+    // If authentication is enabled, check for user session
+    if (AUTH_CONFIG.AUTH_ENABLED) {
+      if (!isLoading && !user && !session) {
+        console.log("No authenticated user found, redirecting to login");
+        navigate('/');
+        toast.error("Please sign in to access the dashboard");
+        return;
+      }
     }
 
     // Debug current user state
-    console.log("Dashboard - User:", user?.uid, "Role:", userRole, "Loading:", isLoading);
-  }, [user, userRole, isLoading, navigate]);
+    console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
+  }, [user, userRole, isLoading, session, navigate]);
 
   // Show loading state while checking authentication
   if (isLoading) {
     return <LoadingState isRedirecting={false} />;
   }
 
-  // If no user, don't render anything (redirect will happen)
-  if (!user) {
+  // If auth is enabled and no user, don't render anything (redirect will happen)
+  if (AUTH_CONFIG.AUTH_ENABLED && !user) {
     return null;
   }
 
   return (
-    <Layout requireAuth>
+    <Layout>
       <div className="w-full h-full min-h-screen bg-gradient-radial">
         <div className="w-full h-full">
           {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}

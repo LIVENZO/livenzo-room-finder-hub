@@ -48,15 +48,8 @@ Deno.serve(async (req) => {
 
     console.log('Syncing user data:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
 
-    // Check if user profile already exists
-    const { data: existingProfile } = await supabase
-      .from('user_profiles')
-      .select('id, firebase_uid')
-      .eq('firebase_uid', firebase_uid)
-      .single();
-
     // Prepare data for upsert
-    const userData: any = {
+    const userData = {
       firebase_uid,
       phone: phone_number,
       updated_at: new Date().toISOString(),
@@ -65,11 +58,6 @@ Deno.serve(async (req) => {
     // Add FCM token if provided
     if (fcm_token) {
       userData.fcm_token = fcm_token;
-    }
-
-    // If this is a new user, generate a UUID for the id column
-    if (!existingProfile) {
-      userData.id = crypto.randomUUID();
     }
 
     // Upsert user profile data

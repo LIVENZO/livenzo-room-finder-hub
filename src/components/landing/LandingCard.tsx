@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
 import OTPVerificationModal from './OTPVerificationModal';
+
 interface LandingCardProps {
   userRole: string;
   setUserRole: (role: string) => void;
@@ -18,6 +19,7 @@ interface LandingCardProps {
     verifyOTP: (phoneNumber: string, token: string) => Promise<void>;
   };
 }
+
 const LandingCard: React.FC<LandingCardProps> = ({
   userRole,
   setUserRole,
@@ -29,6 +31,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpModalOpen, setOtpModalOpen] = useState(false);
+
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
@@ -39,15 +42,18 @@ const LandingCard: React.FC<LandingCardProps> = ({
     }
     return cleaned;
   };
+
   const validatePhoneNumber = (phone: string) => {
     // Validate 10-digit Indian phone number
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
   };
+
   const getFullPhoneNumber = (phone: string) => {
     // Always add +91 prefix for Indian numbers
     return `+91${phone}`;
   };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneNumber.trim()) {
@@ -69,6 +75,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
       toast.error('Failed to send OTP. Please try again.');
     }
   };
+
   const handleVerifyOTP = async (otp: string) => {
     const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     try {
@@ -79,18 +86,23 @@ const LandingCard: React.FC<LandingCardProps> = ({
       throw error; // Let the modal handle the error display
     }
   };
+
   const handleResendOTP = async () => {
     const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     await handleOTPAuth.sendOTP(fullPhoneNumber);
   };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setPhoneNumber(formatted);
   };
+
   const handleCloseOTPModal = () => {
     setOtpModalOpen(false);
   };
-  return <>
+
+  return (
+    <>
       <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
         <div className="space-y-2 text-center">
           {/* Title and description can be added here if needed */}
@@ -101,10 +113,23 @@ const LandingCard: React.FC<LandingCardProps> = ({
         {/* Phone Number Input Section */}
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div className="w-full">
-            <Input type="tel" placeholder="Phone Number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading} className="w-full h-12 text-base rounded-xl" maxLength={10} />
+            <Input 
+              type="tel" 
+              placeholder="Phone Number" 
+              value={phoneNumber} 
+              onChange={handlePhoneChange} 
+              disabled={isLoading} 
+              className="w-full h-12 text-base rounded-xl" 
+              maxLength={10} 
+            />
           </div>
 
-          <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || !phoneNumber.trim()}>
+          <Button 
+            type="submit" 
+            size="lg" 
+            className="w-full h-12 text-base font-semibold rounded-xl" 
+            disabled={isLoading || !phoneNumber.trim()}
+          >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Send OTP
           </Button>
@@ -115,15 +140,30 @@ const LandingCard: React.FC<LandingCardProps> = ({
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-muted-foreground">OR </span>
+            <span className="bg-white px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
         </div>
         
-        <SocialLoginButtons onGoogleLogin={handleGoogleLogin} onFacebookLogin={handleFacebookLogin} isLoading={isLoading} />
+        <SocialLoginButtons 
+          onGoogleLogin={handleGoogleLogin} 
+          onFacebookLogin={handleFacebookLogin} 
+          isLoading={isLoading} 
+        />
       </div>
 
       {/* OTP Verification Modal */}
-      <OTPVerificationModal isOpen={otpModalOpen} onClose={handleCloseOTPModal} phoneNumber={phoneNumber} isLoading={isLoading} onVerifyOTP={handleVerifyOTP} onResendOTP={handleResendOTP} />
-    </>;
+      <OTPVerificationModal
+        isOpen={otpModalOpen}
+        onClose={handleCloseOTPModal}
+        phoneNumber={phoneNumber}
+        isLoading={isLoading}
+        onVerifyOTP={handleVerifyOTP}
+        onResendOTP={handleResendOTP}
+      />
+    </>
+  );
 };
+
 export default LandingCard;
