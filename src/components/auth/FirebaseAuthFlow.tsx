@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useFirebaseAuthFlow } from '@/hooks/useFirebaseAuthFlow';
 import { Loader2, Phone, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ export const FirebaseAuthFlow: React.FC<FirebaseAuthFlowProps> = ({ onAuthSucces
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   
-  const { isLoading, error, sendOTP, verifyOTP, clearError } = useFirebaseAuth();
+  const { isLoading, error, sendOTP, verifyOTP, clearError } = useFirebaseAuthFlow();
 
   const handleSendOTP = async () => {
     if (!phoneNumber.trim()) {

@@ -2,13 +2,14 @@ import React from 'react';
 import { FirebaseAuthFlow } from '@/components/auth/FirebaseAuthFlow';
 import { NotificationTester } from '@/components/test/NotificationTester';
 import { useNavigate } from 'react-router-dom';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 const FirebaseTest: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, signOut } = useFirebaseAuth();
+  const { user, logout } = useFirebaseAuth();
+  const isLoggedIn = !!user;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-6">
@@ -42,7 +43,7 @@ const FirebaseTest: React.FC = () => {
               <p className="text-muted-foreground mb-4">
                 You are now logged in with Firebase authentication
               </p>
-              <Button onClick={signOut} variant="outline">
+              <Button onClick={logout} variant="outline">
                 Sign Out
               </Button>
             </div>

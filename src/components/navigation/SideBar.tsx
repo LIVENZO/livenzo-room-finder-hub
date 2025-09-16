@@ -5,13 +5,13 @@ import { cn } from '@/lib/utils';
 import { LogOut, Home, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/auth';
+import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
 import { useNavItems } from '@/hooks/use-nav-items';
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, userRole } = useAuth();
+  const { logout, userRole } = useFirebaseAuth();
   const { filteredNavItems } = useNavItems();
   
   const handleLogout = () => {
