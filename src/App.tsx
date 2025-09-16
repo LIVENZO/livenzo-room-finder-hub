@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { FirebaseAuthProvider } from "./context/auth/FirebaseAuthProvider";
+import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
@@ -37,7 +37,7 @@ const FCMWrapper = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <FirebaseAuthProvider>
+      <AuthProvider>
         <RoomProvider>
           <FCMWrapper />
           <Toaster />
@@ -67,7 +67,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </RoomProvider>
-      </FirebaseAuthProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

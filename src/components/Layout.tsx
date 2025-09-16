@@ -1,39 +1,17 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useFirebaseAuth } from '@/context/auth/FirebaseAuthProvider';
-import { Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import NavBar from './navigation/NavBar';
 import SideBar from './navigation/SideBar';
 
 interface LayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
-  requireAuth?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, hideNav = false, requireAuth = false }) => {
+const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   const isMobile = useIsMobile();
-  const { user, isLoading } = useFirebaseAuth();
-
-  // Check authentication if required
-  if (requireAuth) {
-    if (isLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (!user) {
-      return <Navigate to="/" replace />;
-    }
-  }
   
   // Render nothing if hideNav is true
   if (hideNav) {

@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     console.log('Syncing user data:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
 
     // Prepare data for upsert
-    const userData: any = {
+    const userData = {
       firebase_uid,
       phone: phone_number,
       updated_at: new Date().toISOString(),
