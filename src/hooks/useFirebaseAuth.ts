@@ -38,11 +38,53 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
         setError(event.detail);
       };
 
-      const handleOTPVerified = (event: CustomEvent) => {
+      const handleOTPVerified = async (event: CustomEvent) => {
         console.log('OTP verified:', event.detail);
-        setIsLoading(false);
-        setError(null);
-        setIsLoggedIn(true);
+        
+        try {
+          // Get Firebase user details
+          const firebaseUid = (window as any).Android.getCurrentUserUID();
+          const phoneNumber = (window as any).Android.getCurrentUserPhone();
+          
+          if (firebaseUid && phoneNumber) {
+            console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber });
+            
+            // Call the sync function
+            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
+              },
+              body: JSON.stringify({
+                firebase_uid: firebaseUid,
+                phone_number: phoneNumber,
+                fcm_token: null // We'll handle FCM token separately
+              })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+              console.log('User synced successfully to Supabase:', result);
+              setIsLoading(false);
+              setError(null);
+              setIsLoggedIn(true);
+            } else {
+              console.error('Failed to sync user to Supabase:', result);
+              setError('Failed to sync user data');
+              setIsLoading(false);
+            }
+          } else {
+            console.error('Could not get Firebase user details');
+            setError('Failed to get user details');
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error('Error syncing user to Supabase:', error);
+          setError('Failed to sync user data');
+          setIsLoading(false);
+        }
       };
 
       const handleOTPVerificationError = (event: CustomEvent) => {

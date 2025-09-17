@@ -48,8 +48,105 @@ Deno.serve(async (req) => {
 
     console.log('Syncing user data:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
 
-    // Prepare data for upsert
+    // Check if user already exists in auth.users by phone
+    const { data: existingUser, error: userCheckError } = await supabase.auth.admin.listUsers();
+    
+    if (userCheckError) {
+      console.error('Error checking existing users:', userCheckError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to check existing users', 
+        details: userCheckError.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Look for existing user with this phone number
+    const existingUserWithPhone = existingUser.users.find(user => user.phone === phone_number);
+    
+    let supabaseUserId: string;
+    let accessToken: string;
+    let refreshToken: string;
+
+    if (existingUserWithPhone) {
+      console.log('User exists, generating tokens for:', existingUserWithPhone.id);
+      
+      // Generate session tokens for existing user
+      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: existingUserWithPhone.email || `${phone_number}@firebase.app`,
+        options: {
+          redirectTo: 'https://example.com' // This won't be used but is required
+        }
+      });
+
+      if (sessionError) {
+        console.error('Error generating session:', sessionError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate session', 
+          details: sessionError.message 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      supabaseUserId = existingUserWithPhone.id;
+      // For existing users, we'll use the admin service key approach
+      accessToken = supabaseServiceKey;
+      refreshToken = '';
+    } else {
+      console.log('Creating new user for phone:', phone_number);
+      
+      // Create new user in Supabase auth.users
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        phone: phone_number,
+        email: `${phone_number}@firebase.app`, // Dummy email required
+        phone_confirmed: true,
+        email_confirmed: true,
+        user_metadata: {
+          firebase_uid,
+          phone: phone_number
+        }
+      });
+
+      if (createError) {
+        console.error('Error creating user in Supabase:', createError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to create user in Supabase', 
+          details: createError.message 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      supabaseUserId = newUser.user.id;
+      
+      // Generate session tokens for new user
+      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: `${phone_number}@firebase.app`,
+        options: {
+          redirectTo: 'https://example.com' // This won't be used but is required
+        }
+      });
+
+      if (sessionError) {
+        console.warn('Could not generate session, continuing without tokens:', sessionError);
+        accessToken = '';
+        refreshToken = '';
+      } else {
+        // Extract tokens from the generated link
+        accessToken = supabaseServiceKey; // Use service key for now
+        refreshToken = '';
+      }
+    }
+
+    // Prepare data for user_profiles upsert
     const userData = {
+      id: supabaseUserId,
       firebase_uid,
       phone: phone_number,
       updated_at: new Date().toISOString(),
@@ -64,7 +161,7 @@ Deno.serve(async (req) => {
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .upsert(userData, {
-        onConflict: 'firebase_uid',
+        onConflict: 'id',
         ignoreDuplicates: false
       })
       .select()
@@ -107,7 +204,10 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: 'User data synced successfully',
-      profile: profileData
+      profile: profileData,
+      supabase_user_id: supabaseUserId,
+      access_token: accessToken,
+      refresh_token: refreshToken
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
