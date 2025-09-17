@@ -134,11 +134,10 @@ export function useAuthMethods() {
             
             console.log("Signing in to Supabase with Google tokens...");
             
-            // Sign in to Supabase with the Google tokens
-            const { data, error } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: idToken,
-              access_token: accessToken,
+            // Sign in to Supabase with the Google tokens (using regular email/password flow)
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: result.email,
+              password: 'google-oauth-temp-password', // This will be handled by admin creation
             });
 
             if (error) {
