@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FirebaseAuthState {
   isLoggedIn: boolean;
@@ -67,9 +68,30 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
             
             if (result.success) {
               console.log('User synced successfully to Supabase:', result);
-              setIsLoading(false);
-              setError(null);
-              setIsLoggedIn(true);
+              try {
+                if (result.access_token && result.refresh_token) {
+                  const { data, error } = await supabase.auth.setSession({
+                    access_token: result.access_token,
+                    refresh_token: result.refresh_token
+                  });
+                  if (error) {
+                    console.error('Failed to set Supabase session:', error);
+                    setError('Failed to establish app session');
+                    setIsLoading(false);
+                    return;
+                  }
+                  console.log('Supabase session established:', data?.session?.user?.id);
+                } else {
+                  console.warn('No tokens returned from sync function');
+                }
+                setIsLoading(false);
+                setError(null);
+                setIsLoggedIn(true);
+              } catch (e) {
+                console.error('Error setting Supabase session:', e);
+                setError('Failed to establish app session');
+                setIsLoading(false);
+              }
             } else {
               console.error('Failed to sync user to Supabase:', result);
               setError('Failed to sync user data');

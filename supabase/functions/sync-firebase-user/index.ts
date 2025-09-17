@@ -8,7 +8,18 @@ const corsHeaders = {
 interface SyncUserRequest {
   firebase_uid: string;
   phone_number: string;
-  fcm_token?: string;
+  fcm_token?: string | null;
+}
+
+function generateTempPassword(length = 32) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_!@#$%^&*()';
+  let result = '';
+  const array = new Uint32Array(length);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < length; i++) {
+    result += chars[array[i] % chars.length];
+  }
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -18,23 +29,25 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    // Initialize Supabase clients
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    const authClient = createClient(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
 
     const body: SyncUserRequest = await req.json();
     const { firebase_uid, phone_number, fcm_token } = body;
@@ -46,173 +59,130 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Syncing user data:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
+    const email = `${phone_number}@firebase.app`;
+    const tempPassword = generateTempPassword();
 
-    // Check if user already exists in auth.users by phone
-    const { data: existingUser, error: userCheckError } = await supabase.auth.admin.listUsers();
-    
-    if (userCheckError) {
-      console.error('Error checking existing users:', userCheckError);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to check existing users', 
-        details: userCheckError.message 
-      }), {
+    console.log('Syncing user:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
+
+    // Try to find existing user by phone via Admin API (paginate first 1000 users)
+    const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+    if (listErr) {
+      console.error('listUsers error:', listErr);
+      return new Response(JSON.stringify({ error: 'Failed to check users', details: listErr.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Look for existing user with this phone number
-    const existingUserWithPhone = existingUser.users.find(user => user.phone === phone_number);
-    
-    let supabaseUserId: string;
-    let accessToken: string;
-    let refreshToken: string;
+    let supabaseUserId: string | null = null;
+    let upsertedEmail = email;
 
-    if (existingUserWithPhone) {
-      console.log('User exists, generating tokens for:', existingUserWithPhone.id);
-      
-      // Generate session tokens for existing user
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: existingUserWithPhone.email || `${phone_number}@firebase.app`,
-        options: {
-          redirectTo: 'https://example.com' // This won't be used but is required
-        }
+    const existing = list.users.find((u) => u.phone === phone_number);
+
+    if (existing) {
+      supabaseUserId = existing.id;
+      // Ensure email is present and update password
+      const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
+        email: existing.email ?? email,
+        email_confirmed: true,
+        phone_confirmed: true,
+        password: tempPassword,
+        user_metadata: { ...(existing.user_metadata || {}), firebase_uid, phone: phone_number }
       });
-
-      if (sessionError) {
-        console.error('Error generating session:', sessionError);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to generate session', 
-          details: sessionError.message 
-        }), {
+      if (updErr) {
+        console.error('updateUserById error:', updErr);
+        return new Response(JSON.stringify({ error: 'Failed to update user', details: updErr.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-
-      supabaseUserId = existingUserWithPhone.id;
-      // For existing users, we'll use the admin service key approach
-      accessToken = supabaseServiceKey;
-      refreshToken = '';
+      upsertedEmail = existing.email ?? email;
     } else {
-      console.log('Creating new user for phone:', phone_number);
-      
-      // Create new user in Supabase auth.users
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      // Create new user with confirmed phone/email and temp password
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
         phone: phone_number,
-        email: `${phone_number}@firebase.app`, // Dummy email required
+        email,
+        password: tempPassword,
         phone_confirmed: true,
         email_confirmed: true,
-        user_metadata: {
-          firebase_uid,
-          phone: phone_number
-        }
+        user_metadata: { firebase_uid, phone: phone_number }
       });
-
-      if (createError) {
-        console.error('Error creating user in Supabase:', createError);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to create user in Supabase', 
-          details: createError.message 
-        }), {
+      if (createErr) {
+        console.error('createUser error:', createErr);
+        return new Response(JSON.stringify({ error: 'Failed to create user', details: createErr.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-
-      supabaseUserId = newUser.user.id;
-      
-      // Generate session tokens for new user
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: `${phone_number}@firebase.app`,
-        options: {
-          redirectTo: 'https://example.com' // This won't be used but is required
-        }
-      });
-
-      if (sessionError) {
-        console.warn('Could not generate session, continuing without tokens:', sessionError);
-        accessToken = '';
-        refreshToken = '';
-      } else {
-        // Extract tokens from the generated link
-        accessToken = supabaseServiceKey; // Use service key for now
-        refreshToken = '';
-      }
+      supabaseUserId = created.user.id;
     }
 
-    // Prepare data for user_profiles upsert
-    const userData = {
+    // Upsert into user_profiles
+    const profilePayload: Record<string, unknown> = {
       id: supabaseUserId,
       firebase_uid,
       phone: phone_number,
       updated_at: new Date().toISOString(),
     };
 
-    // Add FCM token if provided
     if (fcm_token) {
-      userData.fcm_token = fcm_token;
+      profilePayload.fcm_token = fcm_token;
     }
 
-    // Upsert user profile data
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profile, error: profileErr } = await admin
       .from('user_profiles')
-      .upsert(userData, {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      })
+      .upsert(profilePayload, { onConflict: 'id', ignoreDuplicates: false })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (profileError) {
-      console.error('Error upserting user profile:', profileError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to sync user profile', 
-          details: profileError.message 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (profileErr) {
+      console.error('user_profiles upsert error:', profileErr);
+      return new Response(JSON.stringify({ error: 'Failed to sync user profile', details: profileErr.message }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    console.log('User profile synced successfully:', profileData);
-
-    // If FCM token was provided, also update/insert in fcm_tokens table for notifications
-    if (fcm_token && profileData?.id) {
-      const { error: fcmError } = await supabase
+    // Upsert FCM token to fcm_tokens (non-blocking)
+    if (fcm_token && supabaseUserId) {
+      const { error: fcmErr } = await admin
         .from('fcm_tokens')
-        .upsert({
-          user_id: profileData.id,
-          token: fcm_token,
-          created_at: new Date().toISOString()
-        }, {
+        .upsert({ user_id: supabaseUserId, token: fcm_token, created_at: new Date().toISOString() }, {
           onConflict: 'user_id',
           ignoreDuplicates: false
         });
-
-      if (fcmError) {
-        console.warn('Failed to update FCM token:', fcmError);
-        // Don't fail the whole request for FCM token issues
-      } else {
-        console.log('FCM token updated successfully');
+      if (fcmErr) {
+        console.warn('Failed to upsert FCM token:', fcmErr);
       }
     }
 
+    // Now create a user session and return tokens to the client
+    const { data: signInData, error: signInErr } = await authClient.auth.signInWithPassword({
+      email: upsertedEmail,
+      password: tempPassword
+    });
+
+    if (signInErr || !signInData.session) {
+      console.error('signInWithPassword error:', signInErr);
+      return new Response(JSON.stringify({ error: 'Failed to create session for user' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { access_token, refresh_token } = signInData.session;
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'User data synced successfully',
-      profile: profileData,
+      message: 'User synced successfully',
       supabase_user_id: supabaseUserId,
-      access_token: accessToken,
-      refresh_token: refreshToken
+      profile,
+      access_token,
+      refresh_token
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-
   } catch (error) {
     console.error('Sync user error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
