@@ -115,25 +115,46 @@ if (!relationship) {
 
     console.log('Valid relationship found:', relationship.id);
     
-    // Get owner's UPI ID for direct payment
-    const { data: ownerProfile, error: ownerError } = await supabaseClient
-      .from('user_profiles')
-      .select('upi_id, full_name')
-      .eq('id', relationship.owner_id)
+    // Get owner's UPI ID from owner_upi_details table (preferred) or user_profiles (fallback)
+    const { data: ownerUpiDetails, error: upiError } = await supabaseClient
+      .from('owner_upi_details')
+      .select('upi_id, is_active')
+      .eq('owner_id', relationship.owner_id)
+      .eq('is_active', true)
       .maybeSingle();
 
-    if (ownerError) {
-      console.error('Owner profile query error:', ownerError);
-      throw new Error('Database error while fetching owner details');
+    if (upiError) {
+      console.error('Owner UPI details query error:', upiError);
+    }
+
+    let ownerUpiId = ownerUpiDetails?.upi_id;
+    let ownerName = 'Property Owner';
+
+    // Fallback to user_profiles if no UPI details found
+    if (!ownerUpiId) {
+      console.log('No UPI details found in owner_upi_details, checking user_profiles');
+      const { data: ownerProfile, error: ownerError } = await supabaseClient
+        .from('user_profiles')
+        .select('upi_id, full_name')
+        .eq('id', relationship.owner_id)
+        .maybeSingle();
+
+      if (ownerError) {
+        console.error('Owner profile query error:', ownerError);
+        throw new Error('Database error while fetching owner details');
+      }
+
+      ownerUpiId = ownerProfile?.upi_id;
+      ownerName = ownerProfile?.full_name || 'Property Owner';
     }
 
     // Validate owner has UPI ID configured
-    if (!ownerProfile?.upi_id) {
+    if (!ownerUpiId) {
       console.error('Owner UPI ID not configured for owner:', relationship.owner_id);
       throw new Error('Owner UPI ID not configured. Please ask the owner to update their payment settings.');
     }
 
-    console.log('Owner profile found with UPI ID:', ownerProfile.upi_id);
+    console.log('Owner UPI ID found:', ownerUpiId);
     
     // Create Razorpay order with UPI direct payment
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
@@ -160,12 +181,12 @@ if (!relationship) {
         relationship_id: relationship.id,
         renter_id: user.id,
         owner_id: relationship.owner_id,
-        owner_upi_id: ownerProfile.upi_id,
+        owner_upi_id: ownerUpiId,
         payment_type: 'direct_upi_rent'
       }
     };
 
-    console.log('Creating UPI order for direct payment to owner UPI:', ownerProfile.upi_id);
+    console.log('Creating UPI order for direct payment to owner UPI:', ownerUpiId);
     
     const orderResponse = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',

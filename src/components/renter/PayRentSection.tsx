@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth";
 import { toast } from "sonner";
 import { RentPaymentCard } from "@/components/payments/RentPaymentCard";
 import { PaymentHistoryList } from "@/components/payments/PaymentHistoryList";
+import { RenterPaymentStatus } from "@/components/payments/RenterPaymentStatus";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Relationship {
@@ -32,6 +33,7 @@ export const PayRentSection = () => {
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
   const [rentalAgreement, setRentalAgreement] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [ownerUpiConfigured, setOwnerUpiConfigured] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -171,6 +173,29 @@ export const PayRentSection = () => {
         if (!ownerError) {
           setOwnerInfo(ownerProfile || { full_name: 'Property Owner' });
         }
+
+        // Check if owner has UPI configured
+        if (effectiveRelationship.owner_id) {
+          const { data: upiDetails } = await supabase
+            .from('owner_upi_details')
+            .select('upi_id')
+            .eq('owner_id', effectiveRelationship.owner_id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (!upiDetails?.upi_id) {
+            // Fallback to user_profiles
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('upi_id')
+              .eq('id', effectiveRelationship.owner_id)
+              .maybeSingle();
+            
+            setOwnerUpiConfigured(!!profile?.upi_id);
+          } else {
+            setOwnerUpiConfigured(true);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching relationship:', error);
@@ -217,6 +242,11 @@ export const PayRentSection = () => {
         </TabsList>
         
         <TabsContent value="pay-rent" className="space-y-4">
+          <RenterPaymentStatus 
+            ownerUpiConfigured={ownerUpiConfigured}
+            ownerName={ownerInfo?.full_name || 'Property Owner'}
+          />
+          
           {/* Show rental agreement data if available, fallback to rent_status */}
           {rentalAgreement || rentStatus ? (
             <RentPaymentCard

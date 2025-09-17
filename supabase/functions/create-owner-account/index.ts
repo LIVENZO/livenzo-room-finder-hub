@@ -62,8 +62,14 @@ const handler = async (req: Request): Promise<Response> => {
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
     
+    console.log('Razorpay credentials check:', { 
+      keyIdExists: !!razorpayKeyId, 
+      keySecretExists: !!razorpayKeySecret,
+      keyIdLength: razorpayKeyId?.length || 0
+    });
+    
     if (!razorpayKeyId || !razorpayKeySecret) {
-      console.error('Razorpay credentials missing');
+      console.error('Razorpay credentials missing', { razorpayKeyId: !!razorpayKeyId, razorpayKeySecret: !!razorpayKeySecret });
       throw new Error('Payment service configuration error');
     }
 
