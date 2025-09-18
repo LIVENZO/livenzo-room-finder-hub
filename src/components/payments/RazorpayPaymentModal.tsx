@@ -81,6 +81,36 @@ export const RazorpayPaymentModal = ({
           name: 'Livenzo',
           description: 'Rent Payment',
           order_id: orderData.razorpayOrderId,
+          config: {
+            display: {
+              blocks: {
+                banks: {
+                  name: 'Pay using UPI or other methods',
+                  instruments: [
+                    {
+                      method: 'upi'
+                    },
+                    {
+                      method: 'card'
+                    },
+                    {
+                      method: 'netbanking'
+                    },
+                    {
+                      method: 'wallet'
+                    }
+                  ]
+                }
+              },
+              sequence: ['block.banks'],
+              preferences: {
+                show_default_blocks: false
+              }
+            }
+          },
+          prefill: {
+            method: 'upi'
+          },
           handler: async (response: any) => {
             try {
               // Verify payment
@@ -138,6 +168,36 @@ export const RazorpayPaymentModal = ({
             name: 'Livenzo',
             description: 'Rent Payment',
             order_id: orderData.razorpayOrderId,
+            config: {
+              display: {
+                blocks: {
+                  banks: {
+                    name: 'Pay using UPI or other methods',
+                    instruments: [
+                      {
+                        method: 'upi'
+                      },
+                      {
+                        method: 'card'
+                      },
+                      {
+                        method: 'netbanking'
+                      },
+                      {
+                        method: 'wallet'
+                      }
+                    ]
+                  }
+                },
+                sequence: ['block.banks'],
+                preferences: {
+                  show_default_blocks: false
+                }
+              }
+            },
+            prefill: {
+              method: 'upi'
+            },
             handler: async (response: any) => {
               try {
                 const { data: sessionData2 } = await supabase.auth.getSession();
