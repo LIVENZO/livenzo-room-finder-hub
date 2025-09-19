@@ -22,16 +22,26 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
 
     console.log("Registering FCM token for user:", user.id);
 
-    // Save FCM token to user_profiles.fcm_token for the current user
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ fcm_token: token } as any)
-      .eq('id', user.id);
-
+    // Use the new upsert function to handle token conflicts automatically
+    const { error } = await supabase.rpc('upsert_fcm_token', {
+      p_user_id: user.id,
+      p_token: token
+    });
 
     if (error) {
       console.error("Error registering FCM token:", error);
       return false;
+    }
+
+    // Also update user_profiles.fcm_token for backward compatibility
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .update({ fcm_token: token } as any)
+      .eq('id', user.id);
+
+    if (profileError) {
+      console.warn("Error updating FCM token in user_profiles:", profileError);
+      // Don't fail here since the main token is saved in fcm_tokens
     }
 
     console.log("FCM token registered successfully");

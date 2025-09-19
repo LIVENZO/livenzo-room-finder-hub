@@ -143,16 +143,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Upsert FCM token to fcm_tokens (non-blocking)
+    // Use the new upsert function to handle FCM token conflicts (non-blocking)
     if (fcm_token && supabaseUserId) {
-      const { error: fcmErr } = await admin
-        .from('fcm_tokens')
-        .upsert({ user_id: supabaseUserId, token: fcm_token, created_at: new Date().toISOString() }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
+      const { error: fcmErr } = await admin.rpc('upsert_fcm_token', {
+        p_user_id: supabaseUserId,
+        p_token: fcm_token
+      });
       if (fcmErr) {
         console.warn('Failed to upsert FCM token:', fcmErr);
+      } else {
+        console.log('FCM token upserted successfully for user:', supabaseUserId);
       }
     }
 

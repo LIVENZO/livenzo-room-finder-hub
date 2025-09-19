@@ -1380,6 +1380,10 @@ export type Database = {
         Args: { is_available: boolean; room_id: string }
         Returns: undefined
       }
+      upsert_fcm_token: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: undefined
+      }
       validate_relationship_access: {
         Args: { relationship_uuid: string; user_uuid: string }
         Returns: boolean
