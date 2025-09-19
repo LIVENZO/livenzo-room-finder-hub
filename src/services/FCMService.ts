@@ -23,19 +23,17 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
     console.log("Registering FCM token for user:", user.id);
 
     // Use upsert to handle token conflicts automatically
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('fcm_tokens')
-      .upsert({ 
-        user_id: user.id, 
-        token: token 
-      }, { 
-        onConflict: 'token',
-        ignoreDuplicates: false 
-      });
+      .upsert([
+        { user_id: user.id, token: token }
+      ], { onConflict: 'user_id' });
 
     if (error) {
-      console.error("Error registering FCM token:", error);
+      console.error("❌ Failed to save token:", error.message);
       return false;
+    } else {
+      console.log("✅ Token saved or updated successfully:", data);
     }
 
     // Also update user_profiles.fcm_token for backward compatibility
