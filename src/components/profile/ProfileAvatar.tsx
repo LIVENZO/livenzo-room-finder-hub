@@ -56,31 +56,42 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Avatar with enhanced styling */}
+      {/* Avatar with enhanced styling - Tappable */}
       <div className="relative">
-        <Avatar className="h-32 w-32 md:h-36 md:w-36 ring-4 ring-primary/10 shadow-xl">
-          <AvatarImage 
-            src={imageUrl} 
-            key={imageUrl} // Force re-render when URL changes
-            className="object-cover"
-            onLoad={() => console.log('Avatar image loaded:', imageUrl)}
-            onError={() => console.log('Avatar image failed to load:', imageUrl)}
-          />
-          <AvatarFallback className="text-3xl font-semibold bg-gradient-to-br from-primary/20 to-secondary/20 text-foreground">
-            {profile?.full_name?.charAt(0).toUpperCase() || userEmail?.charAt(0).toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
+        <button
+          onClick={() => document.getElementById('picture')?.click()}
+          disabled={uploadingImage}
+          className="group relative focus:outline-none focus:ring-4 focus:ring-primary/20 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          <Avatar className="h-32 w-32 md:h-36 md:w-36 ring-4 ring-primary/10 shadow-xl group-hover:shadow-2xl transition-all duration-200">
+            <AvatarImage 
+              src={imageUrl} 
+              key={imageUrl}
+              className="object-cover transition-all duration-200 group-hover:brightness-90"
+              onLoad={() => console.log('Avatar image loaded:', imageUrl)}
+              onError={() => console.log('Avatar image failed to load:', imageUrl)}
+            />
+            <AvatarFallback className="text-3xl font-semibold bg-gradient-to-br from-primary/20 to-secondary/20 text-foreground transition-all duration-200 group-hover:from-primary/30 group-hover:to-secondary/30">
+              {profile?.full_name?.charAt(0).toUpperCase() || userEmail?.charAt(0).toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Hover overlay with camera icon */}
+          {!uploadingImage && (
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Upload className="h-8 w-8 text-white" />
+            </div>
+          )}
+          
+          {/* Upload indicator overlay */}
+          {uploadingImage && (
+            <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
+              <Loader2 className="h-8 w-8 text-white animate-spin" />
+            </div>
+          )}
+        </button>
         
-        {/* Upload indicator overlay */}
-        {uploadingImage && (
-          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-            <Loader2 className="h-8 w-8 text-white animate-spin" />
-          </div>
-        )}
-      </div>
-
-      {/* Upload Button */}
-      <div className="relative">
+        {/* Hidden file input */}
         <input
           id="picture"
           type="file"
@@ -89,24 +100,14 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
           onChange={handleFileSelect}
           disabled={uploadingImage}
         />
-        <Button
-          size="lg"
-          variant="outline"
-          className="text-base font-medium px-6 py-3 h-auto shadow-md hover:shadow-lg transition-all duration-200"
-          onClick={() => document.getElementById('picture')?.click()}
-          disabled={uploadingImage}
-        >
-          {uploadingImage ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4 mr-2" /> Change Picture
-            </>
-          )}
-        </Button>
       </div>
+
+      {/* Upload status text */}
+      {uploadingImage && (
+        <p className="text-sm text-muted-foreground font-medium animate-pulse">
+          Uploading image...
+        </p>
+      )}
     </div>
   );
 };

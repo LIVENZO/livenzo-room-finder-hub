@@ -59,7 +59,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
       {/* Name Field */}
       <div className="space-y-3">
         <Label htmlFor="fullName" className="text-base font-semibold text-foreground">
-          Hostel Name <span className="text-destructive">*</span>
+          Name <span className="text-destructive">*</span>
         </Label>
         <Input
           id="fullName"
@@ -95,21 +95,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
         )}
       </div>
 
-      {/* Room Number Field */}
+      {/* House No. Field */}
       <div className="space-y-3">
         <Label htmlFor="roomNumber" className="text-base font-semibold text-foreground">
-          Room Number
+          House No.
         </Label>
         <Input
           id="roomNumber"
           name="roomNumber"
           value={formValues.roomNumber}
           onChange={handleSecureInputChange}
-          placeholder="e.g., Room 202, A-101"
+          placeholder="e.g., 202, A-101, 15B"
           className="h-12 text-base"
         />
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Optional: Specify your room number for easier identification
+          Optional: Specify your house number for easier identification
         </p>
       </div>
       
