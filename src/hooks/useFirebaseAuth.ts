@@ -43,14 +43,15 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
         console.log('OTP verified:', event.detail);
         
         try {
-          // Get Firebase user details
+          // Get Firebase user details and FCM token
           const firebaseUid = (window as any).Android.getCurrentUserUID();
           const phoneNumber = (window as any).Android.getCurrentUserPhone();
+          const fcmToken = (window as any).Android.getFCMToken();
           
           if (firebaseUid && phoneNumber) {
-            console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber });
+            console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber, hasFcmToken: !!fcmToken });
             
-            // Call the sync function
+            // Call the sync function with FCM token
             const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
               method: 'POST',
               headers: {
@@ -60,7 +61,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
               body: JSON.stringify({
                 firebase_uid: firebaseUid,
                 phone_number: phoneNumber,
-                fcm_token: null // We'll handle FCM token separately
+                fcm_token: fcmToken // Include FCM token in sync
               })
             });
 
@@ -121,9 +122,40 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
         setError(null);
       };
 
-      const handleUserAlreadyLoggedIn = () => {
+      const handleUserAlreadyLoggedIn = async () => {
         console.log('User already logged in detected');
         setIsLoggedIn(true);
+        
+        // When user is already logged in, sync FCM token to Supabase
+        try {
+          const firebaseUid = (window as any).Android.getCurrentUserUID();
+          const phoneNumber = (window as any).Android.getCurrentUserPhone();
+          const fcmToken = (window as any).Android.getFCMToken();
+          
+          if (firebaseUid && phoneNumber && fcmToken) {
+            console.log('Syncing FCM token for already logged in user');
+            
+            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
+              },
+              body: JSON.stringify({
+                firebase_uid: firebaseUid,
+                phone_number: phoneNumber,
+                fcm_token: fcmToken
+              })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              console.log('FCM token synced successfully for logged in user');
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing FCM token for logged in user:', error);
+        }
       };
 
       // Add event listeners
