@@ -93,43 +93,23 @@ export const storePendingFCMToken = (token: string): void => {
 
       console.log("🔥 Registering FCM token for user:", user.id);
 
-      // Use the safe database function to handle all conflict scenarios
-      const { data, error } = await supabase.rpc('upsert_fcm_token_safe', {
-        p_user_id: user.id,
-        p_token: token
-      });
+      // Upsert token by user_id to avoid 409 conflicts and update only when needed
+      const { error: upsertError } = await supabase
+        .from('fcm_tokens')
+        .upsert(
+          [{ user_id: user.id, token, created_at: new Date().toISOString() }],
+          { onConflict: 'user_id', ignoreDuplicates: false }
+        );
 
-      if (error) {
-        console.error("❌ Failed to save FCM token via RPC:", {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          user_id: user.id,
-          token_length: token.length
-        });
-        
-        // Fallback to direct upsert if RPC fails
-        console.log("🔄 Attempting fallback upsert...");
-        const { error: fallbackError } = await supabase
-          .from('fcm_tokens')
-          .upsert(
-            [{ user_id: user.id, token, created_at: new Date().toISOString() }],
-            { onConflict: 'user_id', ignoreDuplicates: false }
-          );
-        
-        if (fallbackError) {
-          console.error("❌ Fallback upsert also failed:", fallbackError);
-          return false;
-        }
-        
-        console.log("✅ Token saved via fallback method");
-      } else {
-        console.log("✅ Token saved successfully via RPC:", {
-          user_id: user.id,
-          token: token.substring(0, 20) + '...'
-        });
+      if (upsertError) {
+        console.error("❌ Upsert failed for FCM token:", upsertError);
+        return false;
       }
+
+      console.log("✅ Token saved via upsert:", {
+        user_id: user.id,
+        token: token.substring(0, 20) + '...'
+      });
 
       // Also update user_profiles.fcm_token for backward compatibility
       const { error: profileError } = await supabase
