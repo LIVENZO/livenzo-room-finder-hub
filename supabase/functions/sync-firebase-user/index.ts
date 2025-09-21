@@ -148,13 +148,24 @@ Deno.serve(async (req) => {
       const { data: fcmData, error: fcmErr } = await admin
         .from('fcm_tokens')
         .upsert([
-          { user_id: supabaseUserId, token: fcm_token }
-        ], { onConflict: 'user_id' });
+          { user_id: supabaseUserId, token: fcm_token, created_at: new Date().toISOString() }
+        ], { onConflict: ['user_id'] });
       
       if (fcmErr) {
-        console.warn('❌ Failed to save token:', fcmErr.message);
+        console.error('❌ Failed to save FCM token in sync-firebase-user:', {
+          error: fcmErr.message,
+          code: fcmErr.code,
+          details: fcmErr.details,
+          hint: fcmErr.hint,
+          user_id: supabaseUserId,
+          token_length: fcm_token.length
+        });
       } else {
-        console.log('✅ Token saved or updated successfully for user:', supabaseUserId);
+        console.log('✅ FCM token saved or updated successfully:', {
+          user_id: supabaseUserId,
+          token_length: fcm_token.length,
+          data: fcmData
+        });
       }
     }
 

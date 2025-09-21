@@ -30,10 +30,21 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
       ], { onConflict: 'user_id' });
 
     if (error) {
-      console.error("❌ Failed to save token:", error.message);
+      console.error("❌ Failed to save FCM token:", {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        user_id: user.id,
+        token_length: token.length
+      });
       return false;
     } else {
-      console.log("✅ Token saved or updated successfully:", data);
+      console.log("✅ FCM token saved or updated successfully:", {
+        user_id: user.id,
+        token_length: token.length,
+        data
+      });
     }
 
     // Also update user_profiles.fcm_token for backward compatibility
