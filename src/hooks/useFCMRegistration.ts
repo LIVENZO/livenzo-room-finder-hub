@@ -1,20 +1,25 @@
 import { useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth';
-import { registerFCMToken } from '@/services/FCMService';
+import { registerFCMToken, storePendingFCMToken, registerPendingFCMToken } from '@/services/FCMService';
 
 export const useFCMRegistration = () => {
   const { user } = useAuth();
 
   // Function to get and register FCM token
   const getFCMTokenAndRegister = useCallback(async () => {
-    if (!user) return;
-    
     try {
       if ((window as any).Android && (window as any).Android.getFCMToken) {
         const token = (window as any).Android.getFCMToken();
         if (token) {
           console.log('FCM token retrieved from Android interface:', token.substring(0, 20) + '...');
-          await registerFCMToken(token);
+          
+          if (user) {
+            // User is logged in, register immediately
+            await registerFCMToken(token);
+          } else {
+            // User not logged in yet, store temporarily
+            storePendingFCMToken(token);
+          }
         }
       }
     } catch (error) {
@@ -23,9 +28,7 @@ export const useFCMRegistration = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
-
-    // Immediately get and register token when user is available
+    // Always try to get FCM token, regardless of user login status
     getFCMTokenAndRegister();
 
     // Listen for FCM token events from Android
@@ -33,7 +36,12 @@ export const useFCMRegistration = () => {
       const token = event.detail;
       if (token) {
         console.log('FCM token received via event:', token.substring(0, 20) + '...');
-        await registerFCMToken(token);
+        
+        if (user) {
+          await registerFCMToken(token);
+        } else {
+          storePendingFCMToken(token);
+        }
       }
     };
 
@@ -41,15 +49,23 @@ export const useFCMRegistration = () => {
       const token = event.detail;
       if (token) {
         console.log('FCM token updated via event:', token.substring(0, 20) + '...');
-        await registerFCMToken(token);
+        
+        if (user) {
+          await registerFCMToken(token);
+        } else {
+          storePendingFCMToken(token);
+        }
       }
     };
 
-    // Listen for user login events to re-register token
+    // Listen for user login events to register pending tokens
     const handleUserLoggedIn = async () => {
-      console.log('User logged in event detected, registering FCM token');
+      console.log('User logged in event detected, registering pending FCM token');
       // Small delay to ensure auth state is fully updated
-      setTimeout(getFCMTokenAndRegister, 1000);
+      setTimeout(async () => {
+        await registerPendingFCMToken();
+        await getFCMTokenAndRegister();
+      }, 1000);
     };
 
     // Add event listeners for Android WebView FCM events
@@ -67,5 +83,13 @@ export const useFCMRegistration = () => {
       window.removeEventListener('userAlreadyLoggedIn', handleUserLoggedIn as EventListener);
       window.removeEventListener('otpVerified', handleUserLoggedIn as EventListener);
     };
-  }, [user, getFCMTokenAndRegister]);
+  }, [getFCMTokenAndRegister]);
+
+  // Separate effect to handle user login and register pending tokens
+  useEffect(() => {
+    if (user) {
+      console.log('User is now available, checking for pending FCM token');
+      registerPendingFCMToken();
+    }
+  }, [user]);
 };

@@ -8,6 +8,18 @@ export interface FCMToken {
   created_at: string;
 }
 
+// Temporary storage for FCM token before user login
+let pendingFCMToken: string | null = null;
+
+/**
+ * Stores FCM token temporarily before user login
+ */
+export const storePendingFCMToken = (token: string): void => {
+  console.log("🔥 New FCM Token generated:", token.substring(0, 20) + '...');
+  pendingFCMToken = token;
+  console.log("📦 Token stored temporarily until user login");
+};
+
 /**
  * Registers FCM token for the current user
  */
@@ -16,11 +28,13 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found");
+      console.error("❌ Cannot save token: User ID is null");
+      // Store token temporarily for later registration
+      storePendingFCMToken(token);
       return false;
     }
 
-    console.log("Registering FCM token for user:", user.id);
+    console.log("🔥 Registering FCM token for user:", user.id);
 
     // Use upsert to handle token conflicts automatically
     const { data, error } = await supabase
@@ -40,10 +54,9 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
       });
       return false;
     } else {
-      console.log("✅ FCM token saved or updated successfully:", {
+      console.log("✅ Token saved successfully:", {
         user_id: user.id,
-        token_length: token.length,
-        data
+        token: token.substring(0, 20) + '...'
       });
     }
 
@@ -58,12 +71,32 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
       // Don't fail here since the main token is saved in fcm_tokens
     }
 
+    // Clear pending token since we've successfully saved it
+    pendingFCMToken = null;
     console.log("FCM token registered successfully");
     return true;
   } catch (error) {
     console.error("Exception registering FCM token:", error);
     return false;
   }
+};
+
+/**
+ * Registers any pending FCM token after user login
+ */
+export const registerPendingFCMToken = async (): Promise<boolean> => {
+  if (!pendingFCMToken) {
+    return true; // No pending token
+  }
+
+  console.log("📤 Registering pending FCM token after login");
+  const success = await registerFCMToken(pendingFCMToken);
+  
+  if (success) {
+    pendingFCMToken = null; // Clear pending token
+  }
+  
+  return success;
 };
 
 /**
