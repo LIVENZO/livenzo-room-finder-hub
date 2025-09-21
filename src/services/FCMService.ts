@@ -72,6 +72,25 @@ export const storePendingFCMToken = (token: string): void => {
         return false;
       }
 
+      // Check if the existing token is the same
+      const { data: existingTokens, error: fetchError } = await supabase
+        .from('fcm_tokens')
+        .select('token')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (fetchError) {
+        console.warn("⚠️ Error fetching existing token:", fetchError.message);
+        // Continue with save attempt even if fetch fails
+      } else if (existingTokens && existingTokens.length > 0) {
+        const existingToken = existingTokens[0].token;
+        if (existingToken === token) {
+          console.log("✅ Token already exists and is the same, skipping save");
+          return true;
+        }
+        console.log("🔄 Token is different, will update");
+      }
+
       console.log("🔥 Registering FCM token for user:", user.id);
 
       // Use the safe database function to handle all conflict scenarios
