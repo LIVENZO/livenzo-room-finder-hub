@@ -28,7 +28,7 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("❌ Cannot save token: User ID is null");
+      console.log("📦 Token stored temporarily until user login");
       // Store token temporarily for later registration
       storePendingFCMToken(token);
       return false;
@@ -73,7 +73,6 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
 
     // Clear pending token since we've successfully saved it
     pendingFCMToken = null;
-    console.log("FCM token registered successfully");
     return true;
   } catch (error) {
     console.error("Exception registering FCM token:", error);
