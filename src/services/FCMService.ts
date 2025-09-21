@@ -26,7 +26,7 @@ export const registerFCMToken = async (token: string): Promise<boolean> => {
     const { data, error } = await supabase
       .from('fcm_tokens')
       .upsert([
-        { user_id: user.id, token: token }
+        { user_id: user.id, token: token, created_at: new Date().toISOString() }
       ], { onConflict: 'user_id' });
 
     if (error) {
