@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use upsert to handle FCM token conflicts (non-blocking)
+    // Use upsert to handle FCM token conflicts (non-blocking) - ignore if user_id is null
     if (fcm_token && supabaseUserId) {
       const { data: fcmData, error: fcmErr } = await admin
         .from('fcm_tokens')
