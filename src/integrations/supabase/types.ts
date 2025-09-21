@@ -1212,6 +1212,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_stale_fcm_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_stale_waiting_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1381,6 +1385,10 @@ export type Database = {
         Returns: undefined
       }
       upsert_fcm_token: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: undefined
+      }
+      upsert_fcm_token_safe: {
         Args: { p_token: string; p_user_id: string }
         Returns: undefined
       }

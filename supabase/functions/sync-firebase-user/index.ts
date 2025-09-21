@@ -143,30 +143,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use upsert to handle FCM token conflicts (non-blocking) - ignore if user_id is null
+    // Save FCM token using safe database function (non-blocking) - ignore if user_id is null
     if (fcm_token && supabaseUserId) {
-      const { data: fcmData, error: fcmErr } = await admin
-        .from('fcm_tokens')
-        .upsert(
-          [{ user_id: supabaseUserId, token: fcm_token, created_at: new Date().toISOString() }],
-          { onConflict: 'user_id', ignoreDuplicates: false } // Prefer: resolution=merge-duplicates
-        );
+      console.log('🔥 Saving FCM token for user in sync-firebase-user:', supabaseUserId);
       
-      if (fcmErr) {
-        console.error('❌ Failed to save FCM token in sync-firebase-user:', {
-          error: fcmErr.message,
-          code: fcmErr.code,
-          details: fcmErr.details,
-          hint: fcmErr.hint,
-          user_id: supabaseUserId,
-          token_length: fcm_token.length
+      try {
+        const { data: fcmData, error: fcmErr } = await admin.rpc('upsert_fcm_token_safe', {
+          p_user_id: supabaseUserId,
+          p_token: fcm_token
         });
-      } else {
-        console.log('✅ FCM token saved or updated successfully:', {
-          user_id: supabaseUserId,
-          token_length: fcm_token.length,
-          data: fcmData
-        });
+        
+        if (fcmErr) {
+          console.error('❌ Failed to save FCM token via RPC in sync-firebase-user:', {
+            error: fcmErr.message,
+            code: fcmErr.code,
+            user_id: supabaseUserId
+          });
+          
+          // Fallback to direct upsert
+          console.log('🔄 Attempting fallback upsert in sync-firebase-user...');
+          const { error: fallbackErr } = await admin
+            .from('fcm_tokens')
+            .upsert(
+              [{ user_id: supabaseUserId, token: fcm_token, created_at: new Date().toISOString() }],
+              { onConflict: 'user_id', ignoreDuplicates: false }
+            );
+          
+          if (fallbackErr) {
+            console.error('❌ Fallback FCM upsert also failed:', fallbackErr);
+          } else {
+            console.log('✅ FCM token saved via fallback in sync-firebase-user');
+          }
+        } else {
+          console.log('✅ FCM token saved via RPC in sync-firebase-user:', {
+            user_id: supabaseUserId,
+            token: fcm_token.substring(0, 20) + '...'
+          });
+        }
+      } catch (error) {
+        console.error('💥 Exception saving FCM token in sync-firebase-user:', error);
       }
     }
 

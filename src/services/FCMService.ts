@@ -8,95 +8,175 @@ export interface FCMToken {
   created_at: string;
 }
 
-// Temporary storage for FCM token before user login
+// Temporary storage for FCM token before user login (with localStorage persistence)
 let pendingFCMToken: string | null = null;
 
 /**
- * Stores FCM token temporarily before user login
+ * Gets pending token from memory or localStorage
  */
-export const storePendingFCMToken = (token: string): void => {
-  console.log("🔥 New FCM Token generated:", token.substring(0, 20) + '...');
-  pendingFCMToken = token;
-  console.log("📦 Token stored temporarily until user login");
+const getPendingFCMToken = (): string | null => {
+  if (pendingFCMToken) return pendingFCMToken;
+  
+  // Check localStorage for persistent token (useful for app reinstalls)
+  try {
+    const stored = localStorage.getItem('fcm_pending_token');
+    if (stored) {
+      pendingFCMToken = stored;
+      return stored;
+    }
+  } catch (error) {
+    console.warn("Could not access localStorage for FCM token:", error);
+  }
+  
+  return null;
 };
 
 /**
- * Registers FCM token for the current user
+ * Stores FCM token temporarily with persistence across app restarts
  */
-export const registerFCMToken = async (token: string): Promise<boolean> => {
+export const storePendingFCMToken = (token: string): void => {
+  if (!token || token.trim() === '') {
+    console.warn("❌ Invalid token provided to storePendingFCMToken");
+    return;
+  }
+  
+  console.log("🔥 New FCM Token generated:", token.substring(0, 20) + '...');
+  pendingFCMToken = token;
+  
+  // Also store in localStorage for persistence across app restarts
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log("📦 Token stored temporarily until user login");
-      // Store token temporarily for later registration
-      storePendingFCMToken(token);
-      return false;
-    }
-
-    console.log("🔥 Registering FCM token for user:", user.id);
-
-    // Use upsert to handle token conflicts automatically - replaces existing token for this user
-    const { data, error } = await supabase
-      .from('fcm_tokens')
-      .upsert(
-        [{ user_id: user.id, token, created_at: new Date().toISOString() }],
-        { onConflict: 'user_id', ignoreDuplicates: false } // Prefer: resolution=merge-duplicates
-      );
-
-    if (error) {
-      console.error("❌ Failed to save FCM token:", {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        user_id: user.id,
-        token_length: token.length
-      });
-      return false;
-    } else {
-      console.log("✅ Token saved successfully:", {
-        user_id: user.id,
-        token: token.substring(0, 20) + '...'
-      });
-    }
-
-    // Also update user_profiles.fcm_token for backward compatibility
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .update({ fcm_token: token } as any)
-      .eq('id', user.id);
-
-    if (profileError) {
-      console.warn("Error updating FCM token in user_profiles:", profileError);
-      // Don't fail here since the main token is saved in fcm_tokens
-    }
-
-    // Clear pending token since we've successfully saved it
-    pendingFCMToken = null;
-    return true;
+    localStorage.setItem('fcm_pending_token', token);
+    localStorage.setItem('fcm_pending_token_timestamp', Date.now().toString());
+    console.log("📦 Token stored temporarily (memory + localStorage) until user login");
   } catch (error) {
-    console.error("Exception registering FCM token:", error);
-    return false;
+    console.warn("Could not store FCM token in localStorage:", error);
+    console.log("📦 Token stored temporarily (memory only) until user login");
   }
 };
+
+  /**
+   * Registers FCM token for the current user using safe database function
+   */
+  export const registerFCMToken = async (token: string): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log("📦 No authenticated user - storing token temporarily");
+        storePendingFCMToken(token);
+        return false;
+      }
+
+      if (!token || token.trim() === '') {
+        console.warn("❌ Invalid FCM token provided");
+        return false;
+      }
+
+      console.log("🔥 Registering FCM token for user:", user.id);
+
+      // Use the safe database function to handle all conflict scenarios
+      const { data, error } = await supabase.rpc('upsert_fcm_token_safe', {
+        p_user_id: user.id,
+        p_token: token
+      });
+
+      if (error) {
+        console.error("❌ Failed to save FCM token via RPC:", {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          user_id: user.id,
+          token_length: token.length
+        });
+        
+        // Fallback to direct upsert if RPC fails
+        console.log("🔄 Attempting fallback upsert...");
+        const { error: fallbackError } = await supabase
+          .from('fcm_tokens')
+          .upsert(
+            [{ user_id: user.id, token, created_at: new Date().toISOString() }],
+            { onConflict: 'user_id', ignoreDuplicates: false }
+          );
+        
+        if (fallbackError) {
+          console.error("❌ Fallback upsert also failed:", fallbackError);
+          return false;
+        }
+        
+        console.log("✅ Token saved via fallback method");
+      } else {
+        console.log("✅ Token saved successfully via RPC:", {
+          user_id: user.id,
+          token: token.substring(0, 20) + '...'
+        });
+      }
+
+      // Also update user_profiles.fcm_token for backward compatibility
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({ fcm_token: token } as any)
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.warn("⚠️ Error updating FCM token in user_profiles:", profileError.message);
+        // Don't fail here since the main token is saved in fcm_tokens
+      }
+
+      // Clear pending token since we've successfully saved it
+      pendingFCMToken = null;
+      return true;
+    } catch (error) {
+      console.error("💥 Exception registering FCM token:", error);
+      return false;
+    }
+  };
 
 /**
  * Registers any pending FCM token after user login
  */
 export const registerPendingFCMToken = async (): Promise<boolean> => {
-  if (!pendingFCMToken) {
+  const token = getPendingFCMToken();
+  
+  if (!token) {
+    console.log("📭 No pending FCM token to register");
     return true; // No pending token
   }
 
-  console.log("📤 Registering pending FCM token after login");
-  const success = await registerFCMToken(pendingFCMToken);
+  // Check if token is not too old (24 hours max)
+  try {
+    const timestamp = localStorage.getItem('fcm_pending_token_timestamp');
+    if (timestamp && (Date.now() - parseInt(timestamp)) > 24 * 60 * 60 * 1000) {
+      console.log("🕒 Pending FCM token is too old, discarding");
+      clearPendingFCMToken();
+      return true;
+    }
+  } catch (error) {
+    console.warn("Could not check token timestamp:", error);
+  }
+
+  console.log("📤 Registering pending FCM token after login:", token.substring(0, 20) + '...');
+  const success = await registerFCMToken(token);
   
   if (success) {
-    pendingFCMToken = null; // Clear pending token
+    clearPendingFCMToken();
   }
   
   return success;
+};
+
+/**
+ * Clears pending FCM token from memory and storage
+ */
+export const clearPendingFCMToken = (): void => {
+  pendingFCMToken = null;
+  try {
+    localStorage.removeItem('fcm_pending_token');
+    localStorage.removeItem('fcm_pending_token_timestamp');
+    console.log("🧹 Cleared pending FCM token from storage");
+  } catch (error) {
+    console.warn("Could not clear FCM token from localStorage:", error);
+  }
 };
 
 /**
