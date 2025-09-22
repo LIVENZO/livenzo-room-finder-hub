@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
 import RentersPage from '@/components/owner/RentersPage';
 const Connections = () => {
@@ -11,7 +11,9 @@ const Connections = () => {
     isLoading
   } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isOwner = userRole === 'owner';
+  const notificationState = location.state;
   useEffect(() => {
     if (!isLoading && !user?.id) {
       navigate('/');
@@ -48,7 +50,11 @@ const Connections = () => {
           
         </div>
         
-        {isOwner ? <RentersPage currentUserId={user.id} /> : <ConnectWithOwner currentUserId={user.id} />}
+        {isOwner ? (
+          <RentersPage currentUserId={user.id} />
+        ) : (
+          <ConnectWithOwner currentUserId={user.id} />
+        )}
       </div>
     </Layout>;
 };

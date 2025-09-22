@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
+import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
 import SetLocation from "./pages/SetLocation";
 
 import Index from "./pages/Index";
@@ -31,6 +32,7 @@ const queryClient = new QueryClient();
 
 const FCMWrapper = () => {
   useFCMRegistration();
+  useNotificationNavigation();
   return null;
 };
 

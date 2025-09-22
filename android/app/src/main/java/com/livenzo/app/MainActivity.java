@@ -1,5 +1,6 @@
 package com.livenzo.app;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,11 +9,13 @@ import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
 import com.google.firebase.messaging.FirebaseMessaging;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "LIVENZO_DEBUG";
     public static WebView webViewInstance;
     private FirebaseAuthManager authManager;
+    private String notificationData = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -26,6 +29,9 @@ public class MainActivity extends BridgeActivity {
         
         // Add JavaScript interface for FCM token access and Firebase auth
         webViewInstance.addJavascriptInterface(new WebAppInterface(), "Android");
+        
+        // Check if app was opened via notification
+        handleNotificationIntent(getIntent());
         
         // Get FCM token
         FirebaseMessaging.getInstance().getToken()
@@ -196,6 +202,59 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public String getCurrentUserUID() {
             return authManager.getCurrentUserUID();
+        }
+        
+        @JavascriptInterface
+        public String getNotificationData() {
+            return notificationData;
+        }
+        
+        @JavascriptInterface
+        public void clearNotificationData() {
+            notificationData = null;
+        }
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+    
+    private void handleNotificationIntent(Intent intent) {
+        if (intent != null && intent.getExtras() != null) {
+            Bundle extras = intent.getExtras();
+            
+            // Check if this intent has notification data
+            if (extras.containsKey("type")) {
+                try {
+                    JSONObject notificationJson = new JSONObject();
+                    
+                    // Add all extras to JSON
+                    for (String key : extras.keySet()) {
+                        Object value = extras.get(key);
+                        if (value != null) {
+                            notificationJson.put(key, value.toString());
+                        }
+                    }
+                    
+                    notificationData = notificationJson.toString();
+                    Log.d(TAG, "Notification data received: " + notificationData);
+                    
+                    // If WebView is ready, send notification tap event
+                    if (webViewInstance != null) {
+                        webViewInstance.post(() -> {
+                            webViewInstance.evaluateJavascript(
+                                "window.dispatchEvent(new CustomEvent('notificationTapped', { detail: " + notificationData + " }));",
+                                null
+                            );
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error handling notification intent", e);
+                }
+            }
         }
     }
 }

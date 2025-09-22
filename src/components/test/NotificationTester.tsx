@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Bell } from 'lucide-react';
+import { Send, Bell, TestTube } from 'lucide-react';
+import { NotificationNavigationService } from '@/services/NotificationNavigationService';
 
 export const NotificationTester: React.FC = () => {
   const [firebaseUid, setFirebaseUid] = useState('');
@@ -61,6 +62,20 @@ export const NotificationTester: React.FC = () => {
     } else {
       toast.error('Android interface not available');
     }
+  };
+
+  const testNotificationNavigation = (type: string) => {
+    const testData = {
+      type,
+      payment_id: "test-payment-123",
+      notice_id: "test-notice-456", 
+      complaint_id: "test-complaint-789",
+      relationship_id: "test-relationship-abc"
+    };
+    
+    console.log('Testing notification navigation with:', testData);
+    NotificationNavigationService.handleNotificationTap(testData);
+    toast.success(`Testing ${type} notification navigation`);
   };
 
   return (
@@ -143,6 +158,50 @@ export const NotificationTester: React.FC = () => {
             </>
           )}
         </Button>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Test Notification Navigation
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              onClick={() => testNotificationNavigation('payment_delay')} 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              <TestTube className="mr-1 h-3 w-3" />
+              Payment
+            </Button>
+            <Button 
+              onClick={() => testNotificationNavigation('owner_notice')} 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              <TestTube className="mr-1 h-3 w-3" />
+              Notice
+            </Button>
+            <Button 
+              onClick={() => testNotificationNavigation('complaint')} 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              <TestTube className="mr-1 h-3 w-3" />
+              Complaint
+            </Button>
+            <Button 
+              onClick={() => testNotificationNavigation('connection_request')} 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              <TestTube className="mr-1 h-3 w-3" />
+              Request
+            </Button>
+          </div>
+        </div>
         
         <div className="text-xs text-muted-foreground text-center">
           Make sure the user has the app installed and FCM token registered

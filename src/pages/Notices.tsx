@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
 import LoadingState from '@/components/landing/LoadingState';
@@ -10,10 +10,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Notices: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loadingNotices, setLoadingNotices] = useState(true);
   const [connectedOwnerId, setConnectedOwnerId] = useState<string | null>(null);
+  const highlightNoticeId = location.state?.noticeId;
 
   // Step 1: Fetch active connection (relationship)
   useEffect(() => {
