@@ -41,10 +41,10 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
-          <FCMWrapper />
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <FCMWrapper />
             <ProfileCompletionCheck />
             <Routes>
               <Route path="/" element={<Index />} />
