@@ -2,7 +2,8 @@ import { NavigateFunction } from 'react-router-dom';
 import { setupCapacitorNotificationHandler } from '@/utils/capacitorNotificationHandler';
 
 export interface NotificationData {
-  type: string;
+  type?: string;
+  deep_link_url?: string;
   payment_id?: string;
   notice_id?: string;
   complaint_id?: string;
@@ -25,24 +26,68 @@ export class NotificationNavigationService {
 
     console.log('Handling notification tap with data:', data);
 
+    // Handle deep link URLs first
+    if (data.deep_link_url) {
+      try {
+        const url = new URL(data.deep_link_url);
+        const path = url.pathname;
+        
+        console.log('Navigating to deep link path:', path);
+        
+        // Map deep link paths to app routes
+        switch (path) {
+          case '/payment':
+            this.navigate('/payments', { 
+              state: { pendingPaymentId: data.payment_id } 
+            });
+            break;
+          case '/notice':
+            this.navigate('/notices', { 
+              state: { noticeId: data.notice_id } 
+            });
+            break;
+          case '/complaints':
+            this.navigate('/connections', { 
+              state: { 
+                highlightComplaint: data.complaint_id,
+                relationshipId: data.relationship_id 
+              } 
+            });
+            break;
+          case '/documents':
+            this.navigate('/connections', { 
+              state: { showDocuments: true } 
+            });
+            break;
+          case '/connection-requests':
+            this.navigate('/connections', { 
+              state: { showRequests: true } 
+            });
+            break;
+          default:
+            // Navigate to the exact path if it matches our app routes
+            this.navigate(path);
+            break;
+        }
+        return;
+      } catch (error) {
+        console.error('Error parsing deep link URL:', error);
+      }
+    }
+
+    // Fallback to type-based navigation
     switch (data.type) {
       case 'payment_delay':
-        // Navigate to Payments page with payment ID
         this.navigate('/payments', { 
           state: { pendingPaymentId: data.payment_id } 
         });
         break;
-
       case 'owner_notice':
-        // Navigate to Notices page with notice ID
         this.navigate('/notices', { 
           state: { noticeId: data.notice_id } 
         });
         break;
-
       case 'complaint':
-        // Navigate to appropriate complaints page based on user role
-        // For now, navigate to connections page where complaints are handled
         this.navigate('/connections', { 
           state: { 
             highlightComplaint: data.complaint_id,
@@ -50,24 +95,18 @@ export class NotificationNavigationService {
           } 
         });
         break;
-
       case 'connection_request':
-        // Navigate to Connections page (requests tab)
         this.navigate('/connections', { 
           state: { showRequests: true } 
         });
         break;
-
       case 'livenzo_announcement':
-        // Navigate to Dashboard for announcements/offers
         this.navigate('/dashboard', { 
           state: { showAnnouncements: true } 
         });
         break;
-
       default:
         console.warn('Unknown notification type:', data.type);
-        // Default to dashboard
         this.navigate('/dashboard');
         break;
     }
