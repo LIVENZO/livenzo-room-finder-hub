@@ -65,15 +65,48 @@ export const NotificationTester: React.FC = () => {
   };
 
   const testNotificationNavigation = (type: string) => {
-    const testData = {
-      type,
-      payment_id: "test-payment-123",
-      notice_id: "test-notice-456", 
-      complaint_id: "test-complaint-789",
-      relationship_id: "test-relationship-abc"
-    };
+    let testData;
     
-    console.log('Testing notification navigation with:', testData);
+    switch (type) {
+      case 'payment_delay':
+        testData = {
+          type: 'payment_delay',
+          payment_id: "test-payment-123",
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/payments"
+        };
+        break;
+      case 'owner_notice':
+        testData = {
+          type: 'owner_notice',
+          notice_id: "test-notice-456",
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/notices"
+        };
+        break;
+      case 'complaint':
+        testData = {
+          type: 'complaint',
+          complaint_id: "test-complaint-789",
+          relationship_id: "test-relationship-abc",
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/connections"
+        };
+        break;
+      case 'connection_request':
+        testData = {
+          type: 'connection_request',
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/connections"
+        };
+        break;
+      case 'document':
+        testData = {
+          type: 'document',
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/connections"
+        };
+        break;
+      default:
+        testData = { type, deep_link_url: "https://livenzo-room-finder-hub.lovable.app/dashboard" };
+    }
+    
+    console.log('🧪 Testing notification navigation with:', testData);
     NotificationNavigationService.handleNotificationTap(testData);
     toast.success(`Testing ${type} notification navigation`);
   };
@@ -161,7 +194,7 @@ export const NotificationTester: React.FC = () => {
         
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Test Notification Navigation
+            Test Notification Navigation (Web Preview)
           </label>
           <div className="grid grid-cols-2 gap-2">
             <Button 
@@ -199,6 +232,15 @@ export const NotificationTester: React.FC = () => {
             >
               <TestTube className="mr-1 h-3 w-3" />
               Request
+            </Button>
+            <Button 
+              onClick={() => testNotificationNavigation('document')} 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              <TestTube className="mr-1 h-3 w-3" />
+              Document
             </Button>
           </div>
         </div>

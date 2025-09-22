@@ -27,6 +27,7 @@ import Notices from "./pages/Notices";
 import Payments from "./pages/Payments";
 import ActiveRenters from "./pages/ActiveRenters";
 import FirebaseTest from "./pages/FirebaseTest";
+import NotificationTest from "./pages/NotificationTest";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/active-renters" element={<ActiveRenters />} />
               <Route path="/set-location" element={<SetLocation />} />
               <Route path="/firebase-test" element={<FirebaseTest />} />
+              <Route path="/notification-test" element={<NotificationTest />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
