@@ -67,7 +67,8 @@ serve(async (req) => {
           document_type: document.document_type,
           renter_id: relationship.renter_id,
           relationship_id: document.relationship_id,
-          file_name: document.file_name
+          file_name: document.file_name,
+          deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/connections'
         }
       }
     });
