@@ -48,12 +48,12 @@ serve(async (req) => {
         body: notice.message.length > 100 
           ? notice.message.substring(0, 100) + '...' 
           : notice.message,
+        type: 'notice',
         data: {
           type: 'notice',
           notice_id: notice.id,
           owner_id: notice.owner_id,
-          message: notice.message,
-          deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/notices'
+          message: notice.message
         }
       }
     });

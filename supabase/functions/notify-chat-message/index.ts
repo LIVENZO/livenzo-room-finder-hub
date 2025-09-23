@@ -52,6 +52,7 @@ serve(async (req) => {
         userId: message.receiver_id,
         title: `New message from ${senderName}`,
         body: messageBody,
+        type: 'chat_message',
         data: {
           type: 'chat_message',
           message_id: message.id,
@@ -59,8 +60,7 @@ serve(async (req) => {
           receiver_id: message.receiver_id,
           relationship_id: message.relationship_id,
           room_id: message.room_id,
-          message: message.message,
-          deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/chats'
+          message: message.message
         }
       }
     });

@@ -13,6 +13,7 @@ interface NotificationPayload {
   title: string;
   body: string;
   data?: JsonRecord;
+  type?: string; // notification type to determine deep link
 }
 
 // Helper function to create JWT for Google OAuth
@@ -129,7 +130,34 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload: NotificationPayload = await req.json();
-    const { userId, title, body, data } = payload;
+    const { userId, title, body, data, type } = payload;
+
+    // Generate deep link URL based on notification type
+    function getDeepLinkUrl(notificationType?: string): string {
+      const baseUrl = 'https://livenzo-room-finder-hub.lovable.app';
+      switch (notificationType) {
+        case 'payment_delay':
+        case 'payment_due':
+          return `${baseUrl}/payment`;
+        case 'notice':
+        case 'owner_notice':
+          return `${baseUrl}/notice`;
+        case 'complaint':
+        case 'complaint_update':
+          return `${baseUrl}/complaints`;
+        case 'document':
+        case 'document_uploaded':
+          return `${baseUrl}/documents`;
+        case 'connection_request':
+          return `${baseUrl}/connection-requests`;
+        case 'chat_message':
+          return `${baseUrl}/chats`;
+        default:
+          return `${baseUrl}/dashboard`;
+      }
+    }
+
+    const deepLinkUrl = getDeepLinkUrl(type);
 
     if (!userId) {
       console.error('❌ No userId provided');
@@ -218,6 +246,7 @@ serve(async (req) => {
             },
             data: {
               ...(data || {}),
+              deep_link_url: deepLinkUrl,
               click_action: 'FLUTTER_NOTIFICATION_CLICK'
             },
             android: {
