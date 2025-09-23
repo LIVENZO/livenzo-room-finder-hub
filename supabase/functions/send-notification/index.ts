@@ -245,8 +245,9 @@ serve(async (req) => {
               body: body,
             },
             data: {
-              ...(data || {}),
               deep_link_url: deepLinkUrl,
+              type: type || 'general',
+              ...(data || {}),
               click_action: 'FLUTTER_NOTIFICATION_CLICK'
             },
             android: {
