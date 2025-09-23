@@ -90,41 +90,56 @@ export class NotificationNavigationService {
     console.log('📱 Using type-based navigation fallback for type:', data.type);
     switch (data.type) {
       case 'payment_delay':
-        console.log('💳 Payment delay notification - opening payments');
-        this.navigate('/payments', { 
+      case 'rent_payment_due':
+      case 'payment':
+        console.log('💳 Payment notification - opening payments');
+        this.navigate('/payments', {
           state: { pendingPaymentId: data.payment_id },
-          replace: true
+          replace: true,
         });
         break;
       case 'owner_notice':
-        console.log('📢 Owner notice notification - opening notices');
-        this.navigate('/notices', { 
+      case 'notice':
+        console.log('📢 Notice notification - opening notices');
+        this.navigate('/notices', {
           state: { noticeId: data.notice_id },
-          replace: true
+          replace: true,
         });
         break;
       case 'complaint':
+      case 'complaint_update':
         console.log('⚠️ Complaint notification - opening connections');
-        this.navigate('/connections', { 
-          state: { 
+        this.navigate('/connections', {
+          state: {
             highlightComplaint: data.complaint_id,
-            relationshipId: data.relationship_id 
+            relationshipId: data.relationship_id,
           },
-          replace: true
+          replace: true,
         });
         break;
       case 'connection_request':
-        console.log('🤝 Connection request notification - opening connections');
-        this.navigate('/connections', { 
+      case 'new_connection_request':
+      case 'connection':
+        console.log('🤝 Connection request - opening connections');
+        this.navigate('/connections', {
           state: { showRequests: true },
-          replace: true
+          replace: true,
+        });
+        break;
+      case 'document':
+      case 'new_document':
+      case 'document_uploaded':
+        console.log('📄 Document notification - opening connections');
+        this.navigate('/connections', {
+          state: { showDocuments: true },
+          replace: true,
         });
         break;
       case 'livenzo_announcement':
         console.log('📱 Livenzo announcement - opening dashboard');
-        this.navigate('/dashboard', { 
+        this.navigate('/dashboard', {
           state: { showAnnouncements: true },
-          replace: true
+          replace: true,
         });
         break;
       default:
