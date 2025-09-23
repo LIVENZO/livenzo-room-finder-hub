@@ -77,9 +77,9 @@ export const NotificationTester: React.FC = () => {
         break;
       case 'owner_notice':
         testData = {
-          type: 'owner_notice',
+          type: 'notice',
           notice_id: "test-notice-456",
-          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/notices"
+          deep_link_url: "https://livenzo-room-finder-hub.lovable.app/notice?id=test-notice-456"
         };
         break;
       case 'complaint':

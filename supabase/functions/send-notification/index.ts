@@ -132,32 +132,55 @@ serve(async (req) => {
     const payload: NotificationPayload = await req.json();
     const { userId, title, body, data, type } = payload;
 
-    // Generate deep link URL based on notification type
-    function getDeepLinkUrl(notificationType?: string): string {
-      const baseUrl = 'https://livenzo-room-finder-hub.lovable.app';
+    // Determine effective notification type and optional notice id
+    const incomingType = typeof type === 'string' ? type : (typeof (data as any)?.type === 'string' ? String((data as any).type) : undefined);
+    const effectiveType = incomingType || 'general';
+    const noticeId = (data && (data as any).notice_id != null) ? String((data as any).notice_id) : undefined;
+
+    const baseUrl = 'https://livenzo-room-finder-hub.lovable.app';
+
+    // Map a type to a default path (used when specific id isn't required)
+    function getDeepLinkPath(notificationType?: string): string {
       switch (notificationType) {
         case 'payment_delay':
         case 'payment_due':
-          return `${baseUrl}/payment`;
+          return '/payment';
         case 'notice':
         case 'owner_notice':
-          return `${baseUrl}/notice`;
+          return '/notice';
         case 'complaint':
         case 'complaint_update':
-          return `${baseUrl}/complaints`;
+          return '/complaints';
         case 'document':
         case 'document_uploaded':
-          return `${baseUrl}/documents`;
+          return '/documents';
         case 'connection_request':
-          return `${baseUrl}/connection-requests`;
+          return '/connection-requests';
         case 'chat_message':
-          return `${baseUrl}/chats`;
+          return '/chats';
         default:
-          return `${baseUrl}/dashboard`;
+          return '/dashboard';
       }
     }
 
-    const deepLinkUrl = getDeepLinkUrl(type);
+    // Compute deep link URL; ensure notice uses the id param when available
+    let deepLinkUrl = `${baseUrl}${getDeepLinkPath(effectiveType)}`;
+    if (effectiveType === 'notice' && noticeId) {
+      deepLinkUrl = `${baseUrl}/notice?id=${encodeURIComponent(noticeId)}`;
+    }
+
+    // Build final data payload (all values must be strings for FCM)
+    const baseData: Record<string, any> = { ...(data || {}) };
+    const enrichedData: Record<string, any> = {
+      ...baseData,
+      type: effectiveType,
+      ...(noticeId ? { notice_id: noticeId } : {}),
+      deep_link_url: deepLinkUrl,
+      click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    };
+    const finalData: Record<string, string> = Object.fromEntries(
+      Object.entries(enrichedData).map(([k, v]) => [k, v == null ? '' : String(v)])
+    );
 
     if (!userId) {
       console.error('❌ No userId provided');
@@ -244,12 +267,7 @@ serve(async (req) => {
               title: title,
               body: body,
             },
-            data: {
-              deep_link_url: deepLinkUrl,
-              type: type || 'general',
-              ...(data || {}),
-              click_action: 'FLUTTER_NOTIFICATION_CLICK'
-            },
+            data: finalData,
             android: {
               notification: {
                 icon: 'notification_icon',

@@ -15,7 +15,7 @@ const Notices: React.FC = () => {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loadingNotices, setLoadingNotices] = useState(true);
   const [connectedOwnerId, setConnectedOwnerId] = useState<string | null>(null);
-  const highlightNoticeId = location.state?.noticeId;
+  const highlightNoticeId = (new URLSearchParams(location.search).get('id')) || (location.state as any)?.noticeId;
 
   // Step 1: Fetch active connection (relationship)
   useEffect(() => {

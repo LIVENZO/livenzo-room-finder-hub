@@ -44,9 +44,11 @@ export class NotificationNavigationService {
             });
             break;
           case '/notice':
-            console.log('📢 Opening notices page');
-            this.navigate('/notices', { 
-              state: { noticeId: data.notice_id },
+            console.log('📢 Opening notice page');
+            const search = url.search || '';
+            const noticeIdParam = (url as any).searchParams?.get('id') || data.notice_id;
+            this.navigate(`/notice${search}`, { 
+              state: { noticeId: noticeIdParam },
               replace: true
             });
             break;
@@ -100,8 +102,9 @@ export class NotificationNavigationService {
         break;
       case 'owner_notice':
       case 'notice':
-        console.log('📢 Notice notification - opening notices');
-        this.navigate('/notices', {
+        console.log('📢 Notice notification - opening notice page');
+        const qs = data.notice_id ? `?id=${encodeURIComponent(String(data.notice_id))}` : '';
+        this.navigate(`/notice${qs}`, {
           state: { noticeId: data.notice_id },
           replace: true,
         });
