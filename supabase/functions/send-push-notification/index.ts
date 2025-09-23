@@ -58,17 +58,20 @@ serve(async (req) => {
         ? `Your owner sent a notice: ${noticeTitle}`
         : (noticeMsg ? `Your owner sent a notice: ${noticeMsg.substring(0, 100)}` : 'Your owner sent a notice.');
       data.notice_id = record.id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/notice?id=${record.id}`;
     } else if (type === 'document') {
       targetUserId = record.owner_id ?? null;
       title = 'Document Uploaded';
       body = 'A renter uploaded a document for you to review.';
       data.document_id = record.id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/documents?id=${record.id}`;
     } else if (type === 'complaint') {
       targetUserId = record.owner_id ?? null;
       title = 'New Complaint';
       const complaintTitle = record.title ? String(record.title) : undefined;
       body = complaintTitle ? `A renter submitted a new complaint: ${complaintTitle}` : 'A renter submitted a new complaint.';
       data.complaint_id = record.id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/complaints?id=${record.id}`;
     }
 
     if (!targetUserId) {
@@ -105,13 +108,9 @@ serve(async (req) => {
       try {
         const fcmPayload = {
           to: token,
-          notification: {
+          data: {
             title,
             body,
-            icon: 'notification_icon',
-            click_action: 'FLUTTER_NOTIFICATION_CLICK'
-          },
-          data: {
             ...data,
             click_action: 'FLUTTER_NOTIFICATION_CLICK'
           }
