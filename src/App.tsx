@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/list-room" element={<ListRoom />} />
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/notices" element={<Notices />} />
+              <Route path="/notice" element={<Notices />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/active-renters" element={<ActiveRenters />} />
               <Route path="/set-location" element={<SetLocation />} />
