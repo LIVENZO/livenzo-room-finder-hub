@@ -36,43 +36,48 @@ export class NotificationNavigationService {
         
         // Map deep link paths to app routes
         switch (path) {
+          case '/payments':
           case '/payment':
             console.log('💳 Opening payments page');
             this.navigate('/payments', { 
               state: { pendingPaymentId: data.payment_id },
-              replace: true // Replace current route for clean navigation
+              replace: true
             });
             break;
+          case '/notices':
           case '/notice':
-            console.log('📢 Opening notice page');
+            console.log('📢 Opening notices page');
             const search = url.search || '';
-            const noticeIdParam = (url as any).searchParams?.get('id') || data.notice_id;
-            this.navigate(`/notice${search}`, { 
+            const noticeIdParam = url.searchParams?.get('id') || data.notice_id;
+            this.navigate(`/notices${search}`, { 
               state: { noticeId: noticeIdParam },
               replace: true
             });
             break;
-          case '/complaints':
-            console.log('⚠️ Opening complaints in connections');
+          case '/connections':
+            console.log('🤝 Opening connections page');
+            const urlParams = url.searchParams;
+            const state: any = {};
+            
+            if (urlParams?.get('showComplaints') === 'true') {
+              console.log('⚠️ Highlighting complaints tab');
+              state.highlightComplaint = urlParams.get('complaintId') || data.complaint_id;
+              state.relationshipId = data.relationship_id;
+            }
+            
+            if (urlParams?.get('showDocuments') === 'true') {
+              console.log('📄 Highlighting documents tab');
+              state.showDocuments = true;
+              state.documentId = urlParams.get('documentId') || data.document_id;
+            }
+            
+            if (urlParams?.get('showRequests') === 'true') {
+              console.log('🤝 Highlighting requests tab');
+              state.showRequests = true;
+            }
+            
             this.navigate('/connections', { 
-              state: { 
-                highlightComplaint: data.complaint_id,
-                relationshipId: data.relationship_id 
-              },
-              replace: true
-            });
-            break;
-          case '/documents':
-            console.log('📄 Opening documents in connections');
-            this.navigate('/connections', { 
-              state: { showDocuments: true },
-              replace: true
-            });
-            break;
-          case '/connection-requests':
-            console.log('🤝 Opening connection requests');
-            this.navigate('/connections', { 
-              state: { showRequests: true },
+              state,
               replace: true
             });
             break;
