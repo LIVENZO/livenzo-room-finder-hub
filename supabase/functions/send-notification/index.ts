@@ -169,7 +169,39 @@ serve(async (req) => {
       deepLinkUrl = `${baseUrl}/notice?id=${encodeURIComponent(noticeId)}`;
     }
 
-    // Insert notification record with deep_link_url
+    // Check for duplicate notifications within the last 30 seconds
+    const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+    const { data: existingNotifications, error: duplicateCheckError } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('title', title)
+      .eq('message', body)
+      .gte('created_at', thirtySecondsAgo)
+      .limit(1);
+
+    if (duplicateCheckError) {
+      console.error('❌ Error checking for duplicate notifications:', duplicateCheckError);
+    }
+
+    // If a similar notification was sent in the last 30 seconds, skip sending
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log('⚠️ [FCM V1] Duplicate notification detected, skipping send:', {
+        userId,
+        title,
+        existingCount: existingNotifications.length
+      });
+      return new Response(JSON.stringify({
+        message: 'Duplicate notification skipped',
+        userId: userId,
+        duplicateDetected: true
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Insert notification record with deep_link_url and sent flag
     const { data: notificationData, error: insertError } = await supabase
       .from('notifications')
       .insert({
@@ -177,7 +209,8 @@ serve(async (req) => {
         title,
         message: body,
         deep_link_url: deepLinkUrl,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_read: false
       })
       .select()
       .single();
