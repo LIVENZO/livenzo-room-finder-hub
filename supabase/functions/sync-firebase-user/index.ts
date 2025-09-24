@@ -84,8 +84,8 @@ Deno.serve(async (req) => {
       // Ensure email is present and update password
       const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
         email: existing.email ?? email,
-        email_confirmed: true,
-        phone_confirmed: true,
+        email_confirm: true,
+        phone_confirm: true,
         password: tempPassword,
         user_metadata: { ...(existing.user_metadata || {}), firebase_uid, phone: phone_number }
       });
@@ -103,8 +103,8 @@ Deno.serve(async (req) => {
         phone: phone_number,
         email,
         password: tempPassword,
-        phone_confirmed: true,
-        email_confirmed: true,
+        phone_confirm: true,
+        email_confirm: true,
         user_metadata: { firebase_uid, phone: phone_number }
       });
       if (createErr) {
