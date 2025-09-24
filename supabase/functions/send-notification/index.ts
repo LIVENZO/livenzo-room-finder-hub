@@ -140,22 +140,22 @@ serve(async (req) => {
     const baseUrl = 'https://livenzo-room-finder-hub.lovable.app';
 
     // Map a type to a default path (used when specific id isn't required)
-    function getDeepLinkPath(notificationType?: string): string {
+    function getDeepLinkPath(notificationType?: string, recordId?: string): string {
       switch (notificationType) {
         case 'payment_delay':
         case 'payment_due':
-          return '/payment';
+          return '/payments';
         case 'notice':
         case 'owner_notice':
-          return '/notice';
+          return recordId ? `/notices?id=${encodeURIComponent(recordId)}` : '/notices';
         case 'complaint':
         case 'complaint_update':
-          return '/complaints';
+          return recordId ? `/complaints?id=${encodeURIComponent(recordId)}` : '/complaints';
         case 'document':
         case 'document_uploaded':
-          return '/documents';
+          return recordId ? `/documents?id=${encodeURIComponent(recordId)}` : '/documents';
         case 'connection_request':
-          return '/connection-requests';
+          return '/connections';
         case 'chat_message':
           return '/chats';
         default:
@@ -163,11 +163,15 @@ serve(async (req) => {
       }
     }
 
-    // Compute deep link URL; ensure notice uses the id param when available
-    let deepLinkUrl = `${baseUrl}${getDeepLinkPath(effectiveType)}`;
-    if (effectiveType === 'notice' && noticeId) {
-      deepLinkUrl = `${baseUrl}/notice?id=${encodeURIComponent(noticeId)}`;
-    }
+    // Get relevant record ID from data
+    const recordId = (data && (data as any).notice_id) || 
+                    (data && (data as any).document_id) || 
+                    (data && (data as any).complaint_id) || 
+                    (data && (data as any).message_id) || 
+                    noticeId;
+
+    // Compute deep link URL with proper record ID
+    const deepLinkUrl = `${baseUrl}${getDeepLinkPath(effectiveType, recordId)}`;
 
     // Check for duplicate notifications within the last 30 seconds
     const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
@@ -314,7 +318,7 @@ serve(async (req) => {
 
     const notifications = tokens.map(async (token) => {
       try {
-        // FCM V1 API payload structure
+        // FCM V1 API payload structure with proper deep_link_url in data
         const fcmV1Payload = {
           message: {
             token: token,
@@ -322,7 +326,11 @@ serve(async (req) => {
               title: title,
               body: body,
             },
-            data: finalData,
+            data: {
+              deep_link_url: deepLinkUrl,
+              type: effectiveType,
+              ...finalData
+            },
             android: {
               notification: {
                 icon: 'notification_icon',

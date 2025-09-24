@@ -115,8 +115,8 @@ serve(async (req) => {
           data: {
             deep_link_url: data.deep_link_url,
             type: data.type || type,
-            notification_id: data.notice_id || data.document_id || data.complaint_id,
-            ...data,
+            notification_id: data.notice_id || data.document_id || data.complaint_id || 'unknown',
+            ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
             click_action: 'FLUTTER_NOTIFICATION_CLICK'
           }
         };

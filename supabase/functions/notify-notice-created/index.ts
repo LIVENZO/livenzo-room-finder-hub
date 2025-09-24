@@ -45,9 +45,9 @@ serve(async (req) => {
       body: {
         userId: notice.renter_id,
         title: 'New Notice from Owner',
-        body: notice.message.length > 100 
-          ? notice.message.substring(0, 100) + '...' 
-          : notice.message,
+        body: notice.title 
+          ? `${notice.title}: ${notice.message.length > 80 ? notice.message.substring(0, 80) + '...' : notice.message}`
+          : (notice.message.length > 100 ? notice.message.substring(0, 100) + '...' : notice.message),
         type: 'notice',
         data: {
           type: 'notice',
