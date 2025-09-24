@@ -175,7 +175,7 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         title,
-        body,
+        message: body,
         deep_link_url: deepLinkUrl,
         created_at: new Date().toISOString()
       })
