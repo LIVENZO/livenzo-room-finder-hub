@@ -169,6 +169,27 @@ serve(async (req) => {
       deepLinkUrl = `${baseUrl}/notice?id=${encodeURIComponent(noticeId)}`;
     }
 
+    // Insert notification record with deep_link_url
+    const { data: notificationData, error: insertError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title,
+        body,
+        deep_link_url: deepLinkUrl,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('❌ Error inserting notification:', insertError);
+      return new Response(JSON.stringify({ error: 'Failed to create notification record' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Build final data payload (all values must be strings for FCM)
     const baseData: Record<string, any> = { ...(data || {}) };
     const enrichedData: Record<string, any> = {
@@ -176,6 +197,7 @@ serve(async (req) => {
       type: effectiveType,
       ...(noticeId ? { notice_id: noticeId } : {}),
       deep_link_url: deepLinkUrl,
+      notification_id: notificationData.id,
       click_action: 'FLUTTER_NOTIFICATION_CLICK',
     };
     const finalData: Record<string, string> = Object.fromEntries(

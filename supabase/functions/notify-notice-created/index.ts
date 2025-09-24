@@ -53,8 +53,7 @@ serve(async (req) => {
           type: 'notice',
           notice_id: notice.id,
           owner_id: notice.owner_id,
-          message: notice.message,
-          deep_link_url: `https://livenzo-room-finder-hub.lovable.app/notice?id=${notice.id}`
+          message: notice.message
         }
       }
     });
