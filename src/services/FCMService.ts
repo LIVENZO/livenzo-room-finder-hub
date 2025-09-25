@@ -93,20 +93,18 @@ export const storePendingFCMToken = (token: string): void => {
 
       console.log("🔥 Registering FCM token for user:", user.id);
 
-      // Upsert token by user_id to avoid 409 conflicts and update only when needed
-      const { error: upsertError } = await supabase
-        .from('fcm_tokens')
-        .upsert(
-          [{ user_id: user.id, token, created_at: new Date().toISOString() }],
-          { onConflict: 'user_id', ignoreDuplicates: false }
-        );
+      // Use the safe database function to handle token upsert
+      const { error: functionError } = await supabase.rpc('upsert_fcm_token_safe', {
+        p_user_id: user.id,
+        p_token: token
+      });
 
-      if (upsertError) {
-        console.error("❌ Upsert failed for FCM token:", upsertError);
+      if (functionError) {
+        console.error("❌ Failed to register FCM token via function:", functionError);
         return false;
       }
 
-      console.log("✅ Token saved via upsert:", {
+      console.log("✅ Token registered successfully via safe function:", {
         user_id: user.id,
         token: token.substring(0, 20) + '...'
       });

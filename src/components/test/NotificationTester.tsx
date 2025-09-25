@@ -4,15 +4,18 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
-import { Send, Bell, TestTube } from 'lucide-react';
+import { Send, Bell, TestTube, Zap } from 'lucide-react';
 import { NotificationNavigationService } from '@/services/NotificationNavigationService';
 
 export const NotificationTester: React.FC = () => {
+  const { user } = useAuth();
   const [firebaseUid, setFirebaseUid] = useState('');
   const [title, setTitle] = useState('Test Notification');
   const [body, setBody] = useState('This is a test notification from Livenzo app!');
   const [isLoading, setIsLoading] = useState(false);
+  const [isV1Loading, setIsV1Loading] = useState(false);
 
   const sendTestNotification = async () => {
     if (!firebaseUid.trim() || !title.trim() || !body.trim()) {
@@ -61,6 +64,43 @@ export const NotificationTester: React.FC = () => {
       }
     } else {
       toast.error('Android interface not available');
+    }
+  };
+
+  const sendTestV1Notification = async () => {
+    if (!user) {
+      toast.error('Please log in to test FCM V1 notifications');
+      return;
+    }
+
+    setIsV1Loading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          type: 'notice',
+          record: {
+            id: 'test-v1-' + Date.now(),
+            renter_id: user.id,
+            title: 'FCM V1 Test Notification',
+            message: 'This is a test notification using Firebase FCM V1 API!',
+            created_at: new Date().toISOString()
+          }
+        }
+      });
+
+      if (error) {
+        console.error('FCM V1 notification error:', error);
+        toast.error('Failed to send FCM V1 notification: ' + error.message);
+      } else {
+        console.log('FCM V1 notification sent:', data);
+        toast.success(`FCM V1 notification sent! ${data.successCount}/${data.totalTokens} devices reached`);
+      }
+    } catch (err) {
+      console.error('Exception sending FCM V1 notification:', err);
+      toast.error('Failed to send FCM V1 notification');
+    } finally {
+      setIsV1Loading(false);
     }
   };
 
@@ -191,6 +231,31 @@ export const NotificationTester: React.FC = () => {
             </>
           )}
         </Button>
+        
+        <Button 
+          onClick={sendTestV1Notification} 
+          disabled={!user || isV1Loading}
+          className="w-full"
+          variant="secondary"
+        >
+          {isV1Loading ? (
+            <>
+              <Zap className="mr-2 h-4 w-4 animate-spin" />
+              Sending FCM V1...
+            </>
+          ) : (
+            <>
+              <Zap className="mr-2 h-4 w-4" />
+              Send FCM V1 Test (Current User)
+            </>
+          )}
+        </Button>
+        
+        {!user && (
+          <p className="text-xs text-amber-600 text-center">
+            Please log in to test FCM V1 notifications
+          </p>
+        )}
         
         <div className="space-y-2">
           <label className="text-sm font-medium">
