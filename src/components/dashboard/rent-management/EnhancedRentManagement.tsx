@@ -17,6 +17,7 @@ import {
   Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ActiveRentersList from './ActiveRentersList';
 
 interface RentStats {
   totalReceived: number;
@@ -322,67 +323,17 @@ const EnhancedRentManagement: React.FC = () => {
             Rent Management
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {renters.length === 0 ? (
-            <div className="text-center py-8">
-              <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No active renters found</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {renters.map((renter) => (
-                <div
-                  key={renter.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                    renter.paymentStatus === 'paid' 
-                      ? "bg-green-50 border-green-200" 
-                      : "bg-red-50 border-red-200"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarImage src={renter.renter.avatar_url} />
-                      <AvatarFallback>
-                        {renter.renter.full_name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{renter.renter.full_name}</p>
-                        {getStatusIcon(renter.paymentStatus)}
-                      </div>
-                      {renter.renter.room_number && (
-                        <p className="text-sm text-muted-foreground">
-                          Room: {renter.renter.room_number}
-                        </p>
-                      )}
-                      {renter.lastPaymentDate && (
-                        <p className="text-xs text-muted-foreground">
-                          Last payment: {new Date(renter.lastPaymentDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="font-medium">₹{renter.amount.toLocaleString()}</p>
-                        {renter.dueDate && (
-                          <p className="text-xs text-muted-foreground">
-                            Due: {new Date(renter.dueDate).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                      {getStatusBadge(renter.paymentStatus)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <CardContent className="p-0">
+          <ActiveRentersList
+            renters={renters}
+            loading={loading}
+            onAddPayment={(renterId, renterName) => {
+              toast.info(`Add payment feature for ${renterName}`, {
+                description: 'Payment management system coming soon'
+              });
+            }}
+            onRefresh={fetchData}
+          />
         </CardContent>
       </Card>
     </div>

@@ -192,6 +192,7 @@ const ActiveRenters: React.FC = () => {
             renters={renters}
             loading={loading}
             onAddPayment={handleAddPayment}
+            onRefresh={fetchActiveRenters}
           />
         </div>
 

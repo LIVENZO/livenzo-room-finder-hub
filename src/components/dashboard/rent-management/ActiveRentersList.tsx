@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, MapPin, Plus, CheckCircle, XCircle, Clock, Users, Camera, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import SwipeableRenterCard from './SwipeableRenterCard';
+import SwipeTutorial from './SwipeTutorial';
 
 export interface MeterPhoto {
   id: string;
@@ -45,14 +49,65 @@ interface ActiveRentersListProps {
   loading: boolean;
   onAddPayment: (renterId: string, renterName: string) => void;
   meterPhotos?: Record<string, MeterPhoto[]>;
+  onRefresh?: () => void;
 }
 
 const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
   renters,
   loading,
   onAddPayment,
-  meterPhotos = {}
+  meterPhotos = {},
+  onRefresh
 }) => {
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Check if tutorial should be shown (first time user)
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('swipe_tutorial_completed');
+    if (!hasSeenTutorial && renters.length > 0) {
+      setShowTutorial(true);
+    }
+  }, [renters.length]);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem('swipe_tutorial_completed', 'true');
+    setShowTutorial(false);
+  };
+
+  const handleTutorialSkip = () => {
+    localStorage.setItem('swipe_tutorial_completed', 'true');
+    setShowTutorial(false);
+  };
+
+  const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid') => {
+    try {
+      // Update rent status in database
+      const { error } = await supabase
+        .from('rent_status')
+        .update({ 
+          status: action,
+          updated_at: new Date().toISOString()
+        })
+        .eq('relationship_id', renterId);
+
+      if (error) throw error;
+
+      // Show success toast
+      toast.success(`Renter marked as ${action}`, {
+        description: `Payment status has been updated successfully`
+      });
+
+      // Refresh data if callback provided
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      toast.error('Failed to update payment status', {
+        description: 'Please try again or contact support'
+      });
+    }
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
@@ -117,99 +172,27 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
   }
 
   return (
-    <div className="bg-background">
-      {renters.map((renter, index) => (
-        <div
-          key={renter.id}
-          className={`bg-card border-b border-border/50 px-4 py-6 hover:bg-muted/30 transition-colors active:bg-muted/50 ${
-            index === 0 ? 'border-t border-border/50' : ''
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            {/* Left: Avatar */}
-            <Avatar className="h-14 w-14 ring-2 ring-border/20 flex-shrink-0">
-              <AvatarImage src={renter.renter.avatar_url || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
-                {renter.renter.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'R'}
-              </AvatarFallback>
-            </Avatar>
-            
-            {/* Center: Renter Info */}
-            <div className="flex-1 min-w-0 space-y-1">
-              <h3 className="font-bold text-base text-foreground leading-tight">
-                {renter.renter.full_name || 'Unknown Renter'}
-              </h3>
-              
-              {renter.renter.room_number && (
-                <p className="text-sm font-medium text-muted-foreground">
-                  Room {renter.renter.room_number}
-                </p>
-              )}
-              
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-sm font-semibold text-foreground">
-                  ₦{renter.amount.toLocaleString()}
-                </span>
-                {getStatusBadge(renter.paymentStatus)}
-              </div>
-              
-              {/* Due Date Display */}
-              {renter.dueDate && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Due: {new Date(renter.dueDate).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
-                </p>
-              )}
+    <>
+      <div className="bg-background">
+        {renters.map((renter, index) => (
+          <SwipeableRenterCard
+            key={renter.id}
+            renter={renter}
+            index={index}
+            onSwipeAction={handleSwipeAction}
+            meterPhotos={meterPhotos}
+            onAddPayment={onAddPayment}
+          />
+        ))}
+      </div>
 
-              {/* Meter Photos Display */}
-              {renter.relationshipId && meterPhotos[renter.relationshipId] && meterPhotos[renter.relationshipId].length > 0 && (
-                <div className="pt-2">
-                  <div className="flex items-center gap-1 text-xs text-green-600 font-medium mb-1">
-                    <Camera className="h-3 w-3" />
-                    Meter Photo Uploaded
-                  </div>
-                  <div className="flex gap-2">
-                    {meterPhotos[renter.relationshipId].slice(0, 2).map((photo) => (
-                      <div key={photo.id} className="relative group">
-                        <img
-                          src={photo.photo_url}
-                          alt="Meter reading"
-                          className="w-12 h-12 object-cover rounded border cursor-pointer"
-                          onClick={() => window.open(photo.photo_url, '_blank')}
-                        />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                          <Download className="h-3 w-3 text-white" />
-                        </div>
-                      </div>
-                    ))}
-                    {meterPhotos[renter.relationshipId].length > 2 && (
-                      <div className="w-12 h-12 bg-muted rounded border flex items-center justify-center text-xs font-medium text-muted-foreground">
-                        +{meterPhotos[renter.relationshipId].length - 2}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Right: Add Payment Button - Mobile Friendly */}
-            <div className="flex-shrink-0">
-              <Button
-                onClick={() => onAddPayment(renter.renter.id, renter.renter.full_name || 'Unknown')}
-                className="h-9 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-all duration-200"
-                size="sm"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-                <span className="hidden xs:inline sm:ml-1">Add Payment</span>
-                <span className="xs:hidden">Add</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+      {/* Tutorial Modal */}
+      <SwipeTutorial
+        isVisible={showTutorial}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialSkip}
+      />
+    </>
   );
 };
 
