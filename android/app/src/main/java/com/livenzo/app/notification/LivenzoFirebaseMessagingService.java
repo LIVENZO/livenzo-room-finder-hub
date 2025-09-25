@@ -45,6 +45,16 @@ public class LivenzoFirebaseMessagingService extends FirebaseMessagingService {
                 remoteMessage.getNotification().getBody(),
                 remoteMessage.getData()
             );
+        } else {
+            // Handle data-only messages (FCM v1 recommended for reliability)
+            String dataTitle = remoteMessage.getData().get("title");
+            String dataBody = remoteMessage.getData().get("body");
+            if (dataTitle != null || dataBody != null) {
+                Log.d(TAG, "Data-only message received. Showing notification.");
+                showNotification(dataTitle, dataBody, remoteMessage.getData());
+            } else {
+                Log.d(TAG, "Data-only message without title/body payload. Skipping notification display.");
+            }
         }
     }
 

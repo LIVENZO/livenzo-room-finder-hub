@@ -248,6 +248,26 @@ serve(async (req) => {
 
     console.log(`📨 [FCM V1] Sending to ${allTokens.length} device(s)`);
 
+    // Insert debug notification record into DB (for visibility and deep link verification)
+    try {
+      const { error: insertError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: targetUserId,
+          title,
+          message: body,
+          deep_link_url: data.deep_link_url || null,
+          is_read: false
+        });
+      if (insertError) {
+        console.warn('⚠️ Failed to insert debug notification record:', insertError.message);
+      } else {
+        console.log('🧾 Debug notification record inserted');
+      }
+    } catch (e) {
+      console.warn('⚠️ Exception inserting debug notification record:', e);
+    }
+
     // Get OAuth access token for FCM V1 API
     console.log('🔑 Getting OAuth access token...');
     const accessToken = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
@@ -257,25 +277,21 @@ serve(async (req) => {
       try {
         console.log('→ [FCM V1] Sending to token:', token.substring(0, 20) + '...');
         
+        // Send DATA-ONLY message so Android service handles tap reliably
         const fcmPayload = {
           message: {
-            token: token,
-            notification: {
-              title,
-              body
-            },
+            token,
             data: {
-              deep_link_url: data.deep_link_url,
-              type: data.type || type,
-              notification_id: data.notice_id || data.document_id || data.complaint_id || 'unknown',
+              title,
+              body,
+              deep_link_url: String(data.deep_link_url || ''),
+              type: String(data.type || type),
+              notification_id: String(data.notice_id || data.document_id || data.complaint_id || 'unknown'),
               ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
-              click_action: 'FLUTTER_NOTIFICATION_CLICK'
+              click_action: 'OPEN_APP'
             },
             android: {
-              priority: 'high',
-              notification: {
-                click_action: 'FLUTTER_NOTIFICATION_CLICK'
-              }
+              priority: 'high'
             }
           }
         };
