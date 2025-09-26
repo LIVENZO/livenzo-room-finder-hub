@@ -25,6 +25,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   const { user } = useAuth();
   const [renters, setRenters] = useState<Renter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [savingRent, setSavingRent] = useState<Record<string, boolean>>({});
   const [rentAmounts, setRentAmounts] = useState<Record<string, string>>({});
   const [editingRenter, setEditingRenter] = useState<string | null>(null);
@@ -41,36 +42,42 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     
     try {
       setLoading(true);
+      setError(null);
       
-      // Get all active relationships with renter profiles
+      // Get all active relationships for this owner
       const { data: relationships, error: relationshipsError } = await supabase
         .from('relationships')
-        .select(`
-          renter_id,
-          user_profiles!relationships_renter_id_fkey(
-            id,
-            full_name,
-            avatar_url,
-            room_number
-          )
-        `)
+        .select('renter_id')
         .eq('owner_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
 
       if (relationshipsError) {
         console.error('Error fetching relationships:', relationshipsError);
-        toast.error('Failed to load renters');
+        setError('Unable to load renters. Please check your connection or try again.');
         return;
       }
 
       if (!relationships || relationships.length === 0) {
         setRenters([]);
+        setError(null);
+        return;
+      }
+
+      // Get renter profiles
+      const renterIds = relationships.map(r => r.renter_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, room_number')
+        .in('id', renterIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        setError('Unable to load renter details. Please try again.');
         return;
       }
 
       // Get current rent amounts from rental agreements
-      const renterIds = relationships.map(r => r.renter_id);
       const { data: rentAgreements, error: rentError } = await supabase
         .from('rental_agreements')
         .select('renter_id, monthly_rent')
@@ -80,31 +87,25 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
 
       if (rentError) {
         console.error('Error fetching rent agreements:', rentError);
+        // Don't show error for rent agreements as it's not critical
       }
 
-      const renterData: Renter[] = relationships
-        .map(rel => {
-          const profile = Array.isArray(rel.user_profiles) 
-            ? rel.user_profiles[0] 
-            : rel.user_profiles;
-          
-          if (!profile?.full_name || profile.full_name === 'Unknown Renter') {
-            return null;
-          }
-
-          const rentAgreement = rentAgreements?.find(ra => ra.renter_id === rel.renter_id);
+      const renterData: Renter[] = profiles
+        ?.filter(profile => profile.full_name && profile.full_name !== 'Unknown Renter')
+        .map(profile => {
+          const rentAgreement = rentAgreements?.find(ra => ra.renter_id === profile.id);
           
           return {
-            id: rel.renter_id,
+            id: profile.id,
             full_name: profile.full_name,
             avatar_url: profile.avatar_url || '',
             room_number: profile.room_number || '',
             current_rent: rentAgreement?.monthly_rent || 0
           };
-        })
-        .filter(Boolean) as Renter[];
+        }) || [];
 
       setRenters(renterData);
+      setError(null);
       
       // Initialize rent amounts with current values
       const initialAmounts: Record<string, string> = {};
@@ -115,7 +116,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
 
     } catch (error) {
       console.error('Error fetching active renters:', error);
-      toast.error('Failed to load renters');
+      setError('Unable to load renters. Please check your connection or try again.');
     } finally {
       setLoading(false);
     }
@@ -202,7 +203,47 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     );
   }
 
-  if (renters.length === 0) {
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={onBack} className="p-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Set Monthly Rent</h1>
+            <p className="text-muted-foreground">Manage rent amounts for your renters</p>
+          </div>
+        </div>
+        
+        <Card className="text-center py-16 border-destructive/20">
+          <CardContent className="space-y-6">
+            <div className="h-20 w-20 bg-destructive/10 rounded-full mx-auto flex items-center justify-center">
+              <Users className="h-10 w-10 text-destructive" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-xl font-semibold text-foreground">Unable to Load Renters</h3>
+              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                {error}
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={fetchActiveRenters}
+                className="min-w-[120px]"
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Try Again'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (renters.length === 0 && !loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -216,21 +257,24 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         </div>
         
         <Card className="text-center py-16">
-          <CardContent className="space-y-4">
-            <Users className="h-16 w-16 text-muted-foreground mx-auto" />
-            <div className="space-y-2">
+          <CardContent className="space-y-6">
+            <Users className="h-20 w-20 text-muted-foreground mx-auto opacity-50" />
+            <div className="space-y-3">
               <h3 className="text-xl font-semibold text-foreground">No Renters Connected</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
+              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
                 No renters connected yet. Please connect renters to manage rent.
               </p>
             </div>
-            <Button 
-              onClick={fetchActiveRenters}
-              variant="outline"
-              className="mt-4"
-            >
-              Refresh
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={fetchActiveRenters}
+                variant="outline"
+                className="min-w-[120px]"
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
