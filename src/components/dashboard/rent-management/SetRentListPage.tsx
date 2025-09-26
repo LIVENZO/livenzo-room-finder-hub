@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, DollarSign, Save, Users } from 'lucide-react';
+import { ArrowLeft, DollarSign, Save, Users, IndianRupee, Edit3, X, Check } from 'lucide-react';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -27,6 +27,8 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [savingRent, setSavingRent] = useState<Record<string, boolean>>({});
   const [rentAmounts, setRentAmounts] = useState<Record<string, string>>({});
+  const [editingRenter, setEditingRenter] = useState<string | null>(null);
+  const [tempRentAmount, setTempRentAmount] = useState<string>('');
 
   useEffect(() => {
     if (user?.id) {
@@ -119,17 +121,18 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     }
   };
 
-  const handleRentAmountChange = (renterId: string, value: string) => {
-    setRentAmounts(prev => ({
-      ...prev,
-      [renterId]: value
-    }));
+  const handleEditRent = (renter: Renter) => {
+    setEditingRenter(renter.id);
+    setTempRentAmount(renter.current_rent?.toString() || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRenter(null);
+    setTempRentAmount('');
   };
 
   const handleSaveRent = async (renter: Renter) => {
-    const rentAmount = rentAmounts[renter.id];
-    
-    if (!rentAmount || isNaN(Number(rentAmount))) {
+    if (!tempRentAmount || isNaN(Number(tempRentAmount))) {
       toast.error('Please enter a valid rent amount');
       return;
     }
@@ -140,7 +143,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       // Call the database function to set monthly rent
       const { data, error } = await supabase.rpc('set_renter_monthly_rent', {
         p_renter_id: renter.id,
-        p_monthly_rent: Number(rentAmount),
+        p_monthly_rent: Number(tempRentAmount),
         p_next_due_date: null // Use default next month
       });
 
@@ -151,15 +154,19 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       }
 
       toast.success(
-        `Monthly rent for ${renter.full_name} set to ₹${Number(rentAmount).toLocaleString()} successfully.`
+        `Monthly rent for ${renter.full_name} set to ₹${Number(tempRentAmount).toLocaleString()} successfully.`
       );
       
       // Update the renter's current rent in state
       setRenters(prev => prev.map(r => 
         r.id === renter.id 
-          ? { ...r, current_rent: Number(rentAmount) }
+          ? { ...r, current_rent: Number(tempRentAmount) }
           : r
       ));
+      
+      // Reset editing state
+      setEditingRenter(null);
+      setTempRentAmount('');
       
     } catch (error) {
       console.error('Error setting rent:', error);
@@ -208,13 +215,22 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
           </div>
         </div>
         
-        <Card className="text-center py-12">
-          <CardContent>
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No Renters Connected</h3>
-            <p className="text-muted-foreground">
-              No renters connected yet. Please connect renters to manage rent.
-            </p>
+        <Card className="text-center py-16">
+          <CardContent className="space-y-4">
+            <Users className="h-16 w-16 text-muted-foreground mx-auto" />
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-foreground">No Renters Connected</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                No renters connected yet. Please connect renters to manage rent.
+              </p>
+            </div>
+            <Button 
+              onClick={fetchActiveRenters}
+              variant="outline"
+              className="mt-4"
+            >
+              Refresh
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -238,60 +254,79 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
           <Card key={renter.id} className="transition-all duration-200 hover:shadow-md">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12">
+                <Avatar className="h-16 w-16">
                   <AvatarImage src={renter.avatar_url} alt={renter.full_name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-lg font-semibold">
                     {renter.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">{renter.full_name}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{renter.full_name}</h3>
                   {renter.room_number && (
-                    <p className="text-sm text-muted-foreground">Room {renter.room_number}</p>
-                  )}
-                  {renter.current_rent && renter.current_rent > 0 && (
-                    <p className="text-sm text-green-600 font-medium">
-                      Current: ₹{renter.current_rent.toLocaleString()}
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <span>Room No: {renter.room_number}</span>
                     </p>
+                  )}
+                  {renter.current_rent && renter.current_rent > 0 ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <IndianRupee className="h-4 w-4 text-green-600" />
+                      <p className="text-sm text-green-600 font-medium">
+                        Current Rent: ₹{renter.current_rent.toLocaleString()}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">No rent set</p>
                   )}
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      placeholder="Enter amount"
-                      value={rentAmounts[renter.id] || ''}
-                      onChange={(e) => handleRentAmountChange(renter.id, e.target.value)}
-                      min="0"
-                      step="100"
-                      className="w-32 pl-8"
-                    />
-                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  </div>
-                  
-                  <Button
-                    onClick={() => handleSaveRent(renter)}
-                    disabled={
-                      savingRent[renter.id] || 
-                      !rentAmounts[renter.id] || 
-                      isNaN(Number(rentAmounts[renter.id]))
-                    }
-                    className={cn(
-                      "min-w-[80px]",
-                      savingRent[renter.id] && "animate-pulse"
-                    )}
-                  >
-                    {savingRent[renter.id] ? (
-                      'Saving...'
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </Button>
+                <div className="flex flex-col items-end gap-2">
+                  {editingRenter === renter.id ? (
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          placeholder="Enter amount"
+                          value={tempRentAmount}
+                          onChange={(e) => setTempRentAmount(e.target.value)}
+                          min="0"
+                          step="100"
+                          className="w-32 pl-8"
+                          autoFocus
+                        />
+                        <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveRent(renter)}
+                        disabled={savingRent[renter.id] || !tempRentAmount || isNaN(Number(tempRentAmount))}
+                        className="min-w-[60px]"
+                      >
+                        {savingRent[renter.id] ? (
+                          'Saving...'
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={savingRent[renter.id]}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => handleEditRent(renter)}
+                      disabled={savingRent[renter.id]}
+                      className="min-w-[100px]"
+                    >
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Set Rent
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
