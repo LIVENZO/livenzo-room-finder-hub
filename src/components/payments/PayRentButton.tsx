@@ -4,7 +4,10 @@ import { CreditCard, Loader2 } from "lucide-react";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { RazorpayPaymentModal } from "./RazorpayPaymentModal";
 import { UpiPaymentModal } from "./UpiPaymentModal";
+import { MeterPhotoUploadModal } from "./MeterPhotoUploadModal";
+import { ElectricityBillModal } from "./ElectricityBillModal";
 import { toast } from "sonner";
+import { useAuth } from "@/context/auth";
 
 interface PayRentButtonProps {
   amount: number;
@@ -19,10 +22,15 @@ export const PayRentButton = ({
   disabled = false,
   className = ""
 }: PayRentButtonProps) => {
+  const [isMeterPhotoModalOpen, setIsMeterPhotoModalOpen] = useState(false);
+  const [isElectricityBillModalOpen, setIsElectricityBillModalOpen] = useState(false);
   const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(false);
   const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
   const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [finalAmount, setFinalAmount] = useState(amount);
+  const [ownerId, setOwnerId] = useState<string>("");
+  const { user } = useAuth();
 
   // Fixed UPI ID for Livenzo
   const LIVENZO_UPI_ID = "7488698970@ybl";
@@ -31,7 +39,7 @@ export const PayRentButton = ({
     setIsRazorpayModalOpen(false);
     setIsUpiModalOpen(false);
     setIsLoading(false);
-    toast.success(`Payment of ₹${amount} completed successfully!`);
+    toast.success(`Payment of ₹${finalAmount} completed successfully!`);
     
     // Refresh the page to show updated payment status
     setTimeout(() => {
@@ -46,11 +54,43 @@ export const PayRentButton = ({
     toast.error(`Payment failed: ${error}`);
   };
 
-  const handlePayClick = () => {
+  const handlePayClick = async () => {
     if (disabled) return;
     setIsLoading(true);
+    
+    try {
+      // Get owner ID from relationship
+      if (relationshipId && !ownerId) {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: relationship } = await supabase
+          .from('relationships')
+          .select('owner_id')
+          .eq('id', relationshipId)
+          .maybeSingle();
+        
+        if (relationship?.owner_id) {
+          setOwnerId(relationship.owner_id);
+        }
+      }
+      
+      setIsMeterPhotoModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching relationship:', error);
+      toast.error('Failed to load payment information');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMeterPhotoComplete = () => {
+    setIsMeterPhotoModalOpen(false);
+    setIsElectricityBillModalOpen(true);
+  };
+
+  const handleElectricityBillComplete = (totalAmount: number) => {
+    setFinalAmount(totalAmount);
+    setIsElectricityBillModalOpen(false);
     setIsMethodSelectorOpen(true);
-    setIsLoading(false);
   };
 
   const handleSelectRazorpay = () => {
@@ -84,10 +124,25 @@ export const PayRentButton = ({
         )}
       </Button>
 
+      <MeterPhotoUploadModal
+        isOpen={isMeterPhotoModalOpen}
+        onClose={() => setIsMeterPhotoModalOpen(false)}
+        onContinue={handleMeterPhotoComplete}
+        relationshipId={relationshipId || ""}
+        ownerId={ownerId}
+      />
+
+      <ElectricityBillModal
+        isOpen={isElectricityBillModalOpen}
+        onClose={() => setIsElectricityBillModalOpen(false)}
+        onContinue={handleElectricityBillComplete}
+        rentAmount={amount}
+      />
+
       <PaymentMethodSelector
         isOpen={isMethodSelectorOpen}
         onClose={() => setIsMethodSelectorOpen(false)}
-        amount={amount}
+        amount={finalAmount}
         onSelectRazorpay={handleSelectRazorpay}
         onSelectUpiDirect={handleSelectUpiDirect}
       />
@@ -98,7 +153,7 @@ export const PayRentButton = ({
           setIsRazorpayModalOpen(false);
           setIsLoading(false);
         }}
-        amount={amount}
+        amount={finalAmount}
         relationshipId={relationshipId}
         onSuccess={handlePaymentSuccess}
         onFailure={handlePaymentFailure}
@@ -110,7 +165,7 @@ export const PayRentButton = ({
           setIsUpiModalOpen(false);
           setIsLoading(false);
         }}
-        amount={amount}
+        amount={finalAmount}
         relationshipId={relationshipId || ""}
         ownerUpiId={LIVENZO_UPI_ID}
         ownerName="Livenzo"
