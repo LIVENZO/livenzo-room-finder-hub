@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import ActiveRentersList, { MeterPhoto } from './ActiveRentersList';
 import RentSummaryCards from './RentSummaryCards';
 import AddPaymentModal from './AddPaymentModal';
-import SetRentModal from './SetRentModal';
+import SetRentListPage from './SetRentListPage';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
 
 interface RentStats {
@@ -50,7 +50,7 @@ const RentManagementDashboard: React.FC = () => {
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
-  const [showSetRentModal, setShowSetRentModal] = useState(false);
+  const [showSetRentPage, setShowSetRentPage] = useState(false);
   const [selectedRenter, setSelectedRenter] = useState<{ id: string; name: string } | null>(null);
   const [meterPhotos, setMeterPhotos] = useState<Record<string, MeterPhoto[]>>({});
 
@@ -237,9 +237,11 @@ const RentManagementDashboard: React.FC = () => {
     }
   };
 
-  const handleCardClick = (type: 'total' | 'month' | 'pending' | 'renters') => {
+  const handleCardClick = (type: 'total' | 'month' | 'pending' | 'renters' | 'setrent') => {
     if (type === 'renters') {
       navigate('/active-renters');
+    } else if (type === 'setrent') {
+      setShowSetRentPage(true);
     }
     // Add more actions for other cards if needed
   };
@@ -257,15 +259,15 @@ const RentManagementDashboard: React.FC = () => {
     toast.success('Payment added successfully!');
   };
 
-  const handleSetRentClick = () => {
-    setShowSetRentModal(true);
-  };
-
-  const handleRentSet = () => {
-    setShowSetRentModal(false);
+  const handleBackFromSetRent = () => {
+    setShowSetRentPage(false);
     fetchRenters();
     fetchStats();
   };
+
+  if (showSetRentPage) {
+    return <SetRentListPage onBack={handleBackFromSetRent} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -274,7 +276,6 @@ const RentManagementDashboard: React.FC = () => {
         stats={stats}
         loading={loading}
         onCardClick={handleCardClick}
-        onSetRentClick={handleSetRentClick}
       />
 
       {/* Active Renters List */}
@@ -303,13 +304,6 @@ const RentManagementDashboard: React.FC = () => {
           onPaymentSaved={handlePaymentAdded}
         />
       )}
-
-      {/* Set Rent Modal */}
-      <SetRentModal
-        isOpen={showSetRentModal}
-        onClose={() => setShowSetRentModal(false)}
-        onRentSet={handleRentSet}
-      />
     </div>
   );
 };

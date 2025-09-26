@@ -12,15 +12,13 @@ interface RentSummaryCardsProps {
     activeRenters: number;
   };
   loading: boolean;
-  onCardClick: (type: 'total' | 'month' | 'pending' | 'renters') => void;
-  onSetRentClick: () => void;
+  onCardClick: (type: 'total' | 'month' | 'pending' | 'renters' | 'setrent') => void;
 }
 
 const RentSummaryCards: React.FC<RentSummaryCardsProps> = ({
   stats,
   loading,
-  onCardClick,
-  onSetRentClick
+  onCardClick
 }) => {
   const cards = [
     {
@@ -71,13 +69,26 @@ const RentSummaryCards: React.FC<RentSummaryCardsProps> = ({
       iconBg: 'bg-purple-500',
       subtitle: 'Connected',
       isCount: true
+    },
+    {
+      type: 'setrent' as const,
+      title: 'Set Rent',
+      value: 0,
+      icon: Plus,
+      gradient: 'from-indigo-400 to-indigo-600',
+      bgGradient: 'from-indigo-50 to-indigo-100',
+      borderColor: 'border-indigo-200',
+      textColor: 'text-indigo-800',
+      iconBg: 'bg-indigo-500',
+      subtitle: 'Manage rent',
+      isAction: true
     }
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {[...Array(5)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
               <div className="h-20 bg-gray-200 rounded"></div>
@@ -89,64 +100,52 @@ const RentSummaryCards: React.FC<RentSummaryCardsProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Add Set Rent Button */}
-      <div className="flex justify-end">
-        <Button 
-          onClick={onSetRentClick}
-          className="bg-gradient-to-r from-primary to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg transition-all duration-200 gap-2"
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      {cards.map((card) => (
+        <Card
+          key={card.type}
+          className={cn(
+            "cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105",
+            "bg-gradient-to-br shadow-soft border-0",
+            card.bgGradient
+          )}
+          onClick={() => onCardClick(card.type)}
         >
-          <Plus className="h-4 w-4" />
-          Set Rent
-        </Button>
-      </div>
-
-      {/* Summary Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {cards.map((card) => (
-          <Card
-            key={card.type}
-            className={cn(
-              "cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105",
-              "bg-gradient-to-br shadow-soft border-0",
-              card.bgGradient
-            )}
-            onClick={() => onCardClick(card.type)}
-          >
-            <CardContent className="p-4 h-full">
-              <div className="flex items-center justify-between h-full">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "p-2 rounded-lg shadow-sm",
-                      card.iconBg
+          <CardContent className="p-4 h-full">
+            <div className="flex items-center justify-between h-full">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "p-2 rounded-lg shadow-sm",
+                    card.iconBg
+                  )}>
+                    <card.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                      {card.title}
+                    </p>
+                    <p className={cn(
+                      "text-lg sm:text-xl font-bold truncate",
+                      card.textColor
                     )}>
-                      <card.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        {card.title}
-                      </p>
-                      <p className={cn(
-                        "text-lg sm:text-xl font-bold truncate",
-                        card.textColor
-                      )}>
-                        {card.isCount 
+                      {card.isAction 
+                        ? '' 
+                        : card.isCount 
                           ? card.value 
                           : `₹${card.value.toLocaleString()}`
-                        }
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {card.subtitle}
-                      </p>
-                    </div>
+                      }
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {card.subtitle}
+                    </p>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
