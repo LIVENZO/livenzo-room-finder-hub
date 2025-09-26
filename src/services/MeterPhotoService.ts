@@ -60,49 +60,120 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
 };
 
 /**
- * Take photo using device camera (mobile native)
+ * Check camera permissions and request if needed
+ */
+const checkCameraPermissions = async (): Promise<boolean> => {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('Camera API not available');
+      return false;
+    }
+
+    // Check if we already have permission
+    const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+    
+    if (permissionStatus.state === 'granted') {
+      return true;
+    }
+    
+    if (permissionStatus.state === 'denied') {
+      toast.error('⚠️ Camera permission denied. Please enable camera access in your browser settings.');
+      return false;
+    }
+
+    // Try to request permission by accessing camera
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Stop the stream immediately as we just needed permission
+      stream.getTracks().forEach(track => track.stop());
+      return true;
+    } catch (permError) {
+      console.error('Camera permission error:', permError);
+      toast.error('⚠️ Camera permission required to upload meter photo. Please enable it in settings.');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error checking camera permissions:', error);
+    return false;
+  }
+};
+
+/**
+ * Take photo using device camera with proper web/mobile support
  */
 export const takeMeterPhoto = async (): Promise<File | null> => {
   try {
-    if (!Capacitor.isNativePlatform()) {
-      // Fallback for web - trigger file input
+    console.log('Taking meter photo - Platform:', Capacitor.isNativePlatform() ? 'Native' : 'Web');
+
+    if (Capacitor.isNativePlatform()) {
+      // Native mobile platform - use Capacitor Camera
+      try {
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Uri,
+          source: CameraSource.Camera,
+        });
+
+        if (!image.webPath) {
+          throw new Error('No image captured');
+        }
+
+        // Convert to File object
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+        });
+
+        console.log('Native camera photo captured:', file.name, file.size);
+        return file;
+      } catch (nativeError) {
+        console.error('Native camera error:', nativeError);
+        toast.error('⚠️ Unable to access camera. Please check permissions.');
+        return null;
+      }
+    } else {
+      // Web platform - check permissions first
+      const hasPermission = await checkCameraPermissions();
+      if (!hasPermission) {
+        return null;
+      }
+
+      // Use file input with camera capture for web
       return new Promise((resolve) => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.capture = 'camera';
+        input.capture = 'environment'; // Use rear camera
         
         input.onchange = (e) => {
           const file = (e.target as HTMLInputElement).files?.[0];
-          resolve(file || null);
+          if (file) {
+            console.log('Web camera photo selected:', file.name, file.size);
+            resolve(file);
+          } else {
+            console.log('No file selected from camera input');
+            resolve(null);
+          }
         };
         
+        input.onclick = () => {
+          console.log('Camera input clicked');
+        };
+
+        input.oncancel = () => {
+          console.log('Camera input cancelled');
+          resolve(null);
+        };
+        
+        // Trigger the file input
         input.click();
       });
     }
-
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
-    });
-
-    if (!image.webPath) {
-      throw new Error('No image captured');
-    }
-
-    // Convert to File object
-    const response = await fetch(image.webPath);
-    const blob = await response.blob();
-    const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
-      type: 'image/jpeg',
-    });
-
-    return file;
   } catch (error) {
     console.error('Error taking photo:', error);
-    toast.error('Failed to take photo');
+    toast.error('⚠️ Unable to access camera. Please try again or check permissions.');
     return null;
   }
 };
