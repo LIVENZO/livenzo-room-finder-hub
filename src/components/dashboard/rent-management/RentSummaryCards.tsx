@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { DollarSign, Calendar, AlertCircle, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DollarSign, Calendar, AlertCircle, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RentSummaryCardsProps {
@@ -12,12 +13,14 @@ interface RentSummaryCardsProps {
   };
   loading: boolean;
   onCardClick: (type: 'total' | 'month' | 'pending' | 'renters') => void;
+  onSetRentClick: () => void;
 }
 
 const RentSummaryCards: React.FC<RentSummaryCardsProps> = ({
   stats,
   loading,
-  onCardClick
+  onCardClick,
+  onSetRentClick
 }) => {
   const cards = [
     {
@@ -86,50 +89,64 @@ const RentSummaryCards: React.FC<RentSummaryCardsProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {cards.map((card) => (
-        <Card
-          key={card.type}
-          className={cn(
-            "cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105",
-            "bg-gradient-to-br shadow-soft border-0",
-            card.bgGradient
-          )}
-          onClick={() => onCardClick(card.type)}
+    <div className="space-y-4">
+      {/* Add Set Rent Button */}
+      <div className="flex justify-end">
+        <Button 
+          onClick={onSetRentClick}
+          className="bg-gradient-to-r from-primary to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg transition-all duration-200 gap-2"
         >
-          <CardContent className="p-4 h-full">
-            <div className="flex items-center justify-between h-full">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "p-2 rounded-lg shadow-sm",
-                    card.iconBg
-                  )}>
-                    <card.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      {card.title}
-                    </p>
-                    <p className={cn(
-                      "text-lg sm:text-xl font-bold truncate",
-                      card.textColor
+          <Plus className="h-4 w-4" />
+          Set Rent
+        </Button>
+      </div>
+
+      {/* Summary Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {cards.map((card) => (
+          <Card
+            key={card.type}
+            className={cn(
+              "cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105",
+              "bg-gradient-to-br shadow-soft border-0",
+              card.bgGradient
+            )}
+            onClick={() => onCardClick(card.type)}
+          >
+            <CardContent className="p-4 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "p-2 rounded-lg shadow-sm",
+                      card.iconBg
                     )}>
-                      {card.isCount 
-                        ? card.value 
-                        : `₹${card.value.toLocaleString()}`
-                      }
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {card.subtitle}
-                    </p>
+                      <card.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        {card.title}
+                      </p>
+                      <p className={cn(
+                        "text-lg sm:text-xl font-bold truncate",
+                        card.textColor
+                      )}>
+                        {card.isCount 
+                          ? card.value 
+                          : `₹${card.value.toLocaleString()}`
+                        }
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {card.subtitle}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

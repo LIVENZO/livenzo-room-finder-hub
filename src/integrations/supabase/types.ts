@@ -797,6 +797,7 @@ export type Database = {
           end_date: string | null
           id: string
           monthly_rent: number
+          next_due_date: string | null
           owner_id: string
           property_id: string
           renter_id: string
@@ -810,6 +811,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rent: number
+          next_due_date?: string | null
           owner_id: string
           property_id: string
           renter_id: string
@@ -823,6 +825,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rent?: number
+          next_due_date?: string | null
           owner_id?: string
           property_id?: string
           renter_id?: string
@@ -1362,6 +1365,14 @@ export type Database = {
           id: string
           public_id: string
         }[]
+      }
+      set_renter_monthly_rent: {
+        Args: {
+          p_monthly_rent: number
+          p_next_due_date?: string
+          p_renter_id: string
+        }
+        Returns: Json
       }
       submit_complaint: {
         Args: {
