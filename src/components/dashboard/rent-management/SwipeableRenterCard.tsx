@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, Camera, Download, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeterPhoto } from './ActiveRentersList';
+import { MeterPhotoViewModal } from '@/components/owner/MeterPhotoViewModal';
 
 interface RenterPaymentInfo {
   id: string;
@@ -41,6 +42,8 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [showMeterPhotoModal, setShowMeterPhotoModal] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const x = useMotionValue(0);
   const constraintsRef = useRef(null);
 
@@ -67,6 +70,12 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
+    // Clear long press timer
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+
     // Determine if swipe was strong enough
     const shouldTrigger = Math.abs(offset) > 100 || Math.abs(velocity) > 500;
 
@@ -81,6 +90,22 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     // Reset
     setSwipeDirection(null);
     x.set(0);
+  };
+
+  const handleMouseDown = () => {
+    if (renter.relationshipId && meterPhotos[renter.relationshipId]?.length > 0) {
+      const timer = setTimeout(() => {
+        setShowMeterPhotoModal(true);
+      }, 3000); // 3 seconds long press
+      setLongPressTimer(timer);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -162,6 +187,10 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleMouseDown}
+        onTouchEnd={handleMouseUp}
         whileDrag={{ scale: 1.02 }}
         animate={{ 
           scale: isDragging ? 1.02 : 1,
@@ -258,6 +287,17 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         >
           {swipeDirection === 'left' ? 'Unpaid' : 'Paid'}
         </motion.div>
+      )}
+
+      {/* Meter Photo View Modal */}
+      {renter.relationshipId && meterPhotos[renter.relationshipId] && (
+        <MeterPhotoViewModal
+          isOpen={showMeterPhotoModal}
+          onClose={() => setShowMeterPhotoModal(false)}
+          renterName={renter.renter.full_name || 'Unknown Renter'}
+          meterPhotos={meterPhotos[renter.relationshipId]}
+          electricityBillAmount={undefined} // TODO: Get from backend
+        />
       )}
     </div>
   );
