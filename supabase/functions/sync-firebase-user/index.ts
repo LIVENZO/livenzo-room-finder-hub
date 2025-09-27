@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     console.log('Syncing user:', { firebase_uid, phone_number, email, has_fcm_token: !!fcm_token });
 
     // Try to find existing user by phone via Admin API (paginate first 1000 users)
-    const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+    const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (listErr) {
       console.error('listUsers error:', listErr);
       return new Response(JSON.stringify({ error: 'Failed to check users', details: listErr.message }), {
@@ -190,42 +190,57 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Generate session tokens using admin API for phone-authenticated users
-    console.log('Generating session tokens for user:', supabaseUserId);
-    
-    // Use magiclink generation to create valid tokens
-    const { data: sessionData, error: sessionErr } = await admin.auth.admin.generateLink({
+    // Create session via Admin magic link + verifyOtp (no email click needed)
+    console.log('Creating Supabase session via verifyOtp for user:', supabaseUserId);
+
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email: finalEmail,
     });
 
-    if (sessionErr || !sessionData) {
-      console.error('generateLink error:', sessionErr);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to create session for user',
-        details: sessionErr?.message || 'Session generation failed'
+    if (linkErr || !linkData?.properties?.action_link) {
+      console.error('generateLink error:', linkErr);
+      return new Response(JSON.stringify({
+        error: 'Failed to initiate session creation',
+        details: linkErr?.message || 'Magic link generation failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Parse access and refresh tokens from the generated link
-    console.log('Magic link generated successfully');
-    const linkUrl = new URL(sessionData.properties.action_link);
-    const accessToken = linkUrl.searchParams.get('access_token');
-    const refreshToken = linkUrl.searchParams.get('refresh_token');
-    
-    if (!accessToken || !refreshToken) {
-      console.error('Failed to extract tokens from magic link:', linkUrl.href);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to extract session tokens',
-        details: 'Invalid magic link format'
+    const url = new URL(linkData.properties.action_link);
+    const token = url.searchParams.get('token');
+    if (!token) {
+      console.error('No token found in action_link:', url.href);
+      return new Response(JSON.stringify({
+        error: 'Failed to extract verification token',
+        details: 'Invalid action_link format'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    const { data: verifyData, error: verifyErr } = await authClient.auth.verifyOtp({
+      email: finalEmail,
+      token,
+      type: 'magiclink',
+    });
+
+    if (verifyErr || !verifyData?.session) {
+      console.error('verifyOtp error:', verifyErr);
+      return new Response(JSON.stringify({
+        error: 'Failed to create session',
+        details: verifyErr?.message || 'Verification failed'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const accessToken = verifyData.session.access_token;
+    const refreshToken = verifyData.session.refresh_token;
 
     return new Response(JSON.stringify({
       success: true,
