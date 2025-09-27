@@ -55,16 +55,18 @@ export const MeterPhotoUploadModal = ({
     }
   };
 
-  const handleRetakePhoto = () => {
+  const handleRetakePhoto = async () => {
     if (photoPreview) {
       URL.revokeObjectURL(photoPreview);
     }
     setCapturedPhoto(null);
     setPhotoPreview(null);
     setUploadProgress(0);
+    // Open camera again for retake
+    await handleTakePhoto();
   };
 
-  const handleUploadPhoto = async () => {
+  const handleSendToOwner = async () => {
     if (!capturedPhoto) return;
     
     try {
@@ -89,16 +91,16 @@ export const MeterPhotoUploadModal = ({
       
       if (photoUrl) {
         setPhotoUploaded(true);
-        toast.success("Meter photo uploaded successfully ✅");
+        toast.success("Meter photo sent to owner successfully! 📸");
         setTimeout(() => {
-          onContinue();
+          onContinue(); // Continue with the normal payment flow
         }, 1500);
       } else {
         toast.error("⚠️ Upload failed. Please check your network and try again.");
         setUploadProgress(0);
       }
     } catch (error) {
-      console.error('Error uploading meter photo:', error);
+      console.error('Error sending meter photo:', error);
       toast.error("⚠️ Upload failed. Please check your network and try again.");
       setUploadProgress(0);
     } finally {
@@ -176,7 +178,7 @@ export const MeterPhotoUploadModal = ({
                   Retake
                 </Button>
                 <Button
-                  onClick={handleUploadPhoto}
+                  onClick={handleSendToOwner}
                   className="flex-1 bg-primary"
                   disabled={isUploading}
                 >
@@ -185,7 +187,7 @@ export const MeterPhotoUploadModal = ({
                   ) : (
                     <Upload className="h-4 w-4 mr-2" />
                   )}
-                  Upload
+                  Send to Owner
                 </Button>
               </div>
             </div>
@@ -233,13 +235,13 @@ export const MeterPhotoUploadModal = ({
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {photoUploaded 
-                            ? 'Meter photo saved successfully' 
-                            : showCamera 
-                            ? 'Opening camera...' 
-                            : 'Capture and upload your meter reading'
-                          }
+                         <p className="text-sm text-muted-foreground">
+                           {photoUploaded 
+                             ? 'Meter photo sent to owner successfully!' 
+                             : showCamera 
+                             ? 'Opening camera...' 
+                             : 'Capture and send your meter reading'
+                           }
                         </p>
                       </div>
                     </div>
