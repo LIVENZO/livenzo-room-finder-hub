@@ -97,21 +97,30 @@ export const PayRentSection = () => {
       setRentalAgreement(agreementData);
       console.log('Rental agreement data:', agreementData);
 
-      // Fetch relationship with owner profile data
+      // Fetch relationship with owner profile data - simplified query to avoid foreign key issues
       const { data: relationship, error: relationshipError } = await supabase
         .from('relationships')
-        .select(`
-          *,
-          user_profiles!relationships_owner_id_fkey(full_name, property_name)
-        `)
+        .select('*')
         .eq('renter_id', user.id)
         .eq('status', 'accepted')
+        .neq('archived', true)
         .maybeSingle();
 
       if (relationshipError) {
         console.error('Error fetching relationship:', relationshipError);
         toast.error('Failed to load rental information');
         return;
+      }
+
+      // Fetch owner profile separately if relationship exists
+      let ownerProfile = null;
+      if (relationship?.owner_id) {
+        const { data: ownerData } = await supabase
+          .from('user_profiles')
+          .select('full_name, property_name')
+          .eq('id', relationship.owner_id)
+          .maybeSingle();
+        ownerProfile = ownerData;
       }
 
       // NEW: If no direct relationship row found but an agreement exists, try to find matching relationship by owner/renter
@@ -142,10 +151,7 @@ export const PayRentSection = () => {
       
       // Set owner info
       if (effectiveRelationship) {
-        const owner = Array.isArray(effectiveRelationship.user_profiles) 
-          ? effectiveRelationship.user_profiles[0] 
-          : (effectiveRelationship as any).user_profiles;
-        setOwnerInfo(owner || { full_name: 'Property Owner' });
+        setOwnerInfo(ownerProfile || { full_name: 'Property Owner' });
 
         // Fetch rent status for this relationship
         const { data: rentStatusData, error: rentError } = await supabase
