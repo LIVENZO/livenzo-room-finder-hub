@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.71.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4?target=deno';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -185,31 +185,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Directly create a session for the user (no magic links, no verifyOtp)
-    console.log('Creating Supabase session via admin.createSession for user:', supabaseUserId);
+    // Create session using generateLink + extracting tokens (avoiding deprecated verifyOtp)
+    console.log('Creating session tokens for user:', supabaseUserId);
 
-    const { data: sessionData, error: sessionErr } = await admin.auth.admin.createSession({ user_id: supabaseUserId! });
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: finalEmail,
+    });
 
-    if (sessionErr || !sessionData) {
-      console.error('createSession error:', sessionErr);
+    if (linkErr || !linkData?.properties?.action_link) {
+      console.error('generateLink error:', linkErr);
       return new Response(JSON.stringify({
-        error: 'Failed to create session',
-        details: sessionErr?.message || 'Admin createSession failed'
+        error: 'Failed to generate session tokens',
+        details: linkErr?.message || 'Magic link generation failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const sessionAny = sessionData as any;
-    const accessToken = sessionAny?.session?.access_token ?? sessionAny?.access_token;
-    const refreshToken = sessionAny?.session?.refresh_token ?? sessionAny?.refresh_token;
+    // Extract tokens from the magic link URL parameters
+    const linkUrl = new URL(linkData.properties.action_link);
+    const accessToken = linkUrl.searchParams.get('access_token');
+    const refreshToken = linkUrl.searchParams.get('refresh_token');
 
     if (!accessToken || !refreshToken) {
-      console.error('createSession returned no tokens:', sessionAny);
+      console.error('No tokens found in magic link:', linkUrl.href);
       return new Response(JSON.stringify({
-        error: 'Failed to obtain session tokens',
-        details: 'createSession did not return access/refresh tokens'
+        error: 'Failed to extract session tokens',
+        details: 'Magic link did not contain access/refresh tokens'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
