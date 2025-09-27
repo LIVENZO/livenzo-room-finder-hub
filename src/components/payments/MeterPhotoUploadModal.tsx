@@ -43,11 +43,9 @@ export const MeterPhotoUploadModal = ({
         return;
       }
 
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setCapturedPhoto(file);
-      setPhotoPreview(previewUrl);
       setShowCamera(false);
+      // Automatically upload the photo after taking it
+      await handleAutoUpload(file);
     } catch (error) {
       console.error('Error taking photo:', error);
       toast.error("⚠️ Camera access is required to upload meter photos. Please enable it in settings.");
@@ -55,20 +53,7 @@ export const MeterPhotoUploadModal = ({
     }
   };
 
-  const handleRetakePhoto = async () => {
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview);
-    }
-    setCapturedPhoto(null);
-    setPhotoPreview(null);
-    setUploadProgress(0);
-    // Open camera again for retake
-    await handleTakePhoto();
-  };
-
-  const handleSendToOwner = async () => {
-    if (!capturedPhoto) return;
-    
+  const handleAutoUpload = async (file: File) => {
     try {
       setIsUploading(true);
       setUploadProgress(10);
@@ -84,7 +69,7 @@ export const MeterPhotoUploadModal = ({
         });
       }, 200);
 
-      const photoUrl = await uploadMeterPhoto(capturedPhoto, relationshipId, user?.id || '', ownerId);
+      const photoUrl = await uploadMeterPhoto(file, relationshipId, user?.id || '', ownerId);
       
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -100,13 +85,14 @@ export const MeterPhotoUploadModal = ({
         setUploadProgress(0);
       }
     } catch (error) {
-      console.error('Error sending meter photo:', error);
+      console.error('Error uploading meter photo:', error);
       toast.error("⚠️ Upload failed. Please check your network and try again.");
       setUploadProgress(0);
     } finally {
       setIsUploading(false);
     }
   };
+
 
   const handleOwnerCalculate = () => {
     onContinue();
@@ -136,148 +122,101 @@ export const MeterPhotoUploadModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Photo Preview Screen */}
-          {photoPreview && !photoUploaded ? (
-            <div className="space-y-4">
-              <div className="relative">
-                <img 
-                  src={photoPreview} 
-                  alt="Meter photo preview" 
-                  className="w-full h-64 object-cover rounded-lg border"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-white/90 hover:bg-white"
-                  onClick={handleClose}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Uploading meter photo...</span>
+                <span>{uploadProgress}%</span>
               </div>
-              
-              {/* Upload Progress */}
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Uploading meter photo...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="h-2" />
-                </div>
-              )}
-              
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleRetakePhoto}
-                  className="flex-1"
-                  disabled={isUploading}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Retake
-                </Button>
-                <Button
-                  onClick={handleSendToOwner}
-                  className="flex-1 bg-primary"
-                  disabled={isUploading}
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4 mr-2" />
-                  )}
-                  Send to Owner
-                </Button>
-              </div>
+              <Progress value={uploadProgress} className="h-2" />
             </div>
-          ) : (
-            // Main Options Screen
-            <>
-              {/* Upload Photo Option */}
-              <Card 
-                className={`cursor-pointer transition-all border-2 ${
-                  photoUploaded 
-                    ? 'border-green-200 bg-green-50' 
-                    : showCamera 
-                    ? 'border-blue-200 bg-blue-50' 
-                    : 'hover:shadow-md hover:border-blue-200'
-                }`}
-                onClick={!photoUploaded && !showCamera ? handleTakePhoto : undefined}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${
-                        photoUploaded 
-                          ? 'bg-green-100' 
-                          : showCamera 
-                          ? 'bg-blue-100' 
-                          : 'bg-blue-100'
-                      }`}>
-                        {showCamera ? (
-                          <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-                        ) : photoUploaded ? (
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        ) : (
-                          <Camera className="h-6 w-6 text-blue-600" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">
-                            {photoUploaded ? 'Photo Uploaded' : 'Upload Photo'}
-                          </h3>
-                          {photoUploaded && (
-                            <Badge className="text-xs bg-green-100 text-green-700 border-green-200">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Done
-                            </Badge>
-                          )}
-                        </div>
-                         <p className="text-sm text-muted-foreground">
-                           {photoUploaded 
-                             ? 'Meter photo sent to owner successfully!' 
-                             : showCamera 
-                             ? 'Opening camera...' 
-                             : 'Capture and send your meter reading'
-                           }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Owner Calculate Option */}
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-200"
-                onClick={handleOwnerCalculate}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <User className="h-6 w-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Owner Calculate</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Let your owner calculate electricity charges
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="text-center">
-                <Button variant="outline" onClick={handleClose} className="w-full">
-                  Cancel
-                </Button>
-              </div>
-            </>
           )}
+
+          {/* Upload Photo Option */}
+          <Card 
+            className={`cursor-pointer transition-all border-2 ${
+              photoUploaded 
+                ? 'border-green-200 bg-green-50' 
+                : showCamera || isUploading
+                ? 'border-blue-200 bg-blue-50' 
+                : 'hover:shadow-md hover:border-blue-200'
+            }`}
+            onClick={!photoUploaded && !showCamera && !isUploading ? handleTakePhoto : undefined}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    photoUploaded 
+                      ? 'bg-green-100' 
+                      : showCamera || isUploading
+                      ? 'bg-blue-100' 
+                      : 'bg-blue-100'
+                  }`}>
+                    {showCamera || isUploading ? (
+                      <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                    ) : photoUploaded ? (
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <Camera className="h-6 w-6 text-blue-600" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">
+                        {photoUploaded ? 'Photo Uploaded' : 'Upload Photo'}
+                      </h3>
+                      {photoUploaded && (
+                        <Badge className="text-xs bg-green-100 text-green-700 border-green-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Done
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {photoUploaded 
+                        ? 'Meter photo sent to owner successfully!' 
+                        : showCamera 
+                        ? 'Opening camera...'
+                        : isUploading
+                        ? 'Uploading meter photo...'
+                        : 'Capture and send your meter reading'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Owner Calculate Option */}
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-200"
+            onClick={handleOwnerCalculate}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <User className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Owner Calculate</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Let your owner calculate electricity charges
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="text-center">
+            <Button variant="outline" onClick={handleClose} className="w-full">
+              Cancel
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
