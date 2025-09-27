@@ -59,10 +59,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const email = `${phone_number}@firebase.app`;
+    // Generate fake email from phone number for Supabase compatibility
+    const email = `${phone_number.replace('+', '')}@livenzo.app`;
     const tempPassword = generateTempPassword();
 
-    console.log('Syncing user:', { firebase_uid, phone_number, has_fcm_token: !!fcm_token });
+    console.log('Syncing user:', { firebase_uid, phone_number, email, has_fcm_token: !!fcm_token });
 
     // Try to find existing user by phone via Admin API (paginate first 1000 users)
     const { data: list, error: listErr } = await admin.auth.admin.listUsers();
@@ -75,15 +76,17 @@ Deno.serve(async (req) => {
     }
 
     let supabaseUserId: string | null = null;
-    let upsertedEmail = email;
+    let finalEmail = email;
 
     const existing = list.users.find((u) => u.phone === phone_number);
 
     if (existing) {
       supabaseUserId = existing.id;
-      // Ensure email is present and update password
+      finalEmail = existing.email || email;
+      
+      // Update existing user with confirmed email and phone
       const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
-        email: existing.email ?? email,
+        email: finalEmail,
         email_confirm: true,
         phone_confirm: true,
         password: tempPassword,
@@ -96,12 +99,12 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-      upsertedEmail = existing.email ?? email;
+      console.log('Updated existing user:', supabaseUserId, 'with email:', finalEmail);
     } else {
       // Create new user with confirmed phone/email and temp password
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         phone: phone_number,
-        email,
+        email: email,
         password: tempPassword,
         phone_confirm: true,
         email_confirm: true,
@@ -115,6 +118,8 @@ Deno.serve(async (req) => {
         });
       }
       supabaseUserId = created.user.id;
+      finalEmail = email;
+      console.log('Created new user:', supabaseUserId, 'with email:', finalEmail);
     }
 
     // Upsert into user_profiles
@@ -191,7 +196,7 @@ Deno.serve(async (req) => {
     // Use magiclink generation to create valid tokens
     const { data: sessionData, error: sessionErr } = await admin.auth.admin.generateLink({
       type: 'magiclink',
-      email: upsertedEmail,
+      email: finalEmail,
     });
 
     if (sessionErr || !sessionData) {
