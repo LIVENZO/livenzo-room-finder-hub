@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Clock, Camera, Download, User } from 'lucide-reac
 import { cn } from '@/lib/utils';
 import { MeterPhoto } from './ActiveRentersList';
 import { MeterPhotoViewModal } from '@/components/owner/MeterPhotoViewModal';
+import { MeterPhotoDetailModal } from '@/components/owner/MeterPhotoDetailModal';
 
 interface RenterPaymentInfo {
   id: string;
@@ -43,7 +44,10 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showMeterPhotoModal, setShowMeterPhotoModal] = useState(false);
+  const [showMeterPhotoDetailModal, setShowMeterPhotoDetailModal] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [tapCount, setTapCount] = useState(0);
+  const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
   const x = useMotionValue(0);
   const constraintsRef = useRef(null);
 
@@ -92,20 +96,47 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     x.set(0);
   };
 
-  const handleMouseDown = () => {
-    if (renter.relationshipId && meterPhotos[renter.relationshipId]?.length > 0) {
-      const timer = setTimeout(() => {
-        setShowMeterPhotoModal(true);
-      }, 3000); // 3 seconds long press
-      setLongPressTimer(timer);
+  const handleDoubleTap = () => {
+    if (renter.relationshipId) {
+      setShowMeterPhotoDetailModal(true);
     }
   };
 
-  const handleMouseUp = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
+  const handleTap = () => {
+    if (isDragging) return; // Don't handle taps during dragging
+    
+    setTapCount(prev => prev + 1);
+    
+    if (tapTimer) {
+      clearTimeout(tapTimer);
     }
+    
+    const timer = setTimeout(() => {
+      if (tapCount === 1) {
+        // Single tap - show long press modal if meter photos exist
+        if (renter.relationshipId && meterPhotos[renter.relationshipId]?.length > 0) {
+          setShowMeterPhotoModal(true);
+        }
+      }
+      setTapCount(0);
+    }, 300); // 300ms window for double tap
+    
+    setTapTimer(timer);
+    
+    // Check for double tap
+    if (tapCount === 1) {
+      clearTimeout(timer);
+      setTapCount(0);
+      handleDoubleTap();
+    }
+  };
+
+  const handleMouseDown = () => {
+    // No longer needed for long press, keeping for compatibility
+  };
+
+  const handleMouseUp = () => {
+    // No longer needed for long press, keeping for compatibility
   };
 
   const getStatusIcon = (status: string) => {
@@ -187,6 +218,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
+        onClick={handleTap}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onTouchStart={handleMouseDown}
@@ -297,6 +329,17 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
           renterName={renter.renter.full_name || 'Unknown Renter'}
           meterPhotos={meterPhotos[renter.relationshipId]}
           electricityBillAmount={undefined} // TODO: Get from backend
+        />
+      )}
+
+      {/* Meter Photo Detail Modal */}
+      {renter.relationshipId && (
+        <MeterPhotoDetailModal
+          isOpen={showMeterPhotoDetailModal}
+          onClose={() => setShowMeterPhotoDetailModal(false)}
+          renterName={renter.renter.full_name || 'Unknown Renter'}
+          relationshipId={renter.relationshipId}
+          meterPhotos={meterPhotos[renter.relationshipId] || []}
         />
       )}
     </div>
