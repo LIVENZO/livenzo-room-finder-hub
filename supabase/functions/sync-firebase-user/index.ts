@@ -45,6 +45,10 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
+    const publicClient = createClient(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
     const body: SyncUserRequest = await req.json();
     const { firebase_uid, phone_number, fcm_token } = body;
 
@@ -186,35 +190,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Directly create a session for the user (no magic links, no verifyOtp)
-    console.log('Creating Supabase session via admin.createSession for user:', supabaseUserId);
+    // Create session via public client signInWithPassword (no magic links, no verifyOtp)
+    console.log('Creating Supabase session via signInWithPassword for email:', finalEmail);
 
-    const { data: sessionData, error: sessionErr } = await admin.auth.admin.createSession({ user_id: supabaseUserId! });
+    const { data: signInData, error: signInErr } = await publicClient.auth.signInWithPassword({
+      email: finalEmail,
+      password: tempPassword,
+    });
 
-    if (sessionErr || !sessionData) {
-      console.error('createSession error:', sessionErr);
+    if (signInErr || !signInData?.session) {
+      console.error('signInWithPassword error:', signInErr);
       return new Response(JSON.stringify({
         error: 'Failed to create session',
-        details: sessionErr?.message || 'Admin createSession failed'
+        details: signInErr?.message || 'signInWithPassword failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const accessToken = (sessionData as any)?.session?.access_token ?? (sessionData as any)?.access_token;
-    const refreshToken = (sessionData as any)?.session?.refresh_token ?? (sessionData as any)?.refresh_token;
-
-    if (!accessToken || !refreshToken) {
-      console.error('createSession returned no tokens:', sessionData);
-      return new Response(JSON.stringify({
-        error: 'Failed to obtain session tokens',
-        details: 'createSession did not return access/refresh tokens'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    const accessToken = signInData.session.access_token;
+    const refreshToken = signInData.session.refresh_token;
 
     return new Response(JSON.stringify({
       access_token: accessToken,
