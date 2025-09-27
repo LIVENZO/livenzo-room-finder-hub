@@ -426,9 +426,13 @@ export function useAuthMethods() {
 
       // 1) Verify OTP with Firebase and get fresh ID token
       let idToken: string;
+      let firebaseUid: string;
+      let phoneNumber: string;
       try {
         const verifyRes = await verifyFirebaseOTP(token);
         idToken = verifyRes.idToken;
+        firebaseUid = verifyRes.uid;
+        phoneNumber = verifyRes.phoneNumber;
       } catch (e: any) {
         console.error('Firebase OTP verification failed:', e);
         clearConfirmationResult();
@@ -437,10 +441,11 @@ export function useAuthMethods() {
       }
 
       // 2) Exchange Firebase ID token for Supabase session via Edge Function
-      const { data, error } = await supabase.functions.invoke('firebase-auth-convert', {
+      const { data, error } = await supabase.functions.invoke('sync-firebase-user', {
         body: {
-          idToken,
-          selectedRole,
+          firebase_uid: firebaseUid,
+          phone_number: phoneNumber,
+          fcm_token: null, // Can be added later if needed
         },
       });
 
