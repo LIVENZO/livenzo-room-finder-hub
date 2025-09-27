@@ -185,29 +185,50 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Now create a user session and return tokens to the client
-    const { data: signInData, error: signInErr } = await authClient.auth.signInWithPassword({
+    // Generate session tokens using admin API for phone-authenticated users
+    console.log('Generating session tokens for user:', supabaseUserId);
+    
+    // Use magiclink generation to create valid tokens
+    const { data: sessionData, error: sessionErr } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
       email: upsertedEmail,
-      password: tempPassword
     });
 
-    if (signInErr || !signInData.session) {
-      console.error('signInWithPassword error:', signInErr);
-      return new Response(JSON.stringify({ error: 'Failed to create session for user' }), {
+    if (sessionErr || !sessionData) {
+      console.error('generateLink error:', sessionErr);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to create session for user',
+        details: sessionErr?.message || 'Session generation failed'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const { access_token, refresh_token } = signInData.session;
+    // Parse access and refresh tokens from the generated link
+    console.log('Magic link generated successfully');
+    const linkUrl = new URL(sessionData.properties.action_link);
+    const accessToken = linkUrl.searchParams.get('access_token');
+    const refreshToken = linkUrl.searchParams.get('refresh_token');
+    
+    if (!accessToken || !refreshToken) {
+      console.error('Failed to extract tokens from magic link:', linkUrl.href);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to extract session tokens',
+        details: 'Invalid magic link format'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
       message: 'User synced successfully',
       supabase_user_id: supabaseUserId,
       profile,
-      access_token,
-      refresh_token
+      access_token: accessToken,
+      refresh_token: refreshToken
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
