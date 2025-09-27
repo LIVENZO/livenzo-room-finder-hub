@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.71.0?target=deno';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,16 +36,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Initialize Supabase clients
+    // Initialize Supabase admin client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    });
-
-    const authClient = createClient(supabaseUrl, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
@@ -78,7 +73,7 @@ Deno.serve(async (req) => {
     let supabaseUserId: string | null = null;
     let finalEmail = email;
 
-    const existing = list.users.find((u) => u.phone === phone_number);
+    const existing = list.users.find((u: any) => u.phone === phone_number || u.email === email);
 
     if (existing) {
       supabaseUserId = existing.id;
@@ -190,57 +185,36 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create session via Admin magic link + verifyOtp (no email click needed)
-    console.log('Creating Supabase session via verifyOtp for user:', supabaseUserId);
+    // Directly create a session for the user (no magic links, no verifyOtp)
+    console.log('Creating Supabase session via admin.createSession for user:', supabaseUserId);
 
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: finalEmail,
-    });
+    const { data: sessionData, error: sessionErr } = await admin.auth.admin.createSession({ user_id: supabaseUserId! });
 
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.error('generateLink error:', linkErr);
-      return new Response(JSON.stringify({
-        error: 'Failed to initiate session creation',
-        details: linkErr?.message || 'Magic link generation failed'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    const url = new URL(linkData.properties.action_link);
-    const token = url.searchParams.get('token');
-    if (!token) {
-      console.error('No token found in action_link:', url.href);
-      return new Response(JSON.stringify({
-        error: 'Failed to extract verification token',
-        details: 'Invalid action_link format'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    const { data: verifyData, error: verifyErr } = await authClient.auth.verifyOtp({
-      email: finalEmail,
-      token,
-      type: 'magiclink',
-    });
-
-    if (verifyErr || !verifyData?.session) {
-      console.error('verifyOtp error:', verifyErr);
+    if (sessionErr || !sessionData) {
+      console.error('createSession error:', sessionErr);
       return new Response(JSON.stringify({
         error: 'Failed to create session',
-        details: verifyErr?.message || 'Verification failed'
+        details: sessionErr?.message || 'Admin createSession failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const accessToken = verifyData.session.access_token;
-    const refreshToken = verifyData.session.refresh_token;
+    const sessionAny = sessionData as any;
+    const accessToken = sessionAny?.session?.access_token ?? sessionAny?.access_token;
+    const refreshToken = sessionAny?.session?.refresh_token ?? sessionAny?.refresh_token;
+
+    if (!accessToken || !refreshToken) {
+      console.error('createSession returned no tokens:', sessionAny);
+      return new Response(JSON.stringify({
+        error: 'Failed to obtain session tokens',
+        details: 'createSession did not return access/refresh tokens'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
