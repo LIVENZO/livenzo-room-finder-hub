@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
     // Initialize Supabase admin client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
@@ -185,35 +186,30 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create session using generateLink + extracting tokens (avoiding deprecated verifyOtp)
-    console.log('Creating session tokens for user:', supabaseUserId);
+    // Directly create a session for the user (no magic links, no verifyOtp)
+    console.log('Creating Supabase session via admin.createSession for user:', supabaseUserId);
 
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: finalEmail,
-    });
+    const { data: sessionData, error: sessionErr } = await admin.auth.admin.createSession({ user_id: supabaseUserId! });
 
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.error('generateLink error:', linkErr);
+    if (sessionErr || !sessionData) {
+      console.error('createSession error:', sessionErr);
       return new Response(JSON.stringify({
-        error: 'Failed to generate session tokens',
-        details: linkErr?.message || 'Magic link generation failed'
+        error: 'Failed to create session',
+        details: sessionErr?.message || 'Admin createSession failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Extract tokens from the magic link URL parameters
-    const linkUrl = new URL(linkData.properties.action_link);
-    const accessToken = linkUrl.searchParams.get('access_token');
-    const refreshToken = linkUrl.searchParams.get('refresh_token');
+    const accessToken = (sessionData as any)?.session?.access_token ?? (sessionData as any)?.access_token;
+    const refreshToken = (sessionData as any)?.session?.refresh_token ?? (sessionData as any)?.refresh_token;
 
     if (!accessToken || !refreshToken) {
-      console.error('No tokens found in magic link:', linkUrl.href);
+      console.error('createSession returned no tokens:', sessionData);
       return new Response(JSON.stringify({
-        error: 'Failed to extract session tokens',
-        details: 'Magic link did not contain access/refresh tokens'
+        error: 'Failed to obtain session tokens',
+        details: 'createSession did not return access/refresh tokens'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -221,12 +217,9 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      success: true,
-      message: 'User synced successfully',
-      supabase_user_id: supabaseUserId,
-      profile,
       access_token: accessToken,
-      refresh_token: refreshToken
+      refresh_token: refreshToken,
+      user_id: supabaseUserId
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
