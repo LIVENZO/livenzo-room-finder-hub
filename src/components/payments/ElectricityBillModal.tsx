@@ -61,7 +61,7 @@ export const ElectricityBillModal = ({
   const totalAmount = rentAmount + (parseFloat(electricityBill) || 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
