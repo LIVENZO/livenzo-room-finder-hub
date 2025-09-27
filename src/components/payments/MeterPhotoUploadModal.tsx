@@ -78,7 +78,7 @@ export const MeterPhotoUploadModal = ({
         setPhotoUploaded(true);
         toast.success("Meter photo sent to owner successfully! 📸");
         setTimeout(() => {
-          onContinue(); // Continue with the normal payment flow
+          onContinue(); // This will open the electricity bill modal
         }, 1500);
       } else {
         toast.error("⚠️ Upload failed. Please check your network and try again.");
