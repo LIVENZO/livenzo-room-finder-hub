@@ -8,6 +8,7 @@ import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
+import { ExternalFirebaseAuthFlow } from '@/components/auth/ExternalFirebaseAuthFlow';
 
 const Index: React.FC = () => {
   const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
@@ -101,15 +102,13 @@ const Index: React.FC = () => {
             <p className="text-xl md:text-2xl text-gray-600">Find Your Perfect Room Today</p>
           </div>
           
-          <div className="w-full">
-            <LandingCard 
-              userRole={userRole}
-              setUserRole={setUserRole}
-              canChangeRole={canChangeRole}
-              isLoading={isLoading}
-              handleGoogleLogin={handleGoogleLogin}
-              handleFacebookLogin={handleFacebookLogin}
-              handleOTPAuth={handleOTPAuth}
+          <div className="w-full max-w-md mx-auto">
+            <ExternalFirebaseAuthFlow 
+              onAuthSuccess={() => {
+                setIsRedirecting(true);
+                navigate('/dashboard');
+                toast.success("Welcome to Livenzo!");
+              }}
             />
           </div>
           
