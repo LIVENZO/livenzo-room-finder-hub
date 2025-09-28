@@ -8,20 +8,11 @@ const corsHeaders = {
 interface SyncUserRequest {
   firebase_uid: string;
   phone_number: string;
-  firebase_id_token?: string;
+  id_token: string;
   fcm_token?: string | null;
 }
 
-function generateTempPassword(length = 32) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_!@#$%^&*()';
-  let result = '';
-  const array = new Uint32Array(length);
-  crypto.getRandomValues(array);
-  for (let i = 0; i < length; i++) {
-    result += chars[array[i] % chars.length];
-  }
-  return result;
-}
+// Removed temp password generator - switching to OIDC flow with Firebase ID tokens
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -50,84 +41,45 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const body: SyncUserRequest = await req.json();
-    const { firebase_uid, phone_number, firebase_id_token, fcm_token } = body;
+const body: SyncUserRequest = await req.json();
+const { firebase_uid, phone_number, id_token, fcm_token } = body;
 
-    if (!firebase_uid || !phone_number) {
-      return new Response(JSON.stringify({ error: 'firebase_uid and phone_number are required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+if (!firebase_uid || !phone_number || !id_token) {
+  return new Response(JSON.stringify({ error: 'firebase_uid, phone_number and id_token are required' }), {
+    status: 400,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
 
-    // Generate fake email from phone number for Supabase compatibility
-    const email = `${phone_number.replace('+', '')}@livenzo.app`;
-    const tempPassword = generateTempPassword();
 
-    console.log('🔄 Starting Firebase to Supabase sync:', { 
-      firebase_uid, 
-      phone_number, 
-      email, 
-      has_id_token: !!firebase_id_token,
-      has_fcm_token: !!fcm_token 
+    console.log('🔄 Starting Firebase to Supabase sync (OIDC):', { 
+      firebase_uid,
+      phone_number,
+      has_id_token: !!id_token,
+      has_fcm_token: !!fcm_token
     });
 
-    // Try to find existing user by phone via Admin API (paginate first 1000 users)
-    const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (listErr) {
-      console.error('listUsers error:', listErr);
-      return new Response(JSON.stringify({ error: 'Failed to check users', details: listErr.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+// Sign in with Firebase ID token using OIDC. Supabase will verify the token and create the user if needed.
+console.log('🔐 Signing in with Firebase ID token via Supabase OIDC...');
 
-    let supabaseUserId: string | null = null;
-    let finalEmail = email;
+const { data: signInData, error: signInErr } = await publicClient.auth.signInWithIdToken({
+  provider: 'firebase' as any,
+  token: id_token,
+});
 
-    const existing = list.users.find((u: any) => u.phone === phone_number || u.email === email);
+if (signInErr || !signInData?.session) {
+  console.error('❌ OIDC sign-in failed:', signInErr);
+  return new Response(JSON.stringify({
+    error: 'Failed to create session via OIDC',
+    details: signInErr?.message || 'Authentication failed'
+  }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
 
-    if (existing) {
-      supabaseUserId = existing.id;
-      finalEmail = existing.email || email;
-      
-      // Update existing user with confirmed email and phone
-      const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
-        email: finalEmail,
-        email_confirm: true,
-        phone_confirm: true,
-        password: tempPassword,
-        user_metadata: { ...(existing.user_metadata || {}), firebase_uid, phone: phone_number }
-      });
-      if (updErr) {
-        console.error('updateUserById error:', updErr);
-        return new Response(JSON.stringify({ error: 'Failed to update user', details: updErr.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      console.log('Updated existing user:', supabaseUserId, 'with email:', finalEmail);
-    } else {
-      // Create new user with confirmed phone/email and temp password
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        phone: phone_number,
-        email: email,
-        password: tempPassword,
-        phone_confirm: true,
-        email_confirm: true,
-        user_metadata: { firebase_uid, phone: phone_number }
-      });
-      if (createErr) {
-        console.error('createUser error:', createErr);
-        return new Response(JSON.stringify({ error: 'Failed to create user', details: createErr.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      supabaseUserId = created.user.id;
-      finalEmail = email;
-      console.log('Created new user:', supabaseUserId, 'with email:', finalEmail);
-    }
+const supabaseUserId = signInData.session.user.id;
+console.log('✅ OIDC sign-in successful. User ID:', supabaseUserId);
 
     // Upsert into user_profiles
     const profilePayload: Record<string, unknown> = {
@@ -197,36 +149,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create Supabase session using password-based auth (Firebase ID token can be stored for future use)
-    console.log('🔑 Creating Supabase session for user:', finalEmail);
+// Session has already been created via OIDC above. Proceed to respond with tokens.
+console.log('✅ User synced successfully via OIDC:', supabaseUserId);
 
-    const { data: signInData, error: signInErr } = await publicClient.auth.signInWithPassword({
-      email: finalEmail,
-      password: tempPassword,
-    });
-
-    if (signInErr || !signInData?.session) {
-      console.error('❌ Failed to create Supabase session:', signInErr);
-      return new Response(JSON.stringify({
-        error: 'Failed to create session',
-        details: signInErr?.message || 'Authentication failed'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    console.log('✅ User synced successfully:', supabaseUserId);
-
-    return new Response(JSON.stringify({
-      access_token: signInData.session.access_token,
-      refresh_token: signInData.session.refresh_token,
-      user_id: supabaseUserId,
-      success: true
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+return new Response(JSON.stringify({
+  success: true,
+  session: {
+    access_token: signInData.session.access_token,
+    refresh_token: signInData.session.refresh_token,
+    user: { id: supabaseUserId, phone: phone_number }
+  }
+}), {
+  status: 200,
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+});
   } catch (error) {
     console.error('Sync user error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
