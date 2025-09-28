@@ -7,18 +7,14 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
-import { FirebaseAuthFlow } from '@/components/auth/FirebaseAuthFlow';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { AUTH_CONFIG } from '@/config/auth';
 
 const Index: React.FC = () => {
   const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
-  const firebaseAuth = useFirebaseAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
-  const [useWebAuth, setUseWebAuth] = useState<boolean>(false);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -64,28 +60,6 @@ const Index: React.FC = () => {
       checkAuth();
     }
   }, [user, session, navigate, isLoading, userRole]);
-
-  // Check if Firebase auth succeeded and redirect
-  useEffect(() => {
-    if (firebaseAuth.isLoggedIn && !checkingSession) {
-      console.log("🎉 Firebase authentication successful, preparing app...");
-      setIsRedirecting(true);
-      
-      // Set default role if not already set
-      if (!localStorage.getItem('userRole')) {
-        localStorage.setItem('userRole', userRole);
-        console.log("Setting default user role:", userRole);
-      }
-      
-      // Show success message and navigate
-      toast.success("Authentication successful! Welcome to Livenzo!");
-      
-      // Navigate to dashboard after a brief delay to show the success message
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-    }
-  }, [firebaseAuth.isLoggedIn, checkingSession, navigate, userRole]);
   
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);
@@ -114,12 +88,9 @@ const Index: React.FC = () => {
   };
   
   // Show a loading state while checking for existing session or redirect
-  if (checkingSession || isRedirecting || firebaseAuth.isLoading) {
+  if (checkingSession || isRedirecting) {
     return <LoadingState isRedirecting={isRedirecting} />;
   }
-
-  // Check if Android interface is available to determine auth method
-  const isAndroidWebView = !!(window as any).Android;
   
   return (
     <Layout hideNav>
@@ -131,42 +102,16 @@ const Index: React.FC = () => {
           </div>
           
           <div className="w-full">
-            {isAndroidWebView && !useWebAuth ? (
-              <div className="space-y-4">
-                <FirebaseAuthFlow 
-                  onAuthSuccess={() => {
-                    console.log("🎯 Firebase auth flow completed - automatic sync in progress...");
-                    toast.loading("Completing sign-in...", { duration: 3000 });
-                  }}
-                />
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>Secure phone verification powered by Firebase</p>
-                  <p className="text-xs mt-1">Your data is automatically synced and secured</p>
-                </div>
-              </div>
-            ) : (
-              <LandingCard 
-                userRole={userRole}
-                setUserRole={setUserRole}
-                canChangeRole={canChangeRole}
-                isLoading={isLoading}
-                handleGoogleLogin={handleGoogleLogin}
-                handleFacebookLogin={handleFacebookLogin}
-                handleOTPAuth={handleOTPAuth}
-              />
-            )}
+            <LandingCard 
+              userRole={userRole}
+              setUserRole={setUserRole}
+              canChangeRole={canChangeRole}
+              isLoading={isLoading}
+              handleGoogleLogin={handleGoogleLogin}
+              handleFacebookLogin={handleFacebookLogin}
+              handleOTPAuth={handleOTPAuth}
+            />
           </div>
-
-          {isAndroidWebView && (
-            <div className="text-center">
-              <button 
-                onClick={() => setUseWebAuth(!useWebAuth)}
-                className="text-sm text-muted-foreground underline"
-              >
-                {useWebAuth ? 'Use mobile auth' : 'Use web auth instead'}
-              </button>
-            </div>
-          )}
           
           <div className="w-full">
             <StatCards />

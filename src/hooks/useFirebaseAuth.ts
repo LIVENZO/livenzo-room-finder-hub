@@ -40,82 +40,73 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
       };
 
       const handleOTPVerified = async (event: CustomEvent) => {
-        console.log('🎯 Firebase OTP verified successfully:', event.detail);
+        console.log('OTP verified:', event.detail);
         
         try {
-          setIsLoading(true);
-          
-          // Get Firebase ID token (this is what we need for proper OIDC flow)
-          const firebaseIdToken = (window as any).Android.getIdToken();
+          // Get Firebase user details and FCM token
           const firebaseUid = (window as any).Android.getCurrentUserUID();
           const phoneNumber = (window as any).Android.getCurrentUserPhone();
           const fcmToken = (window as any).Android.getFCMToken();
           
-          console.log('🔑 Firebase authentication data:', { 
-            hasIdToken: !!firebaseIdToken, 
-            firebaseUid, 
-            phoneNumber, 
-            hasFcmToken: !!fcmToken 
-          });
-          
-          if (!firebaseIdToken || !firebaseUid || !phoneNumber) {
-            throw new Error('Missing required Firebase authentication data');
-          }
-          
-          // Automatic token exchange with Supabase
-          console.log('🔄 Initiating automatic token exchange with Supabase...');
-          
-          const response = await supabase.functions.invoke('sync-firebase-user', {
-            body: {
-              firebase_uid: firebaseUid,
-              phone_number: phoneNumber,
-              id_token: firebaseIdToken,
-              fcm_token: fcmToken
+          if (firebaseUid && phoneNumber) {
+            console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber, hasFcmToken: !!fcmToken });
+            
+            // Call the sync function with FCM token
+            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
+              },
+              body: JSON.stringify({
+                firebase_uid: firebaseUid,
+                phone_number: phoneNumber,
+                fcm_token: fcmToken // Include FCM token in sync
+              })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+              console.log('User synced successfully to Supabase:', result);
+              try {
+                if (result.access_token && result.refresh_token) {
+                  const { data, error } = await supabase.auth.setSession({
+                    access_token: result.access_token,
+                    refresh_token: result.refresh_token
+                  });
+                  if (error) {
+                    console.error('Failed to set Supabase session:', error);
+                    setError('Failed to establish app session');
+                    setIsLoading(false);
+                    return;
+                  }
+                  console.log('Supabase session established:', data?.session?.user?.id);
+                } else {
+                  console.warn('No tokens returned from sync function');
+                }
+                setIsLoading(false);
+                setError(null);
+                setIsLoggedIn(true);
+              } catch (e) {
+                console.error('Error setting Supabase session:', e);
+                setError('Failed to establish app session');
+                setIsLoading(false);
+              }
+            } else {
+              console.error('Failed to sync user to Supabase:', result);
+              setError('Failed to sync user data');
+              setIsLoading(false);
             }
-          });
-
-          if (response.error) {
-            console.error('❌ Token exchange failed:', response.error);
-            throw new Error('Authentication failed. Please try again.');
+          } else {
+            console.error('Could not get Firebase user details');
+            setError('Failed to get user details');
+            setIsLoading(false);
           }
-
-          const result = response.data;
-          const session = result?.session;
-          
-          if (!session?.access_token || !session?.refresh_token) {
-            console.error('❌ Invalid response from token exchange:', result);
-            throw new Error('Authentication incomplete. Please try again.');
-          }
-          
-          console.log('✅ Token exchange successful, establishing Supabase session...');
-          
-          // Automatically set the Supabase session
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token
-          });
-          
-          if (sessionError) {
-            console.error('❌ Failed to establish Supabase session:', sessionError);
-            throw new Error('Failed to complete sign-in. Please try again.');
-          }
-          
-          console.log('🎉 Authentication completed successfully! User ID:', sessionData?.session?.user?.id);
-          
-          // Clear any existing error states
-          setError(null);
-          setIsLoading(false);
-          setIsLoggedIn(true);
-          
-          // The session will be automatically handled by the auth context
-          // which will trigger navigation to dashboard
-          
         } catch (error) {
-          console.error('💥 Authentication flow error:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-          setError(errorMessage);
+          console.error('Error syncing user to Supabase:', error);
+          setError('Failed to sync user data');
           setIsLoading(false);
-          setIsLoggedIn(false);
         }
       };
 
@@ -132,52 +123,38 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
       };
 
       const handleUserAlreadyLoggedIn = async () => {
-        console.log('🔄 User already logged in detected - syncing with Supabase...');
+        console.log('User already logged in detected');
+        setIsLoggedIn(true);
         
+        // When user is already logged in, sync FCM token to Supabase
         try {
-          setIsLoading(true);
-          
-          const firebaseIdToken = (window as any).Android.getIdToken();
           const firebaseUid = (window as any).Android.getCurrentUserUID();
           const phoneNumber = (window as any).Android.getCurrentUserPhone();
           const fcmToken = (window as any).Android.getFCMToken();
           
-          if (firebaseIdToken && firebaseUid && phoneNumber) {
-            console.log('🔄 Syncing existing user session with Supabase...');
+          if (firebaseUid && phoneNumber && fcmToken) {
+            console.log('Syncing FCM token for already logged in user');
             
-            const response = await supabase.functions.invoke('sync-firebase-user', {
-              body: {
+            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
+              },
+              body: JSON.stringify({
                 firebase_uid: firebaseUid,
                 phone_number: phoneNumber,
-                id_token: firebaseIdToken,
                 fcm_token: fcmToken
-              }
+              })
             });
 
-            const session = response.data?.session;
-            if (session?.access_token && session?.refresh_token) {
-              console.log('✅ Establishing Supabase session for existing user...');
-              
-              const { error } = await supabase.auth.setSession({
-                access_token: session.access_token,
-                refresh_token: session.refresh_token
-              });
-              
-              if (!error) {
-                console.log('✅ Session synchronized successfully');
-                setIsLoggedIn(true);
-                setError(null);
-              } else {
-                console.error('❌ Failed to sync session:', error);
-                setError('Failed to sync user session');
-              }
+            const result = await response.json();
+            if (result.success) {
+              console.log('FCM token synced successfully for logged in user');
             }
           }
         } catch (error) {
-          console.error('💥 Error syncing existing user:', error);
-          setError('Failed to sync user data');
-        } finally {
-          setIsLoading(false);
+          console.error('Error syncing FCM token for logged in user:', error);
         }
       };
 
@@ -209,11 +186,9 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
     setError(null);
     
     try {
-      console.log('📱 Sending OTP to:', phoneNumber);
       (window as any).Android.sendOTP(phoneNumber);
       // The result will come through event listeners
     } catch (err) {
-      console.error('❌ Failed to send OTP:', err);
       setIsLoading(false);
       setError('Failed to send OTP');
       throw err;
@@ -229,41 +204,18 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
     setError(null);
     
     try {
-      console.log('🔐 Verifying OTP...');
       (window as any).Android.verifyOTP(otp);
-      // The result will come through event listeners and trigger automatic flow
+      // The result will come through event listeners
     } catch (err) {
-      console.error('❌ Failed to verify OTP:', err);
       setIsLoading(false);
       setError('Failed to verify OTP');
       throw err;
     }
   };
 
-  const signOut = async (): Promise<void> => {
-    try {
-      console.log('🚪 Signing out user...');
-      
-      // Sign out from Supabase first
-      await supabase.auth.signOut();
-      
-      // Then sign out from Firebase
-      if ((window as any).Android) {
-        (window as any).Android.signOut();
-      }
-      
-      // Clear all local state
-      setIsLoggedIn(false);
-      setError(null);
-      setIsLoading(false);
-      
-      console.log('✅ User signed out successfully');
-    } catch (error) {
-      console.error('❌ Error during sign out:', error);
-      // Still clear local state even if there was an error
-      setIsLoggedIn(false);
-      setError(null);
-      setIsLoading(false);
+  const signOut = (): void => {
+    if ((window as any).Android) {
+      (window as any).Android.signOut();
     }
   };
 
