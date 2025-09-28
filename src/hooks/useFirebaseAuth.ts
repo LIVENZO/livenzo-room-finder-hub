@@ -51,40 +51,38 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
           if (firebaseUid && phoneNumber) {
             console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber, hasFcmToken: !!fcmToken });
             
-            // Call the sync function with FCM token
-            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
-              },
-              body: JSON.stringify({
+            // Call the sync function with FCM token using Supabase client
+            const response = await supabase.functions.invoke('sync-firebase-user', {
+              body: {
                 firebase_uid: firebaseUid,
                 phone_number: phoneNumber,
-                fcm_token: fcmToken // Include FCM token in sync
-              })
+                fcm_token: fcmToken
+              }
             });
 
-            const result = await response.json();
+            if (response.error) {
+              console.error('Failed to sync user to Supabase:', response.error);
+              setError('Failed to sync user data');
+              setIsLoading(false);
+              return;
+            }
+
+            const result = response.data;
             
-            if (result.success) {
-              console.log('User synced successfully to Supabase:', result);
+            if (!response.error && result.access_token && result.refresh_token) {
+              console.log('User synced successfully to Supabase:', result.user_id);
               try {
-                if (result.access_token && result.refresh_token) {
-                  const { data, error } = await supabase.auth.setSession({
-                    access_token: result.access_token,
-                    refresh_token: result.refresh_token
-                  });
-                  if (error) {
-                    console.error('Failed to set Supabase session:', error);
-                    setError('Failed to establish app session');
-                    setIsLoading(false);
-                    return;
-                  }
-                  console.log('Supabase session established:', data?.session?.user?.id);
-                } else {
-                  console.warn('No tokens returned from sync function');
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: result.access_token,
+                  refresh_token: result.refresh_token
+                });
+                if (error) {
+                  console.error('Failed to set Supabase session:', error);
+                  setError('Failed to establish app session');
+                  setIsLoading(false);
+                  return;
                 }
+                console.log('Supabase session established:', data?.session?.user?.id);
                 setIsLoading(false);
                 setError(null);
                 setIsLoggedIn(true);
@@ -95,7 +93,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
               }
             } else {
               console.error('Failed to sync user to Supabase:', result);
-              setError('Failed to sync user data');
+              setError(result.error || 'Failed to sync user data');
               setIsLoading(false);
             }
           } else {
@@ -135,22 +133,23 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
           if (firebaseUid && phoneNumber && fcmToken) {
             console.log('Syncing FCM token for already logged in user');
             
-            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw`
-              },
-              body: JSON.stringify({
+            const response = await supabase.functions.invoke('sync-firebase-user', {
+              body: {
                 firebase_uid: firebaseUid,
                 phone_number: phoneNumber,
                 fcm_token: fcmToken
-              })
+              }
             });
 
-            const result = await response.json();
-            if (result.success) {
-              console.log('FCM token synced successfully for logged in user');
+            if (response.data?.access_token && response.data?.refresh_token) {
+              // Set session for already logged in user too
+              const { error } = await supabase.auth.setSession({
+                access_token: response.data.access_token,
+                refresh_token: response.data.refresh_token
+              });
+              if (!error) {
+                console.log('Session updated for already logged in user');
+              }
             }
           }
         } catch (error) {
