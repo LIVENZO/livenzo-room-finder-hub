@@ -8,6 +8,7 @@ const corsHeaders = {
 interface SyncUserRequest {
   firebase_uid: string;
   phone_number: string;
+  firebase_id_token?: string;
   fcm_token?: string | null;
 }
 
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
     });
 
     const body: SyncUserRequest = await req.json();
-    const { firebase_uid, phone_number, fcm_token } = body;
+    const { firebase_uid, phone_number, firebase_id_token, fcm_token } = body;
 
     if (!firebase_uid || !phone_number) {
       return new Response(JSON.stringify({ error: 'firebase_uid and phone_number are required' }), {
@@ -63,7 +64,13 @@ Deno.serve(async (req) => {
     const email = `${phone_number.replace('+', '')}@livenzo.app`;
     const tempPassword = generateTempPassword();
 
-    console.log('Syncing user:', { firebase_uid, phone_number, email, has_fcm_token: !!fcm_token });
+    console.log('🔄 Starting Firebase to Supabase sync:', { 
+      firebase_uid, 
+      phone_number, 
+      email, 
+      has_id_token: !!firebase_id_token,
+      has_fcm_token: !!fcm_token 
+    });
 
     // Try to find existing user by phone via Admin API (paginate first 1000 users)
     const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -190,8 +197,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create session via public client signInWithPassword (no magic links, no verifyOtp)
-    console.log('Creating Supabase session via signInWithPassword for email:', finalEmail);
+    // Create Supabase session using password-based auth (Firebase ID token can be stored for future use)
+    console.log('🔑 Creating Supabase session for user:', finalEmail);
 
     const { data: signInData, error: signInErr } = await publicClient.auth.signInWithPassword({
       email: finalEmail,
@@ -199,23 +206,23 @@ Deno.serve(async (req) => {
     });
 
     if (signInErr || !signInData?.session) {
-      console.error('signInWithPassword error:', signInErr);
+      console.error('❌ Failed to create Supabase session:', signInErr);
       return new Response(JSON.stringify({
         error: 'Failed to create session',
-        details: signInErr?.message || 'signInWithPassword failed'
+        details: signInErr?.message || 'Authentication failed'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const accessToken = signInData.session.access_token;
-    const refreshToken = signInData.session.refresh_token;
+    console.log('✅ User synced successfully:', supabaseUserId);
 
     return new Response(JSON.stringify({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      user_id: supabaseUserId
+      access_token: signInData.session.access_token,
+      refresh_token: signInData.session.refresh_token,
+      user_id: supabaseUserId,
+      success: true
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -43,11 +43,12 @@ export const FirebaseAuthFlow: React.FC<FirebaseAuthFlowProps> = ({ onAuthSucces
 
     try {
       await verifyOTP(otp);
-      toast.success('Authentication successful!');
+      // Don't show success toast here - the automatic flow will handle it
+      // The auth hook will handle the navigation automatically
       onAuthSuccess?.();
     } catch (err) {
       console.error('Error verifying OTP:', err);
-      toast.error(error || 'Invalid OTP');
+      toast.error(error || 'Invalid OTP. Please try again.');
     }
   };
 
@@ -173,8 +174,22 @@ export const FirebaseAuthFlow: React.FC<FirebaseAuthFlowProps> = ({ onAuthSucces
         )}
         
         {error && (
-          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-            {error}
+          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md space-y-2">
+            <p>{error}</p>
+            {step === 'otp' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  clearError();
+                  setStep('phone');
+                  setOtp('');
+                }}
+                className="w-full text-xs"
+              >
+                Try Different Number
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

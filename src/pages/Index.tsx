@@ -68,7 +68,7 @@ const Index: React.FC = () => {
   // Check if Firebase auth succeeded and redirect
   useEffect(() => {
     if (firebaseAuth.isLoggedIn && !checkingSession) {
-      console.log("Firebase auth successful, redirecting to dashboard");
+      console.log("🎉 Firebase authentication successful, preparing app...");
       setIsRedirecting(true);
       
       // Set default role if not already set
@@ -77,8 +77,13 @@ const Index: React.FC = () => {
         console.log("Setting default user role:", userRole);
       }
       
-      navigate('/dashboard');
-      toast.success("Welcome to Livenzo!");
+      // Show success message and navigate
+      toast.success("Authentication successful! Welcome to Livenzo!");
+      
+      // Navigate to dashboard after a brief delay to show the success message
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     }
   }, [firebaseAuth.isLoggedIn, checkingSession, navigate, userRole]);
   
@@ -127,11 +132,18 @@ const Index: React.FC = () => {
           
           <div className="w-full">
             {isAndroidWebView && !useWebAuth ? (
-              <FirebaseAuthFlow 
-                onAuthSuccess={() => {
-                  console.log("Firebase auth flow completed");
-                }}
-              />
+              <div className="space-y-4">
+                <FirebaseAuthFlow 
+                  onAuthSuccess={() => {
+                    console.log("🎯 Firebase auth flow completed - automatic sync in progress...");
+                    toast.loading("Completing sign-in...", { duration: 3000 });
+                  }}
+                />
+                <div className="text-center text-sm text-muted-foreground">
+                  <p>Secure phone verification powered by Firebase</p>
+                  <p className="text-xs mt-1">Your data is automatically synced and secured</p>
+                </div>
+              </div>
             ) : (
               <LandingCard 
                 userRole={userRole}
