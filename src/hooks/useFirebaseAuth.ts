@@ -69,7 +69,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
             body: {
               firebase_uid: firebaseUid,
               phone_number: phoneNumber,
-              firebase_id_token: firebaseIdToken, // Include ID token for proper OIDC
+              id_token: firebaseIdToken, // Firebase ID token for OIDC
               fcm_token: fcmToken
             }
           });
@@ -81,17 +81,17 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
 
           const result = response.data;
           
-          if (!result?.access_token || !result?.refresh_token) {
-            console.error('❌ Invalid response from token exchange:', result);
+          if (!result?.success || !result?.session?.access_token || !result?.session?.refresh_token) {
+            console.error('❌ Invalid response from Firebase OIDC sync:', result);
             throw new Error('Authentication incomplete. Please try again.');
           }
           
-          console.log('✅ Token exchange successful, establishing Supabase session...');
+          console.log('✅ Firebase OIDC sync successful, establishing Supabase session...');
           
           // Automatically set the Supabase session
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: result.access_token,
-            refresh_token: result.refresh_token
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token
           });
           
           if (sessionError) {
@@ -148,17 +148,17 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
               body: {
                 firebase_uid: firebaseUid,
                 phone_number: phoneNumber,
-                firebase_id_token: firebaseIdToken,
+                id_token: firebaseIdToken,
                 fcm_token: fcmToken
               }
             });
 
-            if (response.data?.access_token && response.data?.refresh_token) {
+            if (response.data?.success && response.data?.session?.access_token && response.data?.session?.refresh_token) {
               console.log('✅ Establishing Supabase session for existing user...');
               
               const { error } = await supabase.auth.setSession({
-                access_token: response.data.access_token,
-                refresh_token: response.data.refresh_token
+                access_token: response.data.session.access_token,
+                refresh_token: response.data.session.refresh_token
               });
               
               if (!error) {
