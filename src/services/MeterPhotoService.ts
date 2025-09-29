@@ -115,12 +115,18 @@ export const takeMeterPhoto = async (): Promise<File | null> => {
           source: CameraSource.Camera,
         });
 
-        if (!image.webPath) {
+        console.log('Camera result:', { webPath: image.webPath, path: image.path });
+
+        if (!image.webPath && !image.path) {
+          console.error('No image path captured from native camera');
           throw new Error('No image captured');
         }
 
+        // Use webPath or fallback to path
+        const imagePath = image.webPath || `data:image/jpeg;base64,${image.base64String}`;
+        
         // Convert to File object
-        const response = await fetch(image.webPath);
+        const response = await fetch(imagePath);
         const blob = await response.blob();
         const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
           type: 'image/jpeg',
