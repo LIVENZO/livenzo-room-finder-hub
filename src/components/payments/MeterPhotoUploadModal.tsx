@@ -32,6 +32,16 @@ export const MeterPhotoUploadModal = ({
   const [showCamera, setShowCamera] = useState(false);
   const { user } = useAuth();
 
+  const safeAdvance = () => {
+    try {
+      onClose();
+    } finally {
+      requestAnimationFrame(() => {
+        onContinue();
+      });
+    }
+  };
+
   const handleTakePhoto = async () => {
     try {
       setShowCamera(true);
@@ -49,10 +59,8 @@ export const MeterPhotoUploadModal = ({
         setPhotoUploaded(true);
         toast.success("Meter photo sent to owner successfully! 📸");
         
-        // Continue to electricity bill modal immediately
-        setTimeout(() => {
-          onContinue();
-        }, 800);
+        // Close this modal and open the next deterministically
+        safeAdvance();
         return;
       }
 
@@ -90,9 +98,7 @@ export const MeterPhotoUploadModal = ({
         setPhotoUploaded(true);
         toast.success("Meter photo sent to owner successfully! 📸");
         // Continue to electricity bill modal immediately after successful upload
-        setTimeout(() => {
-          onContinue();
-        }, 800);
+        safeAdvance();
       } else {
         toast.error("⚠️ Upload failed. Please check your network and try again.");
         setUploadProgress(0);

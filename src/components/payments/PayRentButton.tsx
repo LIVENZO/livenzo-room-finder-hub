@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
@@ -31,6 +31,7 @@ export const PayRentButton = ({
   const [finalAmount, setFinalAmount] = useState(amount);
   const [ownerId, setOwnerId] = useState<string>("");
   const { user } = useAuth();
+  const advancingRef = useRef(false);
 
   // Fixed UPI ID for Livenzo
   const LIVENZO_UPI_ID = "7488698970@ybl";
@@ -83,13 +84,19 @@ export const PayRentButton = ({
   };
 
   const handleMeterPhotoComplete = () => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
     setIsMeterPhotoModalOpen(false);
-    setIsElectricityBillModalOpen(true);
+    // Ensure first dialog fully closes before opening next
+    requestAnimationFrame(() => {
+      setIsElectricityBillModalOpen(true);
+    });
   };
 
   const handleElectricityBillComplete = (totalAmount: number) => {
     setFinalAmount(totalAmount);
     setIsElectricityBillModalOpen(false);
+    advancingRef.current = false;
     setIsMethodSelectorOpen(true);
   };
 
@@ -134,7 +141,10 @@ export const PayRentButton = ({
 
       <ElectricityBillModal
         isOpen={isElectricityBillModalOpen}
-        onClose={() => setIsElectricityBillModalOpen(false)}
+        onClose={() => {
+          setIsElectricityBillModalOpen(false);
+          advancingRef.current = false;
+        }}
         onContinue={handleElectricityBillComplete}
         rentAmount={amount}
       />
