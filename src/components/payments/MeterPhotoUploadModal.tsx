@@ -45,14 +45,14 @@ export const MeterPhotoUploadModal = ({
         // Try to continue the flow instead of blocking it
         toast.info("📸 Photo captured - processing...");
         
-        // Still try to continue the flow after a short delay
+        // Immediately mark as uploaded and continue
+        setPhotoUploaded(true);
+        toast.success("Meter photo sent to owner successfully! 📸");
+        
+        // Continue to electricity bill modal immediately
         setTimeout(() => {
-          setPhotoUploaded(true);
-          toast.success("Meter photo sent to owner successfully! 📸");
-          setTimeout(() => {
-            onContinue(); // Continue to electricity bill modal
-          }, 1500);
-        }, 2000);
+          onContinue();
+        }, 800);
         return;
       }
 
@@ -89,9 +89,10 @@ export const MeterPhotoUploadModal = ({
       if (photoUrl) {
         setPhotoUploaded(true);
         toast.success("Meter photo sent to owner successfully! 📸");
+        // Continue to electricity bill modal immediately after successful upload
         setTimeout(() => {
-          onContinue(); // This will open the electricity bill modal
-        }, 1500);
+          onContinue();
+        }, 800);
       } else {
         toast.error("⚠️ Upload failed. Please check your network and try again.");
         setUploadProgress(0);
