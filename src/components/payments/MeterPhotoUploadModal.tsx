@@ -33,13 +33,8 @@ export const MeterPhotoUploadModal = ({
   const { user } = useAuth();
 
   const safeAdvance = () => {
-    try {
-      onClose();
-    } finally {
-      requestAnimationFrame(() => {
-        onContinue();
-      });
-    }
+    // Call onContinue immediately, let parent handle modal transitions
+    onContinue();
   };
 
   const handleTakePhoto = async () => {

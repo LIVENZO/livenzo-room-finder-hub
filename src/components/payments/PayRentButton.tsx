@@ -86,11 +86,10 @@ export const PayRentButton = ({
   const handleMeterPhotoComplete = () => {
     if (advancingRef.current) return;
     advancingRef.current = true;
+    
+    // Close meter photo modal and immediately open electricity bill modal
     setIsMeterPhotoModalOpen(false);
-    // Ensure first dialog fully closes before opening next
-    requestAnimationFrame(() => {
-      setIsElectricityBillModalOpen(true);
-    });
+    setIsElectricityBillModalOpen(true);
   };
 
   const handleElectricityBillComplete = (totalAmount: number) => {
