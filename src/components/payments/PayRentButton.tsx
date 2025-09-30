@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
@@ -27,6 +27,7 @@ export const PayRentButton = ({
   const [finalAmount, setFinalAmount] = useState(amount);
   const [ownerId, setOwnerId] = useState<string>("");
   const { user } = useAuth();
+  const advancingRef = useRef(false);
 
   // Fixed UPI ID for Livenzo
   const LIVENZO_UPI_ID = "7488698970@ybl";
@@ -77,12 +78,15 @@ export const PayRentButton = ({
   };
 
   const handleMeterPhotoComplete = () => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
     setFlowStep('bill');
   };
 
   const handleElectricityBillComplete = (totalAmount: number) => {
     setFinalAmount(totalAmount);
     setFlowStep('method');
+    advancingRef.current = false;
   };
 
   const handleSelectRazorpay = () => {
@@ -116,7 +120,7 @@ export const PayRentButton = ({
 
       <MeterPhotoUploadModal
         isOpen={flowStep === 'meter'}
-        onClose={() => setFlowStep(prev => (prev === 'meter' ? 'idle' : prev))}
+        onClose={() => { if (!advancingRef.current) setFlowStep('idle'); }}
         onContinue={handleMeterPhotoComplete}
         relationshipId={relationshipId || ""}
         ownerId={ownerId}
@@ -124,7 +128,7 @@ export const PayRentButton = ({
 
       <ElectricityBillModal
         isOpen={flowStep === 'bill'}
-        onClose={() => setFlowStep('idle')}
+        onClose={() => { setFlowStep('idle'); advancingRef.current = false; }}
         onContinue={handleElectricityBillComplete}
         rentAmount={amount}
       />
