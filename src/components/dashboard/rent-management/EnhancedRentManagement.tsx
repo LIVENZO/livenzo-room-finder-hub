@@ -317,6 +317,28 @@ const EnhancedRentManagement: React.FC = () => {
 
       {/* Renters Grouped by Status */}
       <div className="space-y-6">
+        {/* Pending Renters */}
+        {renters.filter(r => r.paymentStatus === 'pending').length > 0 && (
+          <Card className="border-yellow-200 bg-yellow-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-800">
+                <Clock className="h-5 w-5" />
+                Pending Renters ({renters.filter(r => r.paymentStatus === 'pending').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ActiveRentersList
+                renters={renters.filter(r => r.paymentStatus === 'pending')}
+                loading={loading}
+                onAddPayment={(renterId, renterName) => {
+                  toast.info(`Add payment feature for ${renterName}`);
+                }}
+                onRefresh={fetchData}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Paid Renters */}
         {renters.filter(r => r.paymentStatus === 'paid').length > 0 && (
           <Card className="border-green-200 bg-green-50/50">
@@ -351,28 +373,6 @@ const EnhancedRentManagement: React.FC = () => {
             <CardContent className="p-0">
               <ActiveRentersList
                 renters={renters.filter(r => r.paymentStatus === 'unpaid')}
-                loading={loading}
-                onAddPayment={(renterId, renterName) => {
-                  toast.info(`Add payment feature for ${renterName}`);
-                }}
-                onRefresh={fetchData}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Pending Renters */}
-        {renters.filter(r => r.paymentStatus === 'pending').length > 0 && (
-          <Card className="border-yellow-200 bg-yellow-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-800">
-                <Clock className="h-5 w-5" />
-                Pending Renters ({renters.filter(r => r.paymentStatus === 'pending').length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ActiveRentersList
-                renters={renters.filter(r => r.paymentStatus === 'pending')}
                 loading={loading}
                 onAddPayment={(renterId, renterName) => {
                   toast.info(`Add payment feature for ${renterName}`);
