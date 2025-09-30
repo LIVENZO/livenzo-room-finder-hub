@@ -151,8 +151,8 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
                 relationship_id: renterId,
                 amount: renterInfo.amount,
                 renter_name: renterInfo.renter.full_name,
-                title: 'Payment Reminder',
-                message: '⚠️ Your rent is pending. Please complete your payment.',
+                title: '🏠 Rent Payment Pending!',
+                message: 'Your rent is not paid yet! Tap here to complete your payment now. 💰',
                 deep_link_url: '/payments'
               }
             }
