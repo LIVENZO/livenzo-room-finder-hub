@@ -132,7 +132,7 @@ const EnhancedRentManagement: React.FC = () => {
             room_number: renterProfile?.room_number || ''
           },
           relationshipId: relationship.id,
-          paymentStatus: (rentStatus?.status as 'paid' | 'unpaid' | 'pending') || 'pending',
+          paymentStatus: rentStatus?.status === 'paid' ? 'paid' : 'unpaid',
           amount: rentStatus?.current_amount || 0,
           dueDate: rentStatus?.due_date,
           lastPaymentDate: latestPayment?.payment_date
@@ -315,89 +315,27 @@ const EnhancedRentManagement: React.FC = () => {
         </Card>
       </div>
 
-      {/* Renters Grouped by Status */}
-      <div className="space-y-6">
-        {/* Pending Renters */}
-        {renters.filter(r => r.paymentStatus === 'pending').length > 0 && (
-          <Card className="border-yellow-200 bg-yellow-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-800">
-                <Clock className="h-5 w-5" />
-                Pending Renters ({renters.filter(r => r.paymentStatus === 'pending').length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ActiveRentersList
-                renters={renters.filter(r => r.paymentStatus === 'pending')}
-                loading={loading}
-                onAddPayment={(renterId, renterName) => {
-                  toast.info(`Add payment feature for ${renterName}`);
-                }}
-                onRefresh={fetchData}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Paid Renters */}
-        {renters.filter(r => r.paymentStatus === 'paid').length > 0 && (
-          <Card className="border-green-200 bg-green-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-800">
-                <CheckCircle2 className="h-5 w-5" />
-                Paid Renters ({renters.filter(r => r.paymentStatus === 'paid').length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ActiveRentersList
-                renters={renters.filter(r => r.paymentStatus === 'paid')}
-                loading={loading}
-                onAddPayment={(renterId, renterName) => {
-                  toast.info(`Add payment feature for ${renterName}`);
-                }}
-                onRefresh={fetchData}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Unpaid Renters */}
-        {renters.filter(r => r.paymentStatus === 'unpaid').length > 0 && (
-          <Card className="border-red-200 bg-red-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-800">
-                <XCircle className="h-5 w-5" />
-                Unpaid Renters ({renters.filter(r => r.paymentStatus === 'unpaid').length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ActiveRentersList
-                renters={renters.filter(r => r.paymentStatus === 'unpaid')}
-                loading={loading}
-                onAddPayment={(renterId, renterName) => {
-                  toast.info(`Add payment feature for ${renterName}`);
-                }}
-                onRefresh={fetchData}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* No Renters */}
-        {renters.length === 0 && !loading && (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="mx-auto w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
-                <Home className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Active Renters</h3>
-              <p className="text-muted-foreground">
-                Connect with renters to start managing rent payments
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Renters List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Rent Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <ActiveRentersList
+            renters={renters}
+            loading={loading}
+            onAddPayment={(renterId, renterName) => {
+              toast.info(`Add payment feature for ${renterName}`, {
+                description: 'Payment management system coming soon'
+              });
+            }}
+            onRefresh={fetchData}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

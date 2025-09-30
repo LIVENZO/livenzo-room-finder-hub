@@ -81,7 +81,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
 
   const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid', renterInfo: RenterPaymentInfo) => {
     try {
-      console.log('🔄 Updating payment status:', { renterId, action, renterInfo, currentStatus: renterInfo.paymentStatus });
+      console.log('🔄 Updating payment status:', { renterId, action, renterInfo });
       
       // Get current user
       const { data: currentUser } = await supabase.auth.getUser();
@@ -91,40 +91,23 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
         throw new Error('User not authenticated');
       }
 
-      // Determine new status based on current status and swipe direction
-      let newStatus: 'paid' | 'unpaid' | 'pending';
-      const currentStatus = renterInfo.paymentStatus;
-
-      if (action === 'paid') {
-        // Right swipe: if already paid → pending, otherwise → paid
-        newStatus = currentStatus === 'paid' ? 'pending' : 'paid';
-      } else {
-        // Left swipe: if already unpaid → pending, otherwise → unpaid
-        newStatus = currentStatus === 'unpaid' ? 'pending' : 'unpaid';
-      }
-
-      console.log('📊 Status transition:', { from: currentStatus, to: newStatus });
-
-      // 1. Upsert into rent_status table with valid enum values only
+      // 1. Update rent_status table
       const { error: rentStatusError } = await supabase
         .from('rent_status')
         .upsert({ 
           relationship_id: renterId,
-          status: newStatus,
+          status: action,
           current_amount: renterInfo.amount,
           due_date: renterInfo.dueDate || new Date().toISOString().split('T')[0],
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'relationship_id'
         });
 
       if (rentStatusError) {
-        console.error('❌ Rent status error:', rentStatusError);
         throw rentStatusError;
       }
 
       // 2. If marking as paid, create a payment record
-      if (newStatus === 'paid') {
+      if (action === 'paid') {
         const { error: paymentError } = await supabase
           .from('payments')
           .insert({
@@ -140,24 +123,24 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           });
         
         if (paymentError) {
-          console.warn('⚠️ Payment record error:', paymentError);
+          throw paymentError;
         }
       }
 
       // 3. Send notification if marking as unpaid
-      if (newStatus === 'unpaid') {
+      if (action === 'unpaid') {
         try {
           await supabase.functions.invoke('send-push-notification', {
             body: {
               type: 'payment_reminder',
               record: {
                 renter_id: renterInfo.renter.id,
-                owner_id: ownerId,
+                owner_id: (await supabase.auth.getUser()).data.user?.id,
                 relationship_id: renterId,
                 amount: renterInfo.amount,
                 renter_name: renterInfo.renter.full_name,
-                title: '🏠 Rent Payment Pending!',
-                message: 'Your rent is still unpaid! Tap here to complete your payment now. 💳',
+                title: 'Payment Reminder',
+                message: '⚠️ Your rent is pending. Please complete your payment.',
                 deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/payments'
               }
             }
@@ -165,30 +148,36 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           console.log('📧 Notification sent to renter');
         } catch (notifError) {
           console.warn('⚠️ Failed to send notification:', notifError);
+          // Don't fail the whole operation for notification failure
         }
       }
-      
-      // Show success toast
-      const statusIcon = newStatus === 'paid' ? <CheckCircle className="h-4 w-4 text-green-600" /> 
-        : newStatus === 'unpaid' ? <XCircle className="h-4 w-4 text-red-600" />
-        : <Clock className="h-4 w-4 text-yellow-600" />;
 
+      // Update local state immediately for smooth UX
+      const updatedRenters = renters.map(r => 
+        r.id === renterId 
+          ? { ...r, paymentStatus: action as 'paid' | 'unpaid' | 'pending' }
+          : r
+      );
+      
+      // Show success animation/toast
       toast.success(
         <div className="flex items-center gap-2">
-          {statusIcon}
-          <span>Renter marked as {newStatus}</span>
+          {action === 'paid' ? (
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          ) : (
+            <XCircle className="h-4 w-4 text-red-600" />
+          )}
+          <span>Renter marked as {action}</span>
         </div>, 
         {
-          description: newStatus === 'unpaid' 
+          description: action === 'unpaid' 
             ? 'Payment reminder sent to renter' 
-            : newStatus === 'pending'
-            ? 'Status reset to pending'
             : 'Payment status updated successfully',
           duration: 3000
         }
       );
 
-      // Refresh data after a short delay
+      // Refresh data after a short delay to show the updated state
       setTimeout(() => {
         if (onRefresh) {
           onRefresh();
@@ -198,7 +187,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     } catch (error) {
       console.error('❌ Error updating payment status:', error);
       toast.error('Failed to update payment status', {
-        description: error instanceof Error ? error.message : 'Please try again',
+        description: 'Please try again or contact support',
         duration: 5000
       });
     }
