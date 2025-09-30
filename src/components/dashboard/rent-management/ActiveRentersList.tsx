@@ -91,18 +91,21 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
         throw new Error('User not authenticated');
       }
 
-      // 1. Update rent_status table
+      // 1. Upsert into rent_status table with valid enum values only
       const { error: rentStatusError } = await supabase
         .from('rent_status')
         .upsert({ 
           relationship_id: renterId,
-          status: action,
+          status: action, // Only 'paid' or 'unpaid' are passed here
           current_amount: renterInfo.amount,
           due_date: renterInfo.dueDate || new Date().toISOString().split('T')[0],
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'relationship_id'
         });
 
       if (rentStatusError) {
+        console.error('❌ Rent status error:', rentStatusError);
         throw rentStatusError;
       }
 
@@ -123,7 +126,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           });
         
         if (paymentError) {
-          throw paymentError;
+          console.warn('⚠️ Payment record error:', paymentError);
         }
       }
 
@@ -135,12 +138,12 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
               type: 'payment_reminder',
               record: {
                 renter_id: renterInfo.renter.id,
-                owner_id: (await supabase.auth.getUser()).data.user?.id,
+                owner_id: ownerId,
                 relationship_id: renterId,
                 amount: renterInfo.amount,
                 renter_name: renterInfo.renter.full_name,
-                title: 'Payment Reminder',
-                message: '⚠️ Your rent is pending. Please complete your payment.',
+                title: '🏠 Rent Payment Pending!',
+                message: 'Your rent is not paid yet! Tap here to complete your payment now. 💳',
                 deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/payments'
               }
             }
@@ -148,18 +151,10 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           console.log('📧 Notification sent to renter');
         } catch (notifError) {
           console.warn('⚠️ Failed to send notification:', notifError);
-          // Don't fail the whole operation for notification failure
         }
       }
-
-      // Update local state immediately for smooth UX
-      const updatedRenters = renters.map(r => 
-        r.id === renterId 
-          ? { ...r, paymentStatus: action as 'paid' | 'unpaid' | 'pending' }
-          : r
-      );
       
-      // Show success animation/toast
+      // Show success toast
       toast.success(
         <div className="flex items-center gap-2">
           {action === 'paid' ? (
@@ -177,7 +172,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
         }
       );
 
-      // Refresh data after a short delay to show the updated state
+      // Refresh data after a short delay
       setTimeout(() => {
         if (onRefresh) {
           onRefresh();
@@ -187,7 +182,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     } catch (error) {
       console.error('❌ Error updating payment status:', error);
       toast.error('Failed to update payment status', {
-        description: 'Please try again or contact support',
+        description: error instanceof Error ? error.message : 'Please try again',
         duration: 5000
       });
     }
