@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
@@ -22,23 +22,17 @@ export const PayRentButton = ({
   disabled = false,
   className = ""
 }: PayRentButtonProps) => {
-  const [isMeterPhotoModalOpen, setIsMeterPhotoModalOpen] = useState(false);
-  const [isElectricityBillModalOpen, setIsElectricityBillModalOpen] = useState(false);
-  const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(false);
-  const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
-  const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
+  const [flowStep, setFlowStep] = useState<'idle'|'meter'|'bill'|'method'|'razorpay'|'upi'>('idle');
   const [isLoading, setIsLoading] = useState(false);
   const [finalAmount, setFinalAmount] = useState(amount);
   const [ownerId, setOwnerId] = useState<string>("");
   const { user } = useAuth();
-  const advancingRef = useRef(false);
 
   // Fixed UPI ID for Livenzo
   const LIVENZO_UPI_ID = "7488698970@ybl";
 
   const handlePaymentSuccess = (paymentDetails: any) => {
-    setIsRazorpayModalOpen(false);
-    setIsUpiModalOpen(false);
+    setFlowStep('idle');
     setIsLoading(false);
     toast.success(`Payment of ₹${finalAmount} completed successfully!`);
     
@@ -49,8 +43,7 @@ export const PayRentButton = ({
   };
 
   const handlePaymentFailure = (error: string) => {
-    setIsRazorpayModalOpen(false);
-    setIsUpiModalOpen(false);
+    setFlowStep('idle');
     setIsLoading(false);
     toast.error(`Payment failed: ${error}`);
   };
@@ -74,7 +67,7 @@ export const PayRentButton = ({
         }
       }
       
-      setIsMeterPhotoModalOpen(true);
+      setFlowStep('meter');
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load payment information');
@@ -84,29 +77,20 @@ export const PayRentButton = ({
   };
 
   const handleMeterPhotoComplete = () => {
-    if (advancingRef.current) return;
-    advancingRef.current = true;
-    
-    // Close meter photo modal and immediately open electricity bill modal
-    setIsMeterPhotoModalOpen(false);
-    setIsElectricityBillModalOpen(true);
+    setFlowStep('bill');
   };
 
   const handleElectricityBillComplete = (totalAmount: number) => {
     setFinalAmount(totalAmount);
-    setIsElectricityBillModalOpen(false);
-    advancingRef.current = false;
-    setIsMethodSelectorOpen(true);
+    setFlowStep('method');
   };
 
   const handleSelectRazorpay = () => {
-    setIsMethodSelectorOpen(false);
-    setIsRazorpayModalOpen(true);
+    setFlowStep('razorpay');
   };
 
   const handleSelectUpiDirect = () => {
-    setIsMethodSelectorOpen(false);
-    setIsUpiModalOpen(true);
+    setFlowStep('upi');
   };
 
   return (
@@ -131,35 +115,32 @@ export const PayRentButton = ({
       </Button>
 
       <MeterPhotoUploadModal
-        isOpen={isMeterPhotoModalOpen}
-        onClose={() => setIsMeterPhotoModalOpen(false)}
+        isOpen={flowStep === 'meter'}
+        onClose={() => setFlowStep(prev => (prev === 'meter' ? 'idle' : prev))}
         onContinue={handleMeterPhotoComplete}
         relationshipId={relationshipId || ""}
         ownerId={ownerId}
       />
 
       <ElectricityBillModal
-        isOpen={isElectricityBillModalOpen}
-        onClose={() => {
-          setIsElectricityBillModalOpen(false);
-          advancingRef.current = false;
-        }}
+        isOpen={flowStep === 'bill'}
+        onClose={() => setFlowStep('idle')}
         onContinue={handleElectricityBillComplete}
         rentAmount={amount}
       />
 
       <PaymentMethodSelector
-        isOpen={isMethodSelectorOpen}
-        onClose={() => setIsMethodSelectorOpen(false)}
+        isOpen={flowStep === 'method'}
+        onClose={() => setFlowStep('idle')}
         amount={finalAmount}
         onSelectRazorpay={handleSelectRazorpay}
         onSelectUpiDirect={handleSelectUpiDirect}
       />
 
       <RazorpayPaymentModal
-        isOpen={isRazorpayModalOpen}
+        isOpen={flowStep === 'razorpay'}
         onClose={() => {
-          setIsRazorpayModalOpen(false);
+          setFlowStep('idle');
           setIsLoading(false);
         }}
         amount={finalAmount}
@@ -169,9 +150,9 @@ export const PayRentButton = ({
       />
 
       <UpiPaymentModal
-        isOpen={isUpiModalOpen}
+        isOpen={flowStep === 'upi'}
         onClose={() => {
-          setIsUpiModalOpen(false);
+          setFlowStep('idle');
           setIsLoading(false);
         }}
         amount={finalAmount}
