@@ -48,6 +48,8 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusOverride, setStatusOverride] = useState<'paid' | 'unpaid' | null>(null);
   const x = useMotionValue(0);
   const constraintsRef = useRef(null);
 
@@ -69,7 +71,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     }
   };
 
-  const handleDragEnd = (event: Event, info: PanInfo) => {
+  const handleDragEnd = async (event: Event, info: PanInfo) => {
     setIsDragging(false);
     const offset = info.offset.x;
     const velocity = info.velocity.x;
@@ -83,17 +85,46 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     // Determine if swipe was strong enough
     const shouldTrigger = Math.abs(offset) > 100 || Math.abs(velocity) > 500;
 
-    if (shouldTrigger && !isDemo) {
-      if (offset > 0) {
-        onSwipeAction(renter.id, 'paid');
-      } else {
-        onSwipeAction(renter.id, 'unpaid');
+    if (shouldTrigger && !isDemo && !isProcessing) {
+      setIsProcessing(true);
+      
+      const newStatus = offset > 0 ? 'paid' : 'unpaid';
+      
+      // Immediately update UI for smooth experience
+      setStatusOverride(newStatus);
+      
+      try {
+        // Animate the card with success feedback
+        await new Promise(resolve => {
+          x.set(offset > 0 ? 150 : -150);
+          setTimeout(resolve, 200);
+        });
+        
+        // Call the swipe action
+        await onSwipeAction(renter.id, newStatus);
+        
+        // Reset position smoothly
+        x.set(0);
+        
+        // Clear status override after animation
+        setTimeout(() => {
+          setStatusOverride(null);
+          setIsProcessing(false);
+        }, 1000);
+        
+      } catch (error) {
+        // Reset on error
+        setStatusOverride(null);
+        setIsProcessing(false);
+        x.set(0);
       }
+    } else {
+      // Reset position if swipe wasn't strong enough
+      x.set(0);
     }
 
-    // Reset
+    // Reset swipe direction
     setSwipeDirection(null);
-    x.set(0);
   };
 
   const handleDoubleTap = () => {
@@ -255,7 +286,15 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
               <span className="text-sm font-semibold text-foreground">
                 ₹{renter.amount.toLocaleString()}
               </span>
-              {getStatusBadge(renter.paymentStatus)}
+              <motion.div
+                animate={{ 
+                  scale: statusOverride ? [1, 1.1, 1] : 1,
+                  rotateZ: statusOverride ? [0, 5, -5, 0] : 0
+                }}
+                transition={{ duration: 0.5 }}
+              >
+                {getStatusBadge(statusOverride || renter.paymentStatus)}
+              </motion.div>
             </div>
             
             {/* Due Date Display */}
@@ -301,7 +340,22 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
           
           {/* Right: Status Icon */}
           <div className="flex-shrink-0 flex items-center">
-            {getStatusIcon(renter.paymentStatus)}
+            <motion.div
+              animate={{ 
+                scale: statusOverride ? [1, 1.2, 1] : 1,
+                rotateY: statusOverride ? [0, 180, 360] : 0
+              }}
+              transition={{ duration: 0.6 }}
+            >
+              {getStatusIcon(statusOverride || renter.paymentStatus)}
+            </motion.div>
+            {isProcessing && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
+                animate={{ scale: [0, 1, 0] }}
+                transition={{ repeat: Infinity, duration: 1 }}
+              />
+            )}
           </div>
         </div>
       </motion.div>

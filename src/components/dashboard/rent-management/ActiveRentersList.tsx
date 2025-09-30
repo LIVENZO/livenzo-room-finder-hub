@@ -79,32 +79,116 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     setShowTutorial(false);
   };
 
-  const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid') => {
+  const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid', renterInfo: RenterPaymentInfo) => {
     try {
-      // Update rent status in database
-      const { error } = await supabase
-        .from('rent_status')
-        .update({ 
-          status: action,
-          updated_at: new Date().toISOString()
-        })
-        .eq('relationship_id', renterId);
+      console.log('🔄 Updating payment status:', { renterId, action, renterInfo });
+      
+      // Get current user
+      const { data: currentUser } = await supabase.auth.getUser();
+      const ownerId = currentUser?.user?.id;
 
-      if (error) throw error;
-
-      // Show success toast
-      toast.success(`Renter marked as ${action}`, {
-        description: `Payment status has been updated successfully`
-      });
-
-      // Refresh data if callback provided
-      if (onRefresh) {
-        onRefresh();
+      if (!ownerId) {
+        throw new Error('User not authenticated');
       }
+
+      // 1. Update rent_status table
+      const { error: rentStatusError } = await supabase
+        .from('rent_status')
+        .upsert({ 
+          relationship_id: renterId,
+          status: action,
+          current_amount: renterInfo.amount,
+          due_date: renterInfo.dueDate || new Date().toISOString().split('T')[0],
+          updated_at: new Date().toISOString()
+        });
+
+      if (rentStatusError) {
+        throw rentStatusError;
+      }
+
+      // 2. If marking as paid, create a payment record
+      if (action === 'paid') {
+        const { error: paymentError } = await supabase
+          .from('payments')
+          .insert({
+            renter_id: renterInfo.renter.id,
+            owner_id: ownerId,
+            relationship_id: renterId,
+            amount: renterInfo.amount,
+            status: 'paid',
+            payment_method: 'manual_update',
+            payment_date: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        
+        if (paymentError) {
+          throw paymentError;
+        }
+      }
+
+      // 3. Send notification if marking as unpaid
+      if (action === 'unpaid') {
+        try {
+          await supabase.functions.invoke('send-push-notification', {
+            body: {
+              type: 'payment_reminder',
+              record: {
+                renter_id: renterInfo.renter.id,
+                owner_id: (await supabase.auth.getUser()).data.user?.id,
+                relationship_id: renterId,
+                amount: renterInfo.amount,
+                renter_name: renterInfo.renter.full_name,
+                title: 'Payment Reminder',
+                message: '⚠️ Your rent is pending. Please complete your payment.',
+                deep_link_url: 'https://livenzo-room-finder-hub.lovable.app/payments'
+              }
+            }
+          });
+          console.log('📧 Notification sent to renter');
+        } catch (notifError) {
+          console.warn('⚠️ Failed to send notification:', notifError);
+          // Don't fail the whole operation for notification failure
+        }
+      }
+
+      // Update local state immediately for smooth UX
+      const updatedRenters = renters.map(r => 
+        r.id === renterId 
+          ? { ...r, paymentStatus: action as 'paid' | 'unpaid' | 'pending' }
+          : r
+      );
+      
+      // Show success animation/toast
+      toast.success(
+        <div className="flex items-center gap-2">
+          {action === 'paid' ? (
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          ) : (
+            <XCircle className="h-4 w-4 text-red-600" />
+          )}
+          <span>Renter marked as {action}</span>
+        </div>, 
+        {
+          description: action === 'unpaid' 
+            ? 'Payment reminder sent to renter' 
+            : 'Payment status updated successfully',
+          duration: 3000
+        }
+      );
+
+      // Refresh data after a short delay to show the updated state
+      setTimeout(() => {
+        if (onRefresh) {
+          onRefresh();
+        }
+      }, 1000);
+
     } catch (error) {
-      console.error('Error updating payment status:', error);
+      console.error('❌ Error updating payment status:', error);
       toast.error('Failed to update payment status', {
-        description: 'Please try again or contact support'
+        description: 'Please try again or contact support',
+        duration: 5000
       });
     }
   };
@@ -179,7 +263,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             key={renter.id}
             renter={renter}
             index={index}
-            onSwipeAction={handleSwipeAction}
+            onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
             meterPhotos={meterPhotos}
             onAddPayment={onAddPayment}
           />
