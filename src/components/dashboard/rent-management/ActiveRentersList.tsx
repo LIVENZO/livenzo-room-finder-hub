@@ -31,7 +31,7 @@ interface RenterPaymentInfo {
     avatar_url?: string;
     room_number?: string;
   };
-  paymentStatus: 'paid' | 'pending';
+  paymentStatus: 'paid' | 'unpaid' | 'pending';
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -79,7 +79,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     setShowTutorial(false);
   };
 
-  const handleSwipeAction = async (renterId: string, action: 'paid' | 'pending', renterInfo: RenterPaymentInfo) => {
+  const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid', renterInfo: RenterPaymentInfo) => {
     try {
       console.log('🔄 Updating payment status:', { renterId, action, renterInfo });
       
@@ -90,9 +90,6 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
       }
       const ownerId = currentUser.user.id;
 
-      // Calculate due date - next month if not provided
-      const dueDate = renterInfo.dueDate || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0];
-
       // 1. Update rent_status table with proper conflict resolution
       const { data: rentStatusData, error: rentStatusError } = await supabase
         .from('rent_status')
@@ -100,7 +97,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           relationship_id: renterId,
           status: action,
           current_amount: renterInfo.amount,
-          due_date: dueDate,
+          due_date: renterInfo.dueDate || new Date().toISOString().split('T')[0],
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'relationship_id',
@@ -141,6 +138,36 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
 
         console.log('✅ Payment record created:', paymentData);
       }
+
+      // 3. Send notification if marking as unpaid with deep link
+      if (action === 'unpaid') {
+        try {
+          const { data: notifData, error: notifError } = await supabase.functions.invoke('send-push-notification', {
+            body: {
+              type: 'payment_reminder',
+              record: {
+                renter_id: renterInfo.renter.id,
+                owner_id: ownerId,
+                relationship_id: renterId,
+                amount: renterInfo.amount,
+                renter_name: renterInfo.renter.full_name,
+                title: 'Payment Reminder',
+                message: '⚠️ Your rent is pending. Please complete your payment.',
+                deep_link_url: '/payments'
+              }
+            }
+          });
+
+          if (notifError) {
+            console.warn('⚠️ Failed to send notification:', notifError);
+          } else {
+            console.log('✅ Notification sent successfully:', notifData);
+          }
+        } catch (notifError) {
+          console.warn('⚠️ Notification error:', notifError);
+          // Don't fail the whole operation for notification failure
+        }
+      }
       
       // Show success animation/toast
       toast.success(
@@ -148,14 +175,14 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           {action === 'paid' ? (
             <CheckCircle className="h-4 w-4 text-green-600" />
           ) : (
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <XCircle className="h-4 w-4 text-red-600" />
           )}
           <span>Renter marked as {action}</span>
         </div>, 
         {
-          description: action === 'paid' 
-            ? 'Payment status updated successfully' 
-            : 'Status reset to pending',
+          description: action === 'unpaid' 
+            ? 'Payment reminder sent to renter' 
+            : 'Payment status updated successfully',
           duration: 3000
         }
       );
@@ -179,6 +206,8 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     switch (status) {
       case 'paid':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'unpaid':
+        return <XCircle className="h-4 w-4 text-red-600" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-600" />;
       default:
@@ -194,6 +223,8 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             Paid
           </Badge>
         );
+      case 'unpaid':
+        return <Badge variant="destructive" className="font-medium text-xs">Unpaid</Badge>;
       case 'pending':
         return <Badge variant="secondary" className="font-medium text-xs">Pending</Badge>;
       default:

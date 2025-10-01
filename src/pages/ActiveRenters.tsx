@@ -17,7 +17,7 @@ interface RenterPaymentInfo {
     avatar_url?: string;
     room_number?: string;
   };
-  paymentStatus: 'paid' | 'pending';
+  paymentStatus: 'paid' | 'unpaid' | 'pending';
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -111,7 +111,8 @@ const ActiveRenters: React.FC = () => {
           const dueDate = (agreementData as any)?.due_date || statusData?.due_date;
           const rentStatusValue = (agreementData as any)?.status || statusData?.status;
           
-          const paymentStatus: 'paid' | 'pending' = rentStatusValue === 'paid' ? 'paid' : 'pending';
+          const paymentStatus: 'paid' | 'unpaid' | 'pending' = hasRecentPayment ? 'paid' : 
+                        rentStatusValue === 'pending' ? 'pending' : 'unpaid';
 
           return {
             id: rel.id,
