@@ -818,6 +818,7 @@ export type Database = {
       }
       rent_status: {
         Row: {
+          billing_month: string | null
           created_at: string
           current_amount: number
           due_date: string
@@ -828,6 +829,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_month?: string | null
           created_at?: string
           current_amount?: number
           due_date: string
@@ -838,6 +840,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_month?: string | null
           created_at?: string
           current_amount?: number
           due_date?: string
@@ -858,7 +861,7 @@ export type Database = {
           {
             foreignKeyName: "rent_status_relationship_id_fkey"
             columns: ["relationship_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "relationships"
             referencedColumns: ["id"]
           },
@@ -1514,6 +1517,7 @@ export type Database = {
         | "other"
         | "lease_agreement"
         | "reference"
+      rent_payment_status: "pending" | "paid" | "unpaid"
       rent_status_enum: "paid" | "unpaid" | "pending"
     }
     CompositeTypes: {
@@ -1651,6 +1655,7 @@ export const Constants = {
         "lease_agreement",
         "reference",
       ],
+      rent_payment_status: ["pending", "paid", "unpaid"],
       rent_status_enum: ["paid", "unpaid", "pending"],
     },
   },

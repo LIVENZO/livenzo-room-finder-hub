@@ -95,17 +95,18 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
       // Get current month in YYYY-MM format
       const currentMonth = new Date().toISOString().slice(0, 7);
 
-      // 1. Update rent_status table with proper conflict resolution
+      // 1. Update rent_status table with proper conflict resolution for current month
       const { data: rentStatusData, error: rentStatusError } = await supabase
         .from('rent_status')
         .upsert({ 
           relationship_id: renterId,
+          billing_month: currentMonth,
           status: action,
           current_amount: renterInfo.amount,
           due_date: renterInfo.dueDate || new Date().toISOString().split('T')[0],
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'relationship_id',
+          onConflict: 'relationship_id,billing_month',
           ignoreDuplicates: false
         })
         .select()
