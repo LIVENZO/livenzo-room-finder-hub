@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock, Camera, Download, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, XCircle, Clock, Camera, Download, User, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeterPhoto } from './ActiveRentersList';
 import { MeterPhotoViewModal } from '@/components/owner/MeterPhotoViewModal';
 import { MeterPhotoDetailModal } from '@/components/owner/MeterPhotoDetailModal';
+import PaymentHistoryModal from './PaymentHistoryModal';
 
 interface RenterPaymentInfo {
   id: string;
@@ -31,6 +33,7 @@ interface SwipeableRenterCardProps {
   meterPhotos?: Record<string, MeterPhoto[]>;
   onAddPayment: (renterId: string, renterName: string) => void;
   isDemo?: boolean;
+  ownerId: string;
 }
 
 const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
@@ -39,12 +42,14 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   onSwipeAction,
   meterPhotos = {},
   onAddPayment,
-  isDemo = false
+  isDemo = false,
+  ownerId
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showMeterPhotoModal, setShowMeterPhotoModal] = useState(false);
   const [showMeterPhotoDetailModal, setShowMeterPhotoDetailModal] = useState(false);
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
@@ -336,6 +341,22 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Payment History Button */}
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPaymentHistory(true);
+                }}
+                className="w-full text-xs"
+              >
+                <History className="h-3 w-3 mr-1" />
+                View Payment History
+              </Button>
+            </div>
           </div>
           
           {/* Right: Status Icon */}
@@ -394,6 +415,19 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
           renterName={renter.renter.full_name || 'Unknown Renter'}
           relationshipId={renter.relationshipId}
           meterPhotos={meterPhotos[renter.relationshipId] || []}
+        />
+      )}
+
+      {/* Payment History Modal */}
+      {renter.relationshipId && (
+        <PaymentHistoryModal
+          isOpen={showPaymentHistory}
+          onClose={() => setShowPaymentHistory(false)}
+          renterId={renter.renter.id}
+          renterName={renter.renter.full_name || 'Unknown Renter'}
+          ownerId={ownerId}
+          relationshipId={renter.relationshipId}
+          currentAmount={renter.amount}
         />
       )}
     </div>

@@ -290,6 +290,8 @@ const RentManagementDashboard: React.FC = () => {
           loading={loading}
           onAddPayment={handleAddPayment}
           meterPhotos={meterPhotos}
+          onRefresh={fetchRenters}
+          ownerId={user?.id || ''}
         />
       </div>
 

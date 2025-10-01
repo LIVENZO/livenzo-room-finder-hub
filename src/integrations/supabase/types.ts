@@ -579,6 +579,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          billing_month: string | null
           created_at: string
           due_date: string | null
           id: string
@@ -598,6 +599,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          billing_month?: string | null
           created_at?: string
           due_date?: string | null
           id?: string
@@ -617,6 +619,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          billing_month?: string | null
           created_at?: string
           due_date?: string | null
           id?: string
@@ -741,6 +744,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rent_management: {
+        Row: {
+          created_at: string
+          due_date: string
+          id: string
+          notification_sent: boolean
+          notification_sent_at: string | null
+          owner_id: string
+          rent_amount: number
+          renter_id: string
+          status: Database["public"]["Enums"]["rent_status_enum"]
+          status_set_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          id?: string
+          notification_sent?: boolean
+          notification_sent_at?: string | null
+          owner_id: string
+          rent_amount: number
+          renter_id: string
+          status?: Database["public"]["Enums"]["rent_status_enum"]
+          status_set_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          id?: string
+          notification_sent?: boolean
+          notification_sent_at?: string | null
+          owner_id?: string
+          rent_amount?: number
+          renter_id?: string
+          status?: Database["public"]["Enums"]["rent_status_enum"]
+          status_set_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_management_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profile_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_management_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_management_renter_id_fkey"
+            columns: ["renter_id"]
+            isOneToOne: false
+            referencedRelation: "safe_profile_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_management_renter_id_fkey"
+            columns: ["renter_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rent_status: {
         Row: {
@@ -1292,6 +1366,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_rent_management_with_reset: {
+        Args: { p_owner_id?: string }
+        Returns: {
+          created_at: string
+          due_date: string
+          id: string
+          notification_sent: boolean
+          notification_sent_at: string
+          owner_id: string
+          rent_amount: number
+          renter_id: string
+          status: string
+          status_set_at: string
+          updated_at: string
+        }[]
+      }
       get_room_details_for_authenticated: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1424,6 +1514,7 @@ export type Database = {
         | "other"
         | "lease_agreement"
         | "reference"
+      rent_status_enum: "paid" | "unpaid" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1560,6 +1651,7 @@ export const Constants = {
         "lease_agreement",
         "reference",
       ],
+      rent_status_enum: ["paid", "unpaid", "pending"],
     },
   },
 } as const

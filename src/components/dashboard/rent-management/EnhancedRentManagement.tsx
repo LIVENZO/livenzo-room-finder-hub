@@ -333,6 +333,7 @@ const EnhancedRentManagement: React.FC = () => {
               });
             }}
             onRefresh={fetchData}
+            ownerId={user?.id || ''}
           />
         </CardContent>
       </Card>

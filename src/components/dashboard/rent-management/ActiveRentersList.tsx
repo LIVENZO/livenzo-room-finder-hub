@@ -50,6 +50,7 @@ interface ActiveRentersListProps {
   onAddPayment: (renterId: string, renterName: string) => void;
   meterPhotos?: Record<string, MeterPhoto[]>;
   onRefresh?: () => void;
+  ownerId: string;
 }
 
 const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
@@ -57,7 +58,8 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
   loading,
   onAddPayment,
   meterPhotos = {},
-  onRefresh
+  onRefresh,
+  ownerId
 }) => {
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -90,6 +92,9 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
       }
       const ownerId = currentUser.user.id;
 
+      // Get current month in YYYY-MM format
+      const currentMonth = new Date().toISOString().slice(0, 7);
+
       // 1. Update rent_status table with proper conflict resolution
       const { data: rentStatusData, error: rentStatusError } = await supabase
         .from('rent_status')
@@ -113,31 +118,33 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
 
       console.log('✅ Rent status updated:', rentStatusData);
 
-      // 2. If marking as paid, create a payment record
-      if (action === 'paid') {
-        const { data: paymentData, error: paymentError } = await supabase
-          .from('payments')
-          .insert({
-            renter_id: renterInfo.renter.id,
-            owner_id: ownerId,
-            relationship_id: renterId,
-            amount: renterInfo.amount,
-            status: 'paid',
-            payment_method: 'manual_swipe',
-            payment_date: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-        
-        if (paymentError) {
-          console.error('❌ Payment record error:', paymentError);
-          throw new Error(`Failed to create payment record: ${paymentError.message}`);
-        }
-
-        console.log('✅ Payment record created:', paymentData);
+      // 2. Create or update payment record for current month with billing_month
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('payments')
+        .upsert({
+          renter_id: renterInfo.renter.id,
+          owner_id: ownerId,
+          relationship_id: renterId,
+          billing_month: currentMonth,
+          amount: renterInfo.amount,
+          status: action,
+          payment_method: 'manual_swipe',
+          payment_date: action === 'paid' ? new Date().toISOString() : null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'renter_id,owner_id,billing_month',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
+      
+      if (paymentError) {
+        console.error('❌ Payment record error:', paymentError);
+        throw new Error(`Failed to create/update payment record: ${paymentError.message}`);
       }
+
+      console.log('✅ Payment record created/updated:', paymentData);
 
       // 3. Send notification if marking as unpaid with deep link
       if (action === 'unpaid') {
@@ -276,6 +283,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
             meterPhotos={meterPhotos}
             onAddPayment={onAddPayment}
+            ownerId={ownerId}
           />
         ))}
       </div>

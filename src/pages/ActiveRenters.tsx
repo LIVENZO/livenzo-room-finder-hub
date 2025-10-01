@@ -193,6 +193,7 @@ const ActiveRenters: React.FC = () => {
             loading={loading}
             onAddPayment={handleAddPayment}
             onRefresh={fetchActiveRenters}
+            ownerId={user?.id || ''}
           />
         </div>
 
