@@ -30,22 +30,36 @@ export const MeterPhotoUpload: React.FC<MeterPhotoUploadProps> = ({
   const handleTakePhoto = async () => {
     try {
       setIsUploading(true);
+      toast.info('📸 Opening camera...');
+      
       const file = await takeMeterPhoto();
       
-      if (file) {
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
-        
-        // Auto-upload immediately after taking photo
-        const photoUrl = await uploadMeterPhoto(file, relationshipId, renterId, ownerId);
-        if (photoUrl) {
-          onPhotoUploaded(photoUrl, file);
-          onClose();
-        }
+      if (!file) {
+        // User cancelled or error occurred (already handled in service)
+        setIsUploading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      toast.error('Failed to take photo');
+      
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      
+      // Show uploading message
+      toast.info('⬆️ Uploading meter photo...');
+      
+      // Auto-upload immediately after taking photo
+      const photoUrl = await uploadMeterPhoto(file, relationshipId, renterId, ownerId);
+      
+      if (photoUrl) {
+        onPhotoUploaded(photoUrl, file);
+        handleClose();
+      } else {
+        // Upload failed (error already shown in service)
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      }
+    } catch (error: any) {
+      console.error('Unexpected error taking photo:', error);
+      toast.error('⚠️ An unexpected error occurred. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -54,22 +68,36 @@ export const MeterPhotoUpload: React.FC<MeterPhotoUploadProps> = ({
   const handleChooseFromGallery = async () => {
     try {
       setIsUploading(true);
+      toast.info('🖼️ Opening gallery...');
+      
       const file = await chooseMeterPhotoFromGallery();
       
-      if (file) {
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
-        
-        // Auto-upload immediately after selecting photo
-        const photoUrl = await uploadMeterPhoto(file, relationshipId, renterId, ownerId);
-        if (photoUrl) {
-          onPhotoUploaded(photoUrl, file);
-          onClose();
-        }
+      if (!file) {
+        // User cancelled or error occurred
+        setIsUploading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error choosing photo:', error);
-      toast.error('Failed to choose photo');
+      
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      
+      // Show uploading message
+      toast.info('⬆️ Uploading meter photo...');
+      
+      // Auto-upload immediately after selecting photo
+      const photoUrl = await uploadMeterPhoto(file, relationshipId, renterId, ownerId);
+      
+      if (photoUrl) {
+        onPhotoUploaded(photoUrl, file);
+        handleClose();
+      } else {
+        // Upload failed (error already shown in service)
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      }
+    } catch (error: any) {
+      console.error('Unexpected error choosing photo:', error);
+      toast.error('⚠️ An unexpected error occurred. Please try again.');
     } finally {
       setIsUploading(false);
     }

@@ -18,9 +18,10 @@ export interface MeterPhoto {
 }
 
 /**
- * Compress image file for faster upload
+ * Compress image file for faster upload and prevent memory issues
+ * Reduced to 1080px max width to prevent crashes on low-memory devices
  */
-const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
+const compressImage = (file: File, maxWidth: number = 1080, quality: number = 0.8): Promise<File> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -60,37 +61,64 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
 };
 
 /**
- * Check camera permissions and request if needed
+ * Check camera permissions for both native and web platforms
  */
 const checkCameraPermissions = async (): Promise<boolean> => {
   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      console.error('Camera API not available');
+    if (Capacitor.isNativePlatform()) {
+      // Native platform - use Capacitor permissions
+      const permissions = await Camera.checkPermissions();
+      console.log('Native camera permissions:', permissions);
+      
+      if (permissions.camera === 'granted' && permissions.photos === 'granted') {
+        return true;
+      }
+      
+      if (permissions.camera === 'denied' || permissions.photos === 'denied') {
+        toast.error('⚠️ Camera permission denied. Please enable camera access in your device settings.');
+        return false;
+      }
+      
+      // Request permissions if not granted
+      const requestResult = await Camera.requestPermissions();
+      console.log('Permission request result:', requestResult);
+      
+      if (requestResult.camera === 'granted' && requestResult.photos === 'granted') {
+        return true;
+      }
+      
+      toast.error('⚠️ Camera permission required to upload meter photo.');
       return false;
-    }
+    } else {
+      // Web platform
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('Camera API not available');
+        return false;
+      }
 
-    // Check if we already have permission
-    const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-    
-    if (permissionStatus.state === 'granted') {
-      return true;
-    }
-    
-    if (permissionStatus.state === 'denied') {
-      toast.error('⚠️ Camera permission denied. Please enable camera access in your browser settings.');
-      return false;
-    }
+      // Check if we already have permission
+      const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      
+      if (permissionStatus.state === 'granted') {
+        return true;
+      }
+      
+      if (permissionStatus.state === 'denied') {
+        toast.error('⚠️ Camera permission denied. Please enable camera access in your browser settings.');
+        return false;
+      }
 
-    // Try to request permission by accessing camera
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      // Stop the stream immediately as we just needed permission
-      stream.getTracks().forEach(track => track.stop());
-      return true;
-    } catch (permError) {
-      console.error('Camera permission error:', permError);
-      toast.error('⚠️ Camera permission required to upload meter photo. Please enable it in settings.');
-      return false;
+      // Try to request permission by accessing camera
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Stop the stream immediately as we just needed permission
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (permError) {
+        console.error('Camera permission error:', permError);
+        toast.error('⚠️ Camera permission required to upload meter photo. Please enable it in settings.');
+        return false;
+      }
     }
   } catch (error) {
     console.error('Error checking camera permissions:', error);
@@ -106,37 +134,66 @@ export const takeMeterPhoto = async (): Promise<File | null> => {
     console.log('Taking meter photo - Platform:', Capacitor.isNativePlatform() ? 'Native' : 'Web');
 
     if (Capacitor.isNativePlatform()) {
+      // Check and request permissions first
+      const hasPermission = await checkCameraPermissions();
+      if (!hasPermission) {
+        return null;
+      }
+
       // Native mobile platform - use Capacitor Camera
       try {
         const image = await Camera.getPhoto({
-          quality: 90,
+          quality: 80, // Reduced quality for smaller file size
           allowEditing: false,
           resultType: CameraResultType.Uri,
           source: CameraSource.Camera,
+          saveToGallery: false, // Don't save to gallery to reduce memory usage
         });
 
         console.log('Camera result:', { webPath: image.webPath, path: image.path });
 
-        if (!image.webPath && !image.path) {
-          console.error('No image path captured from native camera');
-          throw new Error('No image captured');
+        if (!image.webPath && !image.path && !image.base64String) {
+          console.error('No image data captured from native camera');
+          toast.error('⚠️ No image captured. Please try again.');
+          return null;
         }
 
-        // Use webPath or fallback to path
+        // Use webPath or fallback to base64
         const imagePath = image.webPath || `data:image/jpeg;base64,${image.base64String}`;
         
-        // Convert to File object
-        const response = await fetch(imagePath);
-        const blob = await response.blob();
-        const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
-          type: 'image/jpeg',
-        });
+        // Convert to File object with error handling
+        try {
+          const response = await fetch(imagePath);
+          if (!response.ok) {
+            throw new Error('Failed to fetch image data');
+          }
+          
+          const blob = await response.blob();
+          if (blob.size === 0) {
+            throw new Error('Empty image data');
+          }
+          
+          const file = new File([blob], `meter-photo-${Date.now()}.jpg`, {
+            type: 'image/jpeg',
+          });
 
-        console.log('Native camera photo captured:', file.name, file.size);
-        return file;
-      } catch (nativeError) {
+          console.log('Native camera photo captured:', file.name, file.size);
+          return file;
+        } catch (fetchError) {
+          console.error('Error converting image to file:', fetchError);
+          toast.error('⚠️ Failed to process captured image. Please try again.');
+          return null;
+        }
+      } catch (nativeError: any) {
         console.error('Native camera error:', nativeError);
-        toast.error('⚠️ Unable to access camera. Please check permissions.');
+        
+        // Handle specific error cases
+        if (nativeError.message?.includes('User cancelled')) {
+          console.log('User cancelled camera');
+          return null;
+        }
+        
+        toast.error('⚠️ Unable to access camera. Please check permissions in device settings.');
         return null;
       }
     } else {
@@ -249,18 +306,58 @@ export const uploadMeterPhoto = async (
       ownerId
     });
 
-    // Compress image for faster upload
-    const compressedFile = await compressImage(file);
-    console.log('Image compressed:', { 
-      originalSize: file.size, 
-      compressedSize: compressedFile.size 
-    });
+    // Validate file
+    if (!file || file.size === 0) {
+      console.error('Invalid file provided');
+      toast.error('⚠️ Invalid image file. Please try again.');
+      return null;
+    }
 
-    // Upload to storage
-    const uploadedUrls = await uploadImagesToStorage([compressedFile], renterId, 'user-uploads');
+    // Check file size (max 10MB before compression)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      console.error('File too large:', file.size);
+      toast.error('⚠️ Image file is too large. Please choose a smaller image.');
+      return null;
+    }
+
+    // Compress image for faster upload and prevent memory issues
+    let compressedFile: File;
+    try {
+      compressedFile = await compressImage(file);
+      console.log('Image compressed:', { 
+        originalSize: file.size, 
+        compressedSize: compressedFile.size 
+      });
+    } catch (compressionError) {
+      console.error('Error compressing image:', compressionError);
+      toast.error('⚠️ Failed to process image. Please try again.');
+      return null;
+    }
+
+    // Upload to storage with timeout
+    let uploadedUrls: string[];
+    try {
+      const uploadPromise = uploadImagesToStorage([compressedFile], renterId, 'user-uploads');
+      const timeoutPromise = new Promise<string[]>((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout')), 60000) // 60 second timeout
+      );
+      
+      uploadedUrls = await Promise.race([uploadPromise, timeoutPromise]);
+    } catch (uploadError: any) {
+      console.error('Error uploading to storage:', uploadError);
+      
+      if (uploadError.message === 'Upload timeout') {
+        toast.error('⚠️ Upload is taking too long. Please check your internet connection and try again.');
+      } else {
+        toast.error('⚠️ Failed to upload image. Please check your internet connection.');
+      }
+      return null;
+    }
     
-    if (uploadedUrls.length === 0) {
+    if (!uploadedUrls || uploadedUrls.length === 0) {
       console.error('No URLs returned from storage upload');
+      toast.error('⚠️ Upload failed. Please try again.');
       return null;
     }
 
@@ -268,32 +365,44 @@ export const uploadMeterPhoto = async (
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
     // Save meter photo record to database
-    const { data, error } = await supabase
-      .from('meter_photos')
-      .insert({
-        relationship_id: relationshipId,
-        renter_id: renterId,
-        owner_id: ownerId,
-        photo_url: photoUrl,
-        photo_name: compressedFile.name,
-        file_size: compressedFile.size,
-        billing_month: currentMonth
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('meter_photos')
+        .insert({
+          relationship_id: relationshipId,
+          renter_id: renterId,
+          owner_id: ownerId,
+          photo_url: photoUrl,
+          photo_name: compressedFile.name,
+          file_size: compressedFile.size,
+          billing_month: currentMonth
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error saving meter photo record:', error);
-      toast.error('Failed to save meter photo record');
+      if (error) {
+        console.error('Error saving meter photo record:', error);
+        toast.error('⚠️ Failed to save meter photo record. Please try again.');
+        return null;
+      }
+
+      console.log('Meter photo uploaded and saved successfully:', data);
+      toast.success('✅ Meter photo sent to owner successfully! 📸');
+      return photoUrl;
+    } catch (dbError) {
+      console.error('Database error saving meter photo:', dbError);
+      toast.error('⚠️ Failed to save meter photo. Please try again.');
       return null;
     }
-
-    console.log('Meter photo uploaded and saved successfully:', data);
-    toast.success('Meter photo sent to owner successfully! 📸');
-    return photoUrl;
-  } catch (error) {
-    console.error('Error in meter photo upload:', error);
-    toast.error('Failed to upload meter photo');
+  } catch (error: any) {
+    console.error('Unexpected error in meter photo upload:', error);
+    
+    // Provide user-friendly error messages
+    if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      toast.error('⚠️ Network error. Please check your internet connection and try again.');
+    } else {
+      toast.error('⚠️ Failed to upload meter photo. Please try again.');
+    }
     return null;
   }
 };
