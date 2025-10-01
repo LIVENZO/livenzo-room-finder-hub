@@ -11,6 +11,7 @@ import AddPaymentModal from '@/components/dashboard/rent-management/AddPaymentMo
 
 interface RenterPaymentInfo {
   id: string;
+  relationshipId?: string;
   renter: {
     id: string;
     full_name: string;
@@ -116,6 +117,7 @@ const ActiveRenters: React.FC = () => {
 
           return {
             id: rel.id,
+            relationshipId: rel.id,
             renter: {
               id: rel.renter_id,
               full_name: renterProfile?.full_name || 'Unknown Renter',
