@@ -1,4 +1,3 @@
-import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
 import SetLocation from "./pages/SetLocation";
+import { useState } from "react";
 
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -29,16 +29,25 @@ import ActiveRenters from "./pages/ActiveRenters";
 import FirebaseTest from "./pages/FirebaseTest";
 import NotificationTest from "./pages/NotificationTest";
 
-const queryClient = new QueryClient();
-
 const FCMWrapper = () => {
   useFCMRegistration();
   useNotificationNavigation();
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => {
+  // Create QueryClient inside component to avoid SSR/hydration issues
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
@@ -75,6 +84,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
