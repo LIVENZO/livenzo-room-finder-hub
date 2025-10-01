@@ -95,12 +95,9 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   React.useEffect(() => {
     if (isOpen && renter) {
       setRentAmount(renter.current_rent?.toString() || '');
-      // Set default due date to 1st of next month if not already set
+      // Set default due date to today's date
       if (!dueDate) {
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        nextMonth.setDate(1);
-        setDueDate(nextMonth);
+        setDueDate(new Date());
       }
     }
   }, [isOpen, renter]);
