@@ -34,7 +34,7 @@ interface RenterPaymentInfo {
     avatar_url?: string;
     room_number?: string;
   };
-  paymentStatus: 'paid' | 'unpaid' | 'pending';
+  paymentStatus: 'paid' | 'pending';
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -132,7 +132,7 @@ const EnhancedRentManagement: React.FC = () => {
             room_number: renterProfile?.room_number || ''
           },
           relationshipId: relationship.id,
-          paymentStatus: rentStatus?.status === 'paid' ? 'paid' : 'unpaid',
+          paymentStatus: rentStatus?.status === 'paid' ? 'paid' : 'pending',
           amount: rentStatus?.current_amount || 0,
           dueDate: rentStatus?.due_date,
           lastPaymentDate: latestPayment?.payment_date
@@ -214,7 +214,7 @@ const EnhancedRentManagement: React.FC = () => {
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-600" />;
       default:
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -225,7 +225,7 @@ const EnhancedRentManagement: React.FC = () => {
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
       default:
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Unpaid</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Unknown</Badge>;
     }
   };
 
