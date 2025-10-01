@@ -16,7 +16,7 @@ interface RenterPaymentInfo {
     avatar_url?: string;
     room_number?: string;
   };
-  paymentStatus: 'paid' | 'unpaid' | 'pending';
+  paymentStatus: 'paid' | 'pending';
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -27,7 +27,7 @@ interface RenterPaymentInfo {
 interface SwipeableRenterCardProps {
   renter: RenterPaymentInfo;
   index: number;
-  onSwipeAction: (renterId: string, action: 'paid' | 'unpaid') => void;
+  onSwipeAction: (renterId: string, action: 'paid' | 'pending') => void;
   meterPhotos?: Record<string, MeterPhoto[]>;
   onAddPayment: (renterId: string, renterName: string) => void;
   isDemo?: boolean;
@@ -49,7 +49,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusOverride, setStatusOverride] = useState<'paid' | 'unpaid' | null>(null);
+  const [statusOverride, setStatusOverride] = useState<'paid' | 'pending' | null>(null);
   const x = useMotionValue(0);
   const constraintsRef = useRef(null);
 
@@ -88,7 +88,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     if (shouldTrigger && !isDemo && !isProcessing) {
       setIsProcessing(true);
       
-      const newStatus = offset > 0 ? 'paid' : 'unpaid';
+      const newStatus = offset > 0 ? 'paid' : 'pending';
       
       // Immediately update UI for smooth experience
       setStatusOverride(newStatus);
@@ -174,8 +174,6 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     switch (status) {
       case 'paid':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'unpaid':
-        return <XCircle className="h-4 w-4 text-red-600" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-600" />;
       default:
@@ -191,8 +189,6 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
             Paid
           </Badge>
         );
-      case 'unpaid':
-        return <Badge variant="destructive" className="font-medium text-xs">Unpaid</Badge>;
       case 'pending':
         return <Badge variant="secondary" className="font-medium text-xs">Pending</Badge>;
       default:
@@ -212,14 +208,14 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         className="absolute inset-0 flex"
         style={{ opacity: backgroundOpacity }}
       >
-        {/* Left Background - Unpaid */}
+        {/* Left Background - Pending */}
         <motion.div
-          className="w-1/2 bg-red-500 flex items-center justify-start pl-6"
+          className="w-1/2 bg-yellow-500 flex items-center justify-start pl-6"
           style={{ opacity: leftOpacity }}
         >
           <div className="flex items-center gap-2 text-white">
-            <XCircle className="h-6 w-6" />
-            <span className="font-semibold">Mark Unpaid</span>
+            <Clock className="h-6 w-6" />
+            <span className="font-semibold">Mark Pending</span>
           </div>
         </motion.div>
 
@@ -365,13 +361,13 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         <motion.div
           className={cn(
             "absolute top-2 z-20 px-3 py-1 rounded-full text-white text-sm font-semibold",
-            swipeDirection === 'left' ? "left-2 bg-red-500" : "right-2 bg-green-500"
+            swipeDirection === 'left' ? "left-2 bg-yellow-500" : "right-2 bg-green-500"
           )}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0 }}
         >
-          {swipeDirection === 'left' ? 'Unpaid' : 'Paid'}
+          {swipeDirection === 'left' ? 'Pending' : 'Paid'}
         </motion.div>
       )}
 
