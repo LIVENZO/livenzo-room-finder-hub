@@ -10,9 +10,10 @@ import { useRentersManagement } from './hooks/useRentersManagement';
 
 interface RentersPageProps {
   currentUserId: string;
+  defaultTab?: string;
 }
 
-const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
+const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) => {
   const {
     relationships,
     loading,
@@ -68,7 +69,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   return (
     <div className="w-full h-full space-y-6 p-4">
 
-      <Tabs defaultValue="requests" className="w-full">
+      <Tabs defaultValue={defaultTab || "requests"} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="requests" className="flex items-center gap-2">
             Requests

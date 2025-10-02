@@ -192,7 +192,7 @@ serve(async (req) => {
       body = 'A renter wants to connect with you. Review their request now.';
       data.relationship_id = record.id;
       data.renter_id = record.renter_id;
-      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections`;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?tab=requests`;
     }
 
     if (!targetUserId) {
