@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/auth';
 
 interface Renter {
   id: string;
@@ -32,6 +34,8 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   renter,
   onSuccess
 }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [rentAmount, setRentAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date>();
   const [saving, setSaving] = useState(false);
@@ -76,6 +80,20 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
       setRentAmount('');
       setDueDate(undefined);
       onClose();
+
+      // Check if owner has UPI ID saved
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('upi_id')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile?.upi_id) {
+          toast.info('Please set up your UPI payment details');
+          navigate('/payments');
+        }
+      }
       
     } catch (error) {
       console.error('Error setting rent:', error);

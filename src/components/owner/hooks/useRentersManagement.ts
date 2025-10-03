@@ -18,6 +18,8 @@ export const useRentersManagement = (currentUserId: string) => {
   const [selectedRelationship, setSelectedRelationship] = useState<Relationship | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>('overview');
   const [viewMode, setViewMode] = useState<'full' | 'documents' | 'complaints'>('full');
+  const [showSetRentModal, setShowSetRentModal] = useState(false);
+  const [renterForRent, setRenterForRent] = useState<{ id: string; full_name: string } | null>(null);
 
   const fetchRelationships = useCallback(async () => {
     try {
@@ -56,6 +58,16 @@ export const useRentersManagement = (currentUserId: string) => {
       await updateRelationshipStatus(relationshipId, 'accepted');
       toast.success('Connection request accepted');
       await fetchRelationships();
+      
+      // Get the accepted relationship to show Set Rent modal
+      const acceptedRelationship = relationships.find(r => r.id === relationshipId);
+      if (acceptedRelationship?.renter) {
+        setRenterForRent({
+          id: acceptedRelationship.renter_id,
+          full_name: acceptedRelationship.renter.full_name
+        });
+        setShowSetRentModal(true);
+      }
     } catch (error) {
       console.error('Error accepting request:', error);
       toast.error('Failed to accept request');
@@ -132,6 +144,9 @@ export const useRentersManagement = (currentUserId: string) => {
     handleChat,
     handleComplaints,
     handleBackToList,
-    setViewMode, // Add this to the return object
+    setViewMode,
+    showSetRentModal,
+    setShowSetRentModal,
+    renterForRent,
   };
 };
