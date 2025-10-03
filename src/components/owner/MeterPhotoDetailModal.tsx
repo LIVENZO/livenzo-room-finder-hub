@@ -47,8 +47,7 @@ export const MeterPhotoDetailModal = ({
         .from('payments')
         .select('amount, created_at')
         .eq('relationship_id', relationshipId)
-        .gte('created_at', `${currentMonth}-01`)
-        .lt('created_at', `${currentMonth}-32`)
+        .eq('billing_month', currentMonth)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -57,6 +56,23 @@ export const MeterPhotoDetailModal = ({
           amount: parseFloat(payments[0].amount.toString()),
           created_at: payments[0].created_at
         });
+      } else {
+        // Also try without billing_month filter for backward compatibility
+        const { data: fallbackPayments, error: fallbackError } = await supabase
+          .from('payments')
+          .select('amount, created_at')
+          .eq('relationship_id', relationshipId)
+          .gte('created_at', `${currentMonth}-01`)
+          .lt('created_at', `${currentMonth}-32`)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!fallbackError && fallbackPayments && fallbackPayments.length > 0) {
+          setElectricityBillData({
+            amount: parseFloat(fallbackPayments[0].amount.toString()),
+            created_at: fallbackPayments[0].created_at
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching electricity bill data:', error);
