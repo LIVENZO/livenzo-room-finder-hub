@@ -85,7 +85,7 @@ export const PayRentButton = ({
 
   const handleElectricityBillComplete = (totalAmount: number) => {
     setFinalAmount(totalAmount);
-    setFlowStep('method');
+    setFlowStep('upi'); // Skip payment method selector, go directly to UPI
     advancingRef.current = false;
   };
 
