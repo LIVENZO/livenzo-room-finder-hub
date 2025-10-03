@@ -5,13 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, QrCode, Upload, Loader2, Check, Download } from "lucide-react";
+import { Copy, Upload, Loader2, Check, Smartphone } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
-import QRCode from "qrcode";
 
 interface UpiPaymentModalProps {
   isOpen: boolean;
@@ -39,40 +37,51 @@ export const UpiPaymentModal = ({
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
   const [copied, setCopied] = useState(false);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
+  const [ownerUpiPhone, setOwnerUpiPhone] = useState<string>("");
+  const [ownerId, setOwnerId] = useState<string>("");
 
-  // Generate QR code when modal opens
-  const generateQRCode = async () => {
-    try {
-      const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
-      const qrDataUrl = await QRCode.toDataURL(upiUrl, {
-        width: 200,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-      setQrCodeDataUrl(qrDataUrl);
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-    }
-  };
-
+  // Fetch owner's UPI phone number
   useEffect(() => {
-    if (isOpen && !qrCodeDataUrl) {
-      generateQRCode();
-    }
-  }, [isOpen, ownerUpiId, amount, ownerName]);
+    const fetchOwnerDetails = async () => {
+      try {
+        // Get owner_id from relationship
+        const { data: relationship, error: relError } = await supabase
+          .from('relationships')
+          .select('owner_id')
+          .eq('id', relationshipId)
+          .single();
 
-  const handleCopyUpiId = async () => {
+        if (relError) throw relError;
+        setOwnerId(relationship.owner_id);
+
+        // Fetch owner's UPI phone number
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('upi_phone_number')
+          .eq('id', relationship.owner_id)
+          .single();
+
+        if (profileError) throw profileError;
+        setOwnerUpiPhone(profile.upi_phone_number || "Not available");
+      } catch (error) {
+        console.error('Error fetching owner details:', error);
+        toast({ description: "Failed to load owner payment details", variant: "destructive" });
+      }
+    };
+
+    if (isOpen) {
+      fetchOwnerDetails();
+    }
+  }, [isOpen, relationshipId]);
+
+  const handleCopyUpiPhone = async () => {
     try {
-      await navigator.clipboard.writeText(ownerUpiId);
+      await navigator.clipboard.writeText(ownerUpiPhone);
       setCopied(true);
-      toast({ description: "UPI ID copied to clipboard!" });
+      toast({ description: "UPI Phone Number copied to clipboard!" });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast({ description: "Failed to copy UPI ID", variant: "destructive" });
+      toast({ description: "Failed to copy UPI Phone Number", variant: "destructive" });
     }
   };
 
@@ -87,45 +96,6 @@ export const UpiPaymentModal = ({
     }
   };
 
-  const handleDownloadQRCode = async () => {
-    try {
-      if (!qrCodeDataUrl) {
-        toast({ description: "QR code not available for download", variant: "destructive" });
-        return;
-      }
-
-      const filename = `livenzo-payment-qr-${amount}.png`;
-
-      // Check if we're in Android WebView
-      const isAndroidWebView = typeof (window as any).Android !== 'undefined';
-
-      if (isAndroidWebView) {
-        // Convert data URL to blob for Android
-        const response = await fetch(qrCodeDataUrl);
-        const blob = await response.blob();
-        
-        const reader = new FileReader();
-        reader.onload = function() {
-          const base64data = (reader.result as string).split(',')[1]; // remove data: prefix
-          (window as any).Android.downloadQRCode(base64data, filename);
-          toast({ description: "QR code downloaded successfully!" });
-        };
-        reader.readAsDataURL(blob);
-      } else {
-        // Standard web download
-        const link = document.createElement('a');
-        link.href = qrCodeDataUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ description: "QR code downloaded successfully!" });
-      }
-    } catch (error) {
-      console.error('Error downloading QR code:', error);
-      toast({ description: "Failed to download QR code", variant: "destructive" });
-    }
-  };
 
   const handleSubmitPayment = async () => {
     if (!transactionId.trim()) {
@@ -155,21 +125,12 @@ export const UpiPaymentModal = ({
         proofFileName = fileName;
       }
 
-      // Get relationship details for owner_id
-      const { data: relationship, error: relError } = await supabase
-        .from('relationships')
-        .select('owner_id')
-        .eq('id', relationshipId)
-        .single();
-
-      if (relError) throw relError;
-
       // Also create a record in the main payments table
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
           renter_id: user?.id,
-          owner_id: relationship.owner_id,
+          owner_id: ownerId,
           relationship_id: relationshipId,
           amount: amount,
           status: 'pending',
@@ -189,7 +150,7 @@ export const UpiPaymentModal = ({
         .from('manual_payments')
         .insert({
           renter_id: user?.id,
-          owner_id: relationship.owner_id,
+          owner_id: ownerId,
           relationship_id: relationshipId,
           amount: amount,
           transaction_id: transactionId.trim(),
@@ -225,32 +186,29 @@ export const UpiPaymentModal = ({
     }
   };
 
-  const generateUpiUrl = () => {
-    const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
-    return upiUrl;
-  };
-
   const handlePayWithUpi = async () => {
-    const upiUrl = generateUpiUrl();
-    
     try {
+      // Simple UPI URL without pre-filled data - just opens the UPI app
+      const upiUrl = 'upi://';
+      
       if (Capacitor.isNativePlatform()) {
-        // Use window.open with _system target to trigger native intent chooser
-        // This works better than App.openUrl for UPI deep links on Android
+        // Use window.open to trigger native UPI app chooser
         const opened = window.open(upiUrl, '_system');
         
         if (opened) {
-          // Show success message that UPI app should open
           toast({
             title: "Opening UPI App",
-            description: "UPI app should open now. Complete the payment and return to submit proof.",
+            description: "Complete the payment and return to submit proof with transaction ID.",
           });
         } else {
           throw new Error('Failed to open UPI app');
         }
       } else {
-        // On web platforms, try to open UPI link
-        window.location.href = upiUrl;
+        // On web platforms, just show a message
+        toast({
+          title: "UPI Available on Mobile",
+          description: "Please use a mobile device to open UPI apps directly.",
+        });
       }
     } catch (error) {
       console.error('Error opening UPI app:', error);
@@ -258,13 +216,7 @@ export const UpiPaymentModal = ({
       if (Capacitor.isNativePlatform()) {
         toast({
           title: "No UPI App Found",
-          description: "No UPI app installed. Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "UPI Not Supported",
-          description: "UPI payments work best on mobile. Please use a mobile device or try Razorpay.",
+          description: "Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
           variant: "destructive",
         });
       }
@@ -292,74 +244,32 @@ export const UpiPaymentModal = ({
             </CardContent>
           </Card>
 
-          {/* UPI ID Section */}
+          {/* UPI Phone Number Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex-1 min-w-0">
-                <p className="font-medium">UPI ID</p>
-                <p className="text-sm text-muted-foreground truncate">{ownerUpiId}</p>
+                <p className="font-medium">Owner's UPI Phone Number</p>
+                <p className="text-sm text-muted-foreground truncate">{ownerUpiPhone}</p>
               </div>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleCopyUpiId}
+                onClick={handleCopyUpiPhone}
                 className="ml-2"
+                disabled={!ownerUpiPhone || ownerUpiPhone === "Not available"}
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
 
-            {/* QR Code Section */}
-            {qrCodeDataUrl && (
-              <div className="text-center p-3 border rounded-lg space-y-3">
-                <p className="font-medium">Scan QR Code</p>
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="UPI QR Code" 
-                  className="mx-auto w-32 h-32 object-contain border rounded"
-                />
-                
-                {/* Scan QR & Pay Button */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    try {
-                      // Construct UPI intent URL with payment details
-                      const upiUrl = `upi://pay?pa=${ownerUpiId}&pn=${encodeURIComponent(ownerName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Rent Payment')}`;
-                      
-                      // Open UPI app directly
-                      window.location.href = upiUrl;
-                      
-                      // Show success message
-                      toast({
-                        title: "Opening UPI App",
-                        description: "Complete payment and return to submit proof below.",
-                      });
-                    } catch (error) {
-                      console.error('Error opening UPI app:', error);
-                      toast({
-                        title: "Unable to open UPI app",
-                        description: "Please copy the UPI ID to complete payment.",
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                >
-                  <QrCode className="mr-2 h-4 w-4" />
-                  Scan QR & Pay via UPI
-                </Button>
-              </div>
-            )}
-
-            {/* Pay with UPI App */}
+            {/* Pay via UPI App Button */}
             <Button 
               onClick={handlePayWithUpi}
               className="w-full"
-              variant="outline"
+              size="lg"
             >
-              <QrCode className="mr-2 h-4 w-4" />
-              Open UPI App
+              <Smartphone className="mr-2 h-5 w-5" />
+              Pay via UPI App
             </Button>
           </div>
 
