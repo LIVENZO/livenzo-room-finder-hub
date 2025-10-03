@@ -101,7 +101,7 @@ const getAccessToken = async (clientEmail: string, privateKey: string): Promise<
   return data.access_token;
 };
 
-type EventType = 'notice' | 'document' | 'complaint' | 'payment_reminder';
+type EventType = 'notice' | 'document' | 'complaint' | 'payment_reminder' | 'connection_request';
 
 interface IncomingPayload {
   type: EventType;
@@ -186,6 +186,13 @@ serve(async (req) => {
       data.payment_reminder_id = record.relationship_id;
       data.amount = record.amount;
       data.deep_link_url = record.deep_link_url || 'https://livenzo-room-finder-hub.lovable.app/payments';
+    } else if (type === 'connection_request') {
+      targetUserId = record.owner_id ?? null;
+      title = '🔔 New Connection Request';
+      body = 'A renter wants to connect with you. Review their request now.';
+      data.relationship_id = record.id;
+      data.renter_id = record.renter_id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?tab=requests`;
     }
 
     if (!targetUserId) {
