@@ -59,13 +59,6 @@ export class NotificationNavigationService {
             const urlParams = url.searchParams;
             const state: any = {};
             
-            // Check for tab parameter (for connection requests)
-            const tabParam = urlParams?.get('tab');
-            if (tabParam === 'requests') {
-              console.log('🤝 Opening requests tab directly');
-              state.defaultTab = 'requests';
-            }
-            
             if (urlParams?.get('showComplaints') === 'true') {
               console.log('⚠️ Highlighting complaints tab');
               state.highlightComplaint = urlParams.get('complaintId') || data.complaint_id;
@@ -79,7 +72,7 @@ export class NotificationNavigationService {
             }
             
             if (urlParams?.get('showRequests') === 'true') {
-              console.log('🤝 Highlighting requests tab (legacy)');
+              console.log('🤝 Highlighting requests tab');
               state.showRequests = true;
             }
             

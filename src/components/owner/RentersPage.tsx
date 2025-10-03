@@ -7,14 +7,12 @@ import RenterCard from './components/RenterCard';
 import PendingRequestCard from './components/PendingRequestCard';
 import EmptyState from './components/EmptyState';
 import { useRentersManagement } from './hooks/useRentersManagement';
-import SetRentModal from '@/components/dashboard/rent-management/SetRentModal';
 
 interface RentersPageProps {
   currentUserId: string;
-  defaultTab?: string;
 }
 
-const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) => {
+const RentersPage: React.FC<RentersPageProps> = ({ currentUserId }) => {
   const {
     relationships,
     loading,
@@ -28,10 +26,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) 
     handleDocuments,
     handleComplaints,
     handleBackToList,
-    setViewMode,
-    showSetRentModal,
-    setShowSetRentModal,
-    renterForRent,
+    setViewMode, // Add this from the hook
   } = useRentersManagement(currentUserId);
 
   const handleModeChange = (mode: 'full' | 'documents' | 'complaints') => {
@@ -72,7 +67,8 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) 
 
   return (
     <div className="w-full h-full space-y-6 p-4">
-      <Tabs defaultValue={defaultTab || "requests"} className="w-full">
+
+      <Tabs defaultValue="requests" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="requests" className="flex items-center gap-2">
             Requests
@@ -123,14 +119,6 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) 
           )}
         </TabsContent>
       </Tabs>
-
-      {/* Set Rent Modal */}
-      <SetRentModal
-        isOpen={showSetRentModal}
-        onClose={() => setShowSetRentModal(false)}
-        renter={renterForRent}
-        onSuccess={() => setShowSetRentModal(false)}
-      />
     </div>
   );
 };
