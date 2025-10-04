@@ -186,12 +186,41 @@ export const UpiPaymentModal = ({
     }
   };
 
-  const handlePayWithUpi = () => {
-    // Simple UPI URL to open app chooser
-    const upiUrl = 'upi://pay';
-    
-    // Open UPI app directly
-    window.location.href = upiUrl;
+  const handlePayWithUpi = async () => {
+    try {
+      // Simple UPI URL without pre-filled data - just opens the UPI app
+      const upiUrl = 'upi://';
+      
+      if (Capacitor.isNativePlatform()) {
+        // Use window.open to trigger native UPI app chooser
+        const opened = window.open(upiUrl, '_system');
+        
+        if (opened) {
+          toast({
+            title: "Opening UPI App",
+            description: "Complete the payment and return to submit proof with transaction ID.",
+          });
+        } else {
+          throw new Error('Failed to open UPI app');
+        }
+      } else {
+        // On web platforms, just show a message
+        toast({
+          title: "UPI Available on Mobile",
+          description: "Please use a mobile device to open UPI apps directly.",
+        });
+      }
+    } catch (error) {
+      console.error('Error opening UPI app:', error);
+      
+      if (Capacitor.isNativePlatform()) {
+        toast({
+          title: "No UPI App Found",
+          description: "Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (

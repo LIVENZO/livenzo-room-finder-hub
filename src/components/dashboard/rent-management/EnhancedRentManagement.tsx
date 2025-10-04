@@ -53,7 +53,6 @@ const EnhancedRentManagement: React.FC = () => {
   
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [meterPhotos, setMeterPhotos] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     if (user) {
@@ -64,7 +63,7 @@ const EnhancedRentManagement: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchRenters(), fetchStats(), fetchMeterPhotos()]);
+      await Promise.all([fetchRenters(), fetchStats()]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load rent management data');
@@ -143,34 +142,6 @@ const EnhancedRentManagement: React.FC = () => {
       setRenters(renterPaymentInfo);
     } catch (error) {
       console.error('Error fetching renters:', error);
-      throw error;
-    }
-  };
-
-  const fetchMeterPhotos = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data: photos, error } = await supabase
-        .from('meter_photos')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Group photos by relationship_id
-      const groupedPhotos: Record<string, any[]> = {};
-      photos?.forEach(photo => {
-        if (!groupedPhotos[photo.relationship_id]) {
-          groupedPhotos[photo.relationship_id] = [];
-        }
-        groupedPhotos[photo.relationship_id].push(photo);
-      });
-
-      setMeterPhotos(groupedPhotos);
-    } catch (error) {
-      console.error('Error fetching meter photos:', error);
       throw error;
     }
   };
@@ -356,7 +327,6 @@ const EnhancedRentManagement: React.FC = () => {
           <ActiveRentersList
             renters={renters}
             loading={loading}
-            meterPhotos={meterPhotos}
             onAddPayment={(renterId, renterName) => {
               toast.info(`Add payment feature for ${renterName}`, {
                 description: 'Payment management system coming soon'
