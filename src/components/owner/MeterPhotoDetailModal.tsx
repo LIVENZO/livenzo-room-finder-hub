@@ -42,37 +42,20 @@ export const MeterPhotoDetailModal = ({
     try {
       const currentMonth = new Date().toISOString().slice(0, 7);
       
-      // First try to get payment with billing_month (new format)
-      const { data: paymentsWithMonth, error: error1 } = await supabase
+      // Fetch payment for the current month - this contains the electric bill amount entered by renter
+      const { data: payments, error } = await supabase
         .from('payments')
-        .select('amount, created_at, billing_month')
+        .select('amount, created_at, billing_month, payment_method')
         .eq('relationship_id', relationshipId)
         .eq('billing_month', currentMonth)
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (!error1 && paymentsWithMonth && paymentsWithMonth.length > 0) {
+      if (!error && payments && payments.length > 0) {
         setElectricityBillData({
-          amount: parseFloat(paymentsWithMonth[0].amount.toString()),
-          created_at: paymentsWithMonth[0].created_at
+          amount: parseFloat(payments[0].amount.toString()),
+          created_at: payments[0].created_at
         });
-      } else {
-        // Fallback: if no payment found with billing_month, try date range (old format)
-        const { data: paymentsDateRange, error: error2 } = await supabase
-          .from('payments')
-          .select('amount, created_at')
-          .eq('relationship_id', relationshipId)
-          .gte('created_at', `${currentMonth}-01`)
-          .lt('created_at', `${currentMonth}-32`)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (!error2 && paymentsDateRange && paymentsDateRange.length > 0) {
-          setElectricityBillData({
-            amount: parseFloat(paymentsDateRange[0].amount.toString()),
-            created_at: paymentsDateRange[0].created_at
-          });
-        }
       }
     } catch (error) {
       console.error('Error fetching electricity bill data:', error);
@@ -203,7 +186,7 @@ export const MeterPhotoDetailModal = ({
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                     <div className="flex items-center gap-2">
                       <IndianRupee className="h-4 w-4 text-green-600" />
-                      <span className="font-medium">Total Amount</span>
+                      <span className="font-medium">Electric Bill Amount</span>
                     </div>
                     <span className="text-lg font-bold text-green-600">
                       ₹{electricityBillData.amount.toLocaleString()}
