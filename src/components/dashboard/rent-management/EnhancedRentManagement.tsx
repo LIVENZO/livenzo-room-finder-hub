@@ -116,12 +116,23 @@ const EnhancedRentManagement: React.FC = () => {
 
       if (paymentsError) throw paymentsError;
 
+      // Get meter photos for current month
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const { data: meterPhotos, error: meterError } = await supabase
+        .from('meter_photos')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('billing_month', currentMonth);
+
+      if (meterError) console.error('Error fetching meter photos:', meterError);
+
       // Combine data
       const renterPaymentInfo: RenterPaymentInfo[] = relationships.map(relationship => {
         const renterProfile = renterProfiles?.find(p => p.id === relationship.renter_id);
         const rentStatus = rentStatuses?.find(r => r.relationship_id === relationship.id);
         const renterPayments = latestPayments?.filter(p => p.renter_id === relationship.renter_id) || [];
         const latestPayment = renterPayments[0];
+        const renterMeterPhotos = meterPhotos?.filter(m => m.relationship_id === relationship.id) || [];
 
         return {
           id: relationship.id,
@@ -135,7 +146,8 @@ const EnhancedRentManagement: React.FC = () => {
           paymentStatus: rentStatus?.status === 'paid' ? 'paid' : 'unpaid',
           amount: rentStatus?.current_amount || 0,
           dueDate: rentStatus?.due_date,
-          lastPaymentDate: latestPayment?.payment_date
+          lastPaymentDate: latestPayment?.payment_date,
+          meterPhotos: renterMeterPhotos
         };
       });
 

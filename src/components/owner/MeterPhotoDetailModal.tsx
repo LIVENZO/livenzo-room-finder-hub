@@ -42,21 +42,37 @@ export const MeterPhotoDetailModal = ({
     try {
       const currentMonth = new Date().toISOString().slice(0, 7);
       
-      // Get the most recent payment for this relationship in current month
-      const { data: payments, error } = await supabase
+      // First try to get payment with billing_month (new format)
+      const { data: paymentsWithMonth, error: error1 } = await supabase
         .from('payments')
-        .select('amount, created_at')
+        .select('amount, created_at, billing_month')
         .eq('relationship_id', relationshipId)
-        .gte('created_at', `${currentMonth}-01`)
-        .lt('created_at', `${currentMonth}-32`)
+        .eq('billing_month', currentMonth)
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (!error && payments && payments.length > 0) {
+      if (!error1 && paymentsWithMonth && paymentsWithMonth.length > 0) {
         setElectricityBillData({
-          amount: parseFloat(payments[0].amount.toString()),
-          created_at: payments[0].created_at
+          amount: parseFloat(paymentsWithMonth[0].amount.toString()),
+          created_at: paymentsWithMonth[0].created_at
         });
+      } else {
+        // Fallback: if no payment found with billing_month, try date range (old format)
+        const { data: paymentsDateRange, error: error2 } = await supabase
+          .from('payments')
+          .select('amount, created_at')
+          .eq('relationship_id', relationshipId)
+          .gte('created_at', `${currentMonth}-01`)
+          .lt('created_at', `${currentMonth}-32`)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (!error2 && paymentsDateRange && paymentsDateRange.length > 0) {
+          setElectricityBillData({
+            amount: parseFloat(paymentsDateRange[0].amount.toString()),
+            created_at: paymentsDateRange[0].created_at
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching electricity bill data:', error);
