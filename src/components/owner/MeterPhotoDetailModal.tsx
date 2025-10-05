@@ -8,8 +8,12 @@ import { MeterPhoto } from "../dashboard/rent-management/ActiveRentersList";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ElectricityBillData {
+  billing_month: string;
   amount: number;
-  created_at: string;
+}
+
+interface MeterPhotoWithBill extends MeterPhoto {
+  electricBillAmount?: number;
 }
 
 interface MeterPhotoDetailModalProps {
@@ -27,39 +31,64 @@ export const MeterPhotoDetailModal = ({
   relationshipId,
   meterPhotos
 }: MeterPhotoDetailModalProps) => {
-  const [electricityBillData, setElectricityBillData] = useState<ElectricityBillData | null>(null);
+  const [photosWithBills, setPhotosWithBills] = useState<MeterPhotoWithBill[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch electricity bill data when modal opens
+  // Fetch electricity bill data and prepare photos when modal opens
   useEffect(() => {
     if (isOpen && relationshipId) {
-      fetchElectricityBillData();
+      preparePhotosWithBills();
     }
-  }, [isOpen, relationshipId]);
+  }, [isOpen, relationshipId, meterPhotos]);
 
-  const fetchElectricityBillData = async () => {
+  const preparePhotosWithBills = async () => {
     setLoading(true);
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7);
+      // Get only the latest photo per month
+      const photosByMonth = new Map<string, MeterPhoto>();
       
-      // Fetch payment for the current month - get the electric_bill_amount specifically
+      meterPhotos.forEach(photo => {
+        const existingPhoto = photosByMonth.get(photo.billing_month);
+        if (!existingPhoto || new Date(photo.created_at) > new Date(existingPhoto.created_at)) {
+          photosByMonth.set(photo.billing_month, photo);
+        }
+      });
+
+      const latestPhotos = Array.from(photosByMonth.values());
+
+      // Fetch all electric bill amounts for these months
       const { data: payments, error } = await supabase
         .from('payments')
-        .select('electric_bill_amount, created_at, billing_month')
+        .select('electric_bill_amount, billing_month')
         .eq('relationship_id', relationshipId)
-        .eq('billing_month', currentMonth)
         .not('electric_bill_amount', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .in('billing_month', latestPhotos.map(p => p.billing_month));
 
-      if (!error && payments && payments.length > 0) {
-        setElectricityBillData({
-          amount: parseFloat(payments[0].electric_bill_amount.toString()),
-          created_at: payments[0].created_at
+      if (!error && payments) {
+        // Create a map of billing_month to electric_bill_amount
+        const billMap = new Map<string, number>();
+        payments.forEach(payment => {
+          if (!billMap.has(payment.billing_month)) {
+            billMap.set(payment.billing_month, parseFloat(payment.electric_bill_amount.toString()));
+          }
         });
+
+        // Combine photos with their electric bill amounts
+        const combined = latestPhotos.map(photo => ({
+          ...photo,
+          electricBillAmount: billMap.get(photo.billing_month)
+        }));
+
+        // Sort by billing_month descending (most recent first)
+        combined.sort((a, b) => b.billing_month.localeCompare(a.billing_month));
+        
+        setPhotosWithBills(combined);
+      } else {
+        setPhotosWithBills(latestPhotos);
       }
     } catch (error) {
       console.error('Error fetching electricity bill data:', error);
+      setPhotosWithBills(meterPhotos);
     } finally {
       setLoading(false);
     }
@@ -120,13 +149,18 @@ export const MeterPhotoDetailModal = ({
                 <Camera className="h-4 w-4 text-green-600" />
                 <h4 className="font-semibold">Meter Photos</h4>
                 <Badge variant="outline" className="ml-auto">
-                  {meterPhotos.length} photo{meterPhotos.length !== 1 ? 's' : ''}
+                  {photosWithBills.length} photo{photosWithBills.length !== 1 ? 's' : ''}
                 </Badge>
               </div>
 
-              {meterPhotos.length > 0 ? (
+              {loading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-24 bg-muted rounded"></div>
+                  <div className="h-24 bg-muted rounded"></div>
+                </div>
+              ) : photosWithBills.length > 0 ? (
                 <div className="space-y-3">
-                  {meterPhotos.map((photo) => (
+                  {photosWithBills.map((photo) => (
                     <div key={photo.id} className="border rounded-lg p-3">
                       <div className="flex items-start gap-3">
                         <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
@@ -144,9 +178,15 @@ export const MeterPhotoDetailModal = ({
                               Uploaded on {formatDate(photo.created_at)}
                             </span>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            File: {photo.photo_name} • {(photo.file_size / 1024 / 1024).toFixed(2)}MB
-                          </div>
+                          {photo.electricBillAmount !== undefined ? (
+                            <div className="flex items-center gap-2 text-sm font-medium text-orange-600">
+                              ⚡ Electric Bill: ₹{photo.electricBillAmount.toLocaleString()}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">
+                              No electric bill recorded
+                            </div>
+                          )}
                           <Badge variant="secondary" className="text-xs">
                             {photo.billing_month}
                           </Badge>
@@ -162,48 +202,7 @@ export const MeterPhotoDetailModal = ({
                   </div>
                   <h3 className="font-medium text-foreground mb-2">No meter photo uploaded</h3>
                   <p className="text-sm text-muted-foreground">
-                    The renter hasn't uploaded a meter photo for this month yet.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Electric Bill Information */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Calculator className="h-4 w-4 text-orange-600" />
-                <h4 className="font-semibold">Electric Bill Information</h4>
-              </div>
-
-              {loading ? (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-muted rounded w-1/3"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              ) : electricityBillData ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <IndianRupee className="h-4 w-4 text-green-600" />
-                      <span className="font-medium">Electric Bill Amount</span>
-                    </div>
-                    <span className="text-lg font-bold text-green-600">
-                      ₹{electricityBillData.amount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Last updated: {formatDate(electricityBillData.created_at)}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Calculator className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    No electric bill amount recorded for this month
+                    The renter hasn't uploaded a meter photo yet.
                   </p>
                 </div>
               )}
