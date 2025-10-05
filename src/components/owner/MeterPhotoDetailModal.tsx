@@ -113,44 +113,47 @@ export const MeterPhotoDetailModal = ({
             </CardContent>
           </Card>
 
-          {/* Meter Photo & Electric Bill */}
+          {/* Meter Photos Section */}
           <Card>
             <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Camera className="h-4 w-4 text-green-600" />
+                <h4 className="font-semibold">Meter Photos</h4>
+                <Badge variant="outline" className="ml-auto">
+                  {meterPhotos.length} photo{meterPhotos.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+
               {meterPhotos.length > 0 ? (
-                <div className="space-y-4">
-                  {/* Latest Meter Photo */}
-                  <div className="w-full rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={meterPhotos[0].photo_url}
-                      alt="Meter reading"
-                      className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(meterPhotos[0].photo_url, '_blank')}
-                    />
-                  </div>
-
-                  {/* Upload Date */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Uploaded on {formatDate(meterPhotos[0].created_at)}</span>
-                  </div>
-
-                  {/* Electric Bill Amount */}
-                  {loading ? (
-                    <div className="animate-pulse">
-                      <div className="h-6 bg-muted rounded w-48"></div>
+                <div className="space-y-3">
+                  {meterPhotos.map((photo) => (
+                    <div key={photo.id} className="border rounded-lg p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <img
+                            src={photo.photo_url}
+                            alt="Meter reading"
+                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                            onClick={() => window.open(photo.photo_url, '_blank')}
+                          />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              Uploaded on {formatDate(photo.created_at)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            File: {photo.photo_name} • {(photo.file_size / 1024 / 1024).toFixed(2)}MB
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {photo.billing_month}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  ) : electricityBillData ? (
-                    <div className="flex items-center gap-2 text-lg font-semibold">
-                      <span>🧾 Electric Bill:</span>
-                      <span className="text-green-600">
-                        ₹{electricityBillData.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      No electric bill amount recorded for this month
-                    </div>
-                  )}
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -160,6 +163,47 @@ export const MeterPhotoDetailModal = ({
                   <h3 className="font-medium text-foreground mb-2">No meter photo uploaded</h3>
                   <p className="text-sm text-muted-foreground">
                     The renter hasn't uploaded a meter photo for this month yet.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Electric Bill Information */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Calculator className="h-4 w-4 text-orange-600" />
+                <h4 className="font-semibold">Electric Bill Information</h4>
+              </div>
+
+              {loading ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/3"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
+              ) : electricityBillData ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <IndianRupee className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">Electric Bill Amount</span>
+                    </div>
+                    <span className="text-lg font-bold text-green-600">
+                      ₹{electricityBillData.amount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Last updated: {formatDate(electricityBillData.created_at)}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Calculator className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    No electric bill amount recorded for this month
                   </p>
                 </div>
               )}
