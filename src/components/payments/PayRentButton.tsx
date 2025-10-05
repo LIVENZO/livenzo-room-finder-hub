@@ -25,6 +25,7 @@ export const PayRentButton = ({
   const [flowStep, setFlowStep] = useState<'idle'|'meter'|'bill'|'method'|'razorpay'|'upi'>('idle');
   const [isLoading, setIsLoading] = useState(false);
   const [finalAmount, setFinalAmount] = useState(amount);
+  const [electricBillAmount, setElectricBillAmount] = useState(0);
   const [ownerId, setOwnerId] = useState<string>("");
   const { user } = useAuth();
   const advancingRef = useRef(false);
@@ -83,8 +84,9 @@ export const PayRentButton = ({
     setFlowStep('bill');
   };
 
-  const handleElectricityBillComplete = (totalAmount: number) => {
+  const handleElectricityBillComplete = (totalAmount: number, electricBillAmount: number) => {
     setFinalAmount(totalAmount);
+    setElectricBillAmount(electricBillAmount);
     setFlowStep('upi'); // Skip payment method selector, go directly to UPI
     advancingRef.current = false;
   };
@@ -160,6 +162,7 @@ export const PayRentButton = ({
           setIsLoading(false);
         }}
         amount={finalAmount}
+        electricBillAmount={electricBillAmount}
         relationshipId={relationshipId || ""}
         ownerUpiId={LIVENZO_UPI_ID}
         ownerName="Livenzo"

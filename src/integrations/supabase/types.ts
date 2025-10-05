@@ -582,6 +582,7 @@ export type Database = {
           billing_month: string | null
           created_at: string
           due_date: string | null
+          electric_bill_amount: number | null
           id: string
           owner_id: string | null
           payment_date: string
@@ -602,6 +603,7 @@ export type Database = {
           billing_month?: string | null
           created_at?: string
           due_date?: string | null
+          electric_bill_amount?: number | null
           id?: string
           owner_id?: string | null
           payment_date?: string
@@ -622,6 +624,7 @@ export type Database = {
           billing_month?: string | null
           created_at?: string
           due_date?: string | null
+          electric_bill_amount?: number | null
           id?: string
           owner_id?: string | null
           payment_date?: string

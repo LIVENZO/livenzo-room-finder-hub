@@ -42,18 +42,19 @@ export const MeterPhotoDetailModal = ({
     try {
       const currentMonth = new Date().toISOString().slice(0, 7);
       
-      // Fetch payment for the current month - this contains the electric bill amount entered by renter
+      // Fetch payment for the current month - get the electric_bill_amount specifically
       const { data: payments, error } = await supabase
         .from('payments')
-        .select('amount, created_at, billing_month, payment_method')
+        .select('electric_bill_amount, created_at, billing_month')
         .eq('relationship_id', relationshipId)
         .eq('billing_month', currentMonth)
+        .not('electric_bill_amount', 'is', null)
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (!error && payments && payments.length > 0) {
         setElectricityBillData({
-          amount: parseFloat(payments[0].amount.toString()),
+          amount: parseFloat(payments[0].electric_bill_amount.toString()),
           created_at: payments[0].created_at
         });
       }

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 interface ElectricityBillModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onContinue: (totalAmount: number) => void;
+  onContinue: (totalAmount: number, electricBillAmount: number) => void;
   rentAmount: number;
 }
 
@@ -34,15 +34,13 @@ export const ElectricityBillModal = ({
     try {
       setIsSaving(true);
       
-      // Simulate saving to backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const totalAmount = rentAmount + billAmount;
       
+      // Pass both total amount and electric bill amount separately
       toast.success(`Electricity bill (₹${billAmount.toLocaleString()}) added successfully`);
       
       setTimeout(() => {
-        onContinue(totalAmount);
+        onContinue(totalAmount, billAmount);
       }, 500);
       
     } catch (error) {

@@ -15,6 +15,7 @@ interface UpiPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
+  electricBillAmount?: number;
   relationshipId: string;
   ownerUpiId: string;
   ownerName: string;
@@ -25,6 +26,7 @@ export const UpiPaymentModal = ({
   isOpen, 
   onClose, 
   amount, 
+  electricBillAmount = 0,
   relationshipId, 
   ownerUpiId, 
   ownerName,
@@ -133,6 +135,7 @@ export const UpiPaymentModal = ({
           owner_id: ownerId,
           relationship_id: relationshipId,
           amount: amount,
+          electric_bill_amount: electricBillAmount > 0 ? electricBillAmount : null,
           status: 'pending',
           payment_status: 'pending',
           payment_method: 'upi_manual',
