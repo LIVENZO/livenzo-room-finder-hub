@@ -150,6 +150,7 @@ export const PayRentButton = ({
           setIsLoading(false);
         }}
         amount={finalAmount}
+        electricBillAmount={electricBillAmount}
         relationshipId={relationshipId}
         onSuccess={handlePaymentSuccess}
         onFailure={handlePaymentFailure}

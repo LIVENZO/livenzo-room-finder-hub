@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface PaymentOrderRequest {
   amount: number;
+  electricBillAmount?: number;
   relationshipId?: string;
   rentId?: string;
   paymentMethod?: string;
@@ -50,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     const user = data.user;
     console.log('Authenticated user:', user.id);
 
-const { amount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
+const { amount, electricBillAmount, relationshipId, rentId, paymentMethod = 'razorpay' }: PaymentOrderRequest = await req.json();
 
 // Validate required parameters
 if (!amount) {
@@ -219,30 +220,71 @@ if (!relationship) {
     const orderData = await orderResponse.json();
     console.log('Razorpay order created:', orderData.id);
 
-    // Store payment record in database
-    const { data: payment, error: paymentError } = await supabaseClient
-      .from('payments')
-      .insert({
-        renter_id: user.id,
-        owner_id: relationship.owner_id,
-        relationship_id: relationship.id,
-        amount: amount,
-        razorpay_order_id: orderData.id,
-        status: 'pending',
-        payment_method: paymentMethod,
-        payment_date: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    // Get current billing month
+    const billingMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
 
-    if (paymentError) {
-      console.error('Database insert error:', paymentError);
-      throw new Error('Failed to store payment record');
+    // Check if payment record exists for this billing month
+    const { data: existingPayment } = await supabaseClient
+      .from('payments')
+      .select('id')
+      .eq('renter_id', user.id)
+      .eq('owner_id', relationship.owner_id)
+      .eq('relationship_id', relationship.id)
+      .eq('billing_month', billingMonth)
+      .maybeSingle();
+
+    let payment;
+    if (existingPayment) {
+      // Update existing payment record
+      const { data: updatedPayment, error: updateError } = await supabaseClient
+        .from('payments')
+        .update({
+          amount: amount,
+          electric_bill_amount: electricBillAmount && electricBillAmount > 0 ? electricBillAmount : null,
+          razorpay_order_id: orderData.id,
+          status: 'pending',
+          payment_method: paymentMethod,
+          payment_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingPayment.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error('Failed to update payment record');
+      }
+      payment = updatedPayment;
+    } else {
+      // Store new payment record in database
+      const { data: newPayment, error: paymentError } = await supabaseClient
+        .from('payments')
+        .insert({
+          renter_id: user.id,
+          owner_id: relationship.owner_id,
+          relationship_id: relationship.id,
+          amount: amount,
+          electric_bill_amount: electricBillAmount && electricBillAmount > 0 ? electricBillAmount : null,
+          billing_month: billingMonth,
+          razorpay_order_id: orderData.id,
+          status: 'pending',
+          payment_method: paymentMethod,
+          payment_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error('Database insert error:', paymentError);
+        throw new Error('Failed to store payment record');
+      }
+      payment = newPayment;
     }
 
-    console.log('Payment record created:', payment.id);
+    console.log('Payment record created/updated:', payment.id);
 
     return new Response(JSON.stringify({
       success: true,

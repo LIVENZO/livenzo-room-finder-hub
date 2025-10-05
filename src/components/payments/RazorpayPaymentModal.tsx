@@ -10,6 +10,7 @@ interface RazorpayPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
+  electricBillAmount?: number;
   relationshipId?: string;
   rentId?: string;
   onSuccess: (paymentDetails: any) => void;
@@ -26,7 +27,8 @@ declare global {
 export const RazorpayPaymentModal = ({ 
   isOpen, 
   onClose, 
-  amount, 
+  amount,
+  electricBillAmount = 0,
   relationshipId,
   rentId,
   onSuccess, 
@@ -50,6 +52,7 @@ export const RazorpayPaymentModal = ({
       const result = await supabase.functions.invoke('create-payment-order', {
         body: { 
           amount: payAmount,
+          electricBillAmount: electricBillAmount > 0 ? electricBillAmount : undefined,
           relationshipId,
           rentId,
           paymentMethod: 'razorpay'

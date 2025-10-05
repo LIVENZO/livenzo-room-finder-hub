@@ -127,25 +127,60 @@ export const UpiPaymentModal = ({
         proofFileName = fileName;
       }
 
-      // Also create a record in the main payments table
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          renter_id: user?.id,
-          owner_id: ownerId,
-          relationship_id: relationshipId,
-          amount: amount,
-          electric_bill_amount: electricBillAmount > 0 ? electricBillAmount : null,
-          status: 'pending',
-          payment_status: 'pending',
-          payment_method: 'upi_manual',
-          transaction_id: transactionId.trim(),
-          payment_date: new Date().toISOString()
-        });
+      // Get current billing month
+      const billingMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
 
-      if (paymentError) {
-        console.error('Error creating payment record:', paymentError);
-        throw paymentError;
+      // Check if payment record exists for this billing month
+      const { data: existingPayment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('renter_id', user?.id)
+        .eq('owner_id', ownerId)
+        .eq('relationship_id', relationshipId)
+        .eq('billing_month', billingMonth)
+        .maybeSingle();
+
+      if (existingPayment) {
+        // Update existing payment record
+        const { error: updateError } = await supabase
+          .from('payments')
+          .update({
+            amount: amount,
+            electric_bill_amount: electricBillAmount > 0 ? electricBillAmount : null,
+            transaction_id: transactionId.trim(),
+            payment_date: new Date().toISOString(),
+            payment_method: 'upi_manual',
+            payment_status: 'pending',
+            status: 'pending'
+          })
+          .eq('id', existingPayment.id);
+
+        if (updateError) {
+          console.error('Error updating payment record:', updateError);
+          throw updateError;
+        }
+      } else {
+        // Create a new payment record
+        const { error: paymentError } = await supabase
+          .from('payments')
+          .insert({
+            renter_id: user?.id,
+            owner_id: ownerId,
+            relationship_id: relationshipId,
+            amount: amount,
+            electric_bill_amount: electricBillAmount > 0 ? electricBillAmount : null,
+            billing_month: billingMonth,
+            status: 'pending',
+            payment_status: 'pending',
+            payment_method: 'upi_manual',
+            transaction_id: transactionId.trim(),
+            payment_date: new Date().toISOString()
+          });
+
+        if (paymentError) {
+          console.error('Error creating payment record:', paymentError);
+          throw paymentError;
+        }
       }
 
       // Submit manual payment record for owner verification
