@@ -106,9 +106,9 @@ export const OwnerUpiSettings = () => {
     }
   };
   const handleSave = async () => {
-    if (!upiId.trim()) {
+    if (!upiPhone.trim()) {
       toast({
-        description: "Please enter a valid UPI ID",
+        description: "Please enter your UPI phone number.",
         variant: "destructive"
       });
       return;
@@ -167,7 +167,7 @@ export const OwnerUpiSettings = () => {
         const {
           error
         } = await supabase.from('owner_upi_details').update({
-          upi_id: upiId.trim(),
+          upi_id: upiId.trim() || null,
           qr_code_url: qrCodeUrl,
           qr_code_file_name: qrCodeFileName,
           updated_at: new Date().toISOString()
@@ -179,7 +179,7 @@ export const OwnerUpiSettings = () => {
           error
         } = await supabase.from('owner_upi_details').insert({
           owner_id: user?.id,
-          upi_id: upiId.trim(),
+          upi_id: upiId.trim() || null,
           qr_code_url: qrCodeUrl,
           qr_code_file_name: qrCodeFileName,
           is_active: true
@@ -187,58 +187,18 @@ export const OwnerUpiSettings = () => {
         if (error) throw error;
       }
 
-      // Always update phone number in user profile (optional field)
+      // Always update phone number in user profile
       const {
         error: profileUpdateError
       } = await supabase.from('user_profiles').update({
-        upi_phone_number: upiPhone.trim() || null,
+        upi_phone_number: upiPhone.trim(),
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
       if (profileUpdateError) throw profileUpdateError;
 
-      // Create Razorpay account for Route if UPI ID is provided and account doesn't exist
-      const {
-        data: userProfile
-      } = await supabase.from('user_profiles').select('razorpay_account_id, full_name').eq('id', user.id).maybeSingle();
-      if (!userProfile?.razorpay_account_id && user?.email) {
-        try {
-          toast({
-            description: "Creating payment account..."
-          });
-          const {
-            data: accountData,
-            error: accountError
-          } = await supabase.functions.invoke('create-owner-account', {
-            body: {
-              upiId: upiId.trim(),
-              ownerName: userProfile?.full_name || 'Property Owner',
-              phone: upiPhone.trim() || undefined
-            }
-          });
-          if (accountError) {
-            console.error('Error creating Razorpay account:', accountError);
-            toast({
-              description: "UPI saved but failed to create payment account. Please contact support.",
-              variant: "destructive"
-            });
-          } else {
-            console.log('Razorpay account created:', accountData);
-            toast({
-              description: "UPI details saved and automatic payments enabled!"
-            });
-          }
-        } catch (error) {
-          console.error('Error in account creation:', error);
-          toast({
-            description: "UPI saved but failed to create payment account. Please contact support.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          description: "UPI details saved successfully!"
-        });
-      }
+      toast({
+        description: "Saved successfully."
+      });
       setQrFile(null);
       fetchUpiDetails();
     } catch (error: any) {
@@ -308,27 +268,27 @@ export const OwnerUpiSettings = () => {
         
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* UPI ID Setup */}
+        {/* UPI Phone Number (mandatory) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label htmlFor="upiId">UPI ID</Label>
+            <Label htmlFor="upiPhone">UPI Phone Number *</Label>
             {upiDetails && <Badge variant="secondary" className="bg-green-100 text-green-700">
                 <Check className="h-3 w-3 mr-1" />
                 Active
               </Badge>}
           </div>
-          <Input id="upiId" placeholder="yourname@paytm / yourname@phonepe" value={upiId} onChange={e => setUpiId(e.target.value)} />
+          <Input id="upiPhone" type="tel" placeholder="Enter registered UPI phone number" value={upiPhone} onChange={e => setUpiPhone(e.target.value)} />
           <p className="text-sm text-muted-foreground">
-            Enter your UPI ID that renters will use for direct payments
+            Enter your UPI phone number that renters will use for payments
           </p>
         </div>
 
-        {/* UPI Phone Number (optional) */}
+        {/* UPI ID Setup (optional) */}
         <div className="space-y-3">
-          <Label htmlFor="upiPhone">UPI Phone Number (optional)</Label>
-          <Input id="upiPhone" type="tel" placeholder="Enter registered UPI phone number" value={upiPhone} onChange={e => setUpiPhone(e.target.value)} />
+          <Label htmlFor="upiId">UPI ID (optional)</Label>
+          <Input id="upiId" placeholder="yourname@paytm / yourname@phonepe" value={upiId} onChange={e => setUpiId(e.target.value)} />
           <p className="text-sm text-muted-foreground">
-            This helps renters verify your UPI ID and receive SMS confirmations.
+            Optional: Enter your UPI ID for direct payments
           </p>
         </div>
 
@@ -365,7 +325,7 @@ export const OwnerUpiSettings = () => {
         </div>
 
         {/* Save Button */}
-        <Button onClick={handleSave} disabled={saving || !upiId.trim()} className="w-full">
+        <Button onClick={handleSave} disabled={saving} className="w-full">
           {saving ? <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Saving...
