@@ -552,7 +552,7 @@ export type Database = {
           qr_code_file_name: string | null
           qr_code_url: string | null
           updated_at: string
-          upi_id: string
+          upi_id: string | null
         }
         Insert: {
           created_at?: string
@@ -562,7 +562,7 @@ export type Database = {
           qr_code_file_name?: string | null
           qr_code_url?: string | null
           updated_at?: string
-          upi_id: string
+          upi_id?: string | null
         }
         Update: {
           created_at?: string
@@ -572,7 +572,7 @@ export type Database = {
           qr_code_file_name?: string | null
           qr_code_url?: string | null
           updated_at?: string
-          upi_id?: string
+          upi_id?: string | null
         }
         Relationships: []
       }
@@ -994,6 +994,7 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
+          updated_at: string | null
         }
         Insert: {
           available?: boolean
@@ -1011,6 +1012,7 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
+          updated_at?: string | null
         }
         Update: {
           available?: boolean
@@ -1028,6 +1030,7 @@ export type Database = {
           owner_phone?: string
           price?: number
           title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
