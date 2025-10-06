@@ -50,7 +50,7 @@ export const OwnerUpiSettings = () => {
       if (error) throw error;
       if (data) {
         setUpiDetails(data);
-        setUpiId(data.upi_id);
+        setUpiId(data.upi_id || "");
       }
 
       // Fetch phone number from user profile
@@ -167,7 +167,7 @@ export const OwnerUpiSettings = () => {
         const {
           error
         } = await supabase.from('owner_upi_details').update({
-          upi_id: upiId.trim() || null,
+          upi_id: upiId && upiId.trim() !== "" ? upiId.trim() : null,
           qr_code_url: qrCodeUrl,
           qr_code_file_name: qrCodeFileName,
           updated_at: new Date().toISOString()
@@ -179,7 +179,7 @@ export const OwnerUpiSettings = () => {
           error
         } = await supabase.from('owner_upi_details').insert({
           owner_id: user?.id,
-          upi_id: upiId.trim() || null,
+          upi_id: upiId && upiId.trim() !== "" ? upiId.trim() : null,
           qr_code_url: qrCodeUrl,
           qr_code_file_name: qrCodeFileName,
           is_active: true
