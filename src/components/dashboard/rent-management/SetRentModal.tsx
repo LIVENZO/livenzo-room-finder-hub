@@ -81,15 +81,15 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
       setDueDate(undefined);
       onClose();
 
-      // Check if owner has UPI ID saved
+      // Check if owner has UPI phone number saved
       if (user?.id) {
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('upi_id')
+          .select('upi_phone_number')
           .eq('id', user.id)
           .single();
 
-        if (!profile?.upi_id) {
+        if (!profile?.upi_phone_number) {
           toast.info('Please set up your UPI payment details');
           navigate('/payments');
         }
