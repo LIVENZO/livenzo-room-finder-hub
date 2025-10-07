@@ -80,28 +80,7 @@ export const uploadDocument = async (
     const filePath = fileUrls[0];
     console.log('File uploaded to storage:', filePath);
     
-    // Prepare insert payload and perform REST insert with full headers
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) {
-      console.error("No access token available for document insert");
-      toast.error("Authentication failed. Please log in again.");
-      return null;
-    }
-
-    const payload = {
-      relationship_id: relationshipId,
-      user_id: userId,
-      document_type: documentType,
-      file_path: filePath,
-      file_name: file.name,
-      file_type: file.type,
-      file_size: file.size,
-      status: 'submitted' as const,
-    };
-
-    console.debug('Inserting document payload:', payload);
-
+    // Call the RPC function to create document record
     const { data, error } = await supabase.rpc('create_document_record', {
       p_relationship_id: relationshipId,
       p_document_type: documentType,
@@ -113,7 +92,7 @@ export const uploadDocument = async (
 
     if (error) {
       console.error('Failed to create document record via RPC:', error);
-      toast.error('Failed to record document in database.');
+      toast.error('Failed to save document in database');
       return null;
     }
 
