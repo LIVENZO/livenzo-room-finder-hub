@@ -6,8 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import ActiveRentersList from '@/components/dashboard/rent-management/ActiveRentersList';
+import ActiveRentersList, { MeterPhoto } from '@/components/dashboard/rent-management/ActiveRentersList';
 import AddPaymentModal from '@/components/dashboard/rent-management/AddPaymentModal';
+import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
 
 interface RenterPaymentInfo {
   id: string;
@@ -38,6 +39,7 @@ const ActiveRenters: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [selectedRenter, setSelectedRenter] = useState<{id: string, name: string} | null>(null);
+  const [meterPhotos, setMeterPhotos] = useState<Record<string, MeterPhoto[]>>({});
 
   useEffect(() => {
     if (user) {
@@ -46,6 +48,8 @@ const ActiveRenters: React.FC = () => {
   }, [user]);
 
   const fetchActiveRenters = async () => {
+    if (!user?.id) return;
+    
     setLoading(true);
     try {
       const { data: relationships, error } = await supabase
@@ -54,11 +58,15 @@ const ActiveRenters: React.FC = () => {
           id,
           renter_id
         `)
-        .eq('owner_id', user?.id)
+        .eq('owner_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
 
       if (error) throw error;
+
+      // Fetch meter photos for this owner
+      const ownerMeterPhotos = await getOwnerMeterPhotos(user.id);
+      setMeterPhotos(ownerMeterPhotos);
 
       // For each renter, get their current rent status
       const rentersWithStatus = await Promise.all(
@@ -196,6 +204,7 @@ const ActiveRenters: React.FC = () => {
             onAddPayment={handleAddPayment}
             onRefresh={fetchActiveRenters}
             ownerId={user?.id || ''}
+            meterPhotos={meterPhotos}
           />
         </div>
 
