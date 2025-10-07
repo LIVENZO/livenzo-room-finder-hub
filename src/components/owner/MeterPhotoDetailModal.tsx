@@ -62,7 +62,7 @@ export const MeterPhotoDetailModal = ({
         .select('electric_bill_amount, billing_month')
         .eq('relationship_id', relationshipId)
         .not('electric_bill_amount', 'is', null)
-        .in('billing_month', latestPhotos.map(p => p.billing_month));
+        .order('created_at', { ascending: false });
 
       if (!error && payments) {
         // Create a map of billing_month to electric_bill_amount
