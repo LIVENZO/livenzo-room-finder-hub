@@ -81,6 +81,15 @@ export const uploadDocument = async (
     console.log('File uploaded to storage:', filePath);
     
     // Call the RPC function to create document record
+    console.log('Calling create_document_record RPC with:', {
+      p_relationship_id: relationshipId,
+      p_document_type: documentType,
+      p_file_path: filePath,
+      p_file_name: file.name,
+      p_file_type: file.type,
+      p_file_size: file.size
+    });
+
     const { data, error } = await supabase.rpc('create_document_record', {
       p_relationship_id: relationshipId,
       p_document_type: documentType,
@@ -91,13 +100,25 @@ export const uploadDocument = async (
     });
 
     if (error) {
-      console.error('Failed to create document record via RPC:', error);
-      toast.error('Failed to save document in database');
+      console.error('RPC create_document_record error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      toast.error(`Failed to save document: ${error.message || 'Database error'}`);
       return null;
     }
 
-    console.log('Document record created:', data);
-    toast.success('Document uploaded successfully');
+    if (!data) {
+      console.error('No data returned from create_document_record RPC');
+      toast.error('Failed to save document: No data returned');
+      return null;
+    }
+
+    console.log('Document record created successfully:', data);
+    toast.success('Document sent successfully');
     return data as Document;
   } catch (error) {
     console.error("Exception uploading document:", error);
