@@ -99,30 +99,24 @@ const ActiveRenters: React.FC = () => {
             .limit(1)
             .maybeSingle();
 
-          // Fallback to rent_status if no rental agreement
+          // Get current billing month
+          const currentMonth = new Date().toISOString().slice(0, 7);
+          
+          // Fetch rent_status for current month
           const { data: rentStatus, error: rentError } = await supabase
             .from('rent_status')
-            .select('current_amount, status, due_date')
+            .select('current_amount, status, due_date, billing_month')
             .eq('relationship_id', rel.id)
-            .limit(1);
-
-          const currentMonth = new Date().getMonth();
-          const currentYear = new Date().getFullYear();
-          const hasRecentPayment = recentPayment?.[0] && 
-            new Date(recentPayment[0].payment_date).getMonth() === currentMonth &&
-            new Date(recentPayment[0].payment_date).getFullYear() === currentYear;
+            .eq('billing_month', currentMonth)
+            .maybeSingle();
 
           // Safely extract data, handling potential errors
           const agreementData = !agreementError && rentalAgreement ? rentalAgreement : null;
-          const statusData = !rentError && rentStatus?.[0] ? rentStatus[0] : null;
           
-          // Use rental agreement data first, fallback to rent_status
-          const rentAmount = (agreementData as any)?.monthly_rent || statusData?.current_amount || 0;
-          const dueDate = (agreementData as any)?.due_date || statusData?.due_date;
-          const rentStatusValue = (agreementData as any)?.status || statusData?.status;
-          
-          const paymentStatus: 'paid' | 'unpaid' | 'pending' = hasRecentPayment ? 'paid' : 
-                        rentStatusValue === 'pending' ? 'pending' : 'unpaid';
+          // Use rent_status first (source of truth for current month), fallback to rental agreement
+          const rentAmount = rentStatus?.current_amount || (agreementData as any)?.monthly_rent || 0;
+          const dueDate = rentStatus?.due_date || (agreementData as any)?.due_date;
+          const paymentStatus: 'paid' | 'unpaid' | 'pending' = (rentStatus?.status as any) || 'pending';
 
           return {
             id: rel.id,
