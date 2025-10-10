@@ -159,10 +159,10 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
           owner_id: ownerId,
           relationship_id: renterId,
           billing_month: currentMonth,
-          amount: renterInfo.amount,
+          amount: action === 'unpaid' ? 0 : renterInfo.amount,
           status: action,
-          payment_method: 'manual_swipe',
-          payment_date: action === 'paid' ? new Date().toISOString() : null,
+          payment_method: 'manual_update',
+          payment_date: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, {
