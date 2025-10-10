@@ -19,6 +19,7 @@ interface RenterPaymentInfo {
     room_number?: string;
   };
   paymentStatus: 'paid' | 'unpaid' | 'pending';
+  status: 'paid' | 'unpaid' | 'pending'; // Same as paymentStatus for consistency
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
