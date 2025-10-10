@@ -20,7 +20,6 @@ interface RenterPaymentInfo {
     room_number?: string;
   };
   paymentStatus: 'paid' | 'unpaid' | 'pending';
-  status: 'paid' | 'unpaid' | 'pending'; // Same as paymentStatus for consistency
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -134,7 +133,6 @@ const ActiveRenters: React.FC = () => {
               room_number: renterProfile?.room_number
             },
             paymentStatus,
-            status: paymentStatus, // Add status field for consistency
             amount: rentAmount,
             dueDate: dueDate,
             lastPaymentDate: recentPayment?.[0]?.payment_date,

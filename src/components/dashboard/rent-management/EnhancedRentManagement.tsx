@@ -35,7 +35,6 @@ interface RenterPaymentInfo {
     room_number?: string;
   };
   paymentStatus: 'paid' | 'unpaid' | 'pending';
-  status: 'paid' | 'unpaid' | 'pending'; // Same as paymentStatus for consistency
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -135,7 +134,6 @@ const EnhancedRentManagement: React.FC = () => {
         const latestPayment = renterPayments[0];
         const renterMeterPhotos = meterPhotos?.filter(m => m.relationship_id === relationship.id) || [];
 
-        const paymentStatus = rentStatus?.status === 'paid' ? 'paid' : 'unpaid';
         return {
           id: relationship.id,
           renter: {
@@ -145,8 +143,7 @@ const EnhancedRentManagement: React.FC = () => {
             room_number: renterProfile?.room_number || ''
           },
           relationshipId: relationship.id,
-          paymentStatus,
-          status: paymentStatus, // Add status field for consistency
+          paymentStatus: rentStatus?.status === 'paid' ? 'paid' : 'unpaid',
           amount: rentStatus?.current_amount || 0,
           dueDate: rentStatus?.due_date,
           lastPaymentDate: latestPayment?.payment_date,

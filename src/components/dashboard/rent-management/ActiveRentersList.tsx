@@ -32,7 +32,6 @@ interface RenterPaymentInfo {
     room_number?: string;
   };
   paymentStatus: 'paid' | 'unpaid' | 'pending';
-  status: 'paid' | 'unpaid' | 'pending'; // Same as paymentStatus for consistency
   amount: number;
   dueDate?: string;
   lastPaymentDate?: string;
@@ -95,37 +94,6 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
 
       // Get current month in YYYY-MM format
       const currentMonth = new Date().toISOString().slice(0, 7);
-
-      // Validate state transitions
-      const currentStatus = renterInfo.status;
-      
-      // Enforce state transition rules:
-      // 1. Paid cannot be changed back until next billing cycle (automatic reset)
-      if (currentStatus === 'paid') {
-        toast.error('Cannot change status', {
-          description: 'This renter is already marked as paid for this month',
-          duration: 3000
-        });
-        return;
-      }
-      
-      // 2. Can only mark as unpaid from pending state
-      if (action === 'unpaid' && currentStatus !== 'pending') {
-        toast.error('Invalid action', {
-          description: 'Can only mark as unpaid when status is pending',
-          duration: 3000
-        });
-        return;
-      }
-      
-      // 3. Can mark as paid from pending or unpaid
-      if (action === 'paid' && currentStatus !== 'pending' && currentStatus !== 'unpaid') {
-        toast.error('Invalid action', {
-          description: 'Can only mark as paid from pending or unpaid status',
-          duration: 3000
-        });
-        return;
-      }
 
       // 1. Update rent_status table with proper conflict resolution for current month
       const { data: rentStatusData, error: rentStatusError } = await supabase
