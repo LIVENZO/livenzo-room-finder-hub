@@ -1,15 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { File, Check, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { File, Check, X, Download } from 'lucide-react';
 import { updateDocumentStatus, type Document } from '@/services/DocumentService';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 
 interface DocumentListProps {
   documents: Document[];
@@ -18,6 +17,11 @@ interface DocumentListProps {
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocumentStatusChanged }) => {
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentDocUrl, setCurrentDocUrl] = useState('');
+  const [currentDocName, setCurrentDocName] = useState('');
+  const [currentDocType, setCurrentDocType] = useState('');
+
   const handleApprove = async (documentId: string) => {
     await updateDocumentStatus(documentId, 'approved');
     onDocumentStatusChanged?.();
@@ -71,12 +75,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
       } else if (filePath.includes('documents/')) {
         filePath = filePath.replace('documents/', '');
       } else if (filePath.startsWith('http')) {
-        // If it's already a full URL, open it appropriately
-        if (Capacitor.isNativePlatform()) {
-          await Browser.open({ url: filePath, presentationStyle: 'popover' });
-        } else {
-          window.open(filePath, '_blank');
-        }
+        // If it's already a full URL, open in viewer
+        setCurrentDocUrl(filePath);
+        setCurrentDocName(document.file_name);
+        setCurrentDocType(document.file_type);
+        setViewerOpen(true);
         return;
       }
       
@@ -105,26 +108,82 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
       
       console.log('Opening signed URL:', data.signedUrl);
       
-      // Open the document based on platform
-      if (Capacitor.isNativePlatform()) {
-        // Mobile app: use Capacitor Browser plugin for in-app viewing
-        await Browser.open({ 
-          url: data.signedUrl, 
-          presentationStyle: 'popover' // Shows as overlay on iOS, fullscreen on Android
-        });
-      } else {
-        // Web browser: open in new tab
-        window.open(data.signedUrl, '_blank');
-      }
+      // Open in in-app viewer
+      setCurrentDocUrl(data.signedUrl);
+      setCurrentDocName(document.file_name);
+      setCurrentDocType(document.file_type);
+      setViewerOpen(true);
     } catch (error) {
       console.error("Error viewing document:", error);
       toast.error("Failed to open document");
     }
   };
+
+  const getFileExtension = (filename: string) => {
+    return filename.split('.').pop()?.toLowerCase() || '';
+  };
+
+  const canPreview = (fileType: string, filename: string) => {
+    const ext = getFileExtension(filename);
+    return ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext) ||
+           fileType.startsWith('image/') || 
+           fileType === 'application/pdf';
+  };
   
   return (
-    <div className="w-full">
-      <Card className="w-full">
+    <>
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <span className="truncate">{currentDocName}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(currentDocUrl, '_blank')}
+                className="ml-4 flex-shrink-0"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {canPreview(currentDocType, currentDocName) ? (
+              getFileExtension(currentDocName) === 'pdf' || currentDocType === 'application/pdf' ? (
+                <iframe
+                  src={currentDocUrl}
+                  className="w-full h-full border-0"
+                  title={currentDocName}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted p-4">
+                  <img
+                    src={currentDocUrl}
+                    alt={currentDocName}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              )
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-8 text-center">
+                <File className="h-16 w-16 text-muted-foreground" />
+                <p className="text-lg font-medium">Preview not available</p>
+                <p className="text-sm text-muted-foreground">
+                  This file type cannot be previewed in the app.
+                </p>
+                <Button onClick={() => window.open(currentDocUrl, '_blank')}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download to view
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="w-full">
+        <Card className="w-full">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">Documents</CardTitle>
           <CardDescription>
@@ -206,7 +265,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 };
 
