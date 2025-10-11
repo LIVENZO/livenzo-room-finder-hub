@@ -8,14 +8,12 @@ import RentSummaryCards from './RentSummaryCards';
 import AddPaymentModal from './AddPaymentModal';
 import SetRentListPage from './SetRentListPage';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
-
 interface RentStats {
   totalReceived: number;
   thisMonth: number;
   pendingAmount: number;
   activeRenters: number;
 }
-
 interface RenterPaymentInfo {
   id: string;
   renter: {
@@ -36,51 +34,47 @@ interface RenterPaymentInfo {
   };
   relationshipId?: string;
 }
-
 const RentManagementDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  
+  const {
+    user
+  } = useAuth();
   const [stats, setStats] = useState<RentStats>({
     totalReceived: 0,
     thisMonth: 0,
     pendingAmount: 0,
     activeRenters: 0
   });
-  
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showSetRentPage, setShowSetRentPage] = useState(false);
-  const [selectedRenter, setSelectedRenter] = useState<{ id: string; name: string } | null>(null);
+  const [selectedRenter, setSelectedRenter] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [meterPhotos, setMeterPhotos] = useState<Record<string, MeterPhoto[]>>({});
-
   useEffect(() => {
     if (user) {
       fetchRenters();
       fetchStats();
     }
   }, [user]);
-
   const fetchRenters = async () => {
     if (!user?.id) return;
-    
     try {
       setLoading(true);
-      
+
       // First get all relationships for this owner
-      const { data: relationships, error: relationshipsError } = await supabase
-        .from('relationships')
-        .select(`
+      const {
+        data: relationships,
+        error: relationshipsError
+      } = await supabase.from('relationships').select(`
           id,
           renter_id,
           status,
           created_at
-        `)
-        .eq('owner_id', user.id)
-        .eq('status', 'accepted')
-        .eq('archived', false);
-
+        `).eq('owner_id', user.id).eq('status', 'accepted').eq('archived', false);
       if (relationshipsError) {
         console.error('Error fetching relationships:', relationshipsError);
         toast.error('Failed to load relationships');
@@ -90,7 +84,6 @@ const RentManagementDashboard: React.FC = () => {
       // Fetch meter photos for this owner
       const ownerMeterPhotos = await getOwnerMeterPhotos(user.id);
       setMeterPhotos(ownerMeterPhotos);
-
       if (!relationships || relationships.length === 0) {
         setRenters([]);
         return;
@@ -100,11 +93,10 @@ const RentManagementDashboard: React.FC = () => {
       const renterIds = relationships.map(r => r.renter_id);
 
       // Fetch renter profiles
-      const { data: renterProfiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, avatar_url, room_number')
-        .in('id', renterIds);
-
+      const {
+        data: renterProfiles,
+        error: profilesError
+      } = await supabase.from('user_profiles').select('id, full_name, avatar_url, room_number').in('id', renterIds);
       if (profilesError) {
         console.error('Error fetching renter profiles:', profilesError);
         toast.error('Failed to load renter profiles');
@@ -112,22 +104,21 @@ const RentManagementDashboard: React.FC = () => {
       }
 
       // Fetch rent statuses
-      const { data: rentStatuses, error: rentError } = await supabase
-        .from('rent_status')
-        .select('*')
-        .in('relationship_id', relationships.map(r => r.id));
-
+      const {
+        data: rentStatuses,
+        error: rentError
+      } = await supabase.from('rent_status').select('*').in('relationship_id', relationships.map(r => r.id));
       if (rentError) {
         console.error('Error fetching rent statuses:', rentError);
       }
 
       // Fetch latest payments
-      const { data: latestPayments, error: paymentsError } = await supabase
-        .from('payments')
-        .select('*')
-        .in('renter_id', renterIds)
-        .order('payment_date', { ascending: false });
-
+      const {
+        data: latestPayments,
+        error: paymentsError
+      } = await supabase.from('payments').select('*').in('renter_id', renterIds).order('payment_date', {
+        ascending: false
+      });
       if (paymentsError) {
         console.error('Error fetching payments:', paymentsError);
       }
@@ -138,7 +129,6 @@ const RentManagementDashboard: React.FC = () => {
         const rentStatus = rentStatuses?.find(r => r.relationship_id === relationship.id);
         const renterPayments = latestPayments?.filter(p => p.renter_id === relationship.renter_id) || [];
         const latestPayment = renterPayments[0];
-
         const paymentStatus = rentStatus?.status === 'paid' ? 'paid' : 'unpaid';
         return {
           id: relationship.id,
@@ -150,7 +140,8 @@ const RentManagementDashboard: React.FC = () => {
           },
           relationshipId: relationship.id,
           paymentStatus,
-          status: paymentStatus, // Add status field for consistency
+          status: paymentStatus,
+          // Add status field for consistency
           amount: rentStatus?.current_amount || 0,
           dueDate: rentStatus?.due_date,
           lastPaymentDate: latestPayment?.payment_date,
@@ -161,7 +152,6 @@ const RentManagementDashboard: React.FC = () => {
           } : undefined
         };
       });
-
       setRenters(renterPaymentInfo);
     } catch (error) {
       console.error('Error in fetchRenters:', error);
@@ -170,64 +160,47 @@ const RentManagementDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
   const fetchStats = async () => {
     try {
       // Get all payments for this owner
-      const { data: payments, error: paymentsError } = await supabase
-        .from('payments')
-        .select(`
+      const {
+        data: payments,
+        error: paymentsError
+      } = await supabase.from('payments').select(`
           amount,
           payment_date,
           status,
           relationships!inner(owner_id)
-        `)
-        .eq('relationships.owner_id', user?.id);
-
+        `).eq('relationships.owner_id', user?.id);
       if (paymentsError) throw paymentsError;
 
       // Get rent statuses for pending amounts
-      const { data: rentStatuses, error: rentError } = await supabase
-        .from('rent_status')
-        .select(`
+      const {
+        data: rentStatuses,
+        error: rentError
+      } = await supabase.from('rent_status').select(`
           current_amount,
           status,
           relationships!inner(owner_id)
-        `)
-        .eq('relationships.owner_id', user?.id)
-        .neq('status', 'paid');
-
+        `).eq('relationships.owner_id', user?.id).neq('status', 'paid');
       if (rentError) throw rentError;
 
       // Get active renters count
-      const { data: relationships, error: relationshipsError } = await supabase
-        .from('relationships')
-        .select('id')
-        .eq('owner_id', user?.id)
-        .eq('status', 'accepted')
-        .eq('archived', false);
-
+      const {
+        data: relationships,
+        error: relationshipsError
+      } = await supabase.from('relationships').select('id').eq('owner_id', user?.id).eq('status', 'accepted').eq('archived', false);
       if (relationshipsError) throw relationshipsError;
 
       // Calculate stats
-      const totalReceived = payments
-        ?.filter(p => p.status === 'paid')
-        .reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
+      const totalReceived = payments?.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0) || 0;
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
-      const thisMonth = payments
-        ?.filter(p => {
-          const paymentDate = new Date(p.payment_date);
-          return p.status === 'paid' && 
-                 paymentDate.getMonth() === currentMonth && 
-                 paymentDate.getFullYear() === currentYear;
-        })
-        .reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
-      const pendingAmount = rentStatuses
-        ?.reduce((sum, r) => sum + Number(r.current_amount), 0) || 0;
-
+      const thisMonth = payments?.filter(p => {
+        const paymentDate = new Date(p.payment_date);
+        return p.status === 'paid' && paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+      }).reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+      const pendingAmount = rentStatuses?.reduce((sum, r) => sum + Number(r.current_amount), 0) || 0;
       setStats({
         totalReceived,
         thisMonth,
@@ -239,7 +212,6 @@ const RentManagementDashboard: React.FC = () => {
       toast.error('Failed to load rent management data');
     }
   };
-
   const handleCardClick = (type: 'total' | 'month' | 'pending' | 'renters' | 'setrent') => {
     if (type === 'renters') {
       navigate('/active-renters');
@@ -248,12 +220,13 @@ const RentManagementDashboard: React.FC = () => {
     }
     // Add more actions for other cards if needed
   };
-
   const handleAddPayment = (renterId: string, renterName: string) => {
-    setSelectedRenter({ id: renterId, name: renterName });
+    setSelectedRenter({
+      id: renterId,
+      name: renterName
+    });
     setShowAddPaymentModal(true);
   };
-
   const handlePaymentAdded = () => {
     setShowAddPaymentModal(false);
     setSelectedRenter(null);
@@ -261,56 +234,27 @@ const RentManagementDashboard: React.FC = () => {
     fetchStats();
     toast.success('Payment added successfully!');
   };
-
   const handleBackFromSetRent = () => {
     setShowSetRentPage(false);
     fetchRenters();
     fetchStats();
   };
-
   if (showSetRentPage) {
     return <SetRentListPage onBack={handleBackFromSetRent} />;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Summary Cards */}
-      <RentSummaryCards
-        stats={stats}
-        loading={loading}
-        onCardClick={handleCardClick}
-      />
+      <RentSummaryCards stats={stats} loading={loading} onCardClick={handleCardClick} />
 
       {/* Active Renters List */}
       <div className="bg-card rounded-lg shadow-sm border border-border/50 overflow-hidden">
-        <div className="px-4 py-6 border-b border-border/50">
-          <h3 className="text-lg font-semibold text-foreground">Active Renters</h3>
-          <p className="text-sm text-muted-foreground">Manage rent payments and meter photos</p>
-        </div>
         
-        <ActiveRentersList 
-          renters={renters}
-          loading={loading}
-          onAddPayment={handleAddPayment}
-          meterPhotos={meterPhotos}
-          onRefresh={fetchRenters}
-          ownerId={user?.id || ''}
-        />
+        
+        <ActiveRentersList renters={renters} loading={loading} onAddPayment={handleAddPayment} meterPhotos={meterPhotos} onRefresh={fetchRenters} ownerId={user?.id || ''} />
       </div>
 
       {/* Add Payment Modal */}
-      {showAddPaymentModal && selectedRenter && user?.id && (
-        <AddPaymentModal
-          isOpen={showAddPaymentModal}
-          onClose={() => setShowAddPaymentModal(false)}
-          renterName={selectedRenter.name}
-          renterId={selectedRenter.id}
-          ownerId={user.id}
-          onPaymentSaved={handlePaymentAdded}
-        />
-      )}
-    </div>
-  );
+      {showAddPaymentModal && selectedRenter && user?.id && <AddPaymentModal isOpen={showAddPaymentModal} onClose={() => setShowAddPaymentModal(false)} renterName={selectedRenter.name} renterId={selectedRenter.id} ownerId={user.id} onPaymentSaved={handlePaymentAdded} />}
+    </div>;
 };
-
 export default RentManagementDashboard;
