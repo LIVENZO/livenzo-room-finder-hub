@@ -8,6 +8,8 @@ import { updateDocumentStatus, type Document } from '@/services/DocumentService'
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 interface DocumentListProps {
   documents: Document[];
@@ -69,8 +71,12 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
       } else if (filePath.includes('documents/')) {
         filePath = filePath.replace('documents/', '');
       } else if (filePath.startsWith('http')) {
-        // If it's already a full URL, try to open it directly
-        window.open(filePath, '_blank');
+        // If it's already a full URL, open it appropriately
+        if (Capacitor.isNativePlatform()) {
+          await Browser.open({ url: filePath, presentationStyle: 'popover' });
+        } else {
+          window.open(filePath, '_blank');
+        }
         return;
       }
       
@@ -98,8 +104,18 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isOwner, onDocum
       }
       
       console.log('Opening signed URL:', data.signedUrl);
-      // Open the signed URL in a new tab
-      window.open(data.signedUrl, '_blank');
+      
+      // Open the document based on platform
+      if (Capacitor.isNativePlatform()) {
+        // Mobile app: use Capacitor Browser plugin for in-app viewing
+        await Browser.open({ 
+          url: data.signedUrl, 
+          presentationStyle: 'popover' // Shows as overlay on iOS, fullscreen on Android
+        });
+      } else {
+        // Web browser: open in new tab
+        window.open(data.signedUrl, '_blank');
+      }
     } catch (error) {
       console.error("Error viewing document:", error);
       toast.error("Failed to open document");
