@@ -195,7 +195,6 @@ export const OwnerUpiSettings = () => {
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
       if (profileUpdateError) throw profileUpdateError;
-
       toast({
         description: "Saved successfully."
       });
@@ -278,23 +277,19 @@ export const OwnerUpiSettings = () => {
               </Badge>}
           </div>
           <Input id="upiPhone" type="tel" placeholder="Enter registered UPI phone number" value={upiPhone} onChange={e => setUpiPhone(e.target.value)} />
-          <p className="text-sm text-muted-foreground">
-            Enter your UPI phone number that renters will use for payments
-          </p>
+          
         </div>
 
         {/* UPI ID Setup (optional) */}
         <div className="space-y-3">
           <Label htmlFor="upiId">UPI ID (optional)</Label>
           <Input id="upiId" placeholder="yourname@paytm / yourname@phonepe" value={upiId} onChange={e => setUpiId(e.target.value)} />
-          <p className="text-sm text-muted-foreground">
-            Optional: Enter your UPI ID for direct payments
-          </p>
+          
         </div>
 
         {/* QR Code Section */}
         <div className="space-y-3">
-          <Label>UPI QR Code (Optional)</Label>
+          
           
           {upiDetails?.qr_code_url ? <div className="space-y-3">
               <div className="flex items-center gap-4">
@@ -314,13 +309,8 @@ export const OwnerUpiSettings = () => {
 
           <div className="space-y-2">
             <Input type="file" accept="image/*" onChange={handleQrFileUpload} className="hidden" id="qrUpload" />
-            <Button variant="outline" onClick={() => document.getElementById('qrUpload')?.click()} className="w-full">
-              <Upload className="h-4 w-4 mr-2" />
-              {qrFile ? `Selected: ${qrFile.name}` : upiDetails?.qr_code_url ? "Replace QR Code" : "Upload QR Code"}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Upload your UPI QR code image (max 2MB). Renters can scan this to pay.
-            </p>
+            
+            
           </div>
         </div>
 
