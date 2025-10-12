@@ -38,6 +38,8 @@ const RentManagementDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
+      
       // Get all payments for this owner
       const { data: payments, error: paymentsError } = await supabase
         .from('payments')
@@ -102,6 +104,8 @@ const RentManagementDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
       toast.error('Failed to load rent management data');
+    } finally {
+      setLoading(false);
     }
   };
 
