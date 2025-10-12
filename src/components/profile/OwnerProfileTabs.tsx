@@ -71,6 +71,7 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
           uploadingImage={uploadingImage}
           onInputChange={onInputChange}
           onImageUpload={onImageUpload}
+          isOwner={true}
         />
       </TabsContent>
 

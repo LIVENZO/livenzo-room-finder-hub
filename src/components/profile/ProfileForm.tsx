@@ -19,9 +19,10 @@ interface ProfileFormProps {
   profile: UserProfile | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSecurityIssue?: (field: string, issue: string) => void;
+  isOwner?: boolean;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputChange, onSecurityIssue }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputChange, onSecurityIssue, isOwner = false }) => {
   
   // Enhanced input change handler with security validation
   const handleSecureInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -95,10 +96,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
         )}
       </div>
 
-      {/* House No. Field */}
+      {/* House/Room No. Field */}
       <div className="space-y-3">
         <Label htmlFor="roomNumber" className="text-base font-semibold text-foreground">
-          House No.
+          {isOwner ? 'House No.' : 'Room No.'}
         </Label>
         <Input
           id="roomNumber"
@@ -109,7 +110,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
           className="h-12 text-base"
         />
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Optional: Specify your house number for easier identification
+          Optional: Specify your {isOwner ? 'house' : 'room'} number for easier identification
         </p>
       </div>
       

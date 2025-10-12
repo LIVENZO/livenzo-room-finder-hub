@@ -18,6 +18,7 @@ interface BasicProfileTabProps {
   uploadingImage: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isOwner?: boolean;
 }
 
 const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
@@ -26,7 +27,8 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
   formValues,
   uploadingImage,
   onInputChange,
-  onImageUpload
+  onImageUpload,
+  isOwner = false
 }) => {
   return (
     <div className="space-y-10">
@@ -46,6 +48,7 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
           formValues={formValues}
           profile={profile}
           onInputChange={onInputChange}
+          isOwner={isOwner}
         />
       </div>
 

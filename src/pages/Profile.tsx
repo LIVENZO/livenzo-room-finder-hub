@@ -79,7 +79,7 @@ const Profile = () => {
                   
                   {/* Profile Form Section */}
                   <div className="w-full">
-                    <ProfileForm formValues={formValues} profile={profile} onInputChange={handleInputChange} />
+                    <ProfileForm formValues={formValues} profile={profile} onInputChange={handleInputChange} isOwner={isOwner} />
                   </div>
 
                   {/* Room Number Display */}
