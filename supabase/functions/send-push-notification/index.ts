@@ -158,25 +158,25 @@ serve(async (req) => {
 
     if (type === 'notice') {
       targetUserId = record.renter_id ?? null;
-      title = 'New Notice from Owner';
+      title = '📢 New Notice from Your Owner';
       const noticeTitle = record.title ? String(record.title) : undefined;
       const noticeMsg = record.message ? String(record.message) : undefined;
       body = noticeTitle
-        ? `Your owner sent a notice: ${noticeTitle}`
-        : (noticeMsg ? `Your owner sent a notice: ${noticeMsg.substring(0, 100)}` : 'Your owner sent a notice.');
+        ? `🏠 Your owner sent a new notice: "${noticeTitle}"`
+        : (noticeMsg ? `🏠 Your owner sent a new notice: "${noticeMsg.substring(0, 80)}"` : '🏠 Your owner sent a new notice.');
       data.notice_id = record.id;
       data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/notices?id=${record.id}`;
     } else if (type === 'document') {
       targetUserId = record.owner_id ?? null;
-      title = 'Document Uploaded';
-      body = 'A renter uploaded a document for you to review.';
+      title = '📄 New Document Uploaded';
+      body = '📎 A renter uploaded a document for you to review.';
       data.document_id = record.id;
       data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?showDocuments=true&documentId=${record.id}`;
     } else if (type === 'complaint') {
       targetUserId = record.owner_id ?? null;
-      title = 'New Complaint';
+      title = '⚠️ New Complaint from Renter';
       const complaintTitle = record.title ? String(record.title) : undefined;
-      body = complaintTitle ? `A renter submitted a new complaint: ${complaintTitle}` : 'A renter submitted a new complaint.';
+      body = complaintTitle ? `🙋 A renter submitted a complaint: "${complaintTitle}"` : '🙋 A renter submitted a new complaint.';
       data.complaint_id = record.id;
       data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?showComplaints=true&complaintId=${record.id}`;
     } else if (type === 'payment_reminder') {
