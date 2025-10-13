@@ -71,6 +71,13 @@ export const initializeRecaptcha = async () => {
   });
 
   await recaptchaVerifier.render();
+  
+  // Hide the reCAPTCHA badge
+  const badge = document.querySelector('.grecaptcha-badge') as HTMLElement;
+  if (badge) {
+    badge.style.visibility = 'hidden';
+  }
+  
   return recaptchaVerifier;
 };
 
