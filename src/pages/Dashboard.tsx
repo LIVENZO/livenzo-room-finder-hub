@@ -28,8 +28,8 @@ const Dashboard: React.FC = () => {
     console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
   }, [user, userRole, isLoading, session, navigate]);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  // Show loading state while checking authentication or determining role
+  if (isLoading || !userRole) {
     return <LoadingState isRedirecting={false} />;
   }
 
