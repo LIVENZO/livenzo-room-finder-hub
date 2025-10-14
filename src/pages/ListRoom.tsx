@@ -161,13 +161,13 @@ const ListRoom: React.FC = () => {
       
       if (imageUrls.length === 0) {
         console.error('Image upload failed - no URLs returned');
-        toast.error('Failed to upload images. Please try again or contact support.', { id: toastId });
+        toast.error('⚠️ Failed to upload images. Please check your internet connection and try again.', { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
       console.log('Images uploaded successfully:', imageUrls);
-      toast.loading('Creating room listing...', { id: toastId });
+      toast.loading('📝 Creating room listing...', { id: toastId });
       
       // Step 2: Save room data to Supabase
       const roomData = {
@@ -198,20 +198,20 @@ const ListRoom: React.FC = () => {
       
       if (error) {
         console.error('Error inserting room:', error);
-        toast.error(`Failed to create listing: ${error.message}`, { id: toastId });
+        toast.error(`⚠️ Failed to create listing: ${error.message}`, { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
       console.log('Room created successfully:', room);
-      toast.success('Room listed successfully!', { id: toastId });
+      toast.success('🎉 Room listed successfully!', { id: toastId });
       
       // Step 3: Redirect to my listings
       navigate('/my-listings');
       
     } catch (error: any) {
       console.error('Error in room submission:', error);
-      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}. Please contact support if this persists.`);
+      toast.error(`⚠️ Something went wrong while uploading your room. Please check your internet or try again.`);
     } finally {
       setIsSubmitting(false);
     }
