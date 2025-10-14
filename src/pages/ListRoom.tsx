@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Layout from '@/components/Layout';
-import { uploadPropertyImages } from '@/services/storage/propertyImageUpload';
+import { uploadImagesToStorage } from '@/services/storage';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -153,30 +153,21 @@ const ListRoom: React.FC = () => {
       console.log('User ID:', user.id);
       console.log('Images to upload:', imageFiles.length);
       
-      // Step 1: Upload images to Supabase Storage with automatic retry
-      const toastId = toast.loading('📤 Uploading images (will retry once if needed)...');
+      // Step 1: Upload images to Supabase Storage
+      const toastId = toast.loading('Preparing to upload images...');
       
-      let imageUrls: string[] = [];
-      
-      try {
-        // Upload to property-images bucket with 1 automatic retry
-        imageUrls = await uploadPropertyImages(imageFiles, user.id, 1);
-      } catch (uploadError: any) {
-        console.error('Image upload failed after retries:', uploadError);
-        toast.error(`⚠️ Failed to upload images: ${uploadError.message || 'Please check your internet connection and try again.'}`, { id: toastId });
-        setIsSubmitting(false);
-        return;
-      }
+      // Ensure we're using the correct bucket name 'rooms'
+      const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms');
       
       if (imageUrls.length === 0) {
         console.error('Image upload failed - no URLs returned');
-        toast.error('⚠️ Failed to upload images. Please try again.', { id: toastId });
+        toast.error('Failed to upload images. Please try again or contact support.', { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
       console.log('Images uploaded successfully:', imageUrls);
-      toast.loading('📝 Creating room listing...', { id: toastId });
+      toast.loading('Creating room listing...', { id: toastId });
       
       // Step 2: Save room data to Supabase
       const roomData = {
@@ -207,20 +198,20 @@ const ListRoom: React.FC = () => {
       
       if (error) {
         console.error('Error inserting room:', error);
-        toast.error(`⚠️ Failed to create listing: ${error.message}`, { id: toastId });
+        toast.error(`Failed to create listing: ${error.message}`, { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
       console.log('Room created successfully:', room);
-      toast.success('🎉 Room listed successfully!', { id: toastId });
+      toast.success('Room listed successfully!', { id: toastId });
       
       // Step 3: Redirect to my listings
       navigate('/my-listings');
       
     } catch (error: any) {
       console.error('Error in room submission:', error);
-      toast.error(`⚠️ Something went wrong while uploading your room. Please check your internet or try again.`);
+      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}. Please contact support if this persists.`);
     } finally {
       setIsSubmitting(false);
     }

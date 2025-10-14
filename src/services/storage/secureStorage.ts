@@ -27,7 +27,7 @@ export const uploadFilesSecure = async (
     const authResult = await validateAuthentication();
     if (!authResult.isValid || authResult.userId !== userId) {
       console.error('Authentication validation failed:', authResult);
-      toast.error('⚠️ Please log in again to upload files');
+      toast.error('Please log in again to upload files');
       return [];
     }
     
@@ -45,7 +45,7 @@ export const uploadFilesSecure = async (
     
     if (validFiles.length === 0) {
       console.error('No valid files to upload');
-      toast.error(`⚠️ No valid ${fileType}s to upload. Please ensure files are .jpg, .jpeg, .png, or .webp and under 5MB.`);
+      toast.error(`No valid ${fileType}s to upload. Please check file format and size.`);
       return [];
     }
     
@@ -97,11 +97,11 @@ export const uploadFilesSecure = async (
       return [];
     }
     
-    // Upload each valid file with retry logic
+    // Upload each valid file
     for (const [index, file] of validFiles.entries()) {
       console.log(`Uploading file ${index + 1}/${validFiles.length}:`, file.name);
       
-      toast.loading(`📤 Uploading ${fileType} ${index + 1} of ${validFiles.length}...`, {
+      toast.loading(`Uploading file ${index + 1} of ${validFiles.length}...`, {
         id: uploadToastId
       });
       
@@ -113,46 +113,37 @@ export const uploadFilesSecure = async (
       
       console.log('Uploading to bucket:', bucket, 'with path:', filePath);
       
-      // Attempt upload with retry logic
-      let uploadData = null;
-      let uploadError = null;
-      let retryCount = 0;
-      const maxRetries = 1;
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
-      while (retryCount <= maxRetries && !uploadData) {
-        if (retryCount > 0) {
-          console.log(`Retry attempt ${retryCount} for file:`, file.name);
-          // Wait a bit before retry
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      let uploadData = data;
+      
+      if (error) {
+        console.error('Supabase storage upload error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-        
-        if (!error) {
-          uploadData = data;
-          break;
-        }
-        
-        uploadError = error;
-        console.error(`Upload attempt ${retryCount + 1} failed:`, error);
-        
-        // Handle specific errors
         if (error.message.includes('permissions') || 
             error.message.includes('denied') ||
             error.message.includes('authorized') ||
             error.message.includes('JWT')) {
-          toast.error('⚠️ Permission denied. Please log out and log back in.', { id: uploadToastId });
-          return uploadedUrls;
+          toast.error('Permission denied. Please log out and log back in.', { id: uploadToastId });
+          break;
+        } else if (error.message.includes('size')) {
+          toast.error(`File "${file.name}" is too large. Maximum size is 5MB.`);
+          continue;
+        } else if (error.message.includes('type') || error.message.includes('format')) {
+          toast.error(`File "${file.name}" has invalid format.`);
+          continue;
         } else if (error.message.includes('duplicate') || error.message.includes('already exists')) {
-          // Generate new filename and try again
+          // File with same name exists, try with different name
           const retryFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 20)}.${fileExt}`;
           const retryFilePath = `${userId}/${retryFileName}`;
-          console.log('File exists, retrying with new filename:', retryFilePath);
+          console.log('Retrying upload with new filename:', retryFilePath);
           
           const { data: retryData, error: retryError } = await supabase.storage
             .from(bucket)
@@ -161,26 +152,18 @@ export const uploadFilesSecure = async (
               upsert: false
             });
             
-          if (!retryError) {
+          if (retryError) {
+            console.error('Retry upload failed:', retryError);
+            toast.error(`Failed to upload "${file.name}". Please try again.`);
+            continue;
+          } else {
             uploadData = retryData;
-            break;
           }
-        }
-        
-        retryCount++;
-      }
-      
-      // Handle final upload result
-      if (!uploadData && uploadError) {
-        if (uploadError.message.includes('size')) {
-          toast.error(`⚠️ File "${file.name}" is too large. Maximum size is 5MB.`);
-        } else if (uploadError.message.includes('type') || uploadError.message.includes('format')) {
-          toast.error(`⚠️ File "${file.name}" has invalid format. Only .jpg, .jpeg, .png, and .webp are allowed.`);
         } else {
-          console.error('All upload attempts failed:', uploadError);
-          toast.error(`⚠️ Failed to upload "${file.name}". Please check your internet connection and try again.`);
+          console.error('Unknown upload error:', error.message);
+          toast.error(`Upload failed: ${error.message}. Please contact support if this persists.`);
+          continue;
         }
-        continue;
       }
       
       if (uploadData) {
@@ -206,19 +189,19 @@ export const uploadFilesSecure = async (
     if (uploadedUrls.length > 0) {
       console.log(`Successfully uploaded ${uploadedUrls.length} files`);
       if (fileType === 'image') {
-        toast.success(`✅ ${uploadedUrls.length} image${uploadedUrls.length > 1 ? 's' : ''} uploaded successfully!`);
+        toast.success(`${uploadedUrls.length} images uploaded successfully!`);
       } else {
-        toast.success(`✅ ${uploadedUrls.length} document${uploadedUrls.length > 1 ? 's' : ''} uploaded successfully!`);
+        toast.success(`${uploadedUrls.length} documents uploaded successfully!`);
       }
     } else {
       console.error('No files were successfully uploaded');
-      toast.error('⚠️ All uploads failed. Please check your internet connection and try again.');
+      toast.error('All uploads failed. Please check your connection and try again.');
     }
 
     return uploadedUrls;
   } catch (error) {
     console.error('Critical error in secure file upload:', error);
-    toast.error('⚠️ Something went wrong while uploading. Please check your internet or try again.');
+    toast.error('Upload system error. Please contact support if this persists.');
     return [];
   }
 };
