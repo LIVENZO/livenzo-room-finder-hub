@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
 import { getCurrentLocationSecure, saveOwnerLocationSecure } from '@/services/security/secureLocationService';
 import { UserProfile } from '@/services/UserProfileService';
-import { toast } from 'sonner';
 
 interface LocationSetterProps {
   userId: string;
@@ -33,12 +32,9 @@ const LocationSetter: React.FC<LocationSetterProps> = ({ userId, profile, onLoca
       if (success) {
         setCurrentLocation(coordinates);
         onLocationSaved();
-      } else {
-        toast.error('Failed to save location. Please try again.');
       }
     } catch (error) {
       console.error("Error getting location:", error);
-      toast.error(error instanceof Error ? error.message : 'Failed to get location');
     } finally {
       setLoading(false);
     }

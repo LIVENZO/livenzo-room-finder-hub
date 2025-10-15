@@ -94,7 +94,7 @@ export const saveOwnerLocationSecure = async (
       return false;
     }
 
-    // Don't show toast here - let the calling component handle it
+    toast.success('Location saved successfully');
     return true;
   } catch (error) {
     console.error('Exception saving location:', error);
