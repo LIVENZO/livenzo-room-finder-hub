@@ -4,7 +4,8 @@ import { uploadFilesSecure } from './storage/secureStorage';
 
 export interface UserProfile {
   id: string;
-  full_name?: string;
+  full_name?: string; // For renters
+  hostel_pg_name?: string; // For owners
   phone?: string;
   bio?: string;
   avatar_url?: string;

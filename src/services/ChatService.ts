@@ -64,14 +64,16 @@ export const fetchRoomMessages = async (
       // Get sender profile info
       const { data: senderData } = await supabase
         .from("user_profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, hostel_pg_name, avatar_url")
         .eq("id", msg.sender_id)
         .single();
         
       messages.push({
         ...msg,
-        sender: senderData as { full_name: string, avatar_url: string } || 
-                { full_name: 'Unknown', avatar_url: '' }
+        sender: senderData ? {
+          full_name: senderData.hostel_pg_name || senderData.full_name || 'Unknown',
+          avatar_url: senderData.avatar_url
+        } : { full_name: 'Unknown', avatar_url: '' }
       });
     }
 
@@ -123,7 +125,7 @@ export const fetchUserConversations = async (
       // Get sender profile info
       const { data: senderData } = await supabase
         .from("user_profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, hostel_pg_name, avatar_url")
         .eq("id", messages[0].sender_id)
         .single();
       
@@ -131,8 +133,10 @@ export const fetchUserConversations = async (
         room_id: roomId, 
         last_message: {
           ...messages[0],
-          sender: senderData as { full_name: string, avatar_url: string } || 
-                  { full_name: 'Unknown', avatar_url: '' }
+          sender: senderData ? {
+            full_name: senderData.hostel_pg_name || senderData.full_name || 'Unknown',
+            avatar_url: senderData.avatar_url
+          } : { full_name: 'Unknown', avatar_url: '' }
         }
       });
     }

@@ -44,7 +44,8 @@ export const useProfileForms = (profile: UserProfile | null) => {
   useEffect(() => {
     if (profile) {
       setFormValues({
-        fullName: profile.full_name || '',
+        // Use hostel_pg_name for owners, full_name for renters
+        fullName: profile.hostel_pg_name || profile.full_name || '',
         phone: profile.phone || '',
         bio: profile.bio || '',
         roomNumber: profile.room_number || '',

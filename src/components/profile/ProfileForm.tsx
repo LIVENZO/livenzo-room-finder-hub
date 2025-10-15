@@ -57,22 +57,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
   };
   return (
     <div className="w-full space-y-8">
-      {/* Name Field */}
+      {/* Name Field - Conditional for Owner/Renter */}
       <div className="space-y-3">
         <Label htmlFor="fullName" className="text-base font-semibold text-foreground">
-          Name <span className="text-destructive">*</span>
+          {isOwner ? 'Hostel/PG Name' : 'Name'} <span className="text-destructive">*</span>
         </Label>
         <Input
           id="fullName"
           name="fullName"
           value={formValues.fullName}
           onChange={handleSecureInputChange}
-          placeholder="Your full name"
+          placeholder={isOwner ? "Your hostel or PG name" : "Your full name"}
           className={`h-12 text-base ${!formValues.fullName ? "border-destructive/50 focus-visible:ring-destructive/20" : ""}`}
           required
         />
         {!formValues.fullName && (
-          <p className="text-sm text-destructive font-medium">Name is required to complete your profile</p>
+          <p className="text-sm text-destructive font-medium">
+            {isOwner ? 'Hostel/PG name' : 'Name'} is required to complete your profile
+          </p>
         )}
       </div>
       

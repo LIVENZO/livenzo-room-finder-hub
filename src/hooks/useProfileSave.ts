@@ -40,12 +40,20 @@ export const useProfileSave = (
     
     const updatedProfile: Partial<UserProfile> & { id: string } = {
       id: user.id,
-      full_name: formValues.fullName,
       phone: formValues.phone,
       bio: formValues.bio,
       room_number: formValues.roomNumber || null,
       avatar_url: profile.avatar_url,
     };
+
+    // Set the appropriate name field based on user type
+    if (isOwner) {
+      updatedProfile.hostel_pg_name = formValues.fullName;
+      updatedProfile.full_name = null; // Clear renter name for owners
+    } else {
+      updatedProfile.full_name = formValues.fullName;
+      updatedProfile.hostel_pg_name = null; // Clear owner name for renters
+    }
 
     // Add owner-specific fields if user is an owner
     if (isOwner) {

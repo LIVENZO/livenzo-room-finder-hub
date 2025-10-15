@@ -40,7 +40,7 @@ export const fetchRoomReviews = async (roomId: string): Promise<Review[]> => {
   try {
     const { data, error } = await supabase
       .from("reviews")
-      .select("*, user_profiles(full_name, avatar_url)")
+      .select("*, user_profiles(full_name, hostel_pg_name, avatar_url)")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false });
 

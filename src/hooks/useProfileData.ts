@@ -28,6 +28,7 @@ export const useProfileData = () => {
         const newProfile = {
           id: user.id,
           full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          hostel_pg_name: '', // Initialize for owners
           avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
         };
         

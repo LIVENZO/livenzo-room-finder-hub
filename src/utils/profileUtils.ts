@@ -10,8 +10,9 @@ import { toast } from "sonner";
 export const isProfileComplete = (profile: UserProfile | null): boolean => {
   if (!profile) return false;
   
-  // Check for basic required fields
-  const hasName = !!profile.full_name && profile.full_name.trim().length > 0;
+  // Check for basic required fields - owner uses hostel_pg_name, renter uses full_name
+  const hasName = (!!profile.full_name && profile.full_name.trim().length > 0) || 
+                  (!!profile.hostel_pg_name && profile.hostel_pg_name.trim().length > 0);
   const hasPhone = !!profile.phone && profile.phone.trim().length > 0;
   
   return hasName && hasPhone;

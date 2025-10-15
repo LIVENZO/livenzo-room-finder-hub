@@ -1084,6 +1084,7 @@ export type Database = {
           fcm_token: string | null
           firebase_uid: string | null
           full_name: string | null
+          hostel_pg_name: string | null
           house_number: string | null
           id: string
           is_owner_profile_complete: boolean | null
@@ -1113,6 +1114,7 @@ export type Database = {
           fcm_token?: string | null
           firebase_uid?: string | null
           full_name?: string | null
+          hostel_pg_name?: string | null
           house_number?: string | null
           id?: string
           is_owner_profile_complete?: boolean | null
@@ -1142,6 +1144,7 @@ export type Database = {
           fcm_token?: string | null
           firebase_uid?: string | null
           full_name?: string | null
+          hostel_pg_name?: string | null
           house_number?: string | null
           id?: string
           is_owner_profile_complete?: boolean | null

@@ -25,7 +25,7 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
     const ownerIds = data.map((rel: any) => rel.owner_id);
     const { data: ownerProfiles, error: ownerError } = await supabase
       .from("user_profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, full_name, hostel_pg_name, avatar_url")
       .in("id", ownerIds);
 
     if (ownerError) {
@@ -39,7 +39,7 @@ export const fetchRenterRelationships = async (userId: string): Promise<Relation
       return {
         ...rel,
         owner: ownerProfile ? {
-          full_name: ownerProfile.full_name,
+          full_name: ownerProfile.hostel_pg_name || ownerProfile.full_name, // Prefer hostel_pg_name for owners
           avatar_url: ownerProfile.avatar_url
         } : null
       } as Relationship;
@@ -88,7 +88,7 @@ export const fetchArchivedRenterRelationships = async (userId: string): Promise<
     const ownerIds = data.map(rel => rel.owner_id);
     const { data: ownerProfiles, error: ownerError } = await supabase
       .from("user_profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, full_name, hostel_pg_name, avatar_url")
       .in("id", ownerIds);
 
     if (ownerError) {
@@ -109,7 +109,7 @@ export const fetchArchivedRenterRelationships = async (userId: string): Promise<
         updated_at: rel.updated_at,
         archived: rel.archived,
         owner: ownerProfile ? {
-          full_name: ownerProfile.full_name || '',
+          full_name: ownerProfile.hostel_pg_name || ownerProfile.full_name || '', // Prefer hostel_pg_name for owners
           avatar_url: ownerProfile.avatar_url || ''
         } : null
       };
