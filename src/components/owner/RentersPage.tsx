@@ -12,14 +12,9 @@ import SetRentModal from '@/components/dashboard/rent-management/SetRentModal';
 interface RentersPageProps {
   currentUserId: string;
   defaultTab?: string;
-  documentNotification?: {
-    showDocuments: boolean;
-    documentId?: string;
-    renterId?: string;
-  };
 }
 
-const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab, documentNotification }) => {
+const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab }) => {
   const {
     relationships,
     loading,
@@ -37,7 +32,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab, do
     showSetRentModal,
     setShowSetRentModal,
     renterForRent,
-  } = useRentersManagement(currentUserId, documentNotification);
+  } = useRentersManagement(currentUserId);
 
   const handleModeChange = (mode: 'full' | 'documents' | 'complaints') => {
     setViewMode(mode);
