@@ -170,8 +170,21 @@ serve(async (req) => {
                     (data && (data as any).message_id) || 
                     noticeId;
 
-    // Compute deep link URL with proper record ID
-    const deepLinkUrl = `${baseUrl}${getDeepLinkPath(effectiveType, recordId)}`;
+    // Use provided deep_link_url if available, otherwise compute from type
+    let deepLinkUrl: string;
+    if (data && (data as any).deep_link_url) {
+      // Use the exact deep link URL provided by the caller
+      deepLinkUrl = String((data as any).deep_link_url);
+      // If it's a relative path, prepend base URL
+      if (deepLinkUrl.startsWith('/')) {
+        deepLinkUrl = `${baseUrl}${deepLinkUrl}`;
+      }
+      console.log('✅ Using provided deep_link_url:', deepLinkUrl);
+    } else {
+      // Fallback to computing deep link from type
+      deepLinkUrl = `${baseUrl}${getDeepLinkPath(effectiveType, recordId)}`;
+      console.log('🔄 Generated deep_link_url from type:', deepLinkUrl);
+    }
 
     // Check for duplicate notifications within the last 30 seconds
     const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
