@@ -10,7 +10,14 @@ import {
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { isProfileComplete } from '@/utils/profileUtils';
 
-export const useRentersManagement = (currentUserId: string) => {
+export const useRentersManagement = (
+  currentUserId: string,
+  documentNotification?: {
+    showDocuments: boolean;
+    documentId?: string;
+    renterId?: string;
+  }
+) => {
   const navigate = useNavigate();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +44,18 @@ export const useRentersManagement = (currentUserId: string) => {
   useEffect(() => {
     fetchRelationships();
   }, [fetchRelationships]);
+
+  // Handle document notification navigation
+  useEffect(() => {
+    if (documentNotification?.showDocuments && documentNotification.renterId && relationships.length > 0) {
+      const renterRelationship = relationships.find(r => r.renter_id === documentNotification.renterId);
+      if (renterRelationship) {
+        setSelectedRelationship(renterRelationship);
+        setSelectedTab('documents');
+        setViewMode('documents');
+      }
+    }
+  }, [documentNotification, relationships]);
 
   const handleAccept = async (relationshipId: string) => {
     // Check if basic profile is complete before accepting

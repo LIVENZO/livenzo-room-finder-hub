@@ -13,10 +13,17 @@ const Connections = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isOwner = userRole === 'owner';
-  const notificationState = location.state;
+  const notificationState = location.state as any;
   const [defaultTab, setDefaultTab] = React.useState<string | undefined>(
-    (notificationState as any)?.defaultTab
+    notificationState?.defaultTab
   );
+  
+  // Extract document notification data
+  const documentNotification = notificationState?.showDocuments ? {
+    showDocuments: true,
+    documentId: notificationState.documentId,
+    renterId: notificationState.renterId
+  } : undefined;
   useEffect(() => {
     if (!isLoading && !user?.id) {
       navigate('/');
@@ -54,7 +61,11 @@ const Connections = () => {
         </div>
         
         {isOwner ? (
-          <RentersPage currentUserId={user.id} defaultTab={defaultTab} />
+          <RentersPage 
+            currentUserId={user.id} 
+            defaultTab={defaultTab}
+            documentNotification={documentNotification}
+          />
         ) : (
           <ConnectWithOwner currentUserId={user.id} />
         )}
