@@ -27,9 +27,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <Home className="w-6 h-6 text-black peer-checked:text-white" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
-                  Property Owner
-                </h3>
+                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">Hostel/Pg Owner</h3>
                 
               </div>
               <div className="flex-shrink-0">
