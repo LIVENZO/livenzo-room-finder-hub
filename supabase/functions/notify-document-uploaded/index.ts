@@ -49,26 +49,29 @@ serve(async (req) => {
     // Get renter profile info for notification
     const { data: renterProfile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('full_name')
+      .select('full_name, hostel_pg_name')
       .eq('id', relationship.renter_id)
       .single();
 
-    const renterName = renterProfile?.full_name || 'Renter';
+    // Prefer full_name for renters, fallback to hostel_pg_name
+    const renterName = renterProfile?.full_name || renterProfile?.hostel_pg_name || 'Renter';
 
-    // Send notification to the owner
+    // Send notification to the owner with emoji and deep link
     const notificationResponse = await supabase.functions.invoke('send-notification', {
       body: {
         userId: relationship.owner_id,
-        title: 'New Document Uploaded',
-        body: `${renterName} uploaded a new ${document.document_type} document`,
+        title: '📄 New Document Received!',
+        body: `Your renter ${renterName} has uploaded a new document. Tap to view now!`,
         type: 'document',
+        recordId: relationship.renter_id,
         data: {
           type: 'document',
           document_id: document.id,
           document_type: document.document_type,
           renter_id: relationship.renter_id,
           relationship_id: document.relationship_id,
-          file_name: document.file_name
+          file_name: document.file_name,
+          deep_link_url: `/connections?showDocuments=true&documentId=${document.id}&renterId=${relationship.renter_id}`
         }
       }
     });

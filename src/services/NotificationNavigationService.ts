@@ -76,6 +76,7 @@ export class NotificationNavigationService {
               console.log('📄 Highlighting documents tab');
               state.showDocuments = true;
               state.documentId = urlParams.get('documentId') || data.document_id;
+              state.renterId = urlParams.get('renterId') || data.renter_id;
             }
             
             if (urlParams?.get('showRequests') === 'true') {
@@ -146,7 +147,11 @@ export class NotificationNavigationService {
       case 'document_uploaded':
         console.log('📄 Document notification - opening connections');
         this.navigate('/connections', {
-          state: { showDocuments: true },
+          state: { 
+            showDocuments: true,
+            documentId: data.document_id,
+            renterId: data.renter_id
+          },
           replace: true,
         });
         break;
