@@ -68,12 +68,14 @@ export class NotificationNavigationService {
             
             if (urlParams?.get('showComplaints') === 'true') {
               console.log('⚠️ Highlighting complaints tab');
+              state.defaultTab = 'complaints';
               state.highlightComplaint = urlParams.get('complaintId') || data.complaint_id;
               state.relationshipId = data.relationship_id;
             }
             
             if (urlParams?.get('showDocuments') === 'true') {
               console.log('📄 Highlighting documents tab');
+              state.defaultTab = 'documents';
               state.showDocuments = true;
               state.documentId = urlParams.get('documentId') || data.document_id;
               state.renterId = urlParams.get('renterId') || data.renter_id;
@@ -124,9 +126,10 @@ export class NotificationNavigationService {
         break;
       case 'complaint':
       case 'complaint_update':
-        console.log('⚠️ Complaint notification - opening connections');
+        console.log('⚠️ Complaint notification - opening connections with complaints tab');
         this.navigate('/connections', {
           state: {
+            defaultTab: 'complaints',
             highlightComplaint: data.complaint_id,
             relationshipId: data.relationship_id,
           },
@@ -145,9 +148,10 @@ export class NotificationNavigationService {
       case 'document':
       case 'new_document':
       case 'document_uploaded':
-        console.log('📄 Document notification - opening connections');
+        console.log('📄 Document notification - opening connections with documents tab');
         this.navigate('/connections', {
           state: { 
+            defaultTab: 'documents',
             showDocuments: true,
             documentId: data.document_id,
             renterId: data.renter_id

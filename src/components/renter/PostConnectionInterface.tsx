@@ -8,7 +8,7 @@ import { Relationship } from '@/types/relationship';
 import DocumentsTab from './post-connection/DocumentsTab';
 import ComplaintsTab from './post-connection/ComplaintsTab';
 import RenterDisconnectButton from './RenterDisconnectButton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRelationships } from '@/hooks/useRelationships';
 interface PostConnectionInterfaceProps {
   relationship: Relationship;
@@ -19,6 +19,10 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
   currentUserId
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get default tab from navigation state (for deep linking from notifications)
+  const defaultTab = (location.state as any)?.defaultTab || 'documents';
 
   // Use the relationship hook to get documents and handlers
   const {
@@ -72,7 +76,7 @@ const PostConnectionInterface: React.FC<PostConnectionInterfaceProps> = ({
       </Card>
 
       {/* Management Tabs */}
-      <Tabs defaultValue="documents" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
