@@ -29,10 +29,34 @@ export class NotificationNavigationService {
     // Handle deep link URLs first (primary method)
     if (data.deep_link_url) {
       try {
-        const url = new URL(data.deep_link_url);
+        const url = (data.deep_link_url.startsWith('http') || data.deep_link_url.includes('://'))
+          ? new URL(data.deep_link_url)
+          : new URL(data.deep_link_url, window.location.origin);
         const path = url.pathname;
         
         console.log('🚀 Navigating via deep link to path:', path);
+        
+        // Handle document/renter-documents deep links explicitly
+        if (path.startsWith('/renter-documents') || path.startsWith('/documents')) {
+          const parts = path.split('/').filter(Boolean);
+          // /documents/:renterId pattern
+          const renterIdFromPath = parts[0] === 'documents' && parts[1] ? parts[1] : undefined;
+          const renterId = renterIdFromPath || url.searchParams?.get('renter_id') || url.searchParams?.get('renterId') || data.renter_id;
+          const documentId = url.searchParams?.get('document_id') || url.searchParams?.get('documentId') || data.document_id;
+          const relationshipId = url.searchParams?.get('relationship_id') || url.searchParams?.get('relationshipId') || data.relationship_id;
+          console.log('📄 Deep link -> documents route', { renterId, documentId, relationshipId });
+          this.navigate('/connections', {
+            state: {
+              defaultTab: 'connected',
+              showDocuments: true,
+              renterId,
+              documentId,
+              relationshipId,
+            },
+            replace: true,
+          });
+          return;
+        }
         
         // Map deep link paths to app routes
         switch (path) {
