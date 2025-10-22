@@ -149,12 +149,18 @@ export class NotificationNavigationService {
       case 'new_document':
       case 'document_uploaded':
         console.log('📄 Document notification - opening connections with documents tab');
+        console.log('📄 Document data:', { 
+          documentId: data.document_id, 
+          renterId: data.renter_id,
+          relationshipId: data.relationship_id 
+        });
         this.navigate('/connections', {
           state: { 
-            defaultTab: 'documents',
+            defaultTab: 'connected', // Open connected tab for owners
             showDocuments: true,
             documentId: data.document_id,
-            renterId: data.renter_id
+            renterId: data.renter_id,
+            relationshipId: data.relationship_id
           },
           replace: true,
         });
