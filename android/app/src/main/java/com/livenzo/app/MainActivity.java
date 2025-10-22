@@ -226,8 +226,8 @@ public class MainActivity extends BridgeActivity {
         if (intent != null && intent.getExtras() != null) {
             Bundle extras = intent.getExtras();
             
-            // Check if this intent has notification data
-            if (extras.containsKey("type")) {
+            // Check if this intent has notification data (type or deep link or notification id)
+            if (extras.containsKey("type") || extras.containsKey("deep_link_url") || extras.containsKey("notification_id")) {
                 try {
                     JSONObject notificationJson = new JSONObject();
                     
