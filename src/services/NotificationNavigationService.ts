@@ -29,34 +29,10 @@ export class NotificationNavigationService {
     // Handle deep link URLs first (primary method)
     if (data.deep_link_url) {
       try {
-        const url = (data.deep_link_url.startsWith('http') || data.deep_link_url.includes('://'))
-          ? new URL(data.deep_link_url)
-          : new URL(data.deep_link_url, window.location.origin);
+        const url = new URL(data.deep_link_url);
         const path = url.pathname;
         
         console.log('🚀 Navigating via deep link to path:', path);
-        
-        // Handle document/renter-documents deep links explicitly
-        if (path.startsWith('/renter-documents') || path.startsWith('/documents')) {
-          const parts = path.split('/').filter(Boolean);
-          // /documents/:renterId pattern
-          const renterIdFromPath = parts[0] === 'documents' && parts[1] ? parts[1] : undefined;
-          const renterId = renterIdFromPath || url.searchParams?.get('renter_id') || url.searchParams?.get('renterId') || data.renter_id;
-          const documentId = url.searchParams?.get('document_id') || url.searchParams?.get('documentId') || data.document_id;
-          const relationshipId = url.searchParams?.get('relationship_id') || url.searchParams?.get('relationshipId') || data.relationship_id;
-          console.log('📄 Deep link -> documents route', { renterId, documentId, relationshipId });
-          this.navigate('/connections', {
-            state: {
-              defaultTab: 'connected',
-              showDocuments: true,
-              renterId,
-              documentId,
-              relationshipId,
-            },
-            replace: true,
-          });
-          return;
-        }
         
         // Map deep link paths to app routes
         switch (path) {
@@ -92,14 +68,12 @@ export class NotificationNavigationService {
             
             if (urlParams?.get('showComplaints') === 'true') {
               console.log('⚠️ Highlighting complaints tab');
-              state.defaultTab = 'complaints';
               state.highlightComplaint = urlParams.get('complaintId') || data.complaint_id;
               state.relationshipId = data.relationship_id;
             }
             
             if (urlParams?.get('showDocuments') === 'true') {
               console.log('📄 Highlighting documents tab');
-              state.defaultTab = 'documents';
               state.showDocuments = true;
               state.documentId = urlParams.get('documentId') || data.document_id;
               state.renterId = urlParams.get('renterId') || data.renter_id;
@@ -150,10 +124,9 @@ export class NotificationNavigationService {
         break;
       case 'complaint':
       case 'complaint_update':
-        console.log('⚠️ Complaint notification - opening connections with complaints tab');
+        console.log('⚠️ Complaint notification - opening connections');
         this.navigate('/connections', {
           state: {
-            defaultTab: 'complaints',
             highlightComplaint: data.complaint_id,
             relationshipId: data.relationship_id,
           },
@@ -172,19 +145,12 @@ export class NotificationNavigationService {
       case 'document':
       case 'new_document':
       case 'document_uploaded':
-        console.log('📄 Document notification - opening connections with documents tab');
-        console.log('📄 Document data:', { 
-          documentId: data.document_id, 
-          renterId: data.renter_id,
-          relationshipId: data.relationship_id 
-        });
+        console.log('📄 Document notification - opening connections');
         this.navigate('/connections', {
           state: { 
-            defaultTab: 'connected', // Open connected tab for owners
             showDocuments: true,
             documentId: data.document_id,
-            renterId: data.renter_id,
-            relationshipId: data.relationship_id
+            renterId: data.renter_id
           },
           replace: true,
         });
