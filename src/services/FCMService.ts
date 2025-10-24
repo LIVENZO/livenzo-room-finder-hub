@@ -75,7 +75,7 @@ export const storePendingFCMToken = (token: string): void => {
 };
 
   /**
-   * Registers FCM token for the current user using safe database function
+   * Registers FCM token for the current user using edge function
    */
   export const registerFCMToken = async (token: string): Promise<boolean> => {
     try {
@@ -92,68 +92,55 @@ export const storePendingFCMToken = (token: string): void => {
         return false;
       }
 
-      // Check if the existing token is the same
-      const { data: existingTokens, error: fetchError } = await supabase
-        .from('fcm_tokens')
-        .select('token')
-        .eq('user_id', user.id)
-        .limit(1);
-
-      if (fetchError) {
-        console.warn("⚠️ Error fetching existing token:", fetchError.message);
-        // Continue with save attempt even if fetch fails
-      } else if (existingTokens && existingTokens.length > 0) {
-        const existingToken = existingTokens[0].token;
-        if (existingToken === token) {
-          console.log("✅ Token already exists and is the same, skipping save");
-          return true;
-        }
-        console.log("🔄 Token is different, will update");
-      }
-
       console.log("🔥 Registering FCM token for user:", user.id);
 
       // Get device ID
       const deviceId = getDeviceId();
       console.log("📱 Using device ID:", deviceId);
 
-      // Use direct insert with upsert since RPC function might not exist yet
-      const { error: insertError } = await supabase
-        .from('fcm_tokens')
-        .upsert({
+      // Call the edge function to save the token (bypasses RLS using service role)
+      const { data, error } = await supabase.functions.invoke('save-fcm-token', {
+        body: {
           user_id: user.id,
           token: token,
-          device_id: deviceId,
-          created_at: new Date().toISOString()
-        }, {
-          onConflict: 'device_id',
-          ignoreDuplicates: false
-        });
+          device_id: deviceId
+        }
+      });
 
-      if (insertError) {
-        console.error("❌ Failed to register FCM token:", insertError);
+      if (error) {
+        console.error("❌ Failed to register FCM token via edge function:", error);
         return false;
       }
 
-      console.log("✅ Token registered successfully:", {
+      if (!data?.success) {
+        console.error("❌ Edge function returned failure:", data);
+        return false;
+      }
+
+      console.log("✅ Token registered successfully via edge function:", {
         user_id: user.id,
         device_id: deviceId,
         token: token.substring(0, 20) + '...'
       });
 
       // Also update user_profiles.fcm_token for backward compatibility
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({ fcm_token: token } as any)
-        .eq('id', user.id);
+      try {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .update({ fcm_token: token } as any)
+          .eq('id', user.id);
 
-      if (profileError) {
-        console.warn("⚠️ Error updating FCM token in user_profiles:", profileError.message);
-        // Don't fail here since the main token is saved in fcm_tokens
+        if (profileError) {
+          console.warn("⚠️ Error updating FCM token in user_profiles:", profileError.message);
+          // Don't fail here since the main token is saved in fcm_tokens
+        }
+      } catch (profileUpdateError) {
+        console.warn("⚠️ Exception updating user_profiles:", profileUpdateError);
       }
 
       // Clear pending token since we've successfully saved it
       pendingFCMToken = null;
+      clearPendingFCMToken();
       return true;
     } catch (error) {
       console.error("💥 Exception registering FCM token:", error);

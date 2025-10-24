@@ -212,23 +212,21 @@ export function useAuthState() {
                   }
                 };
 
-                // Save FCM token to Supabase with device_id
-                const { error } = await supabase
-                  .from("fcm_tokens")
-                  .upsert(
-                    { 
-                      user_id: currentSession.user.id, 
-                      token,
-                      device_id: getDeviceId(),
-                      created_at: new Date().toISOString()
-                    },
-                    { onConflict: "device_id", ignoreDuplicates: false }
-                  );
+                // Save FCM token via edge function (bypasses RLS with service role)
+                const { data, error } = await supabase.functions.invoke('save-fcm-token', {
+                  body: {
+                    user_id: currentSession.user.id,
+                    token: token,
+                    device_id: getDeviceId()
+                  }
+                });
                 
                 if (error) {
-                  console.error("Error saving FCM token:", error);
+                  console.error("Error saving FCM token via edge function:", error);
+                } else if (!data?.success) {
+                  console.error("Edge function returned failure:", data);
                 } else {
-                  console.log("FCM token registered successfully");
+                  console.log("✅ FCM token registered successfully via edge function");
                 }
               }
             }
