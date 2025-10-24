@@ -46,3 +46,6 @@ verify_jwt = false
 
 [functions.get-firebase-config]
 verify_jwt = false
+
+[functions.save-fcm-token]
+verify_jwt = false
