@@ -5,11 +5,31 @@ export interface FCMToken {
   id: string;
   user_id: string;
   token: string;
+  device_id: string;
   created_at: string;
 }
 
 // Temporary storage for FCM token before user login (with localStorage persistence)
 let pendingFCMToken: string | null = null;
+
+/**
+ * Gets or generates a unique device ID for this device
+ */
+const getDeviceId = (): string => {
+  try {
+    let deviceId = localStorage.getItem('fcm_device_id');
+    if (!deviceId) {
+      // Generate a new UUID for this device
+      deviceId = crypto.randomUUID();
+      localStorage.setItem('fcm_device_id', deviceId);
+      console.log("📱 Generated new device ID:", deviceId);
+    }
+    return deviceId;
+  } catch (error) {
+    console.warn("Could not access localStorage for device ID, using session UUID:", error);
+    return crypto.randomUUID();
+  }
+};
 
 /**
  * Gets pending token from memory or localStorage
@@ -93,19 +113,31 @@ export const storePendingFCMToken = (token: string): void => {
 
       console.log("🔥 Registering FCM token for user:", user.id);
 
-      // Use the safe database function to handle token upsert
-      const { error: functionError } = await supabase.rpc('upsert_fcm_token_safe', {
-        p_user_id: user.id,
-        p_token: token
-      });
+      // Get device ID
+      const deviceId = getDeviceId();
+      console.log("📱 Using device ID:", deviceId);
 
-      if (functionError) {
-        console.error("❌ Failed to register FCM token via function:", functionError);
+      // Use direct insert with upsert since RPC function might not exist yet
+      const { error: insertError } = await supabase
+        .from('fcm_tokens')
+        .upsert({
+          user_id: user.id,
+          token: token,
+          device_id: deviceId,
+          created_at: new Date().toISOString()
+        }, {
+          onConflict: 'device_id',
+          ignoreDuplicates: false
+        });
+
+      if (insertError) {
+        console.error("❌ Failed to register FCM token:", insertError);
         return false;
       }
 
-      console.log("✅ Token registered successfully via safe function:", {
+      console.log("✅ Token registered successfully:", {
         user_id: user.id,
+        device_id: deviceId,
         token: token.substring(0, 20) + '...'
       });
 

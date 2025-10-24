@@ -280,7 +280,6 @@ export type Database = {
           device_id: string
           id: string
           token: string
-          updated_at: number | null
           user_id: string
         }
         Insert: {
@@ -288,7 +287,6 @@ export type Database = {
           device_id: string
           id?: string
           token: string
-          updated_at?: number | null
           user_id: string
         }
         Update: {
@@ -296,21 +294,20 @@ export type Database = {
           device_id?: string
           id?: string
           token?: string
-          updated_at?: number | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "safe_profile_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },

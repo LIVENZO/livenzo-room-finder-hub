@@ -198,12 +198,31 @@ export function useAuthState() {
               if (token) {
                 console.log("Registering FCM token from Android WebView:", token.substring(0, 20) + '...');
                 
-                // Save FCM token to Supabase
+                // Generate or get device ID
+                const getDeviceId = () => {
+                  try {
+                    let deviceId = localStorage.getItem('fcm_device_id');
+                    if (!deviceId) {
+                      deviceId = crypto.randomUUID();
+                      localStorage.setItem('fcm_device_id', deviceId);
+                    }
+                    return deviceId;
+                  } catch {
+                    return crypto.randomUUID();
+                  }
+                };
+
+                // Save FCM token to Supabase with device_id
                 const { error } = await supabase
                   .from("fcm_tokens")
                   .upsert(
-                    { user_id: currentSession.user.id, token },
-                    { onConflict: "user_id,token", ignoreDuplicates: true }
+                    { 
+                      user_id: currentSession.user.id, 
+                      token,
+                      device_id: getDeviceId(),
+                      created_at: new Date().toISOString()
+                    },
+                    { onConflict: "device_id", ignoreDuplicates: false }
                   );
                 
                 if (error) {
