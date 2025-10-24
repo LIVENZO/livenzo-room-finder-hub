@@ -1310,7 +1310,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_stale_fcm_tokens: { Args: never; Returns: undefined }
       cleanup_stale_waiting_sessions: { Args: never; Returns: undefined }
       create_document_record: {
         Args: {
@@ -1459,6 +1458,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_fcm_token: {
+        Args: { p_device_id?: string; p_token: string }
+        Returns: undefined
+      }
       search_user_by_public_id: {
         Args: { search_public_id: string }
         Returns: {
@@ -1506,16 +1509,6 @@ export type Database = {
         Args: { is_available: boolean; room_id: string }
         Returns: undefined
       }
-      upsert_fcm_token: {
-        Args: { p_token: string; p_user_id: string }
-        Returns: undefined
-      }
-      upsert_fcm_token_safe:
-        | {
-            Args: { p_device_id?: string; p_token: string; p_user_id: string }
-            Returns: undefined
-          }
-        | { Args: { p_token: string; p_user_id: string }; Returns: undefined }
       validate_relationship_access: {
         Args: { relationship_uuid: string; user_uuid: string }
         Returns: boolean
