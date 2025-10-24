@@ -5,31 +5,11 @@ export interface FCMToken {
   id: string;
   user_id: string;
   token: string;
-  device_id: string;
   created_at: string;
 }
 
 // Temporary storage for FCM token before user login (with localStorage persistence)
 let pendingFCMToken: string | null = null;
-
-/**
- * Gets or generates a unique device ID for this device
- */
-const getDeviceId = (): string => {
-  try {
-    let deviceId = localStorage.getItem('fcm_device_id');
-    if (!deviceId) {
-      // Generate a new UUID for this device
-      deviceId = crypto.randomUUID();
-      localStorage.setItem('fcm_device_id', deviceId);
-      console.log("📱 Generated new device ID:", deviceId);
-    }
-    return deviceId;
-  } catch (error) {
-    console.warn("Could not access localStorage for device ID, using session UUID:", error);
-    return crypto.randomUUID();
-  }
-};
 
 /**
  * Gets pending token from memory or localStorage
@@ -75,7 +55,7 @@ export const storePendingFCMToken = (token: string): void => {
 };
 
   /**
-   * Registers FCM token for the current user using edge function
+   * Registers FCM token for the current user using safe database function
    */
   export const registerFCMToken = async (token: string): Promise<boolean> => {
     try {
@@ -92,55 +72,56 @@ export const storePendingFCMToken = (token: string): void => {
         return false;
       }
 
+      // Check if the existing token is the same
+      const { data: existingTokens, error: fetchError } = await supabase
+        .from('fcm_tokens')
+        .select('token')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (fetchError) {
+        console.warn("⚠️ Error fetching existing token:", fetchError.message);
+        // Continue with save attempt even if fetch fails
+      } else if (existingTokens && existingTokens.length > 0) {
+        const existingToken = existingTokens[0].token;
+        if (existingToken === token) {
+          console.log("✅ Token already exists and is the same, skipping save");
+          return true;
+        }
+        console.log("🔄 Token is different, will update");
+      }
+
       console.log("🔥 Registering FCM token for user:", user.id);
 
-      // Get device ID
-      const deviceId = getDeviceId();
-      console.log("📱 Using device ID:", deviceId);
-
-      // Call the edge function to save the token (bypasses RLS using service role)
-      const { data, error } = await supabase.functions.invoke('save-fcm-token', {
-        body: {
-          user_id: user.id,
-          token: token,
-          device_id: deviceId
-        }
+      // Use the safe database function to handle token upsert
+      const { error: functionError } = await supabase.rpc('upsert_fcm_token_safe', {
+        p_user_id: user.id,
+        p_token: token
       });
 
-      if (error) {
-        console.error("❌ Failed to register FCM token via edge function:", error);
+      if (functionError) {
+        console.error("❌ Failed to register FCM token via function:", functionError);
         return false;
       }
 
-      if (!data?.success) {
-        console.error("❌ Edge function returned failure:", data);
-        return false;
-      }
-
-      console.log("✅ Token registered successfully via edge function:", {
+      console.log("✅ Token registered successfully via safe function:", {
         user_id: user.id,
-        device_id: deviceId,
         token: token.substring(0, 20) + '...'
       });
 
       // Also update user_profiles.fcm_token for backward compatibility
-      try {
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .update({ fcm_token: token } as any)
-          .eq('id', user.id);
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({ fcm_token: token } as any)
+        .eq('id', user.id);
 
-        if (profileError) {
-          console.warn("⚠️ Error updating FCM token in user_profiles:", profileError.message);
-          // Don't fail here since the main token is saved in fcm_tokens
-        }
-      } catch (profileUpdateError) {
-        console.warn("⚠️ Exception updating user_profiles:", profileUpdateError);
+      if (profileError) {
+        console.warn("⚠️ Error updating FCM token in user_profiles:", profileError.message);
+        // Don't fail here since the main token is saved in fcm_tokens
       }
 
       // Clear pending token since we've successfully saved it
       pendingFCMToken = null;
-      clearPendingFCMToken();
       return true;
     } catch (error) {
       console.error("💥 Exception registering FCM token:", error);

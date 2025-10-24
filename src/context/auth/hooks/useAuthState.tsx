@@ -198,35 +198,18 @@ export function useAuthState() {
               if (token) {
                 console.log("Registering FCM token from Android WebView:", token.substring(0, 20) + '...');
                 
-                // Generate or get device ID
-                const getDeviceId = () => {
-                  try {
-                    let deviceId = localStorage.getItem('fcm_device_id');
-                    if (!deviceId) {
-                      deviceId = crypto.randomUUID();
-                      localStorage.setItem('fcm_device_id', deviceId);
-                    }
-                    return deviceId;
-                  } catch {
-                    return crypto.randomUUID();
-                  }
-                };
-
-                // Save FCM token via edge function (bypasses RLS with service role)
-                const { data, error } = await supabase.functions.invoke('save-fcm-token', {
-                  body: {
-                    user_id: currentSession.user.id,
-                    token: token,
-                    device_id: getDeviceId()
-                  }
-                });
+                // Save FCM token to Supabase
+                const { error } = await supabase
+                  .from("fcm_tokens")
+                  .upsert(
+                    { user_id: currentSession.user.id, token },
+                    { onConflict: "user_id,token", ignoreDuplicates: true }
+                  );
                 
                 if (error) {
-                  console.error("Error saving FCM token via edge function:", error);
-                } else if (!data?.success) {
-                  console.error("Edge function returned failure:", data);
+                  console.error("Error saving FCM token:", error);
                 } else {
-                  console.log("✅ FCM token registered successfully via edge function");
+                  console.log("FCM token registered successfully");
                 }
               }
             }
