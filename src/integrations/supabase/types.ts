@@ -277,34 +277,40 @@ export type Database = {
       fcm_tokens: {
         Row: {
           created_at: string | null
+          device_id: string
           id: string
           token: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          device_id: string
           id?: string
           token: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          device_id?: string
           id?: string
           token?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "safe_profile_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -1040,7 +1046,7 @@ export type Database = {
           details: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string | null
           severity: string | null
@@ -1052,7 +1058,7 @@ export type Database = {
           details?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string | null
           severity?: string | null
@@ -1064,7 +1070,7 @@ export type Database = {
           details?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string | null
           severity?: string | null
@@ -1304,14 +1310,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_stale_fcm_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_stale_waiting_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_stale_fcm_tokens: { Args: never; Returns: undefined }
+      cleanup_stale_waiting_sessions: { Args: never; Returns: undefined }
       create_document_record: {
         Args: {
           p_document_type: string
@@ -1336,6 +1336,12 @@ export type Database = {
           updated_at: string
           user_id: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_owner_notice: {
         Args: { p_message: string; p_renter_id: string; p_title?: string }
@@ -1348,19 +1354,19 @@ export type Database = {
           renter_id: string
           title: string | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "notices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      ensure_unique_public_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      ensure_unique_public_id: { Args: never; Returns: string }
       find_or_create_anonymous_chat: {
         Args: { user_id_param: string }
         Returns: string
       }
-      generate_public_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_public_id: { Args: never; Returns: string }
       get_active_renter_relationships: {
         Args: { renter_user_id: string }
         Returns: {
@@ -1374,10 +1380,7 @@ export type Database = {
           updated_at: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       get_rent_management_with_reset: {
         Args: { p_owner_id?: string }
         Returns: {
@@ -1395,7 +1398,7 @@ export type Database = {
         }[]
       }
       get_room_details_for_authenticated: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           available: boolean
           created_at: string
@@ -1415,7 +1418,7 @@ export type Database = {
         }[]
       }
       get_rooms_public: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           available: boolean
           created_at: string
@@ -1440,10 +1443,7 @@ export type Database = {
           token: string
         }[]
       }
-      get_user_role: {
-        Args: { user_uuid: string }
-        Returns: string
-      }
+      get_user_role: { Args: { user_uuid: string }; Returns: string }
       log_profile_access_attempt: {
         Args: { access_granted: boolean; target_user_id: string }
         Returns: undefined
@@ -1495,6 +1495,12 @@ export type Database = {
           title: string
           updated_at: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "complaints"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }
@@ -1504,10 +1510,12 @@ export type Database = {
         Args: { p_token: string; p_user_id: string }
         Returns: undefined
       }
-      upsert_fcm_token_safe: {
-        Args: { p_token: string; p_user_id: string }
-        Returns: undefined
-      }
+      upsert_fcm_token_safe:
+        | {
+            Args: { p_device_id?: string; p_token: string; p_user_id: string }
+            Returns: undefined
+          }
+        | { Args: { p_token: string; p_user_id: string }; Returns: undefined }
       validate_relationship_access: {
         Args: { relationship_uuid: string; user_uuid: string }
         Returns: boolean
