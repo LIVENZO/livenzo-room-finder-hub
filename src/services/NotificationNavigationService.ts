@@ -52,14 +52,15 @@ export class NotificationNavigationService {
               replace: true
             });
             break;
-          case path.startsWith('/renters/'):
+          case path.startsWith('/connections/'):
             console.log('👥 Opening renter detail page');
-            const relationshipId = path.split('/renters/')[1];
+            const relationshipId = path.split('/connections/')[1];
             this.navigate(path, {
               state: {
                 relationshipId,
                 documentId: data.document_id,
-                complaintId: data.complaint_id
+                complaintId: data.complaint_id,
+                openRenterDetail: true
               },
               replace: true
             });

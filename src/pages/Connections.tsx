@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
 import RentersPage from '@/components/owner/RentersPage';
 const Connections = () => {
@@ -12,11 +12,20 @@ const Connections = () => {
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { relationshipId } = useParams<{ relationshipId: string }>();
   const isOwner = userRole === 'owner';
   const notificationState = location.state as any;
   const [defaultTab, setDefaultTab] = React.useState<string | undefined>(
     notificationState?.defaultTab
   );
+  
+  // Extract notification data for specific renter navigation
+  const specificRenterData = relationshipId && notificationState?.openRenterDetail ? {
+    relationshipId,
+    documentId: notificationState.documentId,
+    complaintId: notificationState.complaintId,
+    openRenterDetail: true
+  } : undefined;
   
   // Extract document notification data
   const documentNotification = notificationState?.showDocuments ? {
@@ -65,6 +74,7 @@ const Connections = () => {
             currentUserId={user.id} 
             defaultTab={defaultTab}
             documentNotification={documentNotification}
+            specificRenterData={specificRenterData}
           />
         ) : (
           <ConnectWithOwner currentUserId={user.id} />

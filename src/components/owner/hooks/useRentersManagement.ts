@@ -16,6 +16,12 @@ export const useRentersManagement = (
     showDocuments: boolean;
     documentId?: string;
     renterId?: string;
+  },
+  specificRenterData?: {
+    relationshipId: string;
+    documentId?: string;
+    complaintId?: string;
+    openRenterDetail: boolean;
   }
 ) => {
   const navigate = useNavigate();
@@ -56,6 +62,28 @@ export const useRentersManagement = (
       }
     }
   }, [documentNotification, relationships]);
+
+  // Handle specific renter navigation from deep link
+  useEffect(() => {
+    if (specificRenterData?.openRenterDetail && specificRenterData.relationshipId && relationships.length > 0) {
+      const renterRelationship = relationships.find(r => r.id === specificRenterData.relationshipId);
+      if (renterRelationship) {
+        setSelectedRelationship(renterRelationship);
+        
+        // Determine which tab to show based on what data is present
+        if (specificRenterData.documentId) {
+          setSelectedTab('documents');
+          setViewMode('documents');
+        } else if (specificRenterData.complaintId) {
+          setSelectedTab('complaints');
+          setViewMode('complaints');
+        } else {
+          setSelectedTab('overview');
+          setViewMode('full');
+        }
+      }
+    }
+  }, [specificRenterData, relationships]);
 
   const handleAccept = async (relationshipId: string) => {
     // Check if basic profile is complete before accepting
