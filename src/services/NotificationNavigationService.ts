@@ -55,7 +55,21 @@ export class NotificationNavigationService {
           case path.startsWith('/connections/'):
             console.log('👥 Opening renter detail page');
             const relationshipId = path.split('/connections/')[1];
-            this.navigate(path, {
+
+            // Build query params so deep links work even on cold start without state
+            const qp = new URLSearchParams();
+            if (data.document_id) {
+              qp.set('showDocuments', 'true');
+              qp.set('documentId', String(data.document_id));
+              if (data.renter_id) qp.set('renterId', String(data.renter_id));
+            }
+            if (data.complaint_id) {
+              qp.set('showComplaints', 'true');
+              qp.set('complaintId', String(data.complaint_id));
+            }
+            const target = qp.toString() ? `${path}?${qp.toString()}` : path;
+
+            this.navigate(target, {
               state: {
                 relationshipId,
                 documentId: data.document_id,

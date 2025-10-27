@@ -15,23 +15,33 @@ const Connections = () => {
   const { relationshipId } = useParams<{ relationshipId: string }>();
   const isOwner = userRole === 'owner';
   const notificationState = location.state as any;
+
+  // Parse query params to support direct deep links without history state
+  const searchParams = new URLSearchParams(location.search);
+  const queryTab = searchParams.get('tab') || undefined;
+  const showDocumentsParam = searchParams.get('showDocuments') === 'true';
+  const showComplaintsParam = searchParams.get('showComplaints') === 'true';
+  const queryDocumentId = searchParams.get('documentId') || undefined;
+  const queryComplaintId = searchParams.get('complaintId') || undefined;
+  const queryRenterId = searchParams.get('renterId') || undefined;
+
   const [defaultTab, setDefaultTab] = React.useState<string | undefined>(
-    notificationState?.defaultTab
+    notificationState?.defaultTab || queryTab
   );
   
-  // Extract notification data for specific renter navigation
-  const specificRenterData = relationshipId && notificationState?.openRenterDetail ? {
+  // Build data for opening a specific renter's detail page
+  const specificRenterData = relationshipId ? {
     relationshipId,
-    documentId: notificationState.documentId,
-    complaintId: notificationState.complaintId,
+    documentId: notificationState?.documentId || (showDocumentsParam ? queryDocumentId : undefined),
+    complaintId: notificationState?.complaintId || (showComplaintsParam ? queryComplaintId : undefined),
     openRenterDetail: true
   } : undefined;
   
-  // Extract document notification data
-  const documentNotification = notificationState?.showDocuments ? {
+  // Extract document notification data (fallback to query params)
+  const documentNotification = (notificationState?.showDocuments || showDocumentsParam) ? {
     showDocuments: true,
-    documentId: notificationState.documentId,
-    renterId: notificationState.renterId
+    documentId: notificationState?.documentId || queryDocumentId,
+    renterId: notificationState?.renterId || queryRenterId
   } : undefined;
   useEffect(() => {
     if (!isLoading && !user?.id) {
