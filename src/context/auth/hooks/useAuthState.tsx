@@ -198,13 +198,11 @@ export function useAuthState() {
               if (token) {
                 console.log("Registering FCM token from Android WebView:", token.substring(0, 20) + '...');
                 
-                // Save FCM token to Supabase
-                const { error } = await supabase
-                  .from("fcm_tokens")
-                  .upsert(
-                    { user_id: currentSession.user.id, token },
-                    { onConflict: "user_id,token", ignoreDuplicates: true }
-                  );
+                // Save FCM token to Supabase using RPC function
+                const { error } = await supabase.rpc('save_fcm_token', {
+                  p_token: token,
+                  p_device_id: null
+                });
                 
                 if (error) {
                   console.error("Error saving FCM token:", error);

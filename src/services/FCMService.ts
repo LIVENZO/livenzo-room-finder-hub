@@ -93,10 +93,10 @@ export const storePendingFCMToken = (token: string): void => {
 
       console.log("🔥 Registering FCM token for user:", user.id);
 
-      // Use the safe database function to handle token upsert
-      const { error: functionError } = await supabase.rpc('upsert_fcm_token_safe', {
-        p_user_id: user.id,
-        p_token: token
+      // Use the save_fcm_token function to handle token registration
+      const { error: functionError } = await supabase.rpc('save_fcm_token', {
+        p_token: token,
+        p_device_id: null
       });
 
       if (functionError) {
