@@ -171,14 +171,16 @@ serve(async (req) => {
       title = '📄 New Document Uploaded';
       body = '📎 A renter uploaded a document for you to review.';
       data.document_id = record.id;
-      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?showDocuments=true&documentId=${record.id}`;
+      data.relationship_id = record.relationship_id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/renters/${record.relationship_id}`;
     } else if (type === 'complaint') {
       targetUserId = record.owner_id ?? null;
       title = '⚠️ New Complaint from Renter';
       const complaintTitle = record.title ? String(record.title) : undefined;
       body = complaintTitle ? `🙋 A renter submitted a complaint: "${complaintTitle}"` : '🙋 A renter submitted a new complaint.';
       data.complaint_id = record.id;
-      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/connections?showComplaints=true&complaintId=${record.id}`;
+      data.relationship_id = record.relationship_id;
+      data.deep_link_url = `https://livenzo-room-finder-hub.lovable.app/renters/${record.relationship_id}`;
     } else if (type === 'payment_reminder') {
       targetUserId = record.renter_id ?? null;
       title = '⚠️ Payment Reminder';

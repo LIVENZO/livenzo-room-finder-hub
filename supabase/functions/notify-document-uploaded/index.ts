@@ -61,7 +61,7 @@ serve(async (req) => {
           renter_id: relationship.renter_id,
           relationship_id: document.relationship_id,
           file_name: document.file_name,
-          deep_link_url: `https://livenzo-room-finder-hub.lovable.app/documents?showDocuments=true&renterId=${relationship.renter_id}`
+          deep_link_url: `https://livenzo-room-finder-hub.lovable.app/renters/${document.relationship_id}`
         }
       }
     });

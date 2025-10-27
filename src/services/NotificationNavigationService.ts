@@ -35,17 +35,15 @@ export class NotificationNavigationService {
         console.log('🚀 Navigating via deep link to path:', path);
         
         // Map deep link paths to app routes
-        switch (path) {
-          case '/payments':
-          case '/payment':
+        switch (true) {
+          case path === '/payments' || path === '/payment':
             console.log('💳 Opening payments page');
             this.navigate('/payments', { 
               state: { pendingPaymentId: data.payment_id },
               replace: true
             });
             break;
-          case '/notices':
-          case '/notice':
+          case path === '/notices' || path === '/notice':
             console.log('📢 Opening notices page');
             const search = url.search || '';
             const noticeIdParam = url.searchParams?.get('id') || data.notice_id;
@@ -54,7 +52,19 @@ export class NotificationNavigationService {
               replace: true
             });
             break;
-          case '/connections':
+          case path.startsWith('/renters/'):
+            console.log('👥 Opening renter detail page');
+            const relationshipId = path.split('/renters/')[1];
+            this.navigate(path, {
+              state: {
+                relationshipId,
+                documentId: data.document_id,
+                complaintId: data.complaint_id
+              },
+              replace: true
+            });
+            break;
+          case path === '/connections':
             console.log('🤝 Opening connections page');
             const urlParams = url.searchParams;
             const state: any = {};
