@@ -17,6 +17,11 @@ interface RentersPageProps {
     documentId?: string;
     renterId?: string;
   };
+  complaintNotification?: {
+    showComplaints: boolean;
+    complaintId?: string;
+    renterId?: string;
+  };
   specificRenterData?: {
     relationshipId: string;
     documentId?: string;
@@ -25,7 +30,13 @@ interface RentersPageProps {
   };
 }
 
-const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab, documentNotification, specificRenterData }) => {
+const RentersPage: React.FC<RentersPageProps> = ({ 
+  currentUserId, 
+  defaultTab, 
+  documentNotification, 
+  complaintNotification,
+  specificRenterData 
+}) => {
   const {
     relationships,
     loading,
@@ -43,7 +54,7 @@ const RentersPage: React.FC<RentersPageProps> = ({ currentUserId, defaultTab, do
     showSetRentModal,
     setShowSetRentModal,
     renterForRent,
-  } = useRentersManagement(currentUserId, documentNotification, specificRenterData);
+  } = useRentersManagement(currentUserId, documentNotification, complaintNotification, specificRenterData);
 
   const handleModeChange = (mode: 'full' | 'documents' | 'complaints') => {
     setViewMode(mode);

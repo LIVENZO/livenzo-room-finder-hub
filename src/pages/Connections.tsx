@@ -43,6 +43,13 @@ const Connections = () => {
     documentId: notificationState?.documentId || queryDocumentId,
     renterId: notificationState?.renterId || queryRenterId
   } : undefined;
+
+  // Extract complaint notification data (fallback to query params)
+  const complaintNotification = (notificationState?.showComplaints || showComplaintsParam) ? {
+    showComplaints: true,
+    complaintId: notificationState?.complaintId || queryComplaintId,
+    renterId: notificationState?.renterId || queryRenterId
+  } : undefined;
   useEffect(() => {
     if (!isLoading && !user?.id) {
       navigate('/');
@@ -84,6 +91,7 @@ const Connections = () => {
             currentUserId={user.id} 
             defaultTab={defaultTab}
             documentNotification={documentNotification}
+            complaintNotification={complaintNotification}
             specificRenterData={specificRenterData}
           />
         ) : (

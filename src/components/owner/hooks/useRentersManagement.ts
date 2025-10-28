@@ -9,12 +9,18 @@ import {
 } from '@/services/relationship';
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { isProfileComplete } from '@/utils/profileUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useRentersManagement = (
   currentUserId: string,
   documentNotification?: {
     showDocuments: boolean;
     documentId?: string;
+    renterId?: string;
+  },
+  complaintNotification?: {
+    showComplaints: boolean;
+    complaintId?: string;
     renterId?: string;
   },
   specificRenterData?: {
@@ -51,38 +57,155 @@ export const useRentersManagement = (
     fetchRelationships();
   }, [fetchRelationships]);
 
-  // Handle document notification navigation
+  // Handle document/complaint notification navigation - auto-fetch renter if needed
   useEffect(() => {
-    if (documentNotification?.showDocuments && documentNotification.renterId && relationships.length > 0) {
-      const renterRelationship = relationships.find(r => r.renter_id === documentNotification.renterId);
-      if (renterRelationship) {
-        setSelectedRelationship(renterRelationship);
-        setSelectedTab('documents');
-        setViewMode('documents');
-      }
-    }
-  }, [documentNotification, relationships]);
+    const handleNotificationNavigation = async () => {
+      if (!documentNotification || relationships.length === 0) return;
 
-  // Handle specific renter navigation from deep link
-  useEffect(() => {
-    if (specificRenterData?.openRenterDetail && specificRenterData.relationshipId && relationships.length > 0) {
-      const renterRelationship = relationships.find(r => r.id === specificRenterData.relationshipId);
-      if (renterRelationship) {
-        setSelectedRelationship(renterRelationship);
-        
-        // Determine which tab to show based on what data is present
-        if (specificRenterData.documentId) {
-          setSelectedTab('documents');
-          setViewMode('documents');
-        } else if (specificRenterData.complaintId) {
-          setSelectedTab('complaints');
-          setViewMode('complaints');
-        } else {
-          setSelectedTab('overview');
-          setViewMode('full');
+      let targetRelationship: Relationship | undefined;
+
+      // If we have renterId, find by renterId
+      if (documentNotification.renterId) {
+        targetRelationship = relationships.find(r => 
+          r.renter_id === documentNotification.renterId && r.status === 'accepted'
+        );
+      }
+      // If we have documentId but no renterId, fetch relationship from document
+      else if (documentNotification.documentId) {
+        try {
+          const { data, error } = await supabase
+            .from('documents')
+            .select('relationship_id')
+            .eq('id', documentNotification.documentId)
+            .single();
+
+          if (error) throw error;
+          if (data?.relationship_id) {
+            targetRelationship = relationships.find(r => r.id === data.relationship_id);
+          }
+        } catch (error) {
+          console.error('Error fetching document relationship:', error);
+          toast.error('Could not find the document');
+          return;
         }
       }
-    }
+
+      // Open the relationship
+      if (targetRelationship) {
+        setSelectedRelationship(targetRelationship);
+        setSelectedTab('documents');
+        setViewMode('documents');
+      } else if (documentNotification.documentId || documentNotification.renterId) {
+        toast.error('Renter connection not found');
+      }
+    };
+
+    handleNotificationNavigation();
+  }, [documentNotification, relationships]);
+
+  // Handle complaint notification navigation - auto-fetch renter if needed
+  useEffect(() => {
+    const handleComplaintNavigation = async () => {
+      if (!complaintNotification || relationships.length === 0) return;
+
+      let targetRelationship: Relationship | undefined;
+
+      // If we have renterId, find by renterId
+      if (complaintNotification.renterId) {
+        targetRelationship = relationships.find(r => 
+          r.renter_id === complaintNotification.renterId && r.status === 'accepted'
+        );
+      }
+      // If we have complaintId but no renterId, fetch relationship from complaint
+      else if (complaintNotification.complaintId) {
+        try {
+          const { data, error } = await supabase
+            .from('complaints')
+            .select('relationship_id, renter_id')
+            .eq('id', complaintNotification.complaintId)
+            .single();
+
+          if (error) throw error;
+          if (data?.relationship_id) {
+            targetRelationship = relationships.find(r => r.id === data.relationship_id);
+          }
+        } catch (error) {
+          console.error('Error fetching complaint relationship:', error);
+          toast.error('Could not find the complaint');
+          return;
+        }
+      }
+
+      // Open the relationship
+      if (targetRelationship) {
+        setSelectedRelationship(targetRelationship);
+        setSelectedTab('complaints');
+        setViewMode('complaints');
+      } else if (complaintNotification.complaintId || complaintNotification.renterId) {
+        toast.error('Renter connection not found');
+      }
+    };
+
+    handleComplaintNavigation();
+  }, [complaintNotification, relationships]);
+
+  // Handle specific renter navigation from deep link or complaint notifications
+  useEffect(() => {
+    const handleSpecificRenterNavigation = async () => {
+      if (!specificRenterData?.openRenterDetail || relationships.length === 0) return;
+
+      let relationshipId = specificRenterData.relationshipId;
+
+      // If we have a complaintId but no relationshipId, fetch it
+      if (!relationshipId && specificRenterData.complaintId) {
+        try {
+          const { data, error } = await supabase
+            .from('complaints')
+            .select('relationship_id, renter_id')
+            .eq('id', specificRenterData.complaintId)
+            .single();
+
+          if (error) throw error;
+          if (data) {
+            // Find relationship by renter_id
+            const renterRelationship = relationships.find(r => 
+              r.renter_id === data.renter_id && r.status === 'accepted'
+            );
+            if (renterRelationship) {
+              relationshipId = renterRelationship.id;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching complaint relationship:', error);
+          toast.error('Could not find the complaint');
+          return;
+        }
+      }
+
+      // Find and open the relationship
+      if (relationshipId) {
+        const renterRelationship = relationships.find(r => r.id === relationshipId);
+        if (renterRelationship) {
+          setSelectedRelationship(renterRelationship);
+          
+          // Determine which tab to show based on what data is present
+          if (specificRenterData.documentId) {
+            setSelectedTab('documents');
+            setViewMode('documents');
+          } else if (specificRenterData.complaintId) {
+            setSelectedTab('complaints');
+            setViewMode('complaints');
+          } else {
+            setSelectedTab('overview');
+            setViewMode('full');
+          }
+        } else {
+          toast.error('Renter connection not found');
+        }
+      }
+    };
+
+    handleSpecificRenterNavigation();
   }, [specificRenterData, relationships]);
 
   const handleAccept = async (relationshipId: string) => {
