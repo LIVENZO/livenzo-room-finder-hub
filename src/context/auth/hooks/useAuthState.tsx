@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ export function useAuthState() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [canChangeRole, setCanChangeRole] = useState<boolean>(true);
+  const initialSessionChecked = useRef(false);
   
   // Derived properties
   const isOwner = userRole === 'owner';
@@ -243,8 +244,8 @@ export function useAuthState() {
         }, 0);
       }
       
-      // Show success message after a short delay to ensure UI is responsive
-      if (event === 'SIGNED_IN') {
+      // Show success message only for fresh logins, not session restoration
+      if (event === 'SIGNED_IN' && initialSessionChecked.current) {
         setTimeout(() => {
           toast.success("Successfully signed in!");
         }, 500);
@@ -303,6 +304,7 @@ export function useAuthState() {
       console.error("Error checking session:", error);
     } finally {
       setIsLoading(false);
+      initialSessionChecked.current = true;
     }
   }, [redirectToDashboard, setupUserRole]);
 
