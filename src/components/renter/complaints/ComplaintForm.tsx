@@ -27,43 +27,12 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({
   const [complaintDescription, setComplaintDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Enhanced input validation
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const validationResult = EnhancedValidator.validateAndSanitize(value, 'safeName', {
-      required: true,
-      minLength: 5,
-      maxLength: 100
-    });
-    
-    if (validationResult.securityIssue) {
-      securityMonitor.logSuspiciousActivity('form_injection_attempt', {
-        field: 'complaint_title',
-        value: value.substring(0, 50),
-        action: 'complaint_form_input'
-      });
-      toast.error('Invalid input detected in title field');
-      return;
-    }
-    
-    setComplaintTitle(validationResult.sanitizedValue || value);
+    setComplaintTitle(e.target.value);
   };
   
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    const validationResult = EnhancedValidator.validateDescription(value, true);
-    
-    if (validationResult.securityIssue) {
-      securityMonitor.logSuspiciousActivity('form_injection_attempt', {
-        field: 'complaint_description',
-        value: value.substring(0, 50),
-        action: 'complaint_form_input'
-      });
-      toast.error('Invalid input detected in description field');
-      return;
-    }
-    
-    setComplaintDescription(validationResult.sanitizedValue || value);
+    setComplaintDescription(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
