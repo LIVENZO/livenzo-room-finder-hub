@@ -1,10 +1,19 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { LogOut, Home, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/auth';
 import { useNavItems } from '@/hooks/use-nav-items';
 
@@ -13,10 +22,12 @@ const SideBar: React.FC = () => {
   const location = useLocation();
   const { logout, userRole } = useAuth();
   const { filteredNavItems } = useNavItems();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
   const handleLogout = () => {
     logout();
     navigate('/');
+    setShowLogoutDialog(false);
   };
   
   const isActive = (path: string) => {
@@ -73,7 +84,7 @@ const SideBar: React.FC = () => {
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 h-12 text-white/70 hover:text-white hover:bg-red-500/20 transition-all duration-200"
-            onClick={handleLogout}
+            onClick={() => setShowLogoutDialog(true)}
             data-native-logout
           >
             <LogOut size={20} />
@@ -86,6 +97,21 @@ const SideBar: React.FC = () => {
           <Zap className="h-8 w-8 text-white animate-float" />
         </div>
       </div>
+      
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 };

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { LogOut } from 'lucide-react';
@@ -11,6 +10,16 @@ import {
   SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useNavItems } from '@/hooks/use-nav-items';
 
@@ -19,10 +28,12 @@ const MobileMenu: React.FC = () => {
   const location = useLocation();
   const { logout } = useAuth();
   const { filteredNavItems } = useNavItems();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
   const handleLogout = () => {
     logout();
     navigate('/');
+    setShowLogoutDialog(false);
   };
   
   const isActive = (path: string) => {
@@ -51,11 +62,31 @@ const MobileMenu: React.FC = () => {
           </SheetClose>
         ))}
         <Separator className="my-2" />
-        <Button variant="ghost" className="justify-start gap-2" onClick={handleLogout} data-native-logout>
+        <Button 
+          variant="ghost" 
+          className="justify-start gap-2" 
+          onClick={() => setShowLogoutDialog(true)} 
+          data-native-logout
+        >
           <LogOut size={20} />
           Logout
         </Button>
       </div>
+      
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SheetContent>
   );
 };
