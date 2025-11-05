@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Wifi, Bath, User, Users, BedSingle, BedDouble } from 'lucide-react';
+import { Wifi, Bath, User, Users, BedSingle, BedDouble, Wind, Snowflake } from 'lucide-react';
 import { Room } from '@/types/room';
 
 interface RoomFacilityBadgesProps {
@@ -41,6 +41,17 @@ const RoomFacilityBadges: React.FC<RoomFacilityBadgesProps> = ({ room }) => {
         return <BedSingle className="h-4 w-4 mr-1" />;
     }
   };
+  
+  const getCoolingTypeIcon = () => {
+    switch (room.facilities.coolingType) {
+      case 'ac':
+        return <Snowflake className="h-4 w-4 mr-1" />;
+      case 'cooler':
+        return <Wind className="h-4 w-4 mr-1" />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
@@ -62,6 +73,12 @@ const RoomFacilityBadges: React.FC<RoomFacilityBadgesProps> = ({ room }) => {
         <Badge variant="outline" className="flex items-center">
           <Bath className="h-4 w-4 mr-1" />
           Connected Bathroom
+        </Badge>
+      )}
+      {room.facilities.coolingType && (
+        <Badge variant="outline" className="flex items-center">
+          {getCoolingTypeIcon()}
+          {room.facilities.coolingType === 'ac' ? 'AC Room' : 'Cooler Room'}
         </Badge>
       )}
     </>
