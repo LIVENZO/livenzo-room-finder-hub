@@ -121,11 +121,11 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
         name="coolingType"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Cooling Type</FormLabel>
+            <FormLabel>Cooling Type (Optional)</FormLabel>
             <FormControl>
               <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
+                onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
+                value={field.value || 'none'}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -140,8 +140,17 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
                     Cooler Room
                   </FormLabel>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="none" id="cooling-none" />
+                  <FormLabel htmlFor="cooling-none" className="cursor-pointer font-normal">
+                    None
+                  </FormLabel>
+                </div>
               </RadioGroup>
             </FormControl>
+            <FormDescription>
+              Select if your room has AC or Cooler
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
