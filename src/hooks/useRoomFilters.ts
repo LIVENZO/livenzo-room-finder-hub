@@ -44,6 +44,11 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
       
+      // Filter by cooling type
+      if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) {
+        return false;
+      }
+      
       // Filter out unavailable rooms
       if (room.available === false) {
         return false;

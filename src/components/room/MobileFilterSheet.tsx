@@ -127,6 +127,30 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
             </RadioGroup>
           </div>
           
+          <div className="space-y-2">
+            <Label>Cooling Type</Label>
+            <RadioGroup 
+              value={tempFilters.coolingType || ''} 
+              onValueChange={(value) => 
+                setTempFilters({ ...tempFilters, coolingType: value ? value as 'ac' | 'cooler' : undefined })
+              }
+              className="flex items-center space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="ac" id="mobile-ac" />
+                <Label htmlFor="mobile-ac">AC Room</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="cooler" id="mobile-cooler" />
+                <Label htmlFor="mobile-cooler">Cooler Room</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="" id="mobile-any-cooling" />
+                <Label htmlFor="mobile-any-cooling">Any</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
           <div className="flex items-center space-x-2">
             <Switch
               id="mobile-wifi"

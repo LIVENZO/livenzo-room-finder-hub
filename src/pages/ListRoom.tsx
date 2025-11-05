@@ -182,6 +182,7 @@ const ListRoom: React.FC = () => {
           bathroom: values.bathroom,
           gender: values.gender,
           roomType: values.roomType,
+          coolingType: values.coolingType,
         },
         owner_id: user.id,
         owner_phone: values.owner_phone,

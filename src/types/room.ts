@@ -11,6 +11,7 @@ export interface Room {
     bathroom?: boolean;
     gender?: 'male' | 'female' | 'any';
     roomType?: 'single' | 'sharing';
+    coolingType?: 'ac' | 'cooler';
   };
   ownerId: string;
   ownerPhone: string;
@@ -27,4 +28,5 @@ export interface RoomFilters {
   bathroom?: boolean;
   gender?: 'male' | 'female';
   roomType?: 'single' | 'sharing';
+  coolingType?: 'ac' | 'cooler';
 }
