@@ -38,6 +38,7 @@ const ListRoom: React.FC = () => {
       price: 0,
       gender: 'any',
       roomType: 'single',
+      coolingType: undefined,
       wifi: false,
       bathroom: false,
       owner_phone: '',
