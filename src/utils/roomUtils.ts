@@ -10,7 +10,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
         wifi: Boolean(facilitiesJson.wifi),
         bathroom: Boolean(facilitiesJson.bathroom),
         gender: (facilitiesJson.gender || 'any') as 'male' | 'female' | 'any',
-        roomType: (facilitiesJson.roomType || 'single') as 'single' | 'sharing'
+        roomType: (facilitiesJson.roomType || 'single') as 'single' | 'sharing',
+        coolingType: facilitiesJson.coolingType as 'ac' | 'cooler' | undefined
       };
     }
     
@@ -22,7 +23,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
           wifi: Boolean(parsed.wifi),
           bathroom: Boolean(parsed.bathroom),
           gender: (parsed.gender || 'any') as 'male' | 'female' | 'any',
-          roomType: (parsed.roomType || 'single') as 'single' | 'sharing'
+          roomType: (parsed.roomType || 'single') as 'single' | 'sharing',
+          coolingType: parsed.coolingType as 'ac' | 'cooler' | undefined
         };
       } catch (e) {
         console.error('Error parsing facilities JSON:', e);
