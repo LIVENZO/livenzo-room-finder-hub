@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, Loader2 } from 'lucide-react';
+import { Phone, Loader2, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import { fetchUserProfile, UserProfile } from '@/services/UserProfileService';
 import LocationViewer from './LocationViewer';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface RoomActionCardProps {
   room: Room;
@@ -23,6 +25,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   const { user } = useAuth();
   const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
   const [loadingOwnerProfile, setLoadingOwnerProfile] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   // Fetch owner profile to get location data
   useEffect(() => {
@@ -37,6 +40,24 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 
     loadOwnerProfile();
   }, [room.ownerId]);
+
+  const handleBookNow = async () => {
+    setBookingLoading(true);
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ booking: true })
+        .eq('id', room.id);
+
+      if (error) throw error;
+      toast.success('Room booked successfully!');
+    } catch (error) {
+      console.error('Error booking room:', error);
+      toast.error('Failed to book room');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   return (
     <Card className="sticky top-6">
@@ -81,6 +102,25 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
             Call Owner
           </Button>
         )}
+        
+        {/* Book Now Button */}
+        <Button 
+          className="w-full"
+          onClick={handleBookNow}
+          disabled={bookingLoading}
+        >
+          {bookingLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Booking...
+            </>
+          ) : (
+            <>
+              <Calendar className="h-4 w-4 mr-2" />
+              Book Now
+            </>
+          )}
+        </Button>
         
         {/* Property Details */}
         <div className="space-y-2 pt-4 border-t">

@@ -277,40 +277,34 @@ export type Database = {
       fcm_tokens: {
         Row: {
           created_at: string | null
-          device_id: string
           id: string
           token: string
-          updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
-          device_id: string
           id?: string
           token: string
-          updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
-          device_id?: string
           id?: string
           token?: string
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "safe_profile_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fcm_tokens_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -986,6 +980,7 @@ export type Database = {
       rooms: {
         Row: {
           available: boolean
+          booking: boolean | null
           created_at: string
           description: string
           facilities: Json
@@ -1004,6 +999,7 @@ export type Database = {
         }
         Insert: {
           available?: boolean
+          booking?: boolean | null
           created_at?: string
           description: string
           facilities?: Json
@@ -1022,6 +1018,7 @@ export type Database = {
         }
         Update: {
           available?: boolean
+          booking?: boolean | null
           created_at?: string
           description?: string
           facilities?: Json
