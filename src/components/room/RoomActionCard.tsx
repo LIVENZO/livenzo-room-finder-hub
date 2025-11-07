@@ -42,18 +42,26 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   }, [room.ownerId]);
 
   const handleBookNow = async () => {
+    if (!user) {
+      toast.error('Please login to book a room');
+      return;
+    }
+
     setBookingLoading(true);
     try {
       const { error } = await supabase
-        .from('rooms')
-        .update({ booking: true })
-        .eq('id', room.id);
+        .from('booking_requests')
+        .insert({
+          room_id: room.id,
+          user_id: user.id,
+          status: 'pending'
+        });
 
       if (error) throw error;
-      toast.success('Room booked successfully!');
+      toast.success('Booking request sent successfully! Waiting for admin approval.');
     } catch (error) {
-      console.error('Error booking room:', error);
-      toast.error('Failed to book room');
+      console.error('Error submitting booking request:', error);
+      toast.error('Failed to submit booking request');
     } finally {
       setBookingLoading(false);
     }
