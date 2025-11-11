@@ -67,13 +67,8 @@ export const useRoomDetail = (roomId: string | undefined, room: Room | null) => 
       return;
     }
     
-    if (!ownerPhone) {
-      toast.error("Owner's phone number is not available");
-      return;
-    }
-    
-    // Open the phone dialer
-    window.location.href = `tel:${ownerPhone}`;
+    // Open the phone dialer with universal number
+    window.location.href = `tel:7488698970`;
     toast.success("Connecting you to the owner");
   };
   
