@@ -25,7 +25,7 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
         <input
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
           multiple
           onChange={onImageChange}
           className="hidden"
@@ -40,7 +40,7 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
           >
             <UploadCloud className="h-12 w-12 text-gray-400" />
             <p className="mt-2 text-gray-600">Click to upload (max 5 images)</p>
-            <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP up to 5MB each</p>
+            <p className="text-xs text-gray-500 mt-1">PNG, JPG/JPEG, WEBP up to 5MB each</p>
           </label>
         ) : (
           <div className="space-y-4">

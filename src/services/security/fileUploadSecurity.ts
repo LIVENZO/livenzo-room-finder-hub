@@ -17,13 +17,11 @@ const ALLOWED_DOCUMENT_TYPES = [
   'image/webp'
 ];
 
-// Allowed file types for images
+// Allowed file types for images (room listings)
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
-  'image/jpg',
   'image/png',
-  'image/webp',
-  'image/gif'
+  'image/webp'
 ];
 
 // Maximum file sizes (in bytes)
@@ -161,11 +159,12 @@ export const validateImageFile = (file: File): FileValidationResult => {
     };
   }
   
-  // Check file type
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+  // Check file type - normalize jpg to jpeg
+  const normalizedType = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+  if (!ALLOWED_IMAGE_TYPES.includes(normalizedType)) {
     return {
       isValid: false,
-      error: 'Only JPEG, JPG, PNG, WebP, and GIF files are allowed for images'
+      error: 'Only PNG, JPG/JPEG, and WEBP images are allowed'
     };
   }
   
