@@ -16,6 +16,8 @@ export const uploadFilesSecure = async (
 ): Promise<string[]> => {
   if (!files.length) return [];
   
+  let uploadToastId: string | number | undefined;
+  
   try {
     console.log('Starting secure file upload...', { 
       fileCount: files.length, 
@@ -37,14 +39,14 @@ export const uploadFilesSecure = async (
     // Compress images before validation if uploading images
     let filesToValidate = files;
     if (fileType === 'image') {
-      const compressToastId = toast.loading('Compressing images...');
+      const compressToastId = toast.loading('Preparing images...');
       try {
         filesToValidate = await compressImages(files);
-        toast.success('Images compressed', { id: compressToastId, duration: 1000 });
-        console.log('Images compressed successfully');
-      } catch (error) {
-        console.error('Image compression failed:', error);
-        toast.error('Failed to compress images', { id: compressToastId });
+        toast.dismiss(compressToastId);
+        console.log('Images prepared successfully');
+      } catch (error: any) {
+        console.error('Image preparation failed:', error);
+        toast.error(error.message || 'Unable to process images', { id: compressToastId });
         return [];
       }
     }
@@ -68,7 +70,7 @@ export const uploadFilesSecure = async (
     console.log(`${validFiles.length} valid files ready for upload`);
     
     const uploadedUrls: string[] = [];
-    const uploadToastId = toast.loading(`Uploading ${validFiles.length} files...`);
+    uploadToastId = toast.loading(`Uploading ${validFiles.length} files...`);
     
     // Test bucket access and permissions
     try {
@@ -149,8 +151,9 @@ export const uploadFilesSecure = async (
             error.message.includes('JWT')) {
           toast.error('Permission denied. Please log out and log back in.', { id: uploadToastId });
           break;
-        } else if (error.message.includes('size')) {
-          toast.error(`File "${file.name}" is too large. Maximum size is 5MB.`);
+        } else if (error.message.includes('size') || error.message.includes('too large')) {
+          console.log('File size error, should not happen after compression');
+          toast.error(`Upload failed. Please try with a different image.`);
           continue;
         } else if (error.message.includes('type') || error.message.includes('format')) {
           toast.error(`File "${file.name}" has invalid format.`);
@@ -200,7 +203,9 @@ export const uploadFilesSecure = async (
       }
     }
     
-    toast.dismiss(uploadToastId);
+    if (uploadToastId) {
+      toast.dismiss(uploadToastId);
+    }
     
     if (uploadedUrls.length > 0) {
       console.log(`Successfully uploaded ${uploadedUrls.length} files`);
@@ -217,7 +222,7 @@ export const uploadFilesSecure = async (
     return uploadedUrls;
   } catch (error) {
     console.error('Critical error in secure file upload:', error);
-    toast.error('Upload system error. Please contact support if this persists.');
+    toast.error('Upload system error. Please try again.');
     return [];
   }
 };

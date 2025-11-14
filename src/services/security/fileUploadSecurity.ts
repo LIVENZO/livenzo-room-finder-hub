@@ -24,9 +24,9 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp'
 ];
 
-// Maximum file sizes (in bytes)
+// Maximum file sizes (in bytes) - increased since we compress images
 const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB - we'll compress it down anyway
 
 // Dangerous file extensions to block
 const BLOCKED_EXTENSIONS = [
