@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { validateAuthentication } from '../security/authValidator';
 import { validateFiles, sanitizeFileName } from '../security/fileUploadSecurity';
+import { compressImages } from '@/utils/imageCompression';
 
 /**
  * Securely uploads files to Supabase storage with comprehensive validation
@@ -33,8 +34,23 @@ export const uploadFilesSecure = async (
     
     console.log('Authentication validated successfully');
     
+    // Compress images before validation if uploading images
+    let filesToValidate = files;
+    if (fileType === 'image') {
+      const compressToastId = toast.loading('Compressing images...');
+      try {
+        filesToValidate = await compressImages(files);
+        toast.success('Images compressed', { id: compressToastId, duration: 1000 });
+        console.log('Images compressed successfully');
+      } catch (error) {
+        console.error('Image compression failed:', error);
+        toast.error('Failed to compress images', { id: compressToastId });
+        return [];
+      }
+    }
+    
     // Validate files
-    const { validFiles, errors } = validateFiles(files, fileType);
+    const { validFiles, errors } = validateFiles(filesToValidate, fileType);
     
     if (errors.length > 0) {
       errors.forEach(error => {
