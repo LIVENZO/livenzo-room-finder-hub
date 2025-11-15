@@ -22,6 +22,7 @@ import Chats from "./pages/Chats";
 import AnonymousChat from "./pages/AnonymousChat";
 import Connections from "./pages/Connections";
 import ListRoom from "./pages/ListRoom";
+import EditRoom from "./pages/EditRoom";
 import MyListings from "./pages/MyListings";
 import Notices from "./pages/Notices";
 import Payments from "./pages/Payments";
@@ -69,6 +70,7 @@ const App = () => {
               <Route path="/connections" element={<Connections />} />
               <Route path="/connections/:relationshipId" element={<Connections />} />
               <Route path="/list-room" element={<ListRoom />} />
+              <Route path="/edit-room/:id" element={<EditRoom />} />
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/notices" element={<Notices />} />
               <Route path="/notice" element={<Notices />} />
