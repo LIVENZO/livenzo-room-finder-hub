@@ -11,6 +11,7 @@ export const formSchema = z.object({
   gender: z.enum(['male', 'female', 'any']),
   roomType: z.enum(['single', 'sharing']),
   coolingType: z.enum(['ac', 'cooler']).optional(),
+  food: z.enum(['included', 'not_included']),
   wifi: z.boolean().default(false),
   bathroom: z.boolean().default(false),
   owner_phone: z.string().min(10, "Phone number must be valid"),

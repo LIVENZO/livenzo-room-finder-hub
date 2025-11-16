@@ -125,6 +125,29 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
           </RadioGroup>
         </div>
+
+        <div className="space-y-2">
+          <Label>Food</Label>
+          <RadioGroup 
+            value={tempFilters.food || ''} 
+            onValueChange={(value) => 
+              setTempFilters({ ...tempFilters, food: value ? value as 'included' | 'not_included' : undefined })
+            }
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="included" id="food-included" />
+              <Label htmlFor="food-included">Food Included</Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-1">
+              <RadioGroupItem value="not_included" id="food-not-included" />
+              <Label htmlFor="food-not-included">Food Not Included</Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-1">
+              <RadioGroupItem value="" id="any-food" />
+              <Label htmlFor="any-food">Any</Label>
+            </div>
+          </RadioGroup>
+        </div>
         
         <div className="flex items-center space-x-2">
           <Switch

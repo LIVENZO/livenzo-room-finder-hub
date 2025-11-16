@@ -150,6 +150,30 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
               </div>
             </RadioGroup>
           </div>
+
+          <div className="space-y-2">
+            <Label>Food</Label>
+            <RadioGroup 
+              value={tempFilters.food || ''} 
+              onValueChange={(value) => 
+                setTempFilters({ ...tempFilters, food: value ? value as 'included' | 'not_included' : undefined })
+              }
+              className="flex items-center space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="included" id="mobile-food-included" />
+                <Label htmlFor="mobile-food-included">Included</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="not_included" id="mobile-food-not-included" />
+                <Label htmlFor="mobile-food-not-included">Not Included</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="" id="mobile-any-food" />
+                <Label htmlFor="mobile-any-food">Any</Label>
+              </div>
+            </RadioGroup>
+          </div>
           
           <div className="flex items-center space-x-2">
             <Switch

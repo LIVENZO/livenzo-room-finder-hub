@@ -49,6 +49,11 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
       
+      // Filter by food
+      if (filters.food && room.facilities.food !== filters.food) {
+        return false;
+      }
+      
       // Filter out unavailable rooms
       if (room.available === false) {
         return false;
