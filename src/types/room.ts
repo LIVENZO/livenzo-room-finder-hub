@@ -12,6 +12,7 @@ export interface Room {
     gender?: 'male' | 'female' | 'any';
     roomType?: 'single' | 'sharing';
     coolingType?: 'ac' | 'cooler';
+    food?: 'included' | 'not_included';
   };
   ownerId: string;
   ownerPhone: string;
@@ -29,4 +30,5 @@ export interface RoomFilters {
   gender?: 'male' | 'female';
   roomType?: 'single' | 'sharing';
   coolingType?: 'ac' | 'cooler';
+  food?: 'included' | 'not_included';
 }

@@ -155,6 +155,38 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
           </FormItem>
         )}
       />
+
+      {/* Food */}
+      <FormField
+        control={control}
+        name="food"
+        render={({ field }) => (
+          <FormItem className="space-y-3">
+            <FormLabel>Food</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="included" id="food-included" />
+                  <FormLabel htmlFor="food-included" className="cursor-pointer font-normal">
+                    Food Included
+                  </FormLabel>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="not_included" id="food-not-included" />
+                  <FormLabel htmlFor="food-not-included" className="cursor-pointer font-normal">
+                    Food Not Included
+                  </FormLabel>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       {/* Amenities */}
       <div className="space-y-3">
