@@ -7,7 +7,7 @@ interface RoomContentProps {
   description: string;
   roomId: string;
   roomRules: string[];
-  roomAmenities: Record<string, boolean>;
+  roomAmenities: Record<string, boolean | string | undefined>;
 }
 
 const RoomContent: React.FC<RoomContentProps> = ({
@@ -34,14 +34,25 @@ const RoomContent: React.FC<RoomContentProps> = ({
       </TabsContent>
       <TabsContent value="amenities" className="py-4">
         <div className="grid grid-cols-2 gap-3">
-          {Object.entries(roomAmenities).map(([key, value]) => (
-            value && (
+          {Object.entries(roomAmenities).map(([key, value]) => {
+            if (!value) return null;
+            
+            let displayText = key.replace(/([A-Z])/g, ' $1').trim();
+            
+            // Handle specific fields with custom display
+            if (key === 'coolingType' && typeof value === 'string') {
+              displayText = value === 'ac' ? 'AC Room' : 'Cooler Room';
+            } else if (key === 'food' && typeof value === 'string') {
+              displayText = value === 'included' ? 'Food Included' : 'Food Not Included';
+            }
+            
+            return (
               <div key={key} className="flex items-center">
                 <div className="h-2 w-2 rounded-full bg-primary mr-2" />
-                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                <span className="capitalize">{displayText}</span>
               </div>
-            )
-          ))}
+            );
+          })}
         </div>
       </TabsContent>
       <TabsContent value="reviews" className="py-4">

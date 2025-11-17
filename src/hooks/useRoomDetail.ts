@@ -75,7 +75,12 @@ export const useRoomDetail = (roomId: string | undefined, room: Room | null) => 
   // Default values for room details
   const roomRating = 4.5;
   const roomRules = ['No smoking', 'No pets', 'No parties'];
-  const roomAmenities = room ? { wifi: room.facilities.wifi, bathroom: room.facilities.bathroom } : {};
+  const roomAmenities = room ? { 
+    wifi: room.facilities.wifi, 
+    bathroom: room.facilities.bathroom,
+    coolingType: room.facilities.coolingType,
+    food: room.facilities.food
+  } : {};
   const roomAvailability = 'available';
   
   return {
