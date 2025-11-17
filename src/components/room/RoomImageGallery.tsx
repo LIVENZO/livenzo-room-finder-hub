@@ -6,16 +6,18 @@ interface RoomImageGalleryProps {
   images: string[];
   selectedImage: number;
   setSelectedImage: (index: number) => void;
+  onImageClick: (index: number) => void;
 }
 
 const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({ 
   images, 
   selectedImage, 
-  setSelectedImage 
+  setSelectedImage,
+  onImageClick
 }) => {
   return (
     <div className="space-y-4">
-      <AspectRatio ratio={16 / 9} className="bg-muted overflow-hidden rounded-lg">
+      <AspectRatio ratio={16 / 9} className="bg-muted overflow-hidden rounded-lg cursor-pointer" onClick={() => onImageClick(selectedImage)}>
         <img
           src={images[selectedImage]}
           alt={`Room image ${selectedImage + 1}`}
