@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Wifi, Bath, User, Users, BedSingle, BedDouble, Wind, Snowflake } from 'lucide-react';
+import { Wifi, Bath, User, Users, BedSingle, BedDouble, Wind, Snowflake, Utensils } from 'lucide-react';
 import { Room } from '@/types/room';
 
 interface RoomFacilityBadgesProps {
@@ -79,6 +79,12 @@ const RoomFacilityBadges: React.FC<RoomFacilityBadgesProps> = ({ room }) => {
         <Badge variant="outline" className="flex items-center">
           {getCoolingTypeIcon()}
           {room.facilities.coolingType === 'ac' ? 'AC Room' : 'Cooler Room'}
+        </Badge>
+      )}
+      {room.facilities.food && (
+        <Badge variant="outline" className="flex items-center">
+          <Utensils className="h-4 w-4 mr-1" />
+          {room.facilities.food === 'included' ? 'Food Included' : 'Food Not Included'}
         </Badge>
       )}
     </>

@@ -143,6 +143,12 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
             {room.facilities.roomType && (
               <p>🛏️ {room.facilities.roomType === 'single' ? 'Single Occupancy' : 'Shared Room'}</p>
             )}
+            {room.facilities.coolingType && (
+              <p>❄️ {room.facilities.coolingType === 'ac' ? 'AC Room' : 'Cooler Room'}</p>
+            )}
+            {room.facilities.food && (
+              <p>🍽️ {room.facilities.food === 'included' ? 'Food Included' : 'Food Not Included'}</p>
+            )}
           </div>
         </div>
       </CardContent>
