@@ -9,6 +9,7 @@ import RoomImageGallery from '@/components/room/RoomImageGallery';
 import RoomHeader from '@/components/room/RoomHeader';
 import RoomContent from '@/components/room/RoomContent';
 import RoomActionCard from '@/components/room/RoomActionCard';
+import RoomImageViewer from '@/components/room/RoomImageViewer';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
 
 const RoomDetail = () => {
@@ -18,6 +19,8 @@ const RoomDetail = () => {
   
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
   
   // Load room data
   useEffect(() => {
@@ -42,6 +45,11 @@ const RoomDetail = () => {
     roomAmenities,
     roomAvailability,
   } = useRoomDetail(id, room);
+  
+  const handleImageClick = (index: number) => {
+    setViewerInitialIndex(index);
+    setViewerOpen(true);
+  };
   
   if (loading) {
     return (
@@ -85,7 +93,16 @@ const RoomDetail = () => {
             <RoomImageGallery 
               images={room.images} 
               selectedImage={selectedImage} 
-              setSelectedImage={setSelectedImage} 
+              setSelectedImage={setSelectedImage}
+              onImageClick={handleImageClick}
+            />
+            
+            {/* Fullscreen Image Viewer */}
+            <RoomImageViewer
+              images={room.images}
+              initialIndex={viewerInitialIndex}
+              open={viewerOpen}
+              onClose={() => setViewerOpen(false)}
             />
             
             {/* Room header information */}
