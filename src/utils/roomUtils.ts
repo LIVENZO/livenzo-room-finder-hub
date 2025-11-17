@@ -12,7 +12,7 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
         gender: (facilitiesJson.gender || 'any') as 'male' | 'female' | 'any',
         roomType: (facilitiesJson.roomType || 'single') as 'single' | 'sharing',
         coolingType: facilitiesJson.coolingType as 'ac' | 'cooler' | undefined,
-        food: facilitiesJson.food as 'included' | 'not_included' | undefined
+        food: (facilitiesJson.food || 'not_included') as 'included' | 'not_included'
       };
     }
     
@@ -26,7 +26,7 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
           gender: (parsed.gender || 'any') as 'male' | 'female' | 'any',
           roomType: (parsed.roomType || 'single') as 'single' | 'sharing',
           coolingType: parsed.coolingType as 'ac' | 'cooler' | undefined,
-          food: parsed.food as 'included' | 'not_included' | undefined
+          food: (parsed.food || 'not_included') as 'included' | 'not_included'
         };
       } catch (e) {
         console.error('Error parsing facilities JSON:', e);
@@ -38,7 +38,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
       wifi: false,
       bathroom: false,
       gender: 'any',
-      roomType: 'single'
+      roomType: 'single',
+      food: 'not_included'
     };
   } catch (error) {
     console.error('Error processing facilities:', error);
@@ -46,7 +47,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
       wifi: false,
       bathroom: false,
       gender: 'any',
-      roomType: 'single'
+      roomType: 'single',
+      food: 'not_included'
     };
   }
 };
