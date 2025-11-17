@@ -26,6 +26,9 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
   const [loadingOwnerProfile, setLoadingOwnerProfile] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
+  
+  // Check if current user is the owner
+  const isOwner = user?.id === room.ownerId;
 
   // Fetch owner profile to get location data
   useEffect(() => {
@@ -99,8 +102,8 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           />
         )}
         
-        {/* Call Owner Button */}
-        {ownerPhone && (
+        {/* Call Owner Button - Hidden for property owner */}
+        {!isOwner && ownerPhone && (
           <Button 
             variant="outline" 
             className="w-full"
@@ -111,24 +114,26 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           </Button>
         )}
         
-        {/* Book Now Button */}
-        <Button 
-          className="w-full"
-          onClick={handleBookNow}
-          disabled={bookingLoading}
-        >
-          {bookingLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Booking...
-            </>
-          ) : (
-            <>
-              <Calendar className="h-4 w-4 mr-2" />
-              Book Now
-            </>
-          )}
-        </Button>
+        {/* Book Now Button - Hidden for property owner */}
+        {!isOwner && (
+          <Button 
+            className="w-full"
+            onClick={handleBookNow}
+            disabled={bookingLoading}
+          >
+            {bookingLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Booking...
+              </>
+            ) : (
+              <>
+                <Calendar className="h-4 w-4 mr-2" />
+                Book Now
+              </>
+            )}
+          </Button>
+        )}
         
         {/* Property Details */}
         <div className="space-y-2 pt-4 border-t">
