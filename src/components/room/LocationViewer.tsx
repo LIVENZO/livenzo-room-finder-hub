@@ -6,6 +6,9 @@ import { MapPin, Navigation, AlertCircle } from 'lucide-react';
 import { getMapsUrlsSecure } from '@/services/security/secureLocationService';
 import { Room } from '@/types/room';
 
+// Feature flag to show/hide location button (set to true to re-enable)
+const SHOW_LOCATION_BUTTON = false;
+
 interface LocationViewerProps {
   room: Room;
   ownerLatitude?: number | null;
@@ -49,6 +52,11 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
       window.location.href = mapsUrls.directionsUrl;
     }
   };
+
+  // Hide button if feature flag is disabled
+  if (!SHOW_LOCATION_BUTTON) {
+    return null;
+  }
 
   if (!hasLocation) {
     return (
