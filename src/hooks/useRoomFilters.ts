@@ -20,23 +20,25 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
 
-      // Location-based filtering using coordinates
+      // STRICT location-based filtering - no fallbacks
       if (filters.searchLocation) {
         const { latitude, longitude, radius } = filters.searchLocation;
         
-        // If room has coordinates, filter by distance
-        if (room.latitude && room.longitude) {
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            room.latitude,
-            room.longitude
-          );
-          
-          // Filter by radius if specified
-          if (radius && distance > radius) {
-            return false;
-          }
+        // Room MUST have coordinates when location search is active
+        if (!room.latitude || !room.longitude) {
+          return false;
+        }
+        
+        const distance = calculateDistance(
+          latitude,
+          longitude,
+          room.latitude,
+          room.longitude
+        );
+        
+        // Room MUST be within radius - no exceptions
+        if (radius && distance > radius) {
+          return false;
         }
       }
       
