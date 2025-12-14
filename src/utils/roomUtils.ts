@@ -62,6 +62,8 @@ export const mapDbRoomToRoom = (data: any): Room => {
     images: data.images || [],
     price: Number(data.price),
     location: data.location,
+    latitude: data.location_latitude ? Number(data.location_latitude) : undefined,
+    longitude: data.location_longitude ? Number(data.location_longitude) : undefined,
     facilities: parseFacilities(data.facilities),
     ownerId: data.owner_id,
     ownerPhone: data.owner_phone,
@@ -70,4 +72,36 @@ export const mapDbRoomToRoom = (data: any): Room => {
     house_no: data.house_no,
     house_name: data.house_name
   };
+};
+
+// Calculate distance between two coordinates using Haversine formula
+export const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const toRadians = (degrees: number): number => {
+  return degrees * (Math.PI / 180);
+};
+
+// Format distance for display
+export const formatDistance = (distanceKm: number): string => {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)} m`;
+  }
+  return `${distanceKm.toFixed(1)} km`;
 };

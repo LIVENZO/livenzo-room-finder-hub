@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
-import { RoomFilters } from '@/types/room';
+import { RoomFilters, SearchLocation } from '@/types/room';
 import Layout from '@/components/Layout';
 import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, X } from 'lucide-react';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -19,6 +19,7 @@ const FindRoom: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [location, setLocation] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [searchLabel, setSearchLabel] = useState<string | undefined>();
   
   useEffect(() => {
     // Redirect if not logged in
@@ -31,10 +32,31 @@ const FindRoom: React.FC = () => {
     setTempFilters(filters);
   }, [filters]);
   
-  const handleSearch = () => {
+  const handleSearch = (searchLocation?: SearchLocation) => {
+    if (searchLocation) {
+      setSearchLabel(searchLocation.label);
+      setFilters({
+        ...filters,
+        searchLocation,
+        location: undefined, // Clear text-based location filter
+      });
+    } else {
+      setSearchLabel(undefined);
+      setFilters({
+        ...filters,
+        searchLocation: undefined,
+        location: undefined,
+      });
+    }
+  };
+
+  const clearSearch = () => {
+    setLocation('');
+    setSearchLabel(undefined);
     setFilters({
       ...filters,
-      location,
+      searchLocation: undefined,
+      location: undefined,
     });
   };
   
@@ -57,6 +79,8 @@ const FindRoom: React.FC = () => {
           <Button 
             onClick={() => {
               clearAllFilters();
+              setLocation('');
+              setSearchLabel(undefined);
               refreshRooms();
             }}
             disabled={isLoading}
@@ -67,11 +91,11 @@ const FindRoom: React.FC = () => {
           </Button>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="flex flex-col md:flex-row gap-6 mb-4">
           <SearchBar 
             location={location} 
             setLocation={setLocation} 
-            handleSearch={handleSearch} 
+            handleSearch={handleSearch}
           />
           
           <div className="block md:hidden">
@@ -85,6 +109,28 @@ const FindRoom: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Search status indicator */}
+        {searchLabel && (
+          <div className="flex items-center gap-2 mb-4 text-sm">
+            <span className="text-muted-foreground">Showing rooms near:</span>
+            <span className="font-medium text-primary">{searchLabel}</span>
+            {filters.searchLocation?.radius && (
+              <span className="text-muted-foreground">
+                (within {filters.searchLocation.radius} km)
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearch}
+              className="h-6 px-2"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          </div>
+        )}
         
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="hidden md:block w-full lg:w-64 space-y-6">
@@ -100,7 +146,8 @@ const FindRoom: React.FC = () => {
             <RoomResults 
               isLoading={isLoading} 
               filteredRooms={filteredRooms} 
-              resetFilters={resetFilters} 
+              resetFilters={resetFilters}
+              searchLabel={searchLabel}
             />
           </div>
         </div>
