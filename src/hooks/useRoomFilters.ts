@@ -3,6 +3,15 @@ import { useState, useMemo } from 'react';
 import { Room, RoomFilters, SearchLocation } from '@/types/room';
 import { calculateDistance } from '@/utils/roomUtils';
 
+// Helper to check if a room's location text contains the city name
+const roomMatchesCity = (room: Room, cityName: string): boolean => {
+  const locationLower = room.location?.toLowerCase() || '';
+  const cityLower = cityName.toLowerCase();
+  
+  // Check if room location contains the city name
+  return locationLower.includes(cityLower);
+};
+
 export const useRoomFilters = (rooms: Room[]) => {
   const [filters, setFilters] = useState<RoomFilters>({
     maxPrice: 10000 // Set default max price to 10000
@@ -20,12 +29,25 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
 
-      // Location-based filtering using coordinates
+      // Location-based filtering
       if (filters.searchLocation) {
-        const { latitude, longitude, radius } = filters.searchLocation;
+        const { latitude, longitude, radius, searchType, cityName } = filters.searchLocation;
         
-        // If room has coordinates, filter by distance
-        if (room.latitude && room.longitude) {
+        // CITY SEARCH: Filter by city name in location text, NO radius restriction
+        if (searchType === 'city' && cityName) {
+          if (!roomMatchesCity(room, cityName)) {
+            return false;
+          }
+          // City search passes - no coordinate filtering needed
+        }
+        
+        // LANDMARK/NEAR_ME SEARCH: Strict radius filtering
+        else if (searchType === 'landmark' || searchType === 'near_me') {
+          // Rooms MUST have coordinates for landmark search
+          if (!room.latitude || !room.longitude) {
+            return false;
+          }
+          
           const distance = calculateDistance(
             latitude,
             longitude,
@@ -33,8 +55,9 @@ export const useRoomFilters = (rooms: Room[]) => {
             room.longitude
           );
           
-          // Filter by radius if specified
-          if (radius && distance > radius) {
+          // Strict radius filtering - if outside radius, exclude
+          const searchRadius = radius || 3; // Default 3km for landmarks
+          if (distance > searchRadius) {
             return false;
           }
         }

@@ -113,9 +113,13 @@ const FindRoom: React.FC = () => {
         {/* Search status indicator */}
         {searchLabel && (
           <div className="flex items-center gap-2 mb-4 text-sm">
-            <span className="text-muted-foreground">Showing rooms near:</span>
+            <span className="text-muted-foreground">
+              {filters.searchLocation?.searchType === 'city' 
+                ? 'Showing all rooms in:' 
+                : 'Showing rooms near:'}
+            </span>
             <span className="font-medium text-primary">{searchLabel}</span>
-            {filters.searchLocation?.radius && (
+            {filters.searchLocation?.searchType === 'landmark' && filters.searchLocation?.radius && (
               <span className="text-muted-foreground">
                 (within {filters.searchLocation.radius} km)
               </span>
@@ -148,6 +152,7 @@ const FindRoom: React.FC = () => {
               filteredRooms={filteredRooms} 
               resetFilters={resetFilters}
               searchLabel={searchLabel}
+              searchLocation={filters.searchLocation}
             />
           </div>
         </div>
