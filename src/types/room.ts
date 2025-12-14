@@ -6,6 +6,8 @@ export interface Room {
   images: string[];
   price: number;
   location: string;
+  latitude?: number;
+  longitude?: number;
   facilities: {
     wifi?: boolean;
     bathroom?: boolean;
@@ -20,10 +22,19 @@ export interface Room {
   createdAt?: string;
   house_no?: string;
   house_name?: string;
+  distance?: number; // Distance from search location in km
+}
+
+export interface SearchLocation {
+  latitude: number;
+  longitude: number;
+  label?: string;
+  radius?: number; // Search radius in km
 }
 
 export interface RoomFilters {
   location?: string;
+  searchLocation?: SearchLocation;
   maxPrice?: number;
   wifi?: boolean;
   bathroom?: boolean;

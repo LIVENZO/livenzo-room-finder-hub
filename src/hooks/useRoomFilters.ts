@@ -1,6 +1,7 @@
 
 import { useState, useMemo } from 'react';
-import { Room, RoomFilters } from '@/types/room';
+import { Room, RoomFilters, SearchLocation } from '@/types/room';
+import { calculateDistance } from '@/utils/roomUtils';
 
 export const useRoomFilters = (rooms: Room[]) => {
   const [filters, setFilters] = useState<RoomFilters>({
@@ -11,12 +12,32 @@ export const useRoomFilters = (rooms: Room[]) => {
     setFilters({});
   };
 
-  // Filter rooms based on user criteria
+  // Filter and sort rooms based on user criteria
   const filteredRooms = useMemo(() => {
-    return rooms.filter(room => {
-      // Filter by location
-      if (filters.location && !room.location.toLowerCase().includes(filters.location.toLowerCase())) {
+    let result = rooms.filter(room => {
+      // Filter out unavailable rooms first
+      if (room.available === false) {
         return false;
+      }
+
+      // Location-based filtering using coordinates
+      if (filters.searchLocation) {
+        const { latitude, longitude, radius } = filters.searchLocation;
+        
+        // If room has coordinates, filter by distance
+        if (room.latitude && room.longitude) {
+          const distance = calculateDistance(
+            latitude,
+            longitude,
+            room.latitude,
+            room.longitude
+          );
+          
+          // Filter by radius if specified
+          if (radius && distance > radius) {
+            return false;
+          }
+        }
       }
       
       // Filter by max price
@@ -54,13 +75,36 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
       
-      // Filter out unavailable rooms
-      if (room.available === false) {
-        return false;
-      }
-      
       return true;
     });
+
+    // Add distance to each room and sort by distance if search location is set
+    if (filters.searchLocation) {
+      const { latitude, longitude } = filters.searchLocation;
+      
+      result = result.map(room => {
+        if (room.latitude && room.longitude) {
+          const distance = calculateDistance(
+            latitude,
+            longitude,
+            room.latitude,
+            room.longitude
+          );
+          return { ...room, distance };
+        }
+        return { ...room, distance: undefined };
+      });
+
+      // Sort by distance (rooms with coordinates first, then by distance)
+      result.sort((a, b) => {
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      });
+    }
+
+    return result;
   }, [rooms, filters]);
 
   return { filters, setFilters, filteredRooms, clearAllFilters };
