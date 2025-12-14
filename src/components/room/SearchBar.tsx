@@ -29,9 +29,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ location, setLocation, handleSear
       const searchLocation = await geocodeSearch(location);
       if (searchLocation) {
         handleSearch(searchLocation);
-        toast.success(`Showing rooms near ${searchLocation.label}`);
+        
+        // Show appropriate message based on search type
+        if (searchLocation.searchType === 'city') {
+          toast.success(`Showing all rooms in ${searchLocation.label}`);
+        } else if (searchLocation.searchType === 'landmark') {
+          toast.success(`Showing rooms within ${searchLocation.radius} km of ${searchLocation.label}`);
+        } else {
+          toast.success(`Showing rooms near ${searchLocation.label}`);
+        }
       } else {
-        toast.error('Location not found. Try a different search term.');
+        toast.error('Location not found. Try a city name like "Kota" or a landmark.');
         handleSearch(undefined);
       }
     } catch (error) {

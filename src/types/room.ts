@@ -30,6 +30,8 @@ export interface SearchLocation {
   longitude: number;
   label?: string;
   radius?: number; // Search radius in km
+  searchType: 'city' | 'landmark' | 'near_me'; // Type of search to determine filtering logic
+  cityName?: string; // For city-based filtering
 }
 
 export interface RoomFilters {
