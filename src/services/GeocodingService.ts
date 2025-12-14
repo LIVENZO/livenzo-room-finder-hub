@@ -1,3 +1,4 @@
+
 import { SearchLocation } from '@/types/room';
 
 interface GeocodingResult {
@@ -6,27 +7,6 @@ interface GeocodingResult {
   displayName: string;
   type: 'city' | 'landmark' | 'area';
 }
-
-// Check if query is a city search (no "near" pattern, matches known city)
-const isCitySearch = (query: string): string | null => {
-  const normalizedQuery = query.toLowerCase().trim();
-  
-  // Check if it contains "near" - if so, it's NOT a city search
-  if (/\bnear\b/i.test(query) || /\bclose to\b/i.test(query) || /\bnearby\b/i.test(query)) {
-    return null;
-  }
-  
-  // Check known cities
-  for (const city of Object.keys(KNOWN_CITIES)) {
-    if (normalizedQuery === city || 
-        normalizedQuery === `${city} city` ||
-        normalizedQuery.startsWith(`${city},`)) {
-      return city.charAt(0).toUpperCase() + city.slice(1);
-    }
-  }
-  
-  return null;
-};
 
 // Common landmarks in Kota for quick lookup
 const KNOWN_LANDMARKS: Record<string, { lat: number; lon: number; name: string }> = {
@@ -147,24 +127,7 @@ export const geocodeSearch = async (query: string): Promise<SearchLocation | nul
 
   const normalizedQuery = normalizeQuery(query);
 
-  // STEP 1: Check if this is a pure city search (no "near" pattern)
-  const cityMatch = isCitySearch(query);
-  if (cityMatch) {
-    const cityKey = cityMatch.toLowerCase();
-    const cityCoords = KNOWN_CITIES[cityKey];
-    if (cityCoords) {
-      return {
-        latitude: cityCoords.lat,
-        longitude: cityCoords.lon,
-        label: cityMatch,
-        radius: undefined, // NO radius for city search - show ALL rooms in city
-        searchType: 'city',
-        cityName: cityMatch.toLowerCase(),
-      };
-    }
-  }
-
-  // STEP 2: Check for "near" patterns (e.g., "near Allen Samarth", "Kota near Allen")
+  // Check for "near" patterns first (e.g., "near Allen Samarth")
   const nearPattern = extractNearPattern(query);
   if (nearPattern) {
     const landmarkNorm = normalizeQuery(nearPattern.landmark);
@@ -176,39 +139,48 @@ export const geocodeSearch = async (query: string): Promise<SearchLocation | nul
           latitude: value.lat,
           longitude: value.lon,
           label: value.name,
-          radius: 3, // Strict 3km radius for landmarks
-          searchType: 'landmark',
+          radius: 3, // 3km radius for landmarks
         };
       }
     }
 
-    // Try geocoding the landmark via Nominatim
+    // Try geocoding the landmark
     const geoResult = await geocodeWithNominatim(nearPattern.landmark + ', Kota, Rajasthan');
     if (geoResult) {
       return {
         latitude: geoResult.latitude,
         longitude: geoResult.longitude,
         label: nearPattern.landmark,
-        radius: 3, // Strict 3km radius
-        searchType: 'landmark',
+        radius: 3,
       };
     }
   }
 
-  // STEP 3: Check known landmarks (direct search like "Allen Samarth")
+  // Check if it's a known city
+  for (const [city, coords] of Object.entries(KNOWN_CITIES)) {
+    if (normalizedQuery === city || normalizedQuery.startsWith(city + ' ')) {
+      return {
+        latitude: coords.lat,
+        longitude: coords.lon,
+        label: city.charAt(0).toUpperCase() + city.slice(1),
+        radius: coords.radius, // City-wide search
+      };
+    }
+  }
+
+  // Check known landmarks
   for (const [key, value] of Object.entries(KNOWN_LANDMARKS)) {
     if (normalizedQuery.includes(key) || key.includes(normalizedQuery)) {
       return {
         latitude: value.lat,
         longitude: value.lon,
         label: value.name,
-        radius: 3, // Strict 3km radius
-        searchType: 'landmark',
+        radius: 3,
       };
     }
   }
 
-  // STEP 4: Check known areas (e.g., "Mahaveer Nagar")
+  // Check known areas
   for (const [key, value] of Object.entries(KNOWN_AREAS)) {
     if (normalizedQuery.includes(key) || key.includes(normalizedQuery)) {
       return {
@@ -216,33 +188,18 @@ export const geocodeSearch = async (query: string): Promise<SearchLocation | nul
         longitude: value.lon,
         label: key.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
         radius: 2, // 2km for areas
-        searchType: 'landmark', // Areas are treated like landmarks (strict radius)
       };
     }
   }
 
-  // STEP 5: Fallback to Nominatim geocoding
+  // Fallback to Nominatim geocoding
   const geoResult = await geocodeWithNominatim(query);
   if (geoResult) {
-    // If Nominatim identifies it as a city, treat as city search
-    if (geoResult.type === 'city') {
-      return {
-        latitude: geoResult.latitude,
-        longitude: geoResult.longitude,
-        label: query,
-        radius: undefined, // No radius for city
-        searchType: 'city',
-        cityName: query.toLowerCase(),
-      };
-    }
-    
-    // Otherwise treat as landmark/area with strict radius
     return {
       latitude: geoResult.latitude,
       longitude: geoResult.longitude,
       label: query,
-      radius: 3,
-      searchType: 'landmark',
+      radius: geoResult.type === 'city' ? 15 : 3,
     };
   }
 
@@ -263,8 +220,7 @@ export const getCurrentPosition = (): Promise<SearchLocation> => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           label: 'Your Location',
-          radius: 5, // 5km radius for "near me"
-          searchType: 'near_me',
+          radius: 5,
         });
       },
       (error) => {
