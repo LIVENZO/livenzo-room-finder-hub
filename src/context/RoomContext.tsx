@@ -15,6 +15,8 @@ interface RoomContextType {
   getRoom: (id: string) => Room | undefined;
   refreshRooms: () => Promise<void>;
   clearAllFilters: () => void;
+  searchText: string;
+  setSearchText: (text: string) => void;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -23,7 +25,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
-  const { filters, setFilters, filteredRooms, clearAllFilters } = useRoomFilters(rooms);
+  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(rooms);
 
   // Fetch rooms from Supabase
   useEffect(() => {
@@ -69,6 +71,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getRoom,
         refreshRooms,
         clearAllFilters,
+        searchText,
+        setSearchText,
       }}
     >
       {children}

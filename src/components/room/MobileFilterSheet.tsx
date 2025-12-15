@@ -47,11 +47,6 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
   
   return (
     <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="w-full flex items-center gap-2">
-          <Filter className="h-4 w-4" /> Filters
-        </Button>
-      </SheetTrigger>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
@@ -199,7 +194,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
           
           <div className="flex flex-col sm:flex-row gap-2 mt-8">
             <Button onClick={resetFilters} variant="outline" className="flex-1">
-              Reset All
+              Clear Filters
             </Button>
             <Button onClick={applyFilters} className="flex-1">
               Apply Filters

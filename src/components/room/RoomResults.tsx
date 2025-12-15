@@ -7,15 +7,15 @@ import RoomCard from '@/components/RoomCard';
 interface RoomResultsProps {
   isLoading: boolean;
   filteredRooms: Room[];
-  resetFilters: () => void;
-  searchLabel?: string;
+  clearFilters: () => void;
+  searchText: string;
 }
 
 const RoomResults: React.FC<RoomResultsProps> = ({ 
   isLoading, 
   filteredRooms, 
-  resetFilters,
-  searchLabel
+  clearFilters,
+  searchText
 }) => {
   if (isLoading) {
     return <div className="text-center py-12">Loading rooms...</div>;
@@ -24,15 +24,12 @@ const RoomResults: React.FC<RoomResultsProps> = ({
   if (filteredRooms.length === 0) {
     return (
       <div className="text-center py-12 bg-muted/50 rounded-lg">
-        <h3 className="text-xl font-medium mb-2">No rooms found</h3>
+        <h3 className="text-xl font-medium mb-2">No rooms found in this area</h3>
         <p className="text-muted-foreground mb-4">
-          {searchLabel 
-            ? `No rooms found near "${searchLabel}". Try a different location or increase the search area.`
-            : 'Try adjusting your filters or search for a different location.'
-          }
+          Try adjusting your filters or search for a different area.
         </p>
-        <Button onClick={resetFilters} variant="outline">
-          Reset All Filters
+        <Button onClick={clearFilters} variant="outline">
+          Clear Filters
         </Button>
       </div>
     );
@@ -40,15 +37,17 @@ const RoomResults: React.FC<RoomResultsProps> = ({
   
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4">
         <p className="text-muted-foreground">
-          Showing {filteredRooms.length} {filteredRooms.length === 1 ? 'room' : 'rooms'}
-          {searchLabel && ` near ${searchLabel}`}
+          {searchText 
+            ? `Showing ${filteredRooms.length} ${filteredRooms.length === 1 ? 'room' : 'rooms'} in ${searchText}`
+            : `Showing ${filteredRooms.length} ${filteredRooms.length === 1 ? 'room' : 'rooms'} in Kota`
+          }
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) => (
-          <RoomCard key={room.id} room={room} searchLabel={searchLabel} />
+          <RoomCard key={room.id} room={room} />
         ))}
       </div>
     </>
