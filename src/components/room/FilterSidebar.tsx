@@ -173,7 +173,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         
         <div className="flex flex-col gap-2 pt-4">
           <Button onClick={resetFilters} variant="outline">
-            Reset All
+            Clear Filters
           </Button>
           <Button onClick={applyFilters}>
             Apply Filters

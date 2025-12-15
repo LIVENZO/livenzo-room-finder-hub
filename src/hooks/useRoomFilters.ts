@@ -1,15 +1,14 @@
 
 import { useState, useMemo } from 'react';
-import { Room, RoomFilters, SearchLocation } from '@/types/room';
-import { calculateDistance } from '@/utils/roomUtils';
+import { Room, RoomFilters } from '@/types/room';
 
 export const useRoomFilters = (rooms: Room[]) => {
-  const [filters, setFilters] = useState<RoomFilters>({
-    maxPrice: 10000 // Set default max price to 10000
-  });
+  const [filters, setFilters] = useState<RoomFilters>({});
+  const [searchText, setSearchText] = useState('');
 
   const clearAllFilters = () => {
     setFilters({});
+    setSearchText('');
   };
 
   // Filter and sort rooms based on user criteria
@@ -20,23 +19,13 @@ export const useRoomFilters = (rooms: Room[]) => {
         return false;
       }
 
-      // Location-based filtering using coordinates
-      if (filters.searchLocation) {
-        const { latitude, longitude, radius } = filters.searchLocation;
-        
-        // If room has coordinates, filter by distance
-        if (room.latitude && room.longitude) {
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            room.latitude,
-            room.longitude
-          );
-          
-          // Filter by radius if specified
-          if (radius && distance > radius) {
-            return false;
-          }
+      // Text-based search on location/area name (case-insensitive)
+      if (searchText.trim()) {
+        const searchLower = searchText.toLowerCase().trim();
+        const locationMatch = room.location?.toLowerCase().includes(searchLower);
+        const titleMatch = room.title?.toLowerCase().includes(searchLower);
+        if (!locationMatch && !titleMatch) {
+          return false;
         }
       }
       
@@ -78,34 +67,39 @@ export const useRoomFilters = (rooms: Room[]) => {
       return true;
     });
 
-    // Add distance to each room and sort by distance if search location is set
-    if (filters.searchLocation) {
-      const { latitude, longitude } = filters.searchLocation;
-      
-      result = result.map(room => {
-        if (room.latitude && room.longitude) {
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            room.latitude,
-            room.longitude
-          );
-          return { ...room, distance };
+    // Sort: nearest first (if has location), then by price (lowest first), then by date (newest first)
+    result.sort((a, b) => {
+      // If both have distance, sort by distance first
+      if (a.distance !== undefined && b.distance !== undefined) {
+        if (a.distance !== b.distance) {
+          return a.distance - b.distance;
         }
-        return { ...room, distance: undefined };
-      });
-
-      // Sort by distance (rooms with coordinates first, then by distance)
-      result.sort((a, b) => {
-        if (a.distance === undefined && b.distance === undefined) return 0;
-        if (a.distance === undefined) return 1;
-        if (b.distance === undefined) return -1;
-        return a.distance - b.distance;
-      });
-    }
+      } else if (a.distance !== undefined) {
+        return -1;
+      } else if (b.distance !== undefined) {
+        return 1;
+      }
+      
+      // Then sort by price (lowest first)
+      if (a.price !== b.price) {
+        return a.price - b.price;
+      }
+      
+      // Then sort by created date (newest first)
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
 
     return result;
-  }, [rooms, filters]);
+  }, [rooms, filters, searchText]);
 
-  return { filters, setFilters, filteredRooms, clearAllFilters };
+  return { 
+    filters, 
+    setFilters, 
+    filteredRooms, 
+    clearAllFilters,
+    searchText,
+    setSearchText
+  };
 };
