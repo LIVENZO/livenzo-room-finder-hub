@@ -10,6 +10,7 @@ import RoomHeader from '@/components/room/RoomHeader';
 import RoomContent from '@/components/room/RoomContent';
 import RoomActionCard from '@/components/room/RoomActionCard';
 import RoomImageViewer from '@/components/room/RoomImageViewer';
+import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
 
 const RoomDetail = () => {
@@ -105,6 +106,13 @@ const RoomDetail = () => {
               onClose={() => setViewerOpen(false)}
             />
             
+            {/* Video Tour - Below image gallery */}
+            {room.videos && room.videos.length > 0 && (
+              <div className="mt-6">
+                <RoomVideoPlayer videos={room.videos} />
+              </div>
+            )}
+            
             {/* Room header information */}
             <RoomHeader 
               room={room}
@@ -120,7 +128,6 @@ const RoomDetail = () => {
               roomId={room.id}
               roomRules={roomRules}
               roomAmenities={roomAmenities}
-              videos={room.videos}
             />
           </div>
           

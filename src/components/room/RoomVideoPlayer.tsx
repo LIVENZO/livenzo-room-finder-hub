@@ -1,5 +1,6 @@
 import React from 'react';
 import { Video } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RoomVideoPlayerProps {
   videos: string[];
@@ -11,12 +12,14 @@ const RoomVideoPlayer: React.FC<RoomVideoPlayerProps> = ({ videos }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <Video className="h-5 w-5" />
-        Room Video Tour
-      </h3>
-      <div className="grid grid-cols-1 gap-4">
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Video className="h-5 w-5 text-primary" />
+          Room Video Tour
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {videos.map((videoUrl, index) => (
           <div key={index} className="relative rounded-lg overflow-hidden bg-black">
             <video
@@ -32,8 +35,8 @@ const RoomVideoPlayer: React.FC<RoomVideoPlayerProps> = ({ videos }) => {
             </video>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
