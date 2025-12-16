@@ -4,6 +4,7 @@ export interface Room {
   title: string;
   description: string;
   images: string[];
+  videos?: string[]; // Room video tour URLs (max 2 videos)
   price: number;
   location: string;
   latitude?: number;

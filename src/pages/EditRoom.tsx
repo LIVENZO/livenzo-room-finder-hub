@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Layout from '@/components/Layout';
-import { uploadImagesToStorage } from '@/services/storage';
+import { uploadImagesToStorage, uploadVideosToStorage } from '@/services/storage';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -15,6 +15,7 @@ import { formSchema, FormValues } from '@/components/room-listing/schemas/roomLi
 import BasicRoomInfoFields from '@/components/room-listing/BasicRoomInfoFields';
 import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFields';
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
+import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { parseFacilities } from '@/utils/roomUtils';
 
 const EditRoom: React.FC = () => {
@@ -27,6 +28,9 @@ const EditRoom: React.FC = () => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -99,6 +103,12 @@ const EditRoom: React.FC = () => {
           setImagePreviews(data.images);
         }
 
+        // Set existing videos
+        if (data.videos && Array.isArray(data.videos)) {
+          setExistingVideos(data.videos);
+          setVideoPreviews(data.videos);
+        }
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error in loadRoomData:', error);
@@ -155,6 +165,50 @@ const EditRoom: React.FC = () => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalVideos = existingVideos.length + videoFiles.length + files.length;
+    
+    if (totalVideos > 2) {
+      toast.error('Maximum 2 videos allowed');
+      return;
+    }
+
+    // Validate files
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (file.type !== 'video/mp4') {
+        toast.error(`${file.name}: Only MP4 format is allowed`);
+        continue;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name}: Maximum size is 100MB`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setVideoFiles(prev => [...prev, ...validFiles]);
+    
+    // Create previews for new files
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+    setVideoPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeVideo = (index: number) => {
+    // Check if it's an existing video or new file
+    if (index < existingVideos.length) {
+      setExistingVideos(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const fileIndex = index - existingVideos.length;
+      setVideoFiles(prev => prev.filter((_, i) => i !== fileIndex));
+    }
+    
+    setVideoPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: FormValues) => {
     const totalImages = existingImages.length + imageFiles.length;
     
@@ -174,6 +228,15 @@ const EditRoom: React.FC = () => {
 
       // Combine existing and new image URLs
       const allImageUrls = [...existingImages, ...newImageUrls];
+
+      // Upload new videos if any
+      let newVideoUrls: string[] = [];
+      if (videoFiles.length > 0) {
+        newVideoUrls = await uploadVideosToStorage(videoFiles, user!.id, 'rooms');
+      }
+
+      // Combine existing and new video URLs
+      const allVideoUrls = [...existingVideos, ...newVideoUrls];
 
       // Update room in database
       const { error: updateError } = await supabase
@@ -195,6 +258,7 @@ const EditRoom: React.FC = () => {
             food: data.food,
           },
           images: allImageUrls,
+          videos: allVideoUrls,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -247,6 +311,19 @@ const EditRoom: React.FC = () => {
                   isSubmitting={isSubmitting}
                   onImageChange={handleImageChange}
                   onRemoveImage={removeImage}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <VideoUploadSection
+                  videoFiles={videoFiles}
+                  videoPreviews={videoPreviews}
+                  existingVideos={existingVideos}
+                  isSubmitting={isSubmitting}
+                  onVideoChange={handleVideoChange}
+                  onRemoveVideo={removeVideo}
                 />
               </CardContent>
             </Card>

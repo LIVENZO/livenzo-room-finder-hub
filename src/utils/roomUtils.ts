@@ -60,6 +60,7 @@ export const mapDbRoomToRoom = (data: any): Room => {
     title: data.title,
     description: data.description,
     images: data.images || [],
+    videos: data.videos || [],
     price: Number(data.price),
     location: data.location,
     latitude: data.location_latitude ? Number(data.location_latitude) : undefined,
