@@ -1035,6 +1035,7 @@ export type Database = {
           price: number
           title: string
           updated_at: string | null
+          videos: string[] | null
         }
         Insert: {
           available?: boolean
@@ -1054,6 +1055,7 @@ export type Database = {
           price: number
           title: string
           updated_at?: string | null
+          videos?: string[] | null
         }
         Update: {
           available?: boolean
@@ -1073,6 +1075,7 @@ export type Database = {
           price?: number
           title?: string
           updated_at?: string | null
+          videos?: string[] | null
         }
         Relationships: []
       }

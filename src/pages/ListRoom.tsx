@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Layout from '@/components/Layout';
-import { uploadImagesToStorage } from '@/services/storage';
+import { uploadImagesToStorage, uploadVideosToStorage } from '@/services/storage';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -15,6 +15,7 @@ import { formSchema, FormValues } from '@/components/room-listing/schemas/roomLi
 import BasicRoomInfoFields from '@/components/room-listing/BasicRoomInfoFields';
 import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFields';
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
+import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { fetchUserProfile } from '@/services/UserProfileService';
 
 const ListRoom: React.FC = () => {
@@ -24,6 +25,8 @@ const ListRoom: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [profileChecked, setProfileChecked] = useState(false);
 
   // Initialize form with react-hook-form
@@ -135,6 +138,47 @@ const ListRoom: React.FC = () => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
+
+  // Handle video selection
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    // Check if adding these files would exceed the 2 video limit
+    if (videoFiles.length + files.length > 2) {
+      toast.error('You can upload a maximum of 2 videos');
+      return;
+    }
+    
+    // Validate each file
+    const newFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      if (file.type !== 'video/mp4') {
+        toast.error(`${file.name}: Only MP4 format is allowed`);
+        continue;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name}: Maximum size is 100MB`);
+        continue;
+      }
+      newFiles.push(file);
+    }
+    
+    if (newFiles.length === 0) return;
+    
+    setVideoFiles(prev => [...prev, ...newFiles]);
+    
+    // Create and store video previews
+    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+    setVideoPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  // Remove a video
+  const removeVideo = (index: number) => {
+    URL.revokeObjectURL(videoPreviews[index]);
+    setVideoFiles(prev => prev.filter((_, i) => i !== index));
+    setVideoPreviews(prev => prev.filter((_, i) => i !== index));
+  };
   
   // Handle form submission
   const onSubmit = async (values: FormValues) => {
@@ -154,11 +198,11 @@ const ListRoom: React.FC = () => {
       console.log('Starting room listing process...');
       console.log('User ID:', user.id);
       console.log('Images to upload:', imageFiles.length);
+      console.log('Videos to upload:', videoFiles.length);
       
       // Step 1: Upload images to Supabase Storage
-      const toastId = toast.loading('Preparing to upload images...');
+      const toastId = toast.loading('Uploading images...');
       
-      // Ensure we're using the correct bucket name 'rooms'
       const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms');
       
       if (imageUrls.length === 0) {
@@ -169,9 +213,18 @@ const ListRoom: React.FC = () => {
       }
       
       console.log('Images uploaded successfully:', imageUrls);
+
+      // Step 2: Upload videos if any
+      let videoUrls: string[] = [];
+      if (videoFiles.length > 0) {
+        toast.loading('Uploading videos...', { id: toastId });
+        videoUrls = await uploadVideosToStorage(videoFiles, user.id, 'rooms');
+        console.log('Videos uploaded:', videoUrls);
+      }
+      
       toast.loading('Creating room listing...', { id: toastId });
       
-      // Step 2: Save room data to Supabase
+      // Step 3: Save room data to Supabase
       const roomData = {
         title: values.title,
         description: values.description,
@@ -190,6 +243,7 @@ const ListRoom: React.FC = () => {
         owner_id: user.id,
         owner_phone: values.owner_phone,
         images: imageUrls,
+        videos: videoUrls,
       };
       
       console.log('Inserting room data:', roomData);
@@ -210,7 +264,7 @@ const ListRoom: React.FC = () => {
       console.log('Room created successfully:', room);
       toast.success('Room listed successfully!', { id: toastId });
       
-      // Step 3: Redirect to my listings
+      // Step 4: Redirect to my listings
       navigate('/my-listings');
       
     } catch (error: any) {
@@ -240,6 +294,14 @@ const ListRoom: React.FC = () => {
                   isSubmitting={isSubmitting}
                   onImageChange={handleImageChange}
                   onRemoveImage={removeImage}
+                />
+
+                <VideoUploadSection
+                  videoFiles={videoFiles}
+                  videoPreviews={videoPreviews}
+                  isSubmitting={isSubmitting}
+                  onVideoChange={handleVideoChange}
+                  onRemoveVideo={removeVideo}
                 />
                 
                 <RoomPreferencesFields control={form.control} />

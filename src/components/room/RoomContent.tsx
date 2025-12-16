@@ -2,25 +2,31 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RoomReviews from '@/components/RoomReviews';
+import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
 
 interface RoomContentProps {
   description: string;
   roomId: string;
   roomRules: string[];
   roomAmenities: Record<string, boolean | string | undefined>;
+  videos?: string[];
 }
 
 const RoomContent: React.FC<RoomContentProps> = ({
   description,
   roomId,
   roomRules,
-  roomAmenities
+  roomAmenities,
+  videos = []
 }) => {
+  const hasVideos = videos && videos.length > 0;
+
   return (
     <Tabs defaultValue="description" className="mt-8">
       <TabsList>
         <TabsTrigger value="description">Description</TabsTrigger>
         <TabsTrigger value="amenities">Amenities</TabsTrigger>
+        {hasVideos && <TabsTrigger value="video">Video Tour</TabsTrigger>}
         <TabsTrigger value="reviews">Reviews</TabsTrigger>
       </TabsList>
       <TabsContent value="description" className="py-4">
@@ -55,6 +61,11 @@ const RoomContent: React.FC<RoomContentProps> = ({
           })}
         </div>
       </TabsContent>
+      {hasVideos && (
+        <TabsContent value="video" className="py-4">
+          <RoomVideoPlayer videos={videos} />
+        </TabsContent>
+      )}
       <TabsContent value="reviews" className="py-4">
         <RoomReviews roomId={roomId} />
       </TabsContent>

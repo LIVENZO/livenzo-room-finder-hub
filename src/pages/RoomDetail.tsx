@@ -120,6 +120,7 @@ const RoomDetail = () => {
               roomId={room.id}
               roomRules={roomRules}
               roomAmenities={roomAmenities}
+              videos={room.videos}
             />
           </div>
           
