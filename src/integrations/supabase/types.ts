@@ -1453,6 +1453,7 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
+          videos: string[]
         }[]
       }
       get_rooms_public: {
@@ -1473,6 +1474,7 @@ export type Database = {
           owner_phone: string
           price: number
           title: string
+          videos: string[]
         }[]
       }
       get_user_fcm_tokens: {
