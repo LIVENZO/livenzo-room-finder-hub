@@ -101,12 +101,18 @@ const EditRoom: React.FC = () => {
         if (data.images && Array.isArray(data.images)) {
           setExistingImages(data.images);
           setImagePreviews(data.images);
+        } else {
+          setExistingImages([]);
+          setImagePreviews([]);
         }
 
         // Set existing videos
         if (data.videos && Array.isArray(data.videos)) {
           setExistingVideos(data.videos);
           setVideoPreviews(data.videos);
+        } else {
+          setExistingVideos([]);
+          setVideoPreviews([]);
         }
 
         setIsLoading(false);
@@ -146,9 +152,9 @@ const EditRoom: React.FC = () => {
 
     setImageFiles(prev => [...prev, ...files]);
     
-    // Create previews for new files
+    // Create previews for new files and append to existing previews
     const newPreviews = files.map(file => URL.createObjectURL(file));
-    setImagePreviews(prev => [...prev, ...newPreviews]);
+    setImagePreviews(prev => [...existingImages, ...prev.slice(existingImages.length), ...newPreviews]);
   };
 
   const removeImage = (index: number) => {
@@ -192,9 +198,9 @@ const EditRoom: React.FC = () => {
 
     setVideoFiles(prev => [...prev, ...validFiles]);
     
-    // Create previews for new files
+    // Create previews for new files and append to existing previews
     const newPreviews = validFiles.map(file => URL.createObjectURL(file));
-    setVideoPreviews(prev => [...prev, ...newPreviews]);
+    setVideoPreviews(prev => [...existingVideos, ...prev.slice(existingVideos.length), ...newPreviews]);
   };
 
   const removeVideo = (index: number) => {
@@ -308,6 +314,7 @@ const EditRoom: React.FC = () => {
                 <ImageUploadSection
                   imageFiles={imageFiles}
                   imagePreviews={imagePreviews}
+                  existingImages={existingImages}
                   isSubmitting={isSubmitting}
                   onImageChange={handleImageChange}
                   onRemoveImage={removeImage}
