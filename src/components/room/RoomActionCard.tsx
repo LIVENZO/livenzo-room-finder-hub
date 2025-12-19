@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Phone, Loader2, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
-import { fetchUserProfile, UserProfile } from '@/services/UserProfileService';
 import LocationViewer from './LocationViewer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,26 +22,10 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   onCallOwner,
 }) => {
   const { user } = useAuth();
-  const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
-  const [loadingOwnerProfile, setLoadingOwnerProfile] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   
   // Check if current user is the owner
   const isOwner = user?.id === room.ownerId;
-
-  // Fetch owner profile to get location data
-  useEffect(() => {
-    const loadOwnerProfile = async () => {
-      if (room.ownerId) {
-        setLoadingOwnerProfile(true);
-        const profile = await fetchUserProfile(room.ownerId);
-        setOwnerProfile(profile);
-        setLoadingOwnerProfile(false);
-      }
-    };
-
-    loadOwnerProfile();
-  }, [room.ownerId]);
 
   const handleBookNow = async () => {
     if (!user) {
@@ -88,19 +71,8 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           {room.available ? "Available" : "Not Available"}
         </Badge>
         
-        {/* Location Viewer */}
-        {loadingOwnerProfile ? (
-          <div className="w-full h-12 bg-gray-100 rounded animate-pulse flex items-center justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="ml-2 text-sm text-gray-500">Loading location...</span>
-          </div>
-        ) : (
-          <LocationViewer 
-            room={room}
-            ownerLatitude={ownerProfile?.location_latitude ? Number(ownerProfile.location_latitude) : null}
-            ownerLongitude={ownerProfile?.location_longitude ? Number(ownerProfile.location_longitude) : null}
-          />
-        )}
+        {/* Location Viewer - uses room.latitude/longitude which includes fallback */}
+        <LocationViewer room={room} />
         
         {/* Call Owner Button - Hidden for property owner */}
         {!isOwner && ownerPhone && (

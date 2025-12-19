@@ -8,20 +8,17 @@ import { Room } from '@/types/room';
 
 interface LocationViewerProps {
   room: Room;
-  ownerLatitude?: number | null;
-  ownerLongitude?: number | null;
 }
 
-const LocationViewer: React.FC<LocationViewerProps> = ({ 
-  room, 
-  ownerLatitude, 
-  ownerLongitude 
-}) => {
+const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
   const [open, setOpen] = useState(false);
   const [mapsUrls, setMapsUrls] = useState<{ embedUrl?: string; directionsUrl?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   
-  const hasLocation = ownerLatitude && ownerLongitude;
+  // Use room's latitude/longitude (already includes fallback from database)
+  const latitude = room.latitude;
+  const longitude = room.longitude;
+  const hasLocation = latitude && longitude;
 
   useEffect(() => {
     if (hasLocation && open) {
@@ -30,11 +27,11 @@ const LocationViewer: React.FC<LocationViewerProps> = ({
   }, [hasLocation, open]);
 
   const loadMapsUrls = async () => {
-    if (!hasLocation) return;
+    if (!latitude || !longitude) return;
     
     setLoading(true);
     try {
-      const urls = await getMapsUrlsSecure(ownerLatitude, ownerLongitude);
+      const urls = await getMapsUrlsSecure(latitude, longitude);
       setMapsUrls(urls);
     } catch (error) {
       console.error('Error loading maps URLs:', error);
