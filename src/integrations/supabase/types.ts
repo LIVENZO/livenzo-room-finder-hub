@@ -1246,6 +1246,7 @@ export type Database = {
       rooms_public_view: {
         Row: {
           available: boolean | null
+          booking: boolean | null
           created_at: string | null
           description: string | null
           facilities: Json | null
@@ -1260,9 +1261,12 @@ export type Database = {
           owner_phone: string | null
           price: number | null
           title: string | null
+          updated_at: string | null
+          videos: string[] | null
         }
         Insert: {
-          available?: never
+          available?: boolean | null
+          booking?: boolean | null
           created_at?: string | null
           description?: string | null
           facilities?: Json | null
@@ -1274,12 +1278,15 @@ export type Database = {
           location_latitude?: number | null
           location_longitude?: number | null
           owner_id?: string | null
-          owner_phone?: never
+          owner_phone?: string | null
           price?: number | null
           title?: string | null
+          updated_at?: string | null
+          videos?: string[] | null
         }
         Update: {
-          available?: never
+          available?: boolean | null
+          booking?: boolean | null
           created_at?: string | null
           description?: string | null
           facilities?: Json | null
@@ -1291,39 +1298,32 @@ export type Database = {
           location_latitude?: number | null
           location_longitude?: number | null
           owner_id?: string | null
-          owner_phone?: never
+          owner_phone?: string | null
           price?: number | null
           title?: string | null
+          updated_at?: string | null
+          videos?: string[] | null
         }
         Relationships: []
       }
       safe_profile_view: {
         Row: {
-          accommodation_type: string | null
           avatar_url: string | null
           full_name: string | null
           id: string | null
-          property_name: string | null
           public_id: string | null
-          resident_type: string | null
         }
         Insert: {
-          accommodation_type?: string | null
           avatar_url?: string | null
           full_name?: string | null
           id?: string | null
-          property_name?: string | null
           public_id?: string | null
-          resident_type?: string | null
         }
         Update: {
-          accommodation_type?: string | null
           avatar_url?: string | null
           full_name?: string | null
           id?: string | null
-          property_name?: string | null
           public_id?: string | null
-          resident_type?: string | null
         }
         Relationships: []
       }
