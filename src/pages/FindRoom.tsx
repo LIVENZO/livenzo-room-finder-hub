@@ -15,7 +15,20 @@ import { SlidersHorizontal } from 'lucide-react';
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { filteredRooms, filters, setFilters, isLoading, clearAllFilters, searchText, setSearchText } = useRooms();
+  const { 
+    filteredRooms, 
+    filters, 
+    setFilters, 
+    isLoading, 
+    clearAllFilters, 
+    searchText, 
+    setSearchText,
+    nearMeActive,
+    nearMeLoading,
+    nearMeError,
+    activateNearMe,
+    deactivateNearMe,
+  } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   
@@ -40,13 +53,14 @@ const FindRoom: React.FC = () => {
 
   const handleClearFilters = () => {
     clearAllFilters();
+    deactivateNearMe();
   };
 
   // Check if any filters are active
   const hasActiveFilters = Object.keys(filters).some(key => {
     const value = filters[key as keyof RoomFilters];
     return value !== undefined && value !== '';
-  }) || searchText.trim() !== '';
+  }) || searchText.trim() !== '' || nearMeActive;
   
   if (!user) return null;
   
@@ -67,10 +81,14 @@ const FindRoom: React.FC = () => {
         </div>
         
         {/* Search and Filter Bar */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4">
           <SearchBar 
             searchText={searchText}
             onSearchChange={setSearchText}
+            nearMeActive={nearMeActive}
+            nearMeLoading={nearMeLoading}
+            onNearMeClick={activateNearMe}
+            onNearMeDeactivate={deactivateNearMe}
           />
           
           {/* Mobile Filter Button */}
@@ -93,6 +111,23 @@ const FindRoom: React.FC = () => {
             />
           </div>
         </div>
+        
+        {/* Near Me Status Messages */}
+        {nearMeLoading && (
+          <div className="mb-4 p-3 bg-muted rounded-lg text-center text-sm text-muted-foreground">
+            📍 Finding rooms near you...
+          </div>
+        )}
+        {nearMeActive && !nearMeLoading && (
+          <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center text-sm text-primary font-medium">
+            📍 Showing rooms near your location
+          </div>
+        )}
+        {nearMeError && (
+          <div className="mb-4 p-3 bg-destructive/10 rounded-lg text-center text-sm text-destructive">
+            {nearMeError}
+          </div>
+        )}
         
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Filter Sidebar */}
