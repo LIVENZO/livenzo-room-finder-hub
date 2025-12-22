@@ -2,11 +2,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Room } from '@/types/room';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import RoomFacilityBadges from './room/RoomFacilityBadges';
 import RoomPriceBadge from './room/RoomPriceBadge';
 import RoomLocation from './room/RoomLocation';
+import { formatDistance } from '@/utils/roomUtils';
 
 interface RoomCardProps {
   room: Room;
@@ -26,7 +28,12 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
           alt={room.title} 
           className="w-full h-full object-cover"
         />
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex gap-2">
+          {room.distance !== undefined && (
+            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
+              📍 {formatDistance(room.distance)}
+            </Badge>
+          )}
           <RoomPriceBadge price={room.price} />
         </div>
       </AspectRatio>
