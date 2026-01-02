@@ -112,6 +112,19 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
         
+        {/* Promotional Banner */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-xl border border-primary/20 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center">
+            <span className="text-lg">🎉</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+              <span className="font-semibold text-foreground">New Year Special</span>
+              <span className="text-primary font-bold">Get ₹200 OFF</span>
+              <span className="text-muted-foreground text-sm">on your first booking</span>
+            </div>
+            <span className="text-xs text-muted-foreground/80 hidden sm:inline">• Limited time offer</span>
+          </div>
+        </div>
+
         {/* Near Me Status Messages */}
         {nearMeLoading && (
           <div className="mb-4 p-3 bg-muted rounded-lg text-center text-sm text-muted-foreground">
