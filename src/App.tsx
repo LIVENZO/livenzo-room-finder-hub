@@ -8,7 +8,6 @@ import { RoomProvider } from "./context/RoomContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
-import { useReferralCapture } from "./hooks/useReferralCapture";
 import SetLocation from "./pages/SetLocation";
 import { useState } from "react";
 
@@ -34,7 +33,6 @@ import NotificationTest from "./pages/NotificationTest";
 const FCMWrapper = () => {
   useFCMRegistration();
   useNotificationNavigation();
-  useReferralCapture(); // Capture referral code from URL params
   return null;
 };
 

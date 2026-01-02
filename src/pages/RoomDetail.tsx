@@ -12,7 +12,6 @@ import RoomActionCard from '@/components/room/RoomActionCard';
 import RoomImageViewer from '@/components/room/RoomImageViewer';
 import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
-import ReferralBanner from '@/components/referral/ReferralBanner';
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,11 +139,6 @@ const RoomDetail = () => {
               onCallOwner={handleCallOwner}
             />
           </div>
-        </div>
-        
-        {/* Referral Banner */}
-        <div className="mt-8">
-          <ReferralBanner />
         </div>
       </div>
     </Layout>

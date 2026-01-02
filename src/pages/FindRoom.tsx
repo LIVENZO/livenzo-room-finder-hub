@@ -9,7 +9,6 @@ import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
-
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -119,9 +118,10 @@ const FindRoom: React.FC = () => {
             <span className="text-lg">🎉</span>
             <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
               <span className="font-semibold text-foreground">New Year Special</span>
-              <span className="text-primary font-bold">Get ₹100 OFF</span>
+              <span className="text-primary font-bold">Get ₹200 OFF</span>
               <span className="text-muted-foreground text-sm">on your first booking</span>
             </div>
+            <span className="text-xs text-muted-foreground/80 hidden sm:inline">• Limited time offer</span>
           </div>
         </div>
 

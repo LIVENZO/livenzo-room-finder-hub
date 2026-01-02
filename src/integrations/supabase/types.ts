@@ -754,42 +754,6 @@ export type Database = {
         }
         Relationships: []
       }
-      referrals: {
-        Row: {
-          created_at: string
-          id: string
-          referral_code: string
-          referred_id: string | null
-          referrer_id: string
-          reward_amount: number | null
-          reward_credited_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          referral_code: string
-          referred_id?: string | null
-          referrer_id: string
-          reward_amount?: number | null
-          reward_credited_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          referral_code?: string
-          referred_id?: string | null
-          referrer_id?: string
-          reward_amount?: number | null
-          reward_credited_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       relationships: {
         Row: {
           archived: boolean | null
@@ -1365,10 +1329,6 @@ export type Database = {
       }
     }
     Functions: {
-      apply_referral_code: {
-        Args: { p_referral_code: string }
-        Returns: boolean
-      }
       archive_previous_connection_data: {
         Args: { new_owner_id: string; renter_user_id: string }
         Returns: undefined
@@ -1445,7 +1405,6 @@ export type Database = {
         Returns: string
       }
       generate_public_id: { Args: never; Returns: string }
-      generate_referral_code: { Args: never; Returns: string }
       get_active_renter_relationships: {
         Args: { renter_user_id: string }
         Returns: {
@@ -1460,13 +1419,6 @@ export type Database = {
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }
-      get_or_create_referral_code: {
-        Args: never
-        Returns: {
-          referral_code: string
-          referral_id: string
-        }[]
-      }
       get_rent_management_with_reset: {
         Args: { p_owner_id?: string }
         Returns: {
