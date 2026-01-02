@@ -1,11 +1,35 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Applies a referral code for a newly signed up user.
- * This should only be called once during the first signup.
+ * Checks if a user profile exists in the database.
+ * Returns true if profile exists (existing user), false if not (new user).
+ */
+export async function checkProfileExists(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error checking profile existence:', error);
+      return false;
+    }
+    
+    return data !== null;
+  } catch (error) {
+    console.error('Error checking profile existence:', error);
+    return false;
+  }
+}
+
+/**
+ * Applies a referral code for a new user (one without an existing profile).
+ * This should only be called after confirming the user has no profile yet.
  * 
  * @param referralCode - The referral code to apply
- * @param newUserId - The UUID of the newly signed up user
+ * @param newUserId - The UUID of the new user
  * @returns true if referral was successfully applied, false otherwise
  */
 export async function applyReferralForNewUser(
@@ -77,16 +101,4 @@ export async function applyReferralForNewUser(
     console.error('Error applying referral:', error);
     return false;
   }
-}
-
-/**
- * Checks if a user is a first-time user (newly created)
- * by checking if their account was created within the last minute
- */
-export function isNewUser(createdAt: string): boolean {
-  const createdTime = new Date(createdAt).getTime();
-  const now = Date.now();
-  const oneMinute = 60 * 1000;
-  
-  return (now - createdTime) < oneMinute;
 }
