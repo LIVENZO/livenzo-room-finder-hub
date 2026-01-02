@@ -9,6 +9,7 @@ import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
+import ReferralBanner from '@/components/referral/ReferralBanner';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -121,10 +122,11 @@ const FindRoom: React.FC = () => {
               <span className="text-primary font-bold">Get ₹200 OFF</span>
               <span className="text-muted-foreground text-sm">on your first booking</span>
             </div>
-            <span className="text-xs text-muted-foreground/80 hidden sm:inline">• Limited time offer</span>
           </div>
         </div>
 
+        {/* Referral Banner */}
+        <ReferralBanner />
         {/* Near Me Status Messages */}
         {nearMeLoading && (
           <div className="mb-4 p-3 bg-muted rounded-lg text-center text-sm text-muted-foreground">
