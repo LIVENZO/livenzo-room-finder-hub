@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
@@ -8,13 +8,25 @@ import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
+import { useReferral } from '@/hooks/useReferral';
 
 const Index: React.FC = () => {
   const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
+  const { captureReferralFromURL, applyReferral } = useReferral();
+
+  // Capture referral code from URL on mount
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      sessionStorage.setItem('pendingReferralCode', refCode);
+      console.log('Referral code captured:', refCode);
+    }
+  }, [searchParams]);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -39,6 +51,12 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
+        // Apply pending referral for new users
+        const pendingRef = sessionStorage.getItem('pendingReferralCode');
+        if (pendingRef && user.id) {
+          await applyReferral(user.id);
+        }
+        
         // Store the user role if it wasn't already set during login
         if (!localStorage.getItem('userRole')) {
           localStorage.setItem('userRole', userRole);
@@ -59,7 +77,7 @@ const Index: React.FC = () => {
     if (!isLoading) {
       checkAuth();
     }
-  }, [user, session, navigate, isLoading, userRole]);
+  }, [user, session, navigate, isLoading, userRole, applyReferral]);
   
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);
