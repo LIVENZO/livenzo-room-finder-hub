@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { getStoredUserRoles, storeUserRole, getDefaultRole } from '../authUtils';
 import { AUTH_CONFIG } from '@/config/auth';
+import { getPendingReferralCode, clearPendingReferralCode } from '@/hooks/useReferralCapture';
+import { applyReferralForNewUser, isNewUser } from '@/services/ReferralService';
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
@@ -240,6 +242,23 @@ export function useAuthState() {
           // Ensure the user has a role assignment
           await ensureUserRoleAssignment(currentSession.user, selectedRole);
           await setupUserRole(currentSession.user);
+          
+          // Apply referral code for new users only
+          const pendingReferralCode = getPendingReferralCode();
+          if (pendingReferralCode && currentSession.user.created_at) {
+            if (isNewUser(currentSession.user.created_at)) {
+              console.log('New user detected, applying referral code:', pendingReferralCode);
+              const applied = await applyReferralForNewUser(pendingReferralCode, currentSession.user.id);
+              if (applied) {
+                toast.success('Referral applied! You\'ll get ₹200 off on your first booking.');
+              }
+            } else {
+              console.log('Existing user detected, skipping referral application');
+            }
+            // Clear the pending referral code regardless of success
+            clearPendingReferralCode();
+          }
+          
           redirectToDashboard();
         }, 0);
       }
