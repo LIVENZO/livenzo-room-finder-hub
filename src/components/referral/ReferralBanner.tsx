@@ -62,19 +62,19 @@ const ReferralBanner: React.FC = () => {
     <button
       onClick={handleReferralClick}
       disabled={isLoading}
-      className="w-full mb-4 p-4 bg-gradient-to-r from-accent/15 via-accent/10 to-primary/10 rounded-xl border border-accent/20 animate-fade-in cursor-pointer hover:border-accent/40 transition-all duration-200 hover:shadow-sm active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+      className="w-full mb-4 p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-xl border border-primary/20 animate-fade-in cursor-pointer hover:border-primary/40 transition-all duration-200 hover:shadow-sm active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
     >
       <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center">
         <span className="text-lg">🤝</span>
         <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
           <span className="font-semibold text-foreground">Refer a Friend</span>
-          <span className="text-accent font-bold">Earn ₹200</span>
+          <span className="text-primary font-bold">Earn ₹200</span>
           <span className="text-muted-foreground text-sm">when they complete first booking</span>
         </div>
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-accent ml-1" />
+          <Loader2 className="h-4 w-4 animate-spin text-primary ml-1" />
         ) : (
-          <Share2 className="h-4 w-4 text-accent ml-1 hidden sm:inline" />
+          <Share2 className="h-4 w-4 text-primary ml-1 hidden sm:inline" />
         )}
       </div>
     </button>
