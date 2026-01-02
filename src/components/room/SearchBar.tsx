@@ -72,17 +72,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
           nearMeActive && "bg-primary text-primary-foreground"
         )}
       >
-        {nearMeLoading ? (
+      {nearMeLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : nearMeActive ? (
           <X className="h-4 w-4" />
         ) : (
-          <MapPin className="h-4 w-4" />
+          <span>📍</span>
         )}
-        <span className="hidden sm:inline">
+        <span className="text-sm whitespace-nowrap">
           {nearMeLoading ? "Finding..." : nearMeActive ? "Clear" : "Near Me"}
         </span>
-        <span className="sm:hidden">📍</span>
       </Button>
     </div>
   );
