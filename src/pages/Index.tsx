@@ -17,14 +17,14 @@ const Index: React.FC = () => {
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
-  const { captureReferralFromURL, applyReferral } = useReferral();
+  const { captureReferralFromURL } = useReferral();
 
-  // Capture referral code from URL on mount
+  // Capture referral code from URL on mount and store in localStorage
   useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
-      sessionStorage.setItem('pendingReferralCode', refCode);
-      console.log('Referral code captured:', refCode);
+      localStorage.setItem('pendingReferralCode', refCode);
+      console.log('Referral code captured and stored:', refCode);
     }
   }, [searchParams]);
   
@@ -51,15 +51,8 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
-        // Check if user is NEW (created within last 60 seconds)
-        const createdAt = user.created_at ? new Date(user.created_at) : null;
-        const isNewUser = createdAt ? (Date.now() - createdAt.getTime()) < 60000 : false;
-        
-        // Apply pending referral only for new users
-        const pendingRef = sessionStorage.getItem('pendingReferralCode');
-        if (pendingRef && user.id) {
-          await applyReferral(user.id, isNewUser);
-        }
+        // Referral is now handled by auth state listener on SIGNED_UP event
+        // No need to apply here
         
         // Store the user role if it wasn't already set during login
         if (!localStorage.getItem('userRole')) {
@@ -81,7 +74,7 @@ const Index: React.FC = () => {
     if (!isLoading) {
       checkAuth();
     }
-  }, [user, session, navigate, isLoading, userRole, applyReferral]);
+  }, [user, session, navigate, isLoading, userRole]);
   
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);
