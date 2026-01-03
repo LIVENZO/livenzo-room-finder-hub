@@ -79,12 +79,19 @@ export const useReferral = () => {
     return sessionStorage.getItem('pendingReferralCode');
   };
 
-  // Apply referral after signup
-  const applyReferral = async (newUserId: string): Promise<boolean> => {
+  // Apply referral after signup - updates existing row in referrals table
+  const applyReferral = async (newUserId: string, isNewUser: boolean = false): Promise<boolean> => {
     const pendingCode = sessionStorage.getItem('pendingReferralCode');
     
     if (!pendingCode) {
       console.log('No pending referral code to apply');
+      return false;
+    }
+
+    // Only apply referral for new users
+    if (!isNewUser) {
+      console.log('User is not new, skipping referral application');
+      sessionStorage.removeItem('pendingReferralCode');
       return false;
     }
 
@@ -102,45 +109,47 @@ export const useReferral = () => {
         return false;
       }
 
-      // Get referrer from the code
-      const { data: referrerData } = await supabase
+      // Get referrer's referral row matching the code
+      const { data: referralRow } = await supabase
         .from('referrals')
-        .select('referrer_id')
+        .select('id, referrer_id')
         .eq('referral_code', pendingCode)
         .is('referred_id', null)
         .maybeSingle();
 
-      if (!referrerData) {
+      if (!referralRow) {
         console.log('Invalid or already used referral code');
         sessionStorage.removeItem('pendingReferralCode');
         return false;
       }
 
       // Prevent self-referral
-      if (referrerData.referrer_id === newUserId) {
+      if (referralRow.referrer_id === newUserId) {
         console.log('Cannot use own referral code');
         sessionStorage.removeItem('pendingReferralCode');
         toast.error('You cannot use your own referral code');
         return false;
       }
 
-      // Apply the referral using the RPC function
-      const { data: applied, error } = await supabase.rpc('apply_referral_code', {
-        p_referral_code: pendingCode
-      });
+      // Update the existing referral row with the new user's ID and set status to pending
+      const { error } = await supabase
+        .from('referrals')
+        .update({
+          referred_id: newUserId,
+          status: 'pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', referralRow.id)
+        .is('referred_id', null); // Extra safety check
 
       if (error) {
         console.error('Error applying referral:', error);
         return false;
       }
 
-      if (applied) {
-        sessionStorage.removeItem('pendingReferralCode');
-        toast.success('Referral code applied! You\'ll get ₹200 OFF on your first booking.');
-        return true;
-      }
-
-      return false;
+      sessionStorage.removeItem('pendingReferralCode');
+      toast.success('Referral code applied! You\'ll get ₹200 OFF on your first booking.');
+      return true;
     } catch (error) {
       console.error('Error in applyReferral:', error);
       return false;
