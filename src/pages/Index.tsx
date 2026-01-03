@@ -51,10 +51,14 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
-        // Apply pending referral for new users
+        // Check if user is NEW (created within last 60 seconds)
+        const createdAt = user.created_at ? new Date(user.created_at) : null;
+        const isNewUser = createdAt ? (Date.now() - createdAt.getTime()) < 60000 : false;
+        
+        // Apply pending referral only for new users
         const pendingRef = sessionStorage.getItem('pendingReferralCode');
         if (pendingRef && user.id) {
-          await applyReferral(user.id);
+          await applyReferral(user.id, isNewUser);
         }
         
         // Store the user role if it wasn't already set during login
