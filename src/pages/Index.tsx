@@ -17,14 +17,14 @@ const Index: React.FC = () => {
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
-  const { captureReferralFromURL } = useReferral();
+  const { captureReferralFromURL, applyReferral } = useReferral();
 
-  // Capture referral code from URL on mount and store in localStorage
+  // Capture referral code from URL on mount
   useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
-      localStorage.setItem('pendingReferralCode', refCode);
-      console.log('Referral code captured and stored:', refCode);
+      sessionStorage.setItem('pendingReferralCode', refCode);
+      console.log('Referral code captured:', refCode);
     }
   }, [searchParams]);
   
@@ -51,8 +51,11 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
-        // Referral is now handled by auth state listener on SIGNED_UP event
-        // No need to apply here
+        // Apply pending referral for new users
+        const pendingRef = sessionStorage.getItem('pendingReferralCode');
+        if (pendingRef && user.id) {
+          await applyReferral(user.id);
+        }
         
         // Store the user role if it wasn't already set during login
         if (!localStorage.getItem('userRole')) {
@@ -74,7 +77,7 @@ const Index: React.FC = () => {
     if (!isLoading) {
       checkAuth();
     }
-  }, [user, session, navigate, isLoading, userRole]);
+  }, [user, session, navigate, isLoading, userRole, applyReferral]);
   
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);

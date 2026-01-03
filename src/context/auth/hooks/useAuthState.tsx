@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { getStoredUserRoles, storeUserRole, getDefaultRole } from '../authUtils';
 import { AUTH_CONFIG } from '@/config/auth';
-import { applyReferralForNewUser } from '@/hooks/useReferralSignup';
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
@@ -176,14 +175,7 @@ export function useAuthState() {
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
     console.log("Auth state changed:", event, currentSession?.user?.email);
     
-    // Handle SIGNED_UP event - this guarantees user is NEW
-    if (event === 'SIGNED_UP' && currentSession?.user) {
-      console.log("New user signed up, applying referral if pending");
-      // Apply referral for new user - fire and forget
-      applyReferralForNewUser(currentSession.user.id);
-    }
-    
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_UP') {
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       

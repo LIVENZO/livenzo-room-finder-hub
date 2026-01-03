@@ -65,29 +65,91 @@ export const useReferral = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Capture referral code from URL and store in localStorage
+  // Capture referral code from URL
   const captureReferralFromURL = (): string | null => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
     
     if (refCode) {
-      // Store in localStorage for persistence across sessions
-      localStorage.setItem('pendingReferralCode', refCode);
-      console.log('Referral code captured from URL:', refCode);
+      // Store in sessionStorage for later use
+      sessionStorage.setItem('pendingReferralCode', refCode);
       return refCode;
     }
     
-    return localStorage.getItem('pendingReferralCode');
+    return sessionStorage.getItem('pendingReferralCode');
   };
 
-  // Get pending referral code from storage
-  const getPendingReferralCode = (): string | null => {
-    return localStorage.getItem('pendingReferralCode');
+  // Apply referral after signup
+  const applyReferral = async (newUserId: string): Promise<boolean> => {
+    const pendingCode = sessionStorage.getItem('pendingReferralCode');
+    
+    if (!pendingCode) {
+      console.log('No pending referral code to apply');
+      return false;
+    }
+
+    try {
+      // Check if user was already referred
+      const { data: existingReferral } = await supabase
+        .from('referrals')
+        .select('id')
+        .eq('referred_id', newUserId)
+        .maybeSingle();
+
+      if (existingReferral) {
+        console.log('User already has a referral');
+        sessionStorage.removeItem('pendingReferralCode');
+        return false;
+      }
+
+      // Get referrer from the code
+      const { data: referrerData } = await supabase
+        .from('referrals')
+        .select('referrer_id')
+        .eq('referral_code', pendingCode)
+        .is('referred_id', null)
+        .maybeSingle();
+
+      if (!referrerData) {
+        console.log('Invalid or already used referral code');
+        sessionStorage.removeItem('pendingReferralCode');
+        return false;
+      }
+
+      // Prevent self-referral
+      if (referrerData.referrer_id === newUserId) {
+        console.log('Cannot use own referral code');
+        sessionStorage.removeItem('pendingReferralCode');
+        toast.error('You cannot use your own referral code');
+        return false;
+      }
+
+      // Apply the referral using the RPC function
+      const { data: applied, error } = await supabase.rpc('apply_referral_code', {
+        p_referral_code: pendingCode
+      });
+
+      if (error) {
+        console.error('Error applying referral:', error);
+        return false;
+      }
+
+      if (applied) {
+        sessionStorage.removeItem('pendingReferralCode');
+        toast.success('Referral code applied! You\'ll get ₹200 OFF on your first booking.');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error in applyReferral:', error);
+      return false;
+    }
   };
 
   // Clear pending referral
   const clearPendingReferral = () => {
-    localStorage.removeItem('pendingReferralCode');
+    sessionStorage.removeItem('pendingReferralCode');
   };
 
   return {
@@ -97,7 +159,7 @@ export const useReferral = () => {
     getReferralLink,
     shareOnWhatsApp,
     captureReferralFromURL,
-    getPendingReferralCode,
+    applyReferral,
     clearPendingReferral
   };
 };
