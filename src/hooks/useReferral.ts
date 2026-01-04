@@ -58,7 +58,7 @@ export const useReferral = () => {
     const link = getReferralLink(code);
     const message = encodeURIComponent(
       `🏠 Hey! I found this amazing room finder app - Livenzo!\n\n` +
-      `Use my referral link and get ₹200 OFF on your first booking:\n${link}\n\n` +
+      `Use my referral link and get ₹100 OFF on your first booking:\n${link}\n\n` +
       `Find your perfect PG/room today! 🎉`
     );
 
