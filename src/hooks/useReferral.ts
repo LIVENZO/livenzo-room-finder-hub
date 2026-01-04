@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
 
 const APP_URL = 'https://livenzo-room-finder-hub.lovable.app';
+const REFERRAL_STORAGE_KEY = 'pendingReferralCode';
 
 export const useReferral = () => {
   const { user } = useAuth();
@@ -71,86 +72,111 @@ export const useReferral = () => {
     const refCode = urlParams.get('ref');
     
     if (refCode) {
-      // Store in sessionStorage for later use
-      sessionStorage.setItem('pendingReferralCode', refCode);
+      // Store in sessionStorage for later use after signup
+      sessionStorage.setItem(REFERRAL_STORAGE_KEY, refCode);
+      console.log('Referral code captured:', refCode);
       return refCode;
     }
     
-    return sessionStorage.getItem('pendingReferralCode');
+    return sessionStorage.getItem(REFERRAL_STORAGE_KEY);
   };
 
-  // Apply referral after signup
-  const applyReferral = async (newUserId: string): Promise<boolean> => {
-    const pendingCode = sessionStorage.getItem('pendingReferralCode');
-    
-    if (!pendingCode) {
-      console.log('No pending referral code to apply');
-      return false;
-    }
-
-    try {
-      // Check if user was already referred
-      const { data: existingReferral } = await supabase
-        .from('referrals')
-        .select('id')
-        .eq('referred_id', newUserId)
-        .maybeSingle();
-
-      if (existingReferral) {
-        console.log('User already has a referral');
-        sessionStorage.removeItem('pendingReferralCode');
-        return false;
-      }
-
-      // Get referrer from the code
-      const { data: referrerData } = await supabase
-        .from('referrals')
-        .select('referrer_id')
-        .eq('referral_code', pendingCode)
-        .is('referred_id', null)
-        .maybeSingle();
-
-      if (!referrerData) {
-        console.log('Invalid or already used referral code');
-        sessionStorage.removeItem('pendingReferralCode');
-        return false;
-      }
-
-      // Prevent self-referral
-      if (referrerData.referrer_id === newUserId) {
-        console.log('Cannot use own referral code');
-        sessionStorage.removeItem('pendingReferralCode');
-        toast.error('You cannot use your own referral code');
-        return false;
-      }
-
-      // Apply the referral using the RPC function
-      const { data: applied, error } = await supabase.rpc('apply_referral_code', {
-        p_referral_code: pendingCode
-      });
-
-      if (error) {
-        console.error('Error applying referral:', error);
-        return false;
-      }
-
-      if (applied) {
-        sessionStorage.removeItem('pendingReferralCode');
-        toast.success('Referral code applied! You\'ll get ₹200 OFF on your first booking.');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error in applyReferral:', error);
-      return false;
-    }
-  };
+  // Get stored referral code
+  const getStoredReferralCode = useCallback((): string | null => {
+    return sessionStorage.getItem(REFERRAL_STORAGE_KEY);
+  }, []);
 
   // Clear pending referral
   const clearPendingReferral = () => {
-    sessionStorage.removeItem('pendingReferralCode');
+    sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
   };
+
+  // Process referral after signup - ONLY for NEW users
+  // Uses the database function that validates if user is new
+  const processReferralForNewUser = async (): Promise<{ success: boolean; message: string }> => {
+    const pendingCode = getStoredReferralCode();
+    
+    if (!pendingCode) {
+      return { success: false, message: 'No referral code found' };
+    }
+
+    if (!user?.id) {
+      return { success: false, message: 'User not authenticated' };
+    }
+
+    try {
+      // Call the database function that handles all validation including new user check
+      const { data, error } = await supabase.rpc('create_referral_event', {
+        p_referral_code: pendingCode
+      });
+
+      // Always clear the stored code after processing
+      clearPendingReferral();
+
+      if (error) {
+        console.error('Error processing referral:', error);
+        return { success: false, message: error.message };
+      }
+
+      const result = data as { success: boolean; message: string; reason?: string };
+
+      if (result.success) {
+        console.log('Referral processed successfully for new user');
+        toast.success('Referral applied! You\'ll get ₹200 OFF on your first booking.');
+        return { success: true, message: 'Referral applied successfully!' };
+      } else {
+        console.log('Referral not applied:', result.reason, result.message);
+        // Don't show error toast for "not_new_user" - it's expected behavior
+        if (result.reason !== 'not_new_user') {
+          console.log('Referral issue:', result.message);
+        }
+        return { success: false, message: result.message };
+      }
+    } catch (error) {
+      console.error('Error in processReferralForNewUser:', error);
+      clearPendingReferral();
+      return { success: false, message: 'Failed to process referral' };
+    }
+  };
+
+  // Legacy function for backward compatibility
+  const applyReferral = async (newUserId: string): Promise<boolean> => {
+    const result = await processReferralForNewUser();
+    return result.success;
+  };
+
+  // Get referral stats for current user
+  const getReferralStats = useCallback(async () => {
+    if (!user?.id) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('referral_events')
+        .select('*')
+        .eq('referrer_id', user.id);
+
+      if (error) {
+        console.error('Error fetching referral stats:', error);
+        return null;
+      }
+
+      const totalReferrals = data?.length || 0;
+      const pendingRewards = data?.filter(r => r.reward_status === 'pending').length || 0;
+      const completedRewards = data?.filter(r => r.reward_status === 'completed').length || 0;
+      const totalEarned = completedRewards * 200;
+
+      return {
+        totalReferrals,
+        pendingRewards,
+        completedRewards,
+        totalEarned,
+        referrals: data || []
+      };
+    } catch (error) {
+      console.error('Error in getReferralStats:', error);
+      return null;
+    }
+  }, [user?.id]);
 
   return {
     referralCode,
@@ -159,7 +185,10 @@ export const useReferral = () => {
     getReferralLink,
     shareOnWhatsApp,
     captureReferralFromURL,
+    getStoredReferralCode,
     applyReferral,
-    clearPendingReferral
+    processReferralForNewUser,
+    clearPendingReferral,
+    getReferralStats
   };
 };

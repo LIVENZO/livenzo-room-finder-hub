@@ -17,7 +17,7 @@ const Index: React.FC = () => {
   const [userRole, setUserRole] = useState<string>('renter');
   const [checkingSession, setCheckingSession] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
-  const { captureReferralFromURL, applyReferral } = useReferral();
+  const { captureReferralFromURL, processReferralForNewUser } = useReferral();
 
   // Capture referral code from URL on mount
   useEffect(() => {
@@ -51,10 +51,10 @@ const Index: React.FC = () => {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
         
-        // Apply pending referral for new users
+        // Process referral for new users only (handled by database function)
         const pendingRef = sessionStorage.getItem('pendingReferralCode');
         if (pendingRef && user.id) {
-          await applyReferral(user.id);
+          await processReferralForNewUser();
         }
         
         // Store the user role if it wasn't already set during login
@@ -77,7 +77,7 @@ const Index: React.FC = () => {
     if (!isLoading) {
       checkAuth();
     }
-  }, [user, session, navigate, isLoading, userRole, applyReferral]);
+  }, [user, session, navigate, isLoading, userRole, processReferralForNewUser]);
   
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);
