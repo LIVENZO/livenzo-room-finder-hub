@@ -37,6 +37,7 @@ const ListRoom: React.FC = () => {
       description: '',
       house_no: '',
       house_name: '',
+      room_number: '',
       location: '',
       price: 0,
       gender: 'any',
@@ -230,6 +231,7 @@ const ListRoom: React.FC = () => {
         description: values.description,
         house_no: values.house_no || null,
         house_name: values.house_name || null,
+        room_number: values.room_number || null,
         location: values.location,
         price: values.price,
         facilities: {

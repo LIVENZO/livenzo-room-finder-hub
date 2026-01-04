@@ -1102,6 +1102,7 @@ export type Database = {
           owner_id: string
           owner_phone: string
           price: number
+          room_number: string | null
           title: string
           updated_at: string | null
           videos: string[] | null
@@ -1122,6 +1123,7 @@ export type Database = {
           owner_id: string
           owner_phone: string
           price: number
+          room_number?: string | null
           title: string
           updated_at?: string | null
           videos?: string[] | null
@@ -1142,6 +1144,7 @@ export type Database = {
           owner_id?: string
           owner_phone?: string
           price?: number
+          room_number?: string | null
           title?: string
           updated_at?: string | null
           videos?: string[] | null

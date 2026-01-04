@@ -6,6 +6,7 @@ export const formSchema = z.object({
   description: z.string().min(20, "Description must be at least 20 characters"),
   house_no: z.string().optional(),
   house_name: z.string().optional(),
+  room_number: z.string().optional(),
   location: z.string().min(5, "Location must be at least 5 characters"),
   price: z.number().min(1, "Price must be greater than 0"),
   gender: z.enum(['male', 'female', 'any']),

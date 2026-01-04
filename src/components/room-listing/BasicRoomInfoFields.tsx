@@ -133,6 +133,21 @@ const BasicRoomInfoFields: React.FC<BasicRoomInfoFieldsProps> = ({ control }) =>
           )}
         />
       </div>
+
+      {/* Room Number */}
+      <FormField
+        control={control}
+        name="room_number"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Room Number</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g. Room 101 / A-2 / 3B" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       {/* Location */}
       <FormField
