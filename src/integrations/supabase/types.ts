@@ -754,6 +754,39 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_events: {
+        Row: {
+          created_at: string
+          id: string
+          is_new_user: boolean
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number
+          reward_status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_new_user?: boolean
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number
+          reward_status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_new_user?: boolean
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          reward_status?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -1439,6 +1472,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_referral_event: {
+        Args: { p_referral_code: string }
+        Returns: Json
+      }
       ensure_unique_public_id: { Args: never; Returns: string }
       find_or_create_anonymous_chat: {
         Args: { user_id_param: string }
@@ -1466,6 +1503,10 @@ export type Database = {
           referral_code: string
           referral_id: string
         }[]
+      }
+      get_referrer_from_code: {
+        Args: { p_referral_code: string }
+        Returns: string
       }
       get_rent_management_with_reset: {
         Args: { p_owner_id?: string }
