@@ -112,18 +112,44 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
         
-        {/* Promotional Banner - only show when rooms are available */}
-        {!isLoading && filteredRooms.length > 0 && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-xl border border-primary/20 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center">
-              <span className="text-lg">🎉</span>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-                <span className="font-semibold text-foreground">New Year Special</span>
-                <span className="text-primary font-bold">Get ₹100 OFF</span>
-                <span className="text-muted-foreground text-sm">on your first booking</span>
+        {/* Conditional Banner Container - New Year Special or WhatsApp Support */}
+        {!isLoading && (
+          <div className="mb-4">
+            {filteredRooms.length > 0 ? (
+              <div className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-xl border border-primary/20 animate-fade-in">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center">
+                  <span className="text-lg">🎉</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+                    <span className="font-semibold text-foreground">New Year Special</span>
+                    <span className="text-primary font-bold">Get ₹100 OFF</span>
+                    <span className="text-muted-foreground text-sm">on your first booking</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground/80 hidden sm:inline">• Limited time offer</span>
+                </div>
               </div>
-              <span className="text-xs text-muted-foreground/80 hidden sm:inline">• Limited time offer</span>
-            </div>
+            ) : (
+              <div className="bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl p-6 shadow-sm border border-border/50 animate-fade-in">
+                <div className="text-center space-y-4">
+                  <h4 className="text-lg font-semibold text-foreground">
+                    😕 No rooms available right now
+                  </h4>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                    Don't worry — our team helps students find rooms personally on WhatsApp.
+                  </p>
+                  <button
+                    onClick={() => {
+                      const phoneNumber = '917488698970';
+                      const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
+                      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    Chat with Room Expert
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
