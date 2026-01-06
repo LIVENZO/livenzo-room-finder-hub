@@ -22,17 +22,8 @@ const RoomResults: React.FC<RoomResultsProps> = ({
   }
 
   if (filteredRooms.length === 0) {
-    return (
-      <div className="text-center py-12 bg-muted/50 rounded-lg">
-        <h3 className="text-xl font-medium mb-2">No rooms found in this area</h3>
-        <p className="text-muted-foreground mb-4">
-          Try adjusting your filters or search for a different area.
-        </p>
-        <Button onClick={clearFilters} variant="outline">
-          Clear Filters
-        </Button>
-      </div>
-    );
+    // WhatsApp support banner is shown in FindRoom.tsx, so return null here
+    return null;
   }
   
   return (
