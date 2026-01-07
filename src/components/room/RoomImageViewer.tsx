@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { App } from '@capacitor/app';
+
 interface RoomImageViewerProps {
   images: string[];
   initialIndex: number;
@@ -23,70 +22,26 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
-  const goToPrevious = useCallback(() => {
+  const goToPrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  }, [images.length]);
+  };
 
-  const goToNext = useCallback(() => {
+  const goToNext = () => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  }, [images.length]);
+  };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') goToPrevious();
+    if (e.key === 'ArrowRight') goToNext();
+    if (e.key === 'Escape') onClose();
+  };
 
   useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        goToPrevious();
-      }
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        goToNext();
-      }
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, goToPrevious, goToNext, onClose]);
-
-  // Handle Android hardware back button AND browser back button
-  useEffect(() => {
-    if (!open) return;
-
-    // Push a history state when modal opens so back button closes it
-    window.history.pushState({ imageViewer: true }, '');
-
-    const handlePopState = (e: PopStateEvent) => {
-      // When back is pressed, close the modal instead of navigating
-      onClose();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    // Also handle Capacitor Android back button
-    const backButtonListener = App.addListener('backButton', () => {
-      // Remove the history state we added, then close
-      window.history.back();
-    });
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      backButtonListener.then(listener => listener.remove());
-    };
-  }, [open, onClose]);
-
-  // Clean up history state when modal closes via X button
-  const handleCloseWithHistory = useCallback((e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    // Go back to remove the history state we pushed
-    window.history.back();
-  }, []);
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [open]);
 
   const handleSwipe = (e: React.TouchEvent) => {
     const touchStart = e.touches[0].clientX;
@@ -108,31 +63,16 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     document.addEventListener('touchend', handleTouchEnd);
   };
 
-  // Handle dialog open change - use history-aware close
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      window.history.back();
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent 
-        className="max-w-full h-screen w-screen p-0 bg-black/95 border-none [&>button]:hidden"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <VisuallyHidden>
-          <DialogTitle>Room Image Viewer</DialogTitle>
-        </VisuallyHidden>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-full h-screen w-screen p-0 bg-black/95">
         <div className="relative w-full h-full flex items-center justify-center">
           {/* Close Button */}
           <Button
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
-            onClick={handleCloseWithHistory}
-            type="button"
+            onClick={onClose}
           >
             <X className="h-6 w-6" />
           </Button>
@@ -149,7 +89,6 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
               size="icon"
               className="absolute left-4 z-50 text-white hover:bg-white/20 h-12 w-12"
               onClick={goToPrevious}
-              type="button"
             >
               <ChevronLeft className="h-8 w-8" />
             </Button>
@@ -174,7 +113,6 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
               size="icon"
               className="absolute right-4 z-50 text-white hover:bg-white/20 h-12 w-12"
               onClick={goToNext}
-              type="button"
             >
               <ChevronRight className="h-8 w-8" />
             </Button>
@@ -187,7 +125,6 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
-                  type="button"
                   className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
                     index === currentIndex ? 'border-primary scale-110' : 'border-white/30'
                   }`}
