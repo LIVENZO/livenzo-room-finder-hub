@@ -31,11 +31,6 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
-  const handleClose = useCallback((e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    onClose();
-  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -59,18 +54,39 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, goToPrevious, goToNext, onClose]);
 
-  // Handle Android hardware back button
+  // Handle Android hardware back button AND browser back button
   useEffect(() => {
     if (!open) return;
 
-    const backButtonListener = App.addListener('backButton', () => {
+    // Push a history state when modal opens so back button closes it
+    window.history.pushState({ imageViewer: true }, '');
+
+    const handlePopState = (e: PopStateEvent) => {
+      // When back is pressed, close the modal instead of navigating
       onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Also handle Capacitor Android back button
+    const backButtonListener = App.addListener('backButton', () => {
+      // Remove the history state we added, then close
+      window.history.back();
     });
 
     return () => {
+      window.removeEventListener('popstate', handlePopState);
       backButtonListener.then(listener => listener.remove());
     };
   }, [open, onClose]);
+
+  // Clean up history state when modal closes via X button
+  const handleCloseWithHistory = useCallback((e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    // Go back to remove the history state we pushed
+    window.history.back();
+  }, []);
 
   const handleSwipe = (e: React.TouchEvent) => {
     const touchStart = e.touches[0].clientX;
@@ -92,10 +108,10 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     document.addEventListener('touchend', handleTouchEnd);
   };
 
-  // Handle dialog open change - only allow closing, not navigation
+  // Handle dialog open change - use history-aware close
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      onClose();
+      window.history.back();
     }
   };
 
@@ -115,7 +131,7 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
-            onClick={handleClose}
+            onClick={handleCloseWithHistory}
             type="button"
           >
             <X className="h-6 w-6" />
