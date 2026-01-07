@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-
+import { App } from '@capacitor/app';
 interface RoomImageViewerProps {
   images: string[];
   initialIndex: number;
@@ -58,6 +58,19 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, goToPrevious, goToNext, onClose]);
+
+  // Handle Android hardware back button
+  useEffect(() => {
+    if (!open) return;
+
+    const backButtonListener = App.addListener('backButton', () => {
+      onClose();
+    });
+
+    return () => {
+      backButtonListener.then(listener => listener.remove());
+    };
+  }, [open, onClose]);
 
   const handleSwipe = (e: React.TouchEvent) => {
     const touchStart = e.touches[0].clientX;
