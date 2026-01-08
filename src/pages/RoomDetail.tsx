@@ -78,76 +78,74 @@ const RoomDetail = () => {
   }
   
   return (
-    <>
-      <Layout>
-        <div className="container max-w-6xl py-10 pb-24">
-          <Button
-            variant="ghost"
-            className="mb-4 pl-0"
-            onClick={() => navigate(-1)}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" /> Back
-          </Button>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left column - Images and details */}
-            <div className="lg:col-span-2">
-              {/* Image gallery */}
-              <RoomImageGallery 
-                images={room.images} 
-                selectedImage={selectedImage} 
-                setSelectedImage={setSelectedImage}
-                onImageClick={handleImageClick}
-              />
-              
-              {/* Fullscreen Image Viewer */}
-              <RoomImageViewer
-                images={room.images}
-                initialIndex={viewerInitialIndex}
-                open={viewerOpen}
-                onClose={() => setViewerOpen(false)}
-              />
-              
-              {/* Video Tour - Below image gallery */}
-              {room.videos && room.videos.length > 0 && (
-                <div className="mt-6">
-                  <RoomVideoPlayer videos={room.videos} />
-                </div>
-              )}
-              
-              {/* Room header information */}
-              <RoomHeader 
-                room={room}
-                isFavorite={isFavorite}
-                favoritesLoading={favoritesLoading}
-                handleFavoriteToggle={handleFavoriteToggle}
-                roomRating={roomRating}
-              />
-              
-              {/* Room content tabs */}
-              <RoomContent 
-                description={room.description}
-                roomId={room.id}
-                roomRules={roomRules}
-                roomAmenities={roomAmenities}
-              />
-            </div>
+    <Layout>
+      <div className="container max-w-6xl py-10">
+        <Button
+          variant="ghost"
+          className="mb-4 pl-0"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left column - Images and details */}
+          <div className="lg:col-span-2">
+            {/* Image gallery */}
+            <RoomImageGallery 
+              images={room.images} 
+              selectedImage={selectedImage} 
+              setSelectedImage={setSelectedImage}
+              onImageClick={handleImageClick}
+            />
             
-            {/* Right column - Action card */}
-            <div>
-              <RoomActionCard 
-                room={room} 
-                ownerPhone={ownerPhone}
-                onCallOwner={handleCallOwner}
-              />
-            </div>
+            {/* Fullscreen Image Viewer */}
+            <RoomImageViewer
+              images={room.images}
+              initialIndex={viewerInitialIndex}
+              open={viewerOpen}
+              onClose={() => setViewerOpen(false)}
+            />
+            
+            {/* Video Tour - Below image gallery */}
+            {room.videos && room.videos.length > 0 && (
+              <div className="mt-6">
+                <RoomVideoPlayer videos={room.videos} />
+              </div>
+            )}
+            
+            {/* Room header information */}
+            <RoomHeader 
+              room={room}
+              isFavorite={isFavorite}
+              favoritesLoading={favoritesLoading}
+              handleFavoriteToggle={handleFavoriteToggle}
+              roomRating={roomRating}
+            />
+            
+            {/* Room content tabs */}
+            <RoomContent 
+              description={room.description}
+              roomId={room.id}
+              roomRules={roomRules}
+              roomAmenities={roomAmenities}
+            />
+          </div>
+          
+          {/* Right column - Action card */}
+          <div>
+            <RoomActionCard 
+              room={room} 
+              ownerPhone={ownerPhone}
+              onCallOwner={handleCallOwner}
+            />
           </div>
         </div>
-      </Layout>
+      </div>
       
-      {/* Referral Banner - Fixed at viewport bottom */}
+      {/* Referral Banner - Sticky at bottom */}
       <ReferralBanner />
-    </>
+    </Layout>
   );
 };
 
