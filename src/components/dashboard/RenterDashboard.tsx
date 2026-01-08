@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersIcon, SearchIcon, Bell, Heart, MessageSquare, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import HeroCarousel from '@/components/landing/HeroCarousel';
+
 const RenterDashboard: React.FC = () => {
   const navigate = useNavigate();
   const quickActions = [{
@@ -51,14 +53,15 @@ const RenterDashboard: React.FC = () => {
     count: '12'
   }];
   return <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="text-center py-8">
-        <div className="mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mb-4 animate-float">
+      {/* Hero Section with Background Carousel */}
+      <div className="relative h-[45vh] min-h-[280px] max-h-[360px] w-full overflow-hidden rounded-2xl -mt-4">
+        <HeroCarousel />
+        
+        {/* Content overlay with search icon */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-center p-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4 animate-float">
             <SearchIcon className="h-8 w-8 text-white" />
           </div>
-          
-          
         </div>
       </div>
 
