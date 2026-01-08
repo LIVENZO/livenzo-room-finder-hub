@@ -18,8 +18,8 @@ const ReferralBanner: React.FC = () => {
     }
     await shareOnWhatsApp();
   };
-  return <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-primary/95 to-primary-foreground/10 backdrop-blur-sm border-t border-primary/20 shadow-lg">
-      <div className="container max-w-6xl py-3 px-4">
+  return <div className="w-full bg-gradient-to-r from-primary/95 to-primary-foreground/10 border-t border-primary/20 shadow-lg rounded-lg mt-8">
+      <div className="py-4 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-center sm:text-left">
             <span className="text-lg">🤝</span>
