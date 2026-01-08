@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
-import HeroCarousel from '@/components/landing/HeroCarousel';
+
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 
@@ -113,10 +113,8 @@ const Index: React.FC = () => {
   return (
     <Layout hideNav>
       <div className="w-full h-full min-h-screen flex flex-col">
-        {/* Hero section with background carousel */}
-        <div className="relative h-[45vh] min-h-[320px] max-h-[400px] w-full overflow-hidden">
-          <HeroCarousel />
-          
+        {/* Hero section */}
+        <div className="relative h-[45vh] min-h-[320px] max-h-[400px] w-full overflow-hidden bg-gradient-to-br from-primary to-primary/80">
           {/* Content overlay */}
           <div className="relative z-10 h-full flex flex-col items-center justify-center p-6">
             <div className="space-y-3 text-center">
