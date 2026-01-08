@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -6,7 +7,6 @@ import { toast } from 'sonner';
 import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
-
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 
@@ -112,20 +112,13 @@ const Index: React.FC = () => {
   
   return (
     <Layout hideNav>
-      <div className="w-full h-full min-h-screen flex flex-col">
-        {/* Hero section */}
-        <div className="relative h-[45vh] min-h-[320px] max-h-[400px] w-full overflow-hidden bg-gradient-to-br from-primary to-primary/80">
-          {/* Content overlay */}
-          <div className="relative z-10 h-full flex flex-col items-center justify-center p-6">
-            <div className="space-y-3 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Livenzo</h1>
-              <p className="text-xl md:text-2xl text-white/90 drop-shadow-md">Find Your Perfect Room Today</p>
-            </div>
+      <div className="w-full h-full min-h-screen flex flex-col justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="w-full flex-1 flex flex-col justify-center p-6 space-y-8">
+          <div className="space-y-3 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary">Livenzo</h1>
+            <p className="text-xl md:text-2xl text-gray-600">Find Your Perfect Room Today</p>
           </div>
-        </div>
-        
-        {/* Main content section */}
-        <div className="flex-1 bg-gradient-to-br from-primary/10 to-secondary/10 p-6 space-y-8">
+          
           <div className="w-full">
             <LandingCard 
               userRole={userRole}
