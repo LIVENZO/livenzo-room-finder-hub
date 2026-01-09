@@ -1,11 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersIcon, SearchIcon, Bell, Heart, MessageSquare, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const heroImages = [
+  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131737442_0ozzpm685nw.jpg',
+  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131738562_bd30txo9bd.jpg',
+  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg',
+  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766132019346_v39iyaqqgs.jpg',
+  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767873415838_ncg44uvhnsj.jpg',
+];
+
 const RenterDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  }, []);
+
+  // Auto-slide every 3.5 seconds
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 3500);
+    return () => clearInterval(interval);
+  }, [nextSlide]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+    }
+    setTouchStart(null);
+  };
+
   const quickActions = [{
     title: 'Find a Room',
     description: 'Discover perfect rooms that match your preferences',
@@ -32,7 +73,7 @@ const RenterDashboard: React.FC = () => {
     buttonStyle: 'bg-purple-800 hover:bg-purple-900 text-white border-0',
     onClick: () => navigate('/notices'),
     isPrimary: false,
-    hasNotification: true // This could be dynamic based on actual notices
+    hasNotification: true
   }];
   const quickLinks = [{
     title: 'My Favorites',
@@ -51,14 +92,54 @@ const RenterDashboard: React.FC = () => {
     count: '12'
   }];
   return <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="text-center py-8">
-        <div className="mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mb-4 animate-float">
+      {/* Hero Carousel Section */}
+      <div 
+        className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-medium"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Carousel Images */}
+        {heroImages.map((image, index) => (
+          <div
+            key={index}
+            className={cn(
+              "absolute inset-0 transition-opacity duration-700",
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <img
+              src={image}
+              alt={`Room ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        
+        {/* Search Icon Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl shadow-lg animate-float cursor-pointer hover:scale-105 transition-transform"
+               onClick={() => navigate('/find-room')}>
             <SearchIcon className="h-8 w-8 text-white" />
           </div>
-          
-          
+        </div>
+        
+        {/* Slide Indicators */}
+        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all duration-300",
+                index === currentSlide 
+                  ? "bg-white w-4" 
+                  : "bg-white/50 hover:bg-white/70"
+              )}
+            />
+          ))}
         </div>
       </div>
 
