@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckCircle2, ArrowLeft, Loader2, Info } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Loader2, Info, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+// Global type declaration for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface BookingFlowSheetProps {
   open: boolean;
@@ -15,10 +22,15 @@ interface BookingFlowSheetProps {
   roomId: string;
   userId: string;
   roomTitle: string;
+  userName?: string;
+  userPhone?: string;
+  userEmail?: string;
 }
 
-type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'success';
+type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'processing' | 'success' | 'failed';
 type UserType = 'student' | 'professional';
+
+const TOKEN_AMOUNT = 1000; // ₹1000 token amount
 
 const stepVariants = {
   initial: { opacity: 0, x: 50 },
@@ -31,7 +43,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   onOpenChange,
   roomId,
   userId,
-  roomTitle
+  roomTitle,
+  userName = '',
+  userPhone = '',
+  userEmail = ''
 }) => {
   const [step, setStep] = useState<Step>('user-type');
   const [userType, setUserType] = useState<UserType | null>(null);
@@ -39,6 +54,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [stayDuration, setStayDuration] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string>('');
 
   const resetFlow = () => {
     setStep('user-type');
@@ -46,6 +62,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setUserDetails('');
     setStayDuration(null);
     setBookingId(null);
+    setPaymentError('');
   };
 
   const handleClose = () => {
@@ -53,27 +70,37 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setTimeout(resetFlow, 300);
   };
 
-  const createBookingRequest = async (stage: string, tokenRequired: boolean, tokenPaid: boolean = false) => {
-    setLoading(true);
+  const createOrUpdateBookingRequest = async (
+    stage: string, 
+    tokenRequired: boolean, 
+    tokenPaid: boolean = false,
+    status: string = 'initiated',
+    razorpayPaymentId?: string
+  ) => {
     try {
       if (bookingId) {
-        // Update existing booking
+        const updateData: any = {
+          user_type: userType,
+          user_details: userDetails,
+          stay_duration: stayDuration,
+          booking_stage: stage,
+          token_required: tokenRequired,
+          token_paid: tokenPaid,
+          token_amount: TOKEN_AMOUNT,
+          status
+        };
+        
+        // Add razorpay_payment_id if payment was successful
+        // Note: This field might need to be added to the table if not exists
+        
         const { error } = await supabase
           .from('booking_requests')
-          .update({
-            user_type: userType,
-            user_details: userDetails,
-            stay_duration: stayDuration,
-            booking_stage: stage,
-            token_required: tokenRequired,
-            token_paid: tokenPaid,
-            status: tokenPaid ? 'pending' : 'initiated'
-          })
+          .update(updateData)
           .eq('id', bookingId);
 
         if (error) throw error;
+        return bookingId;
       } else {
-        // Create new booking
         const { data, error } = await supabase
           .from('booking_requests')
           .insert({
@@ -85,20 +112,180 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             booking_stage: stage,
             token_required: tokenRequired,
             token_paid: tokenPaid,
-            status: 'initiated'
+            token_amount: TOKEN_AMOUNT,
+            status
           })
           .select('id')
           .single();
 
         if (error) throw error;
-        if (data) setBookingId(data.id);
+        if (data) {
+          setBookingId(data.id);
+          return data.id;
+        }
       }
-      return true;
+      return null;
     } catch (error) {
       console.error('Error with booking request:', error);
       toast.error('Something went wrong. Please try again.');
-      return false;
-    } finally {
+      return null;
+    }
+  };
+
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayAndLock = async () => {
+    setLoading(true);
+    setStep('processing');
+    
+    try {
+      // Create/update booking with token_pending status
+      const currentBookingId = await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
+      if (!currentBookingId) {
+        throw new Error('Failed to create booking');
+      }
+
+      // Get authentication token
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.access_token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
+      // Create payment order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-payment-order', {
+        body: { 
+          amount: TOKEN_AMOUNT,
+          paymentMethod: 'razorpay',
+          bookingId: currentBookingId
+        },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
+
+      if (orderError) {
+        console.error('Error creating payment order:', orderError);
+        throw new Error('Failed to create payment order');
+      }
+
+      if (!orderData?.success || !orderData?.razorpayOrderId) {
+        console.error('Invalid response:', orderData);
+        throw new Error('Invalid payment order response');
+      }
+
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Failed to load payment gateway');
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: orderData.razorpayKeyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Livenzo',
+        description: 'Livenzo Room Booking Token',
+        order_id: orderData.razorpayOrderId,
+        prefill: {
+          name: userName,
+          email: userEmail,
+          contact: userPhone
+        },
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Pay using UPI or other methods',
+                instruments: [
+                  { method: 'upi' },
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: { show_default_blocks: false }
+          }
+        },
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            const { data: sessionData2 } = await supabase.auth.getSession();
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+              body: {
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                paymentId: orderData.paymentId
+              },
+              headers: sessionData2?.session?.access_token 
+                ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
+                : undefined
+            });
+
+            if (verifyError) {
+              console.error('Payment verification failed:', verifyError);
+              await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+              setPaymentError('Payment verification failed. Please contact support.');
+              setStep('failed');
+              setLoading(false);
+              return;
+            }
+
+            // Update booking to confirmed
+            await createOrUpdateBookingRequest('confirmed', true, true, 'approved');
+            setStep('success');
+            setLoading(false);
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+            setPaymentError('Payment verification failed. Please contact support.');
+            setStep('failed');
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_cancelled');
+            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
+            setStep('failed');
+            setLoading(false);
+          }
+        },
+        theme: { color: '#3B82F6' }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', async (response: any) => {
+        console.error('Payment failed:', response.error);
+        await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+        setPaymentError(response.error?.description || 'Payment failed. Please try again.');
+        setStep('failed');
+        setLoading(false);
+      });
+      rzp.open();
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+      setPaymentError(error instanceof Error ? error.message : 'Payment failed');
+      setStep('failed');
       setLoading(false);
     }
   };
@@ -124,14 +311,16 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       toast.error('Please select a duration');
       return;
     }
+    setLoading(true);
 
     if (stayDuration < 6) {
-      await createBookingRequest('not_eligible', false);
+      await createOrUpdateBookingRequest('not_eligible', false, false, 'not_eligible');
       setStep('not-eligible');
     } else {
-      await createBookingRequest('token_pending', true);
+      await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
       setStep('token-confirm');
     }
+    setLoading(false);
   };
 
   const handleChangeDuration = () => {
@@ -139,17 +328,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setStep('duration');
   };
 
-  const handlePayAndLock = async () => {
-    // Simulate payment (in real app, integrate payment gateway)
-    setLoading(true);
-    
-    // Simulate payment delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const success = await createBookingRequest('token_paid', true, true);
-    if (success) {
-      setStep('success');
-    }
+  const handleRetryPayment = () => {
+    setPaymentError('');
+    setStep('token-confirm');
   };
 
   const renderStep = () => {
@@ -377,7 +558,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Token Amount</span>
-                <span className="text-2xl font-bold text-foreground">₹500</span>
+                <span className="text-2xl font-bold text-foreground">₹{TOKEN_AMOUNT.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Refunded if owner does not approve
@@ -389,15 +570,35 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               onClick={handlePayAndLock}
               disabled={loading}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  Processing...
-                </>
-              ) : (
-                'Pay & Lock Room'
-              )}
+              Pay & Lock Room
             </Button>
+          </motion.div>
+        );
+
+      case 'processing':
+        return (
+          <motion.div
+            key="processing"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="space-y-6 text-center py-8"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="w-16 h-16 mx-auto"
+            >
+              <Loader2 className="h-16 w-16 text-primary" />
+            </motion.div>
+
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Opening secure payment…</h2>
+              <p className="text-muted-foreground mt-2">
+                Please complete the payment in the Razorpay window
+              </p>
+            </div>
           </motion.div>
         );
 
@@ -427,9 +628,11 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             >
               <h2 className="text-2xl font-semibold text-foreground">Room Locked 🎉</h2>
               <p className="text-muted-foreground mt-3 leading-relaxed">
-                Your booking request has been sent to the owner.
+                Your payment was successful.
                 <br />
-                We'll notify you once it's approved.
+                This room is now locked for you.
+                <br />
+                Our team and the owner have been notified.
               </p>
             </motion.div>
 
@@ -445,6 +648,50 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 Done
               </Button>
             </motion.div>
+          </motion.div>
+        );
+
+      case 'failed':
+        return (
+          <motion.div
+            key="failed"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="space-y-6 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center"
+            >
+              <XCircle className="h-10 w-10 text-red-600" />
+            </motion.div>
+
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Payment Not Completed</h2>
+              <p className="text-muted-foreground mt-3 leading-relaxed">
+                {paymentError || 'Payment was not completed. You can retry anytime to lock this room.'}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                className="w-full h-12 text-base font-medium"
+                onClick={handleRetryPayment}
+              >
+                Retry Payment
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base font-medium"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            </div>
           </motion.div>
         );
 
