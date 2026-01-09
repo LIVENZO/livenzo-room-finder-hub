@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, Loader2, Calendar } from 'lucide-react';
+import { Phone, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import LocationViewer from './LocationViewer';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import BookingFlowSheet from './BookingFlowSheet';
 
 interface RoomActionCardProps {
   room: Room;
@@ -22,69 +21,52 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   onCallOwner,
 }) => {
   const { user } = useAuth();
-  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   
   // Check if current user is the owner
   const isOwner = user?.id === room.ownerId;
 
-  const handleBookNow = async () => {
+  const handleBookNow = () => {
     if (!user) {
       toast.error('Please login to book a room');
       return;
     }
-
-    setBookingLoading(true);
-    try {
-      const { error } = await supabase
-        .from('booking_requests')
-        .insert({
-          room_id: room.id,
-          user_id: user.id,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-      toast.success('Booking request sent successfully! Waiting for admin approval.');
-    } catch (error) {
-      console.error('Error submitting booking request:', error);
-      toast.error('Failed to submit booking request');
-    } finally {
-      setBookingLoading(false);
-    }
+    setBookingSheetOpen(true);
   };
 
   return (
-    <Card className="sticky top-6">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">
-          ₹{room.price.toLocaleString()}
-          <span className="text-base font-normal text-gray-600">/month</span>
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Availability Badge */}
-        <Badge 
-          variant={room.available ? "default" : "secondary"} 
-          className={room.available ? "bg-green-100 text-green-800" : ""}
-        >
-          {room.available ? "Available" : "Not Available"}
-        </Badge>
+    <>
+      <Card className="sticky top-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">
+            ₹{room.price.toLocaleString()}
+            <span className="text-base font-normal text-muted-foreground">/month</span>
+          </CardTitle>
+        </CardHeader>
         
-        {/* Location Viewer - uses room.latitude/longitude which includes fallback */}
-        <LocationViewer room={room} />
-        
-        {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
-        {!isOwner && (
-          <div className="flex gap-2 w-full">
-            {/* WhatsApp Chat Support Button */}
-            <Button 
-              className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white"
-              onClick={() => {
-                const facilities = room.facilities || {};
-                const roomType = facilities.roomType === 'single' ? 'Single' : facilities.roomType === 'sharing' ? 'Sharing' : 'Room';
-                const gender = facilities.gender === 'male' ? 'Boys' : facilities.gender === 'female' ? 'Girls' : 'Any';
-                const message = `Hi Livenzo,
+        <CardContent className="space-y-4">
+          {/* Availability Badge */}
+          <Badge 
+            variant={room.available ? "default" : "secondary"} 
+            className={room.available ? "bg-green-100 text-green-800" : ""}
+          >
+            {room.available ? "Available" : "Not Available"}
+          </Badge>
+          
+          {/* Location Viewer - uses room.latitude/longitude which includes fallback */}
+          <LocationViewer room={room} />
+          
+          {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
+          {!isOwner && (
+            <div className="flex gap-2 w-full">
+              {/* WhatsApp Chat Support Button */}
+              <Button 
+                className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white"
+                onClick={() => {
+                  const facilities = room.facilities || {};
+                  const roomType = facilities.roomType === 'single' ? 'Single' : facilities.roomType === 'sharing' ? 'Sharing' : 'Room';
+                  const gender = facilities.gender === 'male' ? 'Boys' : facilities.gender === 'female' ? 'Girls' : 'Any';
+                  const message = `Hi Livenzo,
 
 I'm interested in the ${room.title}
 
@@ -95,72 +77,74 @@ ${room.house_name || ''}, ${room.location}
 Room ID: ${room.id}
 
 Please help me.`;
-                const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
-                window.open(whatsappUrl, '_blank');
-              }}
-            >
-              💬 Chat Support
-            </Button>
-            
-            {/* Call Owner Button */}
-            {ownerPhone && (
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={onCallOwner}
+                  const encodedMessage = encodeURIComponent(message);
+                  const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
+                  window.open(whatsappUrl, '_blank');
+                }}
               >
-                <Phone className="h-4 w-4 mr-2" />
-                Call Owner
+                💬 Chat Support
               </Button>
-            )}
+              
+              {/* Call Owner Button */}
+              {ownerPhone && (
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={onCallOwner}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Owner
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Book Now Button - Hidden for property owner */}
+          {!isOwner && (
+            <Button 
+              className="w-full"
+              onClick={handleBookNow}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Book Now
+            </Button>
+          )}
+          
+          {/* Property Details */}
+          <div className="space-y-2 pt-4 border-t">
+            <h4 className="font-semibold">Property Details</h4>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>📍 {room.location}</p>
+              {room.facilities.wifi && <p>📶 WiFi Available</p>}
+              {room.facilities.bathroom && <p>🚿 Private Bathroom</p>}
+              {room.facilities.gender && (
+                <p>👥 {room.facilities.gender === 'any' ? 'Co-ed' : room.facilities.gender === 'male' ? 'Boys Only' : 'Girls Only'}</p>
+              )}
+              {room.facilities.roomType && (
+                <p>🛏️ {room.facilities.roomType === 'single' ? 'Single Occupancy' : 'Shared Room'}</p>
+              )}
+              {room.facilities.coolingType && (
+                <p>❄️ {room.facilities.coolingType === 'ac' ? 'AC Room' : 'Cooler Room'}</p>
+              )}
+              {room.facilities.food && (
+                <p>🍽️ {room.facilities.food === 'included' ? 'Food Included' : 'Food Not Included'}</p>
+              )}
+            </div>
           </div>
-        )}
-        
-        {/* Book Now Button - Hidden for property owner */}
-        {!isOwner && (
-          <Button 
-            className="w-full"
-            onClick={handleBookNow}
-            disabled={bookingLoading}
-          >
-            {bookingLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Booking...
-              </>
-            ) : (
-              <>
-                <Calendar className="h-4 w-4 mr-2" />
-                Book Now
-              </>
-            )}
-          </Button>
-        )}
-        
-        {/* Property Details */}
-        <div className="space-y-2 pt-4 border-t">
-          <h4 className="font-semibold">Property Details</h4>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>📍 {room.location}</p>
-            {room.facilities.wifi && <p>📶 WiFi Available</p>}
-            {room.facilities.bathroom && <p>🚿 Private Bathroom</p>}
-            {room.facilities.gender && (
-              <p>👥 {room.facilities.gender === 'any' ? 'Co-ed' : room.facilities.gender === 'male' ? 'Boys Only' : 'Girls Only'}</p>
-            )}
-            {room.facilities.roomType && (
-              <p>🛏️ {room.facilities.roomType === 'single' ? 'Single Occupancy' : 'Shared Room'}</p>
-            )}
-            {room.facilities.coolingType && (
-              <p>❄️ {room.facilities.coolingType === 'ac' ? 'AC Room' : 'Cooler Room'}</p>
-            )}
-            {room.facilities.food && (
-              <p>🍽️ {room.facilities.food === 'included' ? 'Food Included' : 'Food Not Included'}</p>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Booking Flow Sheet */}
+      {user && (
+        <BookingFlowSheet
+          open={bookingSheetOpen}
+          onOpenChange={setBookingSheetOpen}
+          roomId={room.id}
+          userId={user.id}
+          roomTitle={room.title}
+        />
+      )}
+    </>
   );
 };
 
