@@ -75,25 +75,46 @@ export type Database = {
       }
       booking_requests: {
         Row: {
+          booking_stage: string | null
           created_at: string
           id: string
           room_id: string
           status: string
+          stay_duration: number | null
+          token_amount: number | null
+          token_paid: boolean | null
+          token_required: boolean | null
+          user_details: string | null
           user_id: string
+          user_type: string | null
         }
         Insert: {
+          booking_stage?: string | null
           created_at?: string
           id?: string
           room_id: string
           status?: string
+          stay_duration?: number | null
+          token_amount?: number | null
+          token_paid?: boolean | null
+          token_required?: boolean | null
+          user_details?: string | null
           user_id: string
+          user_type?: string | null
         }
         Update: {
+          booking_stage?: string | null
           created_at?: string
           id?: string
           room_id?: string
           status?: string
+          stay_duration?: number | null
+          token_amount?: number | null
+          token_paid?: boolean | null
+          token_required?: boolean | null
+          user_details?: string | null
           user_id?: string
+          user_type?: string | null
         }
         Relationships: [
           {
