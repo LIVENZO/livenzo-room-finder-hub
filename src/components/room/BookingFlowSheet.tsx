@@ -151,7 +151,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const handlePayAndLock = async () => {
     setLoading(true);
     setStep('processing');
-    
+
     try {
       // Create/update booking with token_pending status
       const currentBookingId = await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
@@ -165,12 +165,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Authentication required. Please log in again.');
       }
 
-      // Create payment order
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-payment-order', {
-        body: { 
-          amount: TOKEN_AMOUNT,
-          paymentMethod: 'razorpay',
-          bookingId: currentBookingId
+      // Create token payment order (NO relationship required)
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-token-payment', {
+        body: {
+          action: 'create_order',
+          bookingRequestId: currentBookingId,
+          roomId
         },
         headers: {
           Authorization: `Bearer ${sessionData.session.access_token}`
@@ -178,7 +178,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       });
 
       if (orderError) {
-        console.error('Error creating payment order:', orderError);
+        console.error('Error creating token payment order:', orderError);
         throw new Error('Failed to create payment order');
       }
 
@@ -225,37 +225,41 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         },
         handler: async (response: any) => {
           try {
-            // Verify payment
             const { data: sessionData2 } = await supabase.auth.getSession();
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+            if (!sessionData2?.session?.access_token) {
+              throw new Error('Authentication required. Please log in again.');
+            }
+
+            // Verify token payment and lock room server-side
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('create-token-payment', {
               body: {
+                action: 'verify_payment',
+                bookingRequestId: currentBookingId,
+                roomId,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature,
-                paymentId: orderData.paymentId
+                razorpaySignature: response.razorpay_signature
               },
-              headers: sessionData2?.session?.access_token 
-                ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
-                : undefined
+              headers: {
+                Authorization: `Bearer ${sessionData2.session.access_token}`
+              }
             });
 
-            if (verifyError) {
-              console.error('Payment verification failed:', verifyError);
+            if (verifyError || !verifyData?.success) {
+              console.error('Token payment verification failed:', verifyError, verifyData);
               await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-              setPaymentError('Payment verification failed. Please contact support.');
+              setPaymentError('Payment verification failed. You can retry anytime to lock this room.');
               setStep('failed');
               setLoading(false);
               return;
             }
 
-            // Update booking to confirmed
-            await createOrUpdateBookingRequest('confirmed', true, true, 'approved');
             setStep('success');
             setLoading(false);
           } catch (error) {
-            console.error('Payment verification error:', error);
+            console.error('Token payment verification error:', error);
             await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-            setPaymentError('Payment verification failed. Please contact support.');
+            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
             setStep('failed');
             setLoading(false);
           }
@@ -275,12 +279,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       rzp.on('payment.failed', async (response: any) => {
         console.error('Payment failed:', response.error);
         await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-        setPaymentError(response.error?.description || 'Payment failed. Please try again.');
+        setPaymentError(response.error?.description || 'Payment was not completed. You can retry anytime to lock this room.');
         setStep('failed');
         setLoading(false);
       });
       rzp.open();
-      
+
     } catch (error) {
       console.error('Payment error:', error);
       await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
