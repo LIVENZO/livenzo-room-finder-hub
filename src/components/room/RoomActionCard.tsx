@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, Calendar } from 'lucide-react';
+import { CalendarCheck, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import LocationViewer from './LocationViewer';
@@ -85,17 +85,35 @@ Please help me.`;
                 💬 Chat Support
               </Button>
               
-              {/* Call Owner Button */}
-              {ownerPhone && (
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={onCallOwner}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Owner
-                </Button>
-              )}
+              {/* Offline Visit Button */}
+              <Button 
+                variant="outline" 
+                className="flex-1 border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                onClick={() => {
+                  const message = `Hi, I found this room on Livenzo.
+
+I would like to schedule an offline visit before booking.
+
+Room Details:
+• Location: ${room.location}
+• Rent: ₹${room.price.toLocaleString()}/month
+• Room ID: ${room.id}
+
+Please let me know a suitable time for visit.
+
+Thank you.`;
+                  const encodedMessage = encodeURIComponent(message);
+                  const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
+                  const opened = window.open(whatsappUrl, '_blank');
+                  
+                  if (!opened) {
+                    toast.error("WhatsApp not installed");
+                  }
+                }}
+              >
+                <CalendarCheck className="h-4 w-4 mr-2" />
+                Offline Visit
+              </Button>
             </div>
           )}
           
