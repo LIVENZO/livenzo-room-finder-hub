@@ -5,13 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CheckCircle2, ArrowLeft, Loader2, Info, XCircle, CalendarIcon } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Loader2, Info, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 // Global type declaration for Razorpay
 declare global {
@@ -31,10 +27,10 @@ interface BookingFlowSheetProps {
   userEmail?: string;
 }
 
-type Step = 'user-type' | 'details' | 'duration' | 'move-in-date' | 'not-eligible' | 'token-confirm' | 'processing' | 'success' | 'failed';
+type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'processing' | 'success' | 'failed';
 type UserType = 'student' | 'professional';
 
-const TOKEN_AMOUNT = 500; // ₹500 token amount
+const TOKEN_AMOUNT = 1000; // ₹1000 token amount
 
 const stepVariants = {
   initial: { opacity: 0, x: 50 },
@@ -56,7 +52,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
   const [stayDuration, setStayDuration] = useState<number | null>(null);
-  const [moveInDate, setMoveInDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string>('');
@@ -66,7 +61,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setUserType(null);
     setUserDetails('');
     setStayDuration(null);
-    setMoveInDate(undefined);
     setBookingId(null);
     setPaymentError('');
   };
@@ -89,7 +83,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           user_type: userType,
           user_details: userDetails,
           stay_duration: stayDuration,
-          move_in_date: moveInDate ? format(moveInDate, 'yyyy-MM-dd') : null,
           booking_stage: stage,
           token_required: tokenRequired,
           token_paid: tokenPaid,
@@ -116,7 +109,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             user_type: userType,
             user_details: userDetails,
             stay_duration: stayDuration,
-            move_in_date: moveInDate ? format(moveInDate, 'yyyy-MM-dd') : null,
             booking_stage: stage,
             token_required: tokenRequired,
             token_paid: tokenPaid,
@@ -329,19 +321,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       await createOrUpdateBookingRequest('not_eligible', false, false, 'not_eligible');
       setStep('not-eligible');
     } else {
-      setStep('move-in-date');
+      await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
+      setStep('token-confirm');
     }
-    setLoading(false);
-  };
-
-  const handleMoveInDateContinue = async () => {
-    if (!moveInDate) {
-      toast.error('Please select a move-in date');
-      return;
-    }
-    setLoading(true);
-    await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
-    setStep('token-confirm');
     setLoading(false);
   };
 
@@ -552,70 +534,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           </motion.div>
         );
 
-      case 'move-in-date':
-        return (
-          <motion.div
-            key="move-in-date"
-            variants={stepVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="space-y-6"
-          >
-            <button
-              onClick={() => setStep('duration')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </button>
-
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-foreground">When do you plan to shift?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Select your expected move-in date</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-foreground">Move-in Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal",
-                      !moveInDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {moveInDate ? format(moveInDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={moveInDate}
-                    onSelect={setMoveInDate}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground">
-                This helps the owner prepare the room before your arrival.
-              </p>
-            </div>
-
-            <Button
-              className="w-full h-12 text-base font-medium"
-              onClick={handleMoveInDateContinue}
-              disabled={!moveInDate || loading}
-            >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
-            </Button>
-          </motion.div>
-        );
-
       case 'token-confirm':
         return (
           <motion.div
@@ -627,7 +545,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             className="space-y-6"
           >
             <button
-              onClick={() => setStep('move-in-date')}
+              onClick={() => setStep('duration')}
               className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
@@ -647,7 +565,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 <span className="text-2xl font-bold text-foreground">₹{TOKEN_AMOUNT.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                ₹{TOKEN_AMOUNT} is refundable if owner does not approve
+                Refunded if owner does not approve
               </p>
             </div>
 
