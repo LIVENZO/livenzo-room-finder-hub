@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CalendarCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Room } from '@/types/room';
+import { useAuth } from '@/context/auth';
 
 interface StickyBottomBarProps {
   room: Room;
@@ -10,7 +11,13 @@ interface StickyBottomBarProps {
 }
 
 const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
+  const { isOwner } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
+
+  // Don't render the sticky bar for property owners
+  if (isOwner) {
+    return null;
+  }
 
   useEffect(() => {
     const handleScroll = () => {
