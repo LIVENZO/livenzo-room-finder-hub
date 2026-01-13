@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import RoomContent from '@/components/room/RoomContent';
 import RoomActionCard from '@/components/room/RoomActionCard';
 import RoomImageViewer from '@/components/room/RoomImageViewer';
 import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
+import StickyBottomBar from '@/components/room/StickyBottomBar';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
 import ReferralBanner from '@/components/referral/ReferralBanner';
 
@@ -23,6 +23,7 @@ const RoomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
+  const actionCardRef = useRef<HTMLDivElement>(null);
   
   // Load room data
   useEffect(() => {
@@ -133,7 +134,7 @@ const RoomDetail = () => {
           </div>
           
           {/* Right column - Action card */}
-          <div>
+          <div ref={actionCardRef}>
             <RoomActionCard 
               room={room} 
               ownerPhone={ownerPhone}
@@ -143,8 +144,11 @@ const RoomDetail = () => {
         </div>
       </div>
       
-      {/* Referral Banner - Sticky at bottom */}
+      {/* Referral Banner */}
       <ReferralBanner />
+      
+      {/* Sticky Bottom Bar - Mobile First */}
+      <StickyBottomBar room={room} actionCardRef={actionCardRef} />
     </Layout>
   );
 };
