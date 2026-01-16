@@ -441,41 +441,18 @@ export function useAuthMethods() {
       }
 
       // 2) Exchange Firebase ID token for Supabase session via Edge Function
-      // Include selected_role for role conflict checking
       const { data, error } = await supabase.functions.invoke('sync-firebase-user', {
         body: {
           firebase_uid: firebaseUid,
           phone_number: phoneNumber,
-          fcm_token: null,
-          selected_role: selectedRole,
+          fcm_token: null, // Can be added later if needed
         },
       });
 
-      // Handle role conflict error specifically
       if (error) {
         console.error('Supabase session creation failed:', error);
-        
-        // Check if it's a role conflict error (status 409)
-        if (error.message?.includes('role_conflict') || error.context?.status === 409) {
-          try {
-            const errorData = JSON.parse(error.message || '{}');
-            if (errorData.error === 'role_conflict' && errorData.message) {
-              toast.error(errorData.message, { duration: 6000 });
-              throw new Error('role_conflict');
-            }
-          } catch (parseErr) {
-            // If parsing fails, show a generic role conflict message
-          }
-        }
-        
         toast.error('Unable to sign in, please try again later.');
         throw error;
-      }
-
-      // Check if response indicates role conflict
-      if (data?.error === 'role_conflict') {
-        toast.error(data.message, { duration: 6000 });
-        throw new Error('role_conflict');
       }
 
       const { access_token, refresh_token } = data as { access_token: string; refresh_token: string };
