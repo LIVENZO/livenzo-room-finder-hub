@@ -9,6 +9,7 @@ interface SyncUserRequest {
   firebase_uid: string;
   phone_number: string;
   fcm_token?: string | null;
+  selected_role?: string;
 }
 
 function generateTempPassword(length = 32) {
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
     });
 
     const body: SyncUserRequest = await req.json();
-    const { firebase_uid, phone_number, fcm_token } = body;
+    const { firebase_uid, phone_number, fcm_token, selected_role } = body;
 
     if (!firebase_uid || !phone_number) {
       return new Response(JSON.stringify({ error: 'firebase_uid and phone_number are required' }), {
@@ -59,11 +60,36 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check for phone role conflict BEFORE creating/updating user
+    if (selected_role) {
+      const { data: conflictData, error: conflictErr } = await admin.rpc('check_phone_role_conflict', {
+        phone_param: phone_number,
+        requested_role: selected_role
+      });
+
+      if (!conflictErr && conflictData && conflictData.length > 0 && conflictData[0].has_conflict) {
+        const existingRole = conflictData[0].existing_role;
+        const roleDisplayName = existingRole === 'owner' ? 'Hostel/PG Owner' : 'Renter';
+        const requestedRoleDisplayName = selected_role === 'owner' ? 'Hostel/PG Owner' : 'Renter';
+        
+        console.log('Phone role conflict detected:', { phone_number, existingRole, selected_role });
+        
+        return new Response(JSON.stringify({ 
+          error: 'role_conflict',
+          existing_role: existingRole,
+          message: `This phone number is already registered as a ${roleDisplayName}. Please log in as a ${roleDisplayName} or use a different phone number to continue as a ${requestedRoleDisplayName}.`
+        }), {
+          status: 409, // Conflict status
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     // Generate fake email from phone number for Supabase compatibility
     const email = `${phone_number.replace('+', '')}@livenzo.app`;
     const tempPassword = generateTempPassword();
 
-    console.log('Syncing user:', { firebase_uid, phone_number, email, has_fcm_token: !!fcm_token });
+    console.log('Syncing user:', { firebase_uid, phone_number, email, has_fcm_token: !!fcm_token, selected_role });
 
     // Try to find existing user by phone via Admin API (paginate first 1000 users)
     const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -146,6 +172,31 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    // Create or update user_role_assignments with phone number for future conflict checks
+    if (selected_role && supabaseUserId) {
+      console.log('Upserting user_role_assignments with phone:', { user_id: supabaseUserId, role: selected_role, phone: phone_number });
+      
+      const { error: roleErr } = await admin
+        .from('user_role_assignments')
+        .upsert({
+          user_id: supabaseUserId,
+          email: finalEmail,
+          phone: phone_number,
+          role: selected_role,
+          updated_at: new Date().toISOString()
+        }, { 
+          onConflict: 'user_id,role',
+          ignoreDuplicates: false 
+        });
+      
+      if (roleErr) {
+        console.error('user_role_assignments upsert error:', roleErr);
+        // Non-blocking - don't fail the request for this
+      } else {
+        console.log('Successfully saved role assignment with phone number');
+      }
     }
 
     // Save FCM token using safe database function (non-blocking) - ignore if user_id is null
