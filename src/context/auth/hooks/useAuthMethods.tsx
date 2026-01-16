@@ -8,7 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
 import { sendFirebaseOTP, verifyFirebaseOTP, clearConfirmationResult } from '@/config/firebase';
 
-// Function to check for role conflicts before authentication
+// Function to check for role conflicts before authentication (Google/Facebook)
 const checkRoleConflict = async (googleId: string | null, email: string | null, selectedRole: string): Promise<boolean> => {
   try {
     console.log("Pre-auth conflict check:", { googleId, email, selectedRole });
@@ -61,6 +61,47 @@ const checkRoleConflict = async (googleId: string | null, email: string | null, 
     console.error('Error checking role conflict:', error);
     return false;
   }
+};
+
+// Function to check phone role conflict BEFORE sending OTP
+const checkPhoneRoleConflict = async (phoneNumber: string, selectedRole: string): Promise<{ hasConflict: boolean; existingRole?: string }> => {
+  try {
+    // Normalize phone number - remove +91 prefix for comparison
+    const normalizedPhone = phoneNumber.replace(/^\+91/, '');
+    const phoneWithPrefix = `91${normalizedPhone}`;
+    
+    console.log("Checking phone role conflict:", { normalizedPhone, phoneWithPrefix, selectedRole });
+    
+    const { data, error } = await supabase
+      .from('user_role_assignments')
+      .select('role')
+      .eq('phone', phoneWithPrefix)
+      .neq('role', selectedRole);
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking phone role conflict:', error);
+      return { hasConflict: false };
+    }
+
+    if (data && data.length > 0) {
+      const existingRole = data[0].role;
+      console.log("Phone role conflict detected:", existingRole);
+      return { hasConflict: true, existingRole };
+    }
+
+    console.log("No phone role conflict detected");
+    return { hasConflict: false };
+  } catch (error) {
+    console.error('Error checking phone role conflict:', error);
+    return { hasConflict: false };
+  }
+};
+
+// Helper to format role display name
+const formatRoleDisplayName = (role: string): string => {
+  if (role === 'owner') return 'Hostel/PG Owner';
+  if (role === 'renter') return 'Renter';
+  return role;
 };
 
 export function useAuthMethods() {
@@ -408,11 +449,33 @@ export function useAuthMethods() {
   const sendOTP = async (identifier: string): Promise<void> => {
     setIsLoading(true);
     try {
+      const selectedRole = localStorage.getItem('selectedRole') || 'renter';
+      
+      // Check for phone role conflict BEFORE sending OTP
+      const { hasConflict, existingRole } = await checkPhoneRoleConflict(identifier, selectedRole);
+      
+      if (hasConflict && existingRole) {
+        const existingRoleDisplay = formatRoleDisplayName(existingRole);
+        const selectedRoleDisplay = formatRoleDisplayName(selectedRole);
+        
+        // Show only ONE clear message with specific format
+        toast.error(
+          `This phone number is already registered as a ${existingRoleDisplay}. Please log in as a ${existingRoleDisplay} or use a different phone number to continue as a ${selectedRoleDisplay}.`,
+          { duration: 6000 }
+        );
+        
+        setIsLoading(false);
+        throw new Error('ROLE_CONFLICT');
+      }
+      
       await sendFirebaseOTP(identifier);
       toast.success('OTP sent successfully!');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
-      toast.error(error.message || 'Failed to send OTP. Please try again.');
+      // Don't show another error toast for role conflict
+      if (error.message !== 'ROLE_CONFLICT') {
+        toast.error(error.message || 'Failed to send OTP. Please try again.');
+      }
       throw error;
     } finally {
       setIsLoading(false);
