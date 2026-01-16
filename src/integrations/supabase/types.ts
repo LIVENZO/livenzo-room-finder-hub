@@ -1310,6 +1310,7 @@ export type Database = {
           email: string | null
           google_id: string | null
           id: string
+          phone: string | null
           role: string
           updated_at: string
           user_id: string
@@ -1319,6 +1320,7 @@ export type Database = {
           email?: string | null
           google_id?: string | null
           id?: string
+          phone?: string | null
           role: string
           updated_at?: string
           user_id: string
@@ -1328,6 +1330,7 @@ export type Database = {
           email?: string | null
           google_id?: string | null
           id?: string
+          phone?: string | null
           role?: string
           updated_at?: string
           user_id?: string
@@ -1445,6 +1448,13 @@ export type Database = {
           requested_role: string
         }
         Returns: boolean
+      }
+      check_phone_role_conflict: {
+        Args: { phone_param: string; requested_role: string }
+        Returns: {
+          existing_role: string
+          has_conflict: boolean
+        }[]
       }
       cleanup_stale_waiting_sessions: { Args: never; Returns: undefined }
       create_document_record: {
