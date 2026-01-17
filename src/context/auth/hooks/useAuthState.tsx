@@ -99,15 +99,42 @@ export function useAuthState() {
     }
   }, []);
 
+  // Helper to get display name for role
+  const getRoleDisplayName = (role: string): string => {
+    if (role === 'owner') return 'Owner';
+    return 'Renter';
+  };
+
   // Check for role conflicts after authentication (mainly for web OAuth flow)
   const checkRoleConflict = async (user: User, selectedRole: string): Promise<boolean> => {
     try {
       const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
       const email = user.email;
+      const phone = user.phone || user.user_metadata?.phone;
       
-      console.log("Checking role conflict for:", { email, googleId, selectedRole, userMetadata: user.user_metadata });
+      console.log("Checking role conflict for:", { email, googleId, phone, selectedRole, userMetadata: user.user_metadata });
 
-      // Check by google_id first if available
+      // Check by phone first if available
+      if (phone) {
+        console.log("Checking role conflict by phone:", phone);
+        const { data: phoneData, error: phoneError } = await supabase
+          .from('user_role_assignments')
+          .select('role')
+          .eq('phone', phone)
+          .neq('role', selectedRole);
+
+        if (phoneError && phoneError.code !== 'PGRST116') {
+          console.error('Error checking phone role conflict:', phoneError);
+        } else if (phoneData && phoneData.length > 0) {
+          const existingRole = phoneData[0].role;
+          const displayRole = getRoleDisplayName(existingRole);
+          console.log("Role conflict detected by phone:", existingRole);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
+          return true;
+        }
+      }
+
+      // Check by google_id if available
       if (googleId) {
         console.log("Checking role conflict by Google ID:", googleId);
         const { data: googleData, error: googleError } = await supabase
@@ -122,8 +149,9 @@ export function useAuthState() {
           console.error('Error checking Google ID role conflict:', googleError);
         } else if (googleData && googleData.length > 0) {
           const existingRole = googleData[0].role;
+          const displayRole = getRoleDisplayName(existingRole);
           console.log("Role conflict detected by Google ID:", existingRole);
-          toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
           return true;
         }
       }
@@ -143,8 +171,9 @@ export function useAuthState() {
           console.error('Error checking email role conflict:', emailError);
         } else if (emailData && emailData.length > 0) {
           const existingRole = emailData[0].role;
+          const displayRole = getRoleDisplayName(existingRole);
           console.log("Role conflict detected by email:", existingRole);
-          toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
           return true;
         }
       }

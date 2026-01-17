@@ -8,7 +8,43 @@ import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
 import { sendFirebaseOTP, verifyFirebaseOTP, clearConfirmationResult } from '@/config/firebase';
 
-// Function to check for role conflicts before authentication
+// Function to check for phone role conflicts before authentication
+const checkPhoneRoleConflict = async (phone: string, selectedRole: string): Promise<{ hasConflict: boolean; existingRole: string | null }> => {
+  try {
+    console.log("Checking phone role conflict:", { phone, selectedRole });
+    
+    const { data, error } = await supabase
+      .from('user_role_assignments')
+      .select('role')
+      .eq('phone', phone)
+      .neq('role', selectedRole)
+      .limit(1);
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking phone role conflict:', error);
+      return { hasConflict: false, existingRole: null };
+    }
+
+    if (data && data.length > 0) {
+      const existingRole = data[0].role;
+      console.log("Phone role conflict detected:", existingRole);
+      return { hasConflict: true, existingRole };
+    }
+
+    return { hasConflict: false, existingRole: null };
+  } catch (error) {
+    console.error('Error checking phone role conflict:', error);
+    return { hasConflict: false, existingRole: null };
+  }
+};
+
+// Function to get display name for role
+const getRoleDisplayName = (role: string): string => {
+  if (role === 'owner') return 'Owner';
+  return 'Renter';
+};
+
+// Function to check for role conflicts before authentication (Google/Email)
 const checkRoleConflict = async (googleId: string | null, email: string | null, selectedRole: string): Promise<boolean> => {
   try {
     console.log("Pre-auth conflict check:", { googleId, email, selectedRole });
@@ -28,8 +64,9 @@ const checkRoleConflict = async (googleId: string | null, email: string | null, 
         console.error('Error checking Google ID role conflict:', googleError);
       } else if (googleData && googleData.length > 0) {
         const existingRole = googleData[0].role;
+        const displayRole = getRoleDisplayName(existingRole);
         console.log("Role conflict detected by Google ID:", existingRole);
-        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
         return true;
       }
     }
@@ -49,8 +86,9 @@ const checkRoleConflict = async (googleId: string | null, email: string | null, 
         console.error('Error checking email role conflict:', emailError);
       } else if (emailData && emailData.length > 0) {
         const existingRole = emailData[0].role;
+        const displayRole = getRoleDisplayName(existingRole);
         console.log("Role conflict detected by email:", existingRole);
-        toast.error(`This Google account is already registered as a ${existingRole}. Please use a different Google account for ${selectedRole} role.`);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
         return true;
       }
     }
@@ -408,11 +446,26 @@ export function useAuthMethods() {
   const sendOTP = async (identifier: string): Promise<void> => {
     setIsLoading(true);
     try {
+      const selectedRole = localStorage.getItem('selectedRole') || 'renter';
+      
+      // Check for phone role conflict BEFORE sending OTP
+      const { hasConflict, existingRole } = await checkPhoneRoleConflict(identifier, selectedRole);
+      
+      if (hasConflict && existingRole) {
+        const displayRole = getRoleDisplayName(existingRole);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
+        setIsLoading(false);
+        throw new Error(`Phone number already registered as ${displayRole}`);
+      }
+      
       await sendFirebaseOTP(identifier);
       toast.success('OTP sent successfully!');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
-      toast.error(error.message || 'Failed to send OTP. Please try again.');
+      // Only show generic error if it's not our custom conflict error
+      if (!error.message?.includes('already registered')) {
+        toast.error(error.message || 'Failed to send OTP. Please try again.');
+      }
       throw error;
     } finally {
       setIsLoading(false);
