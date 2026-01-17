@@ -193,7 +193,7 @@ export function useAuthMethods() {
               console.log("Stored selected role:", selectedRole);
             }
             
-            toast.success("Successfully signed in!");
+            // Sign-in successful - no toast message per user request
             
           } catch (nativeError) {
             console.error("Capacitor Google Sign-In error:", nativeError);
@@ -279,7 +279,7 @@ export function useAuthMethods() {
                 console.log("Stored selected role:", selectedRole);
               }
               
-              toast.success("Successfully signed in with Facebook!");
+              // Sign-in successful - no toast message per user request
               
             } else {
               throw new Error('No access token received from Facebook');
@@ -390,7 +390,7 @@ export function useAuthMethods() {
           localStorage.setItem('selectedRole', selectedRole);
         }
         
-        toast.success('Successfully signed in!');
+        // Sign-in successful - no toast message per user request
       }
       
     } catch (error) {
