@@ -6,6 +6,23 @@ import { toast } from 'sonner';
 import { getStoredUserRoles, storeUserRole, getDefaultRole } from '../authUtils';
 import { AUTH_CONFIG } from '@/config/auth';
 
+// Global flag to track role conflict - prevents other toasts/redirects from triggering
+let isRoleConflictActive = false;
+
+export const setRoleConflictActive = (value: boolean) => {
+  isRoleConflictActive = value;
+  if (value) {
+    // Store in sessionStorage to persist across redirects
+    sessionStorage.setItem('roleConflictActive', 'true');
+  } else {
+    sessionStorage.removeItem('roleConflictActive');
+  }
+};
+
+export const getRoleConflictActive = (): boolean => {
+  return isRoleConflictActive || sessionStorage.getItem('roleConflictActive') === 'true';
+};
+
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -259,10 +276,13 @@ export function useAuthState() {
           
           const hasConflict = await checkRoleConflict(currentSession.user, selectedRole);
           if (hasConflict) {
-            // Sign out the user if there's a role conflict
-            console.log("Role conflict detected, signing out user");
+            // Set role conflict flag BEFORE signing out to prevent other toasts
+            setRoleConflictActive(true);
+            console.log("Role conflict detected, signing out user - suppressing other messages");
             await supabase.auth.signOut();
             localStorage.removeItem('selectedRole');
+            // Clear the flag after a delay to allow for redirect
+            setTimeout(() => setRoleConflictActive(false), 3000);
             return;
           }
           
@@ -291,7 +311,10 @@ export function useAuthState() {
       (window as any).supabaseUser = null;
       console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
       
-      toast.info("You've been signed out.");
+      // Only show sign-out message if NOT caused by role conflict
+      if (!getRoleConflictActive()) {
+        toast.info("You've been signed out.");
+      }
     }
     
     setIsLoading(false);
