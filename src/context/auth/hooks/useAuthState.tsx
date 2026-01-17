@@ -13,7 +13,6 @@ export function useAuthState() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [canChangeRole, setCanChangeRole] = useState<boolean>(true);
   const initialSessionChecked = useRef(false);
-  const roleConflictSignOut = useRef(false); // Track if sign-out is due to role conflict
   
   // Derived properties
   const isOwner = userRole === 'owner';
@@ -233,7 +232,6 @@ export function useAuthState() {
           if (hasConflict) {
             // Sign out the user if there's a role conflict
             console.log("Role conflict detected, signing out user");
-            roleConflictSignOut.current = true; // Mark as role conflict sign-out
             await supabase.auth.signOut();
             localStorage.removeItem('selectedRole');
             return;
@@ -264,11 +262,7 @@ export function useAuthState() {
       (window as any).supabaseUser = null;
       console.log("LIVENZO_DEBUG_USER:", (window as any).supabaseUser);
       
-      // Only show sign-out toast if it's NOT due to role conflict
-      if (!roleConflictSignOut.current) {
-        toast.info("You've been signed out.");
-      }
-      roleConflictSignOut.current = false; // Reset the flag
+      toast.info("You've been signed out.");
     }
     
     setIsLoading(false);

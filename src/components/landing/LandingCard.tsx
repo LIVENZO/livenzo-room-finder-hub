@@ -61,13 +61,12 @@ const LandingCard: React.FC<LandingCardProps> = ({
     const fullPhoneNumber = getFullPhoneNumber(phoneNumber);
     try {
       await handleOTPAuth.sendOTP(fullPhoneNumber);
-      // OTP sent toast is handled in useAuthMethods
+      toast.success('OTP sent successfully!');
       // Immediately open OTP verification modal
       setOtpModalOpen(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to send OTP:', error);
-      // Don't show error toast here - it's handled in useAuthMethods
-      // Role conflict errors are already shown with specific message
+      toast.error('Failed to send OTP. Please try again.');
     }
   };
   const handleVerifyOTP = async (otp: string) => {
