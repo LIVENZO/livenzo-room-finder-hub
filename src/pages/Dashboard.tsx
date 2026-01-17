@@ -8,6 +8,7 @@ import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
 import LoadingState from '@/components/landing/LoadingState';
 import { toast } from 'sonner';
 import { AUTH_CONFIG } from '@/config/auth';
+import { getRoleConflictActive } from '@/context/auth/hooks/useAuthState';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +20,10 @@ const Dashboard: React.FC = () => {
       if (!isLoading && !user && !session) {
         console.log("No authenticated user found, redirecting to login");
         navigate('/');
-        toast.error("Please sign in to access the dashboard");
+        // Only show error message if NOT caused by role conflict
+        if (!getRoleConflictActive()) {
+          toast.error("Please sign in to access the dashboard");
+        }
         return;
       }
     }

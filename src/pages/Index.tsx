@@ -9,6 +9,7 @@ import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
+import { getRoleConflictActive, setRoleConflictActive } from '@/context/auth/hooks/useAuthState';
 
 const Index: React.FC = () => {
   const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
@@ -19,12 +20,18 @@ const Index: React.FC = () => {
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
   const { captureReferralFromURL, processReferralForNewUser } = useReferral();
 
-  // Capture referral code from URL on mount
+  // Capture referral code from URL on mount and clear role conflict flag on landing page
   useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
       sessionStorage.setItem('pendingReferralCode', refCode);
       console.log('Referral code captured:', refCode);
+    }
+    
+    // Clear role conflict flag when user arrives at landing page
+    // This ensures a clean slate for the next login attempt
+    if (getRoleConflictActive()) {
+      setTimeout(() => setRoleConflictActive(false), 500);
     }
   }, [searchParams]);
   
