@@ -49,7 +49,7 @@ const Index: React.FC = () => {
         }
         
         navigate('/dashboard');
-        toast.success("Welcome to Livenzo!");
+        // No welcome toast per user request
         return;
       }
       
@@ -72,8 +72,7 @@ const Index: React.FC = () => {
         
         // Navigate directly to dashboard instead of using window.location
         navigate('/dashboard');
-        const userName = user.email?.split('@')[0] || 'User';
-        toast.success(`Welcome, ${userName}!`);
+        // No welcome toast per user request
       } else {
         console.log("No user detected on index page");
         setCheckingSession(false);

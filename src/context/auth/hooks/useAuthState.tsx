@@ -293,12 +293,7 @@ export function useAuthState() {
         }, 0);
       }
       
-      // Show success message only for fresh logins, not session restoration
-      if (event === 'SIGNED_IN' && initialSessionChecked.current) {
-        setTimeout(() => {
-          toast.success("Successfully signed in!");
-        }, 500);
-      }
+      // Sign-in successful - no toast message per user request
     } else if (event === 'SIGNED_OUT') {
       setSession(null);
       setUser(null);
