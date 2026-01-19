@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Heart, Loader2, StarIcon, MapPin, Home } from 'lucide-react';
+import { Heart, Loader2, StarIcon, MapPin, Home, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Room } from '@/types/room';
 import RoomFacilityBadges from './RoomFacilityBadges';
+import { toast } from 'sonner';
 
 interface RoomHeaderProps {
   room: Room;
@@ -28,23 +29,66 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
     title: room.title
   });
 
+  const handleShare = async () => {
+    const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
+    const shareText = `🏠 ${room.title}
+📍 ${room.location}
+💰 ₹${room.price}/month
+
+Check out this room on Livenzo:
+${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: room.title,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled or share failed
+        if ((error as Error).name !== 'AbortError') {
+          toast.error('Failed to share');
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast.success('Link copied to clipboard!');
+      } catch {
+        toast.error('Failed to copy link');
+      }
+    }
+  };
+
   return (
     <div className="mt-6">
       <div className="flex items-start justify-between">
         <h1 className="text-3xl font-bold">{room.title}</h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full"
-          onClick={handleFavoriteToggle}
-          disabled={favoritesLoading}
-        >
-          {favoritesLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-          )}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={handleShare}
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={handleFavoriteToggle}
+            disabled={favoritesLoading}
+          >
+            {favoritesLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+            )}
+          </Button>
+        </div>
       </div>
       
       {/* House Name and House Number */}
