@@ -29,37 +29,13 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
     title: room.title
   });
 
-  const handleShare = async () => {
+  const handleShare = () => {
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
-    const shareText = `🏠 ${room.title}
-📍 ${room.location}
-💰 ₹${room.price}/month
-
-Check out this room on Livenzo:
-${shareUrl}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: room.title,
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        // User cancelled or share failed
-        if ((error as Error).name !== 'AbortError') {
-          toast.error('Failed to share');
-        }
-      }
-    } else {
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(shareText);
-        toast.success('Link copied to clipboard!');
-      } catch {
-        toast.error('Failed to copy link');
-      }
-    }
+    const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
+    
+    // Open WhatsApp directly
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
