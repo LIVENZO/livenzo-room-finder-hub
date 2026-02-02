@@ -67,18 +67,6 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
         </div>
       </div>
       
-      {/* House Name and House Number */}
-      {(room.house_name || room.house_no) && (
-        <div className="flex items-center mt-3 text-lg font-medium text-gray-700">
-          <Home className="h-5 w-5 text-gray-500 mr-2" />
-          <span>
-            {room.house_name && room.house_no 
-              ? `${room.house_name}, ${room.house_no}`
-              : room.house_name || room.house_no
-            }
-          </span>
-        </div>
-      )}
       
       <div className="flex items-center mt-2">
         <MapPin className="h-4 w-4 text-gray-500 mr-1" />
