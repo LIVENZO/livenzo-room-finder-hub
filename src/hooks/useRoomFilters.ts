@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Room, RoomFilters } from '@/types/room';
 import { fetchTopRoomIds } from '@/services/topRoomsService';
 
@@ -78,15 +78,19 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
 export const useRoomFilters = (rooms: Room[]) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
-  const [topRoomIds, setTopRoomIds] = useState<Set<string>>(new Set());
   
   // Store the strategy for this session (changes on component mount)
   const strategyRef = useRef<SortStrategy>(getRandomStrategy());
+  const topRoomIdsRef = useRef<Set<string>>(new Set());
+  const fetchedRef = useRef(false);
 
-  // Fetch top room IDs once
-  useEffect(() => {
-    fetchTopRoomIds().then(ids => setTopRoomIds(new Set(ids)));
-  }, []);
+  // Fetch top room IDs once (using ref to avoid extra useState)
+  if (!fetchedRef.current) {
+    fetchedRef.current = true;
+    fetchTopRoomIds().then(ids => {
+      topRoomIdsRef.current = new Set(ids);
+    });
+  }
 
   const clearAllFilters = () => {
     setFilters({});
@@ -130,10 +134,10 @@ export const useRoomFilters = (rooms: Room[]) => {
         }
         return b.price - a.price;
       });
-    } else if (topRoomIds.size > 0) {
+    } else if (topRoomIdsRef.current.size > 0) {
       // Split into top rooms and remaining
-      const topRooms = result.filter(r => topRoomIds.has(r.id));
-      const remainingRooms = result.filter(r => !topRoomIds.has(r.id));
+      const topRooms = result.filter(r => topRoomIdsRef.current.has(r.id));
+      const remainingRooms = result.filter(r => !topRoomIdsRef.current.has(r.id));
 
       // Shuffle top rooms with premium-first feel (high > med > low, shuffled within buckets)
       const topHigh = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'high'));
@@ -151,7 +155,7 @@ export const useRoomFilters = (rooms: Room[]) => {
     }
 
     return result;
-  }, [rooms, filters, searchText, topRoomIds]);
+  }, [rooms, filters, searchText]);
 
   return { 
     filters, 
