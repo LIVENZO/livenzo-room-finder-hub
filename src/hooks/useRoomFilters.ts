@@ -19,7 +19,7 @@ const getPriceBucket = (price: number): PriceBucket => {
 };
 
 const getRandomStrategy = (): SortStrategy => {
-  const strategies: SortStrategy[] = ['high_to_low', 'budget_focused', 'premium_focused', 'smart_mix'];
+  const strategies: SortStrategy[] = ['high_to_low', 'premium_focused', 'smart_mix'];
   return strategies[Math.floor(Math.random() * strategies.length)];
 };
 
@@ -41,42 +41,27 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
     case 'high_to_low':
       return [...rooms].sort((a, b) => b.price - a.price);
     
-    case 'budget_focused': {
-      // Prioritize low and medium price rooms
-      const lowMedium = rooms.filter(r => getPriceBucket(r.price) !== 'high');
-      const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
-      return [...lowMedium.sort((a, b) => a.price - b.price), ...high.sort((a, b) => a.price - b.price)];
-    }
-    
     case 'premium_focused': {
-      // Prioritize medium and high price rooms
-      const mediumHigh = rooms.filter(r => getPriceBucket(r.price) !== 'low');
+      // High first, then Medium, then Low — all descending within buckets
+      const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
+      const medium = rooms.filter(r => getPriceBucket(r.price) === 'medium');
       const low = rooms.filter(r => getPriceBucket(r.price) === 'low');
-      return [...mediumHigh.sort((a, b) => b.price - a.price), ...low.sort((a, b) => a.price - b.price)];
+      return [
+        ...high.sort((a, b) => b.price - a.price),
+        ...medium.sort((a, b) => b.price - a.price),
+        ...low.sort((a, b) => b.price - a.price),
+      ];
     }
     
     case 'smart_mix': {
-      // ~30% low & mid-range, ~70% premium, then shuffled
-      const lowMedium = rooms.filter(r => getPriceBucket(r.price) !== 'high');
-      const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
-      
-      // Calculate target counts
-      const totalCount = rooms.length;
-      const targetHighCount = Math.ceil(totalCount * 0.7);
-      const targetLowMediumCount = totalCount - targetHighCount;
-      
-      // Take proportional amounts (or all if not enough)
-      const selectedHigh = shuffleArray(high).slice(0, targetHighCount);
-      const selectedLowMedium = shuffleArray(lowMedium).slice(0, targetLowMediumCount);
-      
-      // Combine and shuffle for natural discovery
-      return shuffleArray([...selectedHigh, ...selectedLowMedium, 
-        ...high.slice(targetHighCount), 
-        ...lowMedium.slice(targetLowMediumCount)]);
+      // High + Medium first (shuffled), then Low — overall trend is decreasing
+      const highMed = shuffleArray(rooms.filter(r => getPriceBucket(r.price) !== 'low'));
+      const low = shuffleArray(rooms.filter(r => getPriceBucket(r.price) === 'low'));
+      return [...highMed, ...low];
     }
     
     default:
-      return [...rooms].sort((a, b) => a.price - b.price);
+      return [...rooms].sort((a, b) => b.price - a.price);
   }
 };
 
