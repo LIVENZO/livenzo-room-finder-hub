@@ -1211,6 +1211,39 @@ export type Database = {
         }
         Relationships: []
       }
+      top_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "top_rooms_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "top_rooms_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms_public_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           accommodation_type: string | null

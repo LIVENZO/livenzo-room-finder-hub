@@ -1,6 +1,7 @@
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Room, RoomFilters } from '@/types/room';
+import { fetchTopRoomIds } from '@/services/topRoomsService';
 
 // Price bucket thresholds
 const PRICE_THRESHOLDS = {
@@ -10,7 +11,7 @@ const PRICE_THRESHOLDS = {
 };
 
 type PriceBucket = 'low' | 'medium' | 'high';
-type SortStrategy = 'low_to_high' | 'high_to_low' | 'budget_focused' | 'premium_focused' | 'smart_mix';
+type SortStrategy = 'high_to_low' | 'premium_focused' | 'premium_mid_focus' | 'smart_premium_mix';
 
 const getPriceBucket = (price: number): PriceBucket => {
   if (price <= PRICE_THRESHOLDS.LOW_MAX) return 'low';
@@ -19,7 +20,7 @@ const getPriceBucket = (price: number): PriceBucket => {
 };
 
 const getRandomStrategy = (): SortStrategy => {
-  const strategies: SortStrategy[] = ['low_to_high', 'high_to_low', 'budget_focused', 'premium_focused', 'smart_mix'];
+  const strategies: SortStrategy[] = ['high_to_low', 'premium_focused', 'premium_mid_focus', 'smart_premium_mix'];
   return strategies[Math.floor(Math.random() * strategies.length)];
 };
 
@@ -35,57 +36,57 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
   switch (strategy) {
-    case 'low_to_high':
-      return [...rooms].sort((a, b) => a.price - b.price);
-    
     case 'high_to_low':
       return [...rooms].sort((a, b) => b.price - a.price);
-    
-    case 'budget_focused': {
-      // Prioritize low and medium price rooms
-      const lowMedium = rooms.filter(r => getPriceBucket(r.price) !== 'high');
-      const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
-      return [...lowMedium.sort((a, b) => a.price - b.price), ...high.sort((a, b) => a.price - b.price)];
-    }
-    
+
     case 'premium_focused': {
-      // Prioritize medium and high price rooms
-      const mediumHigh = rooms.filter(r => getPriceBucket(r.price) !== 'low');
-      const low = rooms.filter(r => getPriceBucket(r.price) === 'low');
-      return [...mediumHigh.sort((a, b) => b.price - a.price), ...low.sort((a, b) => a.price - b.price)];
-    }
-    
-    case 'smart_mix': {
-      // ~70% low & mid-range, ~30% premium, then shuffled
-      const lowMedium = rooms.filter(r => getPriceBucket(r.price) !== 'high');
       const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
-      
-      // Calculate target counts
-      const totalCount = rooms.length;
-      const targetLowMediumCount = Math.ceil(totalCount * 0.7);
-      const targetHighCount = totalCount - targetLowMediumCount;
-      
-      // Take proportional amounts (or all if not enough)
-      const selectedLowMedium = shuffleArray(lowMedium).slice(0, targetLowMediumCount);
-      const selectedHigh = shuffleArray(high).slice(0, targetHighCount);
-      
-      // Combine and shuffle for natural discovery
-      return shuffleArray([...selectedLowMedium, ...selectedHigh, 
-        ...lowMedium.slice(targetLowMediumCount), 
-        ...high.slice(targetHighCount)]);
+      const medium = rooms.filter(r => getPriceBucket(r.price) === 'medium');
+      const low = rooms.filter(r => getPriceBucket(r.price) === 'low');
+      return [
+        ...high.sort((a, b) => b.price - a.price),
+        ...medium.sort((a, b) => b.price - a.price),
+        ...low.sort((a, b) => b.price - a.price),
+      ];
     }
-    
+
+    case 'premium_mid_focus': {
+      const highMed = rooms.filter(r => getPriceBucket(r.price) !== 'low');
+      const low = rooms.filter(r => getPriceBucket(r.price) === 'low');
+      return [
+        ...shuffleArray(highMed),
+        ...low.sort((a, b) => b.price - a.price),
+      ];
+    }
+
+    case 'smart_premium_mix': {
+      const high = rooms.filter(r => getPriceBucket(r.price) === 'high');
+      const medium = rooms.filter(r => getPriceBucket(r.price) === 'medium');
+      const low = rooms.filter(r => getPriceBucket(r.price) === 'low');
+      return [
+        ...shuffleArray(high),
+        ...shuffleArray(medium),
+        ...shuffleArray(low),
+      ];
+    }
+
     default:
-      return [...rooms].sort((a, b) => a.price - b.price);
+      return [...rooms].sort((a, b) => b.price - a.price);
   }
 };
 
 export const useRoomFilters = (rooms: Room[]) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
+  const [topRoomIds, setTopRoomIds] = useState<Set<string>>(new Set());
   
   // Store the strategy for this session (changes on component mount)
   const strategyRef = useRef<SortStrategy>(getRandomStrategy());
+
+  // Fetch top room IDs once
+  useEffect(() => {
+    fetchTopRoomIds().then(ids => setTopRoomIds(new Set(ids)));
+  }, []);
 
   const clearAllFilters = () => {
     setFilters({});
@@ -95,55 +96,22 @@ export const useRoomFilters = (rooms: Room[]) => {
   // Filter and sort rooms based on user criteria
   const filteredRooms = useMemo(() => {
     let result = rooms.filter(room => {
-      // Filter out unavailable rooms first
-      if (room.available === false) {
-        return false;
-      }
+      if (room.available === false) return false;
 
-      // Text-based search on location/area name (case-insensitive)
       if (searchText.trim()) {
         const searchLower = searchText.toLowerCase().trim();
         const locationMatch = room.location?.toLowerCase().includes(searchLower);
         const titleMatch = room.title?.toLowerCase().includes(searchLower);
-        if (!locationMatch && !titleMatch) {
-          return false;
-        }
+        if (!locationMatch && !titleMatch) return false;
       }
       
-      // Filter by max price
-      if (filters.maxPrice && room.price > filters.maxPrice) {
-        return false;
-      }
-      
-      // Filter by wifi
-      if (filters.wifi && !room.facilities.wifi) {
-        return false;
-      }
-      
-      // Filter by bathroom
-      if (filters.bathroom && !room.facilities.bathroom) {
-        return false;
-      }
-      
-      // Filter by gender preference
-      if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) {
-        return false;
-      }
-      
-      // Filter by room type
-      if (filters.roomType && room.facilities.roomType !== filters.roomType) {
-        return false;
-      }
-      
-      // Filter by cooling type
-      if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) {
-        return false;
-      }
-      
-      // Filter by food
-      if (filters.food && room.facilities.food !== filters.food) {
-        return false;
-      }
+      if (filters.maxPrice && room.price > filters.maxPrice) return false;
+      if (filters.wifi && !room.facilities.wifi) return false;
+      if (filters.bathroom && !room.facilities.bathroom) return false;
+      if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) return false;
+      if (filters.roomType && room.facilities.roomType !== filters.roomType) return false;
+      if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) return false;
+      if (filters.food && room.facilities.food !== filters.food) return false;
       
       return true;
     });
@@ -152,27 +120,38 @@ export const useRoomFilters = (rooms: Room[]) => {
     const hasDistanceData = result.some(room => room.distance !== undefined);
 
     if (hasDistanceData) {
-      // When near me is active, sort by distance first, then apply strategy for price tie-breaking
       result.sort((a, b) => {
         if (a.distance !== undefined && b.distance !== undefined) {
-          if (a.distance !== b.distance) {
-            return a.distance - b.distance;
-          }
+          if (a.distance !== b.distance) return a.distance - b.distance;
         } else if (a.distance !== undefined) {
           return -1;
         } else if (b.distance !== undefined) {
           return 1;
         }
-        // For same distance, fall back to price order
-        return a.price - b.price;
+        return b.price - a.price;
       });
+    } else if (topRoomIds.size > 0) {
+      // Split into top rooms and remaining
+      const topRooms = result.filter(r => topRoomIds.has(r.id));
+      const remainingRooms = result.filter(r => !topRoomIds.has(r.id));
+
+      // Shuffle top rooms with premium-first feel (high > med > low, shuffled within buckets)
+      const topHigh = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'high'));
+      const topMed = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'medium'));
+      const topLow = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'low'));
+      const orderedTop = [...topHigh, ...topMed, ...topLow];
+
+      // Apply existing strategy to remaining rooms
+      const orderedRemaining = applyStrategy(remainingRooms, strategyRef.current);
+
+      result = [...orderedTop, ...orderedRemaining];
     } else {
-      // Apply dynamic ordering strategy when near me is not active
+      // Fallback: use existing strategy (all premium-first, never low-to-high)
       result = applyStrategy(result, strategyRef.current);
     }
 
     return result;
-  }, [rooms, filters, searchText]);
+  }, [rooms, filters, searchText, topRoomIds]);
 
   return { 
     filters, 
