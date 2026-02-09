@@ -71,7 +71,8 @@ export const mapDbRoomToRoom = (data: any): Room => {
     available: data.available,
     createdAt: data.created_at,
     house_no: data.house_no,
-    house_name: data.house_name
+    house_name: data.house_name,
+    is_top_room: data.is_top_room ?? false
   };
 };
 
