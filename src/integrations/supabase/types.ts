@@ -1117,6 +1117,7 @@ export type Database = {
           house_no: string | null
           id: string
           images: string[] | null
+          is_top_room: boolean
           location: string
           location_latitude: number | null
           location_longitude: number | null
@@ -1138,6 +1139,7 @@ export type Database = {
           house_no?: string | null
           id?: string
           images?: string[] | null
+          is_top_room?: boolean
           location: string
           location_latitude?: number | null
           location_longitude?: number | null
@@ -1159,6 +1161,7 @@ export type Database = {
           house_no?: string | null
           id?: string
           images?: string[] | null
+          is_top_room?: boolean
           location?: string
           location_latitude?: number | null
           location_longitude?: number | null
@@ -1701,6 +1704,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      toggle_top_room: {
+        Args: { p_is_top: boolean; p_room_id: string }
+        Returns: undefined
       }
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Pencil, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Eye, Loader2, Star } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { invalidateTopRoomsCache } from '@/services/topRoomsService';
 
 interface RoomManagementCardProps {
   room: Room;
@@ -23,6 +25,8 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
   const navigate = useNavigate();
   const [isAvailable, setIsAvailable] = useState(room.available !== false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTopRoom, setIsTopRoom] = useState(room.is_top_room ?? false);
+  const [isTogglingTop, setIsTogglingTop] = useState(false);
   
   const handleAvailabilityChange = async (checked: boolean) => {
     setUpdatingRoom(room.id);
@@ -79,6 +83,27 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
     }
   };
   
+  const handleToggleTopRoom = async (checked: boolean) => {
+    setIsTogglingTop(true);
+    try {
+      const { error } = await supabase.rpc('toggle_top_room', {
+        p_room_id: room.id,
+        p_is_top: checked
+      });
+      if (error) {
+        toast.error(`Failed to update: ${error.message}`);
+        return;
+      }
+      setIsTopRoom(checked);
+      invalidateTopRoomsCache();
+      toast.success(checked ? 'Added to Top Rooms' : 'Removed from Top Rooms');
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setIsTogglingTop(false);
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -119,6 +144,19 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
             checked={isAvailable} 
             onCheckedChange={handleAvailabilityChange}
             disabled={isUpdating}
+          />
+        </div>
+
+        <div className="flex items-center justify-between w-full">
+          <label htmlFor={`top-room-${room.id}`} className="text-sm flex items-center gap-1.5 cursor-pointer">
+            <Star className="h-3.5 w-3.5 text-amber-500" />
+            Add to Top Rooms
+          </label>
+          <Checkbox
+            id={`top-room-${room.id}`}
+            checked={isTopRoom}
+            onCheckedChange={(checked) => handleToggleTopRoom(checked === true)}
+            disabled={isTogglingTop}
           />
         </div>
         
