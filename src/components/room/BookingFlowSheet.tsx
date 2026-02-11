@@ -5,7 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckCircle2, ArrowLeft, Loader2, Info, XCircle } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Loader2, Info, XCircle, CalendarIcon, Clock } from 'lucide-react';
+import { format, addDays } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -27,7 +32,7 @@ interface BookingFlowSheetProps {
   userEmail?: string;
 }
 
-type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'processing' | 'success' | 'failed';
+type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'processing' | 'success' | 'failed';
 type UserType = 'student' | 'professional';
 
 const TOKEN_AMOUNT = 1000; // ₹1000 token amount
@@ -55,6 +60,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string>('');
+  const [dropDate, setDropDate] = useState<Date | undefined>(undefined);
+  const [dropTime, setDropTime] = useState<string>('');
 
   const resetFlow = () => {
     setStep('user-type');
@@ -63,6 +70,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setStayDuration(null);
     setBookingId(null);
     setPaymentError('');
+    setDropDate(undefined);
+    setDropTime('');
   };
 
   const handleClose = () => {
@@ -583,10 +592,155 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
             <Button
               className="w-full h-12 text-base font-medium"
-              onClick={handlePayAndLock}
+              onClick={() => setStep('drop-schedule')}
               disabled={loading}
             >
               Schedule My Complimentary Drop
+            </Button>
+          </motion.div>
+        );
+
+      case 'drop-schedule':
+        const timeSlots = [
+          '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+          '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+          '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+          '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
+        ];
+        const formatTime = (t: string) => {
+          const [h, m] = t.split(':').map(Number);
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const hour12 = h % 12 || 12;
+          return `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+        };
+
+        const handleConfirmDrop = async () => {
+          if (!dropDate || !dropTime) {
+            toast.error('Please select both date and time');
+            return;
+          }
+          setLoading(true);
+          try {
+            const dateStr = format(dropDate, 'yyyy-MM-dd');
+            if (bookingId) {
+              await supabase
+                .from('booking_requests')
+                .update({ drop_date: dateStr, drop_time: dropTime } as any)
+                .eq('id', bookingId);
+            }
+            // Proceed to payment
+            handlePayAndLock();
+          } catch (error) {
+            console.error('Error saving drop schedule:', error);
+            toast.error('Failed to save schedule. Please try again.');
+            setLoading(false);
+          }
+        };
+
+        return (
+          <motion.div
+            key="drop-schedule"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="space-y-5"
+          >
+            <button
+              onClick={() => setStep('token-confirm')}
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </button>
+
+            <div className="text-center space-y-2">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+                className="text-3xl"
+              >
+                🚗
+              </motion.div>
+              <h2 className="text-xl font-semibold text-foreground">Schedule Your Drop</h2>
+              <p className="text-sm text-muted-foreground">
+                Pick a date and time — we'll visit and drop you to your new room for free.
+              </p>
+            </div>
+
+            {/* Date Picker */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <CalendarIcon className="h-4 w-4" />
+                Preferred Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-12 justify-start text-left font-normal",
+                      !dropDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dropDate ? format(dropDate, "PPP") : "Select a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={dropDate}
+                    onSelect={setDropDate}
+                    disabled={(date) => date < addDays(new Date(), 1)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Time Picker */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                Preferred Time
+              </Label>
+              <Select value={dropTime} onValueChange={setDropTime}>
+                <SelectTrigger className="w-full h-12">
+                  <SelectValue placeholder="Select a time slot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {formatTime(slot)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Summary */}
+            {dropDate && dropTime && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center"
+              >
+                <p className="text-sm text-muted-foreground">Your drop is scheduled for</p>
+                <p className="text-lg font-semibold text-foreground mt-1">
+                  {format(dropDate, "EEE, MMM d")} at {formatTime(dropTime)}
+                </p>
+              </motion.div>
+            )}
+
+            <Button
+              className="w-full h-12 text-base font-medium"
+              onClick={handleConfirmDrop}
+              disabled={!dropDate || !dropTime || loading}
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm Drop Schedule'}
             </Button>
           </motion.div>
         );
