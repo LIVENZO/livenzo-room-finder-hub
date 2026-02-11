@@ -317,13 +317,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     }
     setLoading(true);
 
-    if (stayDuration < 6) {
-      await createOrUpdateBookingRequest('not_eligible', false, false, 'not_eligible');
-      setStep('not-eligible');
-    } else {
-      await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
-      setStep('token-confirm');
-    }
+    await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
+    setStep('token-confirm');
     setLoading(false);
   };
 
