@@ -97,34 +97,14 @@ Please help me.`;
             </div>
           )}
           
-          {/* Offline Visit Button - Primary CTA, Hidden for property owner */}
+          {/* Book & Pay After Shift Button - Primary CTA, Hidden for property owner */}
           {!isOwner && (
             <Button 
               className="w-full"
-              onClick={() => {
-                const message = `Hi, I found this room on Livenzo.
-
-I would like to schedule an offline visit before booking.
-
-Room Details:
-• Location: ${room.location}
-• Rent: ₹${room.price.toLocaleString()}/month
-• Room ID: ${room.id}
-
-Please let me know a suitable time for visit.
-
-Thank you.`;
-                const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
-                const opened = window.open(whatsappUrl, '_blank');
-                
-                if (!opened) {
-                  toast.error("WhatsApp not installed");
-                }
-              }}
+              onClick={handleBookNow}
             >
               <CalendarCheck className="h-4 w-4 mr-2" />
-              Offline Visit
+              Book & Pay After Shift
             </Button>
           )}
           
