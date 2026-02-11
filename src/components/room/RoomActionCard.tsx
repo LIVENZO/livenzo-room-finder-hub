@@ -82,7 +82,7 @@ Please help me.`;
                   window.open(whatsappUrl, '_blank');
                 }}
               >
-                🗨️ Get Help (Reply in 5 min)
+                💬 Chat Support
               </Button>
               
               {/* Call Button */}
