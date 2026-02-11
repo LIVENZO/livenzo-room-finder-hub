@@ -547,20 +547,37 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               Back
             </button>
 
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-foreground">Lock this room</h2>
+            <div className="text-center space-y-3">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+                className="text-4xl"
+              >
+                🎉
+              </motion.div>
+              <h2 className="text-xl font-semibold text-foreground">Great Choice! Your Room is Reserved</h2>
               <p className="text-muted-foreground mt-2 leading-relaxed">
-                Pay a refundable token amount to lock this room. This helps us confirm serious bookings and notify the owner faster.
+                You're one step away from your new home. We've reserved this room for you — confirm below to complete your booking.
               </p>
             </div>
 
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Token Amount</span>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🚗</span>
+                <div>
+                  <p className="font-medium text-foreground">Complimentary Room Visit & Drop</p>
+                  <p className="text-sm text-muted-foreground">
+                    We'll arrange a free visit and drop to your new room — on us!
+                  </p>
+                </div>
+              </div>
+              <div className="border-t border-primary/10 pt-3 flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">Booking Confirmation Fee</span>
                 <span className="text-2xl font-bold text-foreground">₹{TOKEN_AMOUNT.toLocaleString()}</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Refunded if owner does not approve
+              <p className="text-xs text-muted-foreground">
+                Fully refundable if the owner doesn't approve
               </p>
             </div>
 
@@ -569,7 +586,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               onClick={handlePayAndLock}
               disabled={loading}
             >
-              Pay & Lock Room
+              Schedule My Complimentary Drop
             </Button>
           </motion.div>
         );
