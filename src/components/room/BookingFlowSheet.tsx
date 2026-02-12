@@ -27,6 +27,7 @@ interface BookingFlowSheetProps {
   roomId: string;
   userId: string;
   roomTitle: string;
+  roomPrice: number;
   userName?: string;
   userPhone?: string;
   userEmail?: string;
@@ -35,7 +36,7 @@ interface BookingFlowSheetProps {
 type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'processing' | 'success' | 'failed';
 type UserType = 'student' | 'professional';
 
-const TOKEN_AMOUNT = 1000; // ₹1000 token amount
+// Token amount is now dynamic based on room rent
 
 const stepVariants = {
   initial: { opacity: 0, x: 50 },
@@ -49,10 +50,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   roomId,
   userId,
   roomTitle,
+  roomPrice,
   userName = '',
   userPhone = '',
   userEmail = ''
 }) => {
+  const tokenAmount = roomPrice; // Dynamic: equals room rent
   const [step, setStep] = useState<Step>('user-type');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
@@ -95,7 +98,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           booking_stage: stage,
           token_required: tokenRequired,
           token_paid: tokenPaid,
-          token_amount: TOKEN_AMOUNT,
+          token_amount: tokenAmount,
           status
         };
         
@@ -121,7 +124,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             booking_stage: stage,
             token_required: tokenRequired,
             token_paid: tokenPaid,
-            token_amount: TOKEN_AMOUNT,
+            token_amount: tokenAmount,
             status
           })
           .select('id')
@@ -583,10 +586,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               </div>
               <div className="border-t border-primary/10 pt-3 flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Booking Confirmation Fee</span>
-                <span className="text-2xl font-bold text-foreground">₹{TOKEN_AMOUNT.toLocaleString()}</span>
+                <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Fully refundable if the owner doesn't approve
+                Equals your monthly rent — fully refundable if not approved
               </p>
             </div>
 
@@ -795,15 +798,23 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
+              className="space-y-2"
             >
-              <h2 className="text-2xl font-semibold text-foreground">Room Locked 🎉</h2>
-              <p className="text-muted-foreground mt-3 leading-relaxed">
-                Your payment was successful.
-                <br />
-                This room is now locked for you.
-                <br />
-                Our team and the owner have been notified.
+              <h2 className="text-2xl font-semibold text-foreground">Your Room is Secured! 🎉</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Congratulations! Your room is now locked and waiting for you.
               </p>
+              {dropDate && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
+                  <p className="text-sm text-muted-foreground">Your shift is scheduled for</p>
+                  <p className="text-lg font-semibold text-foreground mt-1">
+                    🚗 {format(dropDate, "EEE, MMM d")}{dropTime ? ` at ${(() => { const [h, m] = dropTime.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })()}` : ''}
+                  </p>
+                  <p className="text-sm text-primary font-medium mt-2">
+                    Looking forward to your shift! 🏠
+                  </p>
+                </div>
+              )}
             </motion.div>
 
             <motion.div
@@ -815,7 +826,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 className="w-full h-12 text-base font-medium"
                 onClick={handleClose}
               >
-                Done
+                Go to Dashboard
               </Button>
             </motion.div>
           </motion.div>
