@@ -33,7 +33,7 @@ interface BookingFlowSheetProps {
   userEmail?: string;
 }
 
-type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'processing' | 'success' | 'failed';
+type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'drop-confirmed' | 'processing' | 'success' | 'failed';
 type UserType = 'student' | 'professional';
 
 // Token amount is now dynamic based on room rent
@@ -631,8 +631,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 .update({ drop_date: dateStr, drop_time: dropTime } as any)
                 .eq('id', bookingId);
             }
-            // Proceed to payment
-            handlePayAndLock();
+            setLoading(false);
+            setStep('drop-confirmed');
           } catch (error) {
             console.error('Error saving drop schedule:', error);
             toast.error('Failed to save schedule. Please try again.');
@@ -745,6 +745,95 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm Drop Schedule'}
             </Button>
+          </motion.div>
+        );
+
+      case 'drop-confirmed':
+        const formatTimeDisplay = (t: string) => {
+          const [h, m] = t.split(':').map(Number);
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const hour12 = h % 12 || 12;
+          return `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+        };
+
+        return (
+          <motion.div
+            key="drop-confirmed"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="space-y-5"
+          >
+            {/* Celebration Banner */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 180, damping: 16 }}
+              className="text-center space-y-3 py-2"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.15 }}
+                className="text-5xl"
+              >
+                🎉
+              </motion.div>
+              <h2 className="text-xl font-bold text-foreground">Your Drop is Scheduled!</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Your room is almost yours — just one step to go!
+              </p>
+              {dropDate && dropTime && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 inline-block">
+                  <p className="text-sm font-semibold text-foreground">
+                    🚗 {format(dropDate, "EEE, MMM d")} at {formatTimeDisplay(dropTime)}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Payment Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-card border border-border rounded-2xl p-5 space-y-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🔒</span>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Lock Your Room</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    Pay the booking confirmation fee to secure this room before someone else does. This amount equals your monthly rent and is fully refundable if not approved.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-3 flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Amount to pay</span>
+                <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                ✅ Equals your monthly rent &nbsp;·&nbsp; 💰 Fully refundable if not approved
+              </p>
+            </motion.div>
+
+            {/* Pay Button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+            >
+              <Button
+                className="w-full h-12 text-base font-semibold"
+                onClick={handlePayAndLock}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} & Lock Room`}
+              </Button>
+            </motion.div>
           </motion.div>
         );
 
