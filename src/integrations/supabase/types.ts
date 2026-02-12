@@ -77,8 +77,6 @@ export type Database = {
         Row: {
           booking_stage: string | null
           created_at: string
-          drop_date: string | null
-          drop_time: string | null
           id: string
           room_id: string
           status: string
@@ -93,8 +91,6 @@ export type Database = {
         Insert: {
           booking_stage?: string | null
           created_at?: string
-          drop_date?: string | null
-          drop_time?: string | null
           id?: string
           room_id: string
           status?: string
@@ -109,8 +105,6 @@ export type Database = {
         Update: {
           booking_stage?: string | null
           created_at?: string
-          drop_date?: string | null
-          drop_time?: string | null
           id?: string
           room_id?: string
           status?: string
