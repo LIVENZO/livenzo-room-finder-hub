@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { shouldUseExternalBrowser, openRazorpayInBrowser, storePendingPayment, checkPendingPayment, clearPendingPayment } from '@/utils/razorpayHelper';
+import { App as CapApp } from '@capacitor/app';
 
 // Global type declaration for Razorpay
 declare global {
@@ -160,6 +162,47 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     });
   };
 
+  // Listen for app resume to check pending external payments
+  useEffect(() => {
+    if (!shouldUseExternalBrowser()) return;
+
+    const checkOnResume = async () => {
+      const result = await checkPendingPayment();
+      if (result?.found && result.type === 'token') {
+        if (result.success) {
+          clearPendingPayment();
+          setStep('success');
+          setLoading(false);
+        } else {
+          // Payment might still be processing, poll again after delay
+          setTimeout(async () => {
+            const retry = await checkPendingPayment();
+            if (retry?.found && retry.success) {
+              clearPendingPayment();
+              setStep('success');
+              setLoading(false);
+            } else if (retry?.found) {
+              clearPendingPayment();
+              setPaymentError('Payment was not completed. You can retry anytime.');
+              setStep('failed');
+              setLoading(false);
+            }
+          }, 3000);
+        }
+      }
+    };
+
+    const listener = CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive && step === 'processing') {
+        checkOnResume();
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [step]);
+
   const handlePayAndLock = async () => {
     setLoading(true);
     setStep('processing');
@@ -199,7 +242,33 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Invalid payment order response');
       }
 
-      // Load Razorpay script
+      // --- EXTERNAL BROWSER for Android Capacitor ---
+      if (shouldUseExternalBrowser()) {
+        storePendingPayment({
+          type: 'token',
+          bookingId: currentBookingId,
+          roomId,
+        });
+
+        await openRazorpayInBrowser({
+          razorpayKeyId: orderData.razorpayKeyId,
+          razorpayOrderId: orderData.razorpayOrderId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          description: 'Livenzo Room Booking',
+          userName,
+          userEmail,
+          userPhone,
+          bookingId: currentBookingId,
+          roomId,
+          type: 'token',
+        });
+
+        // Keep processing state - app resume listener will handle the result
+        return;
+      }
+
+      // --- STANDARD MODAL for web browser ---
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         throw new Error('Failed to load payment gateway');

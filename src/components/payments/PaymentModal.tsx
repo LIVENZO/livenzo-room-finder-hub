@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { CreditCard, Smartphone, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { shouldUseExternalBrowser, openRazorpayInBrowser, storePendingPayment, checkPendingPayment, clearPendingPayment } from "@/utils/razorpayHelper";
+import { App as CapApp } from '@capacitor/app';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -27,10 +29,43 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  // Listen for app resume to check pending external payments
+  useEffect(() => {
+    if (!shouldUseExternalBrowser() || !isOpen) return;
+
+    const listener = CapApp.addListener('appStateChange', async ({ isActive }) => {
+      if (isActive && loading) {
+        const result = await checkPendingPayment();
+        if (result?.found && result.type === 'rent') {
+          if (result.success) {
+            clearPendingPayment();
+            setLoading(false);
+            toast({ title: "Payment Successful", description: "Your rent payment has been processed successfully" });
+            onSuccess({ verified: true });
+          } else {
+            setTimeout(async () => {
+              const retry = await checkPendingPayment();
+              if (retry?.found && retry.success) {
+                clearPendingPayment();
+                setLoading(false);
+                onSuccess({ verified: true });
+              } else if (retry?.found) {
+                clearPendingPayment();
+                setLoading(false);
+                onFailure?.("Payment was not completed. You can retry anytime.");
+              }
+            }, 3000);
+          }
+        }
+      }
+    });
+
+    return () => { listener.then(l => l.remove()); };
+  }, [isOpen, loading]);
+
   const handlePayment = async () => {
     setLoading(true);
     try {
-      // Ensure auth header and create payment order
       const { data: sessionData } = await supabase.auth.getSession();
       const authHeader = sessionData?.session?.access_token
         ? { Authorization: `Bearer ${sessionData.session.access_token}` }
@@ -42,23 +77,37 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
       });
 
       if (orderError) {
-        console.error('Order creation error:', orderError);
         throw new Error(orderError.message || 'Failed to create payment order');
       }
 
-      // Load Razorpay script if not already loaded
-      if (!window.Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
+      // --- EXTERNAL BROWSER for Android Capacitor ---
+      if (shouldUseExternalBrowser()) {
+        storePendingPayment({ type: 'rent', paymentId: orderData.paymentId });
         
-        await new Promise((resolve) => {
-          script.onload = resolve;
+        await openRazorpayInBrowser({
+          razorpayKeyId: orderData.razorpayKeyId,
+          razorpayOrderId: orderData.razorpayOrderId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          description: `Rent Payment for ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+          userEmail: user?.email || '',
+          paymentId: orderData.paymentId,
+          type: 'rent',
+        });
+        return;
+      }
+
+      // --- STANDARD MODAL for web browser ---
+      if (!window.Razorpay) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => resolve();
+          document.body.appendChild(script);
         });
       }
 
-      // Initialize Razorpay payment
       const options = {
         key: orderData.razorpayKeyId,
         amount: orderData.amount,
@@ -68,7 +117,6 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
         order_id: orderData.razorpayOrderId,
         handler: async (response: any) => {
           try {
-            // Verify payment
             const { data: sessionData2 } = await supabase.auth.getSession();
             const authHeader2 = sessionData2?.session?.access_token
               ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
@@ -85,29 +133,16 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
 
             if (verifyError) throw verifyError;
 
-            toast({
-              title: "Payment Successful",
-              description: "Your rent payment has been processed successfully",
-            });
-
+            toast({ title: "Payment Successful", description: "Your rent payment has been processed successfully" });
             onSuccess(response);
           } catch (error) {
-            console.error('Payment verification failed:', error);
             const errorMessage = "Payment verification failed. Please contact support if amount was deducted.";
-            toast({
-              title: "Payment Verification Failed",
-              description: errorMessage,
-              variant: "destructive",
-            });
+            toast({ title: "Payment Verification Failed", description: errorMessage, variant: "destructive" });
             onFailure?.(errorMessage);
           }
         },
-        prefill: {
-          email: user?.email || '',
-        },
-        theme: {
-          color: '#8B5CF6'
-        },
+        prefill: { email: user?.email || '' },
+        theme: { color: '#8B5CF6' },
         modal: {
           ondismiss: () => {
             setLoading(false);
@@ -120,13 +155,8 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
       razorpay.open();
       
     } catch (error) {
-      console.error('Payment initiation failed:', error);
       const errorMessage = "Failed to initiate payment. Please check your connection and try again.";
-      toast({
-        title: "Payment Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast({ title: "Payment Failed", description: errorMessage, variant: "destructive" });
       onFailure?.(errorMessage);
       setLoading(false);
     }
@@ -174,11 +204,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, relationshipId, onSucces
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button 
-              onClick={handlePayment} 
-              disabled={loading}
-              className="flex-1"
-            >
+            <Button onClick={handlePayment} disabled={loading} className="flex-1">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Pay Now
             </Button>
