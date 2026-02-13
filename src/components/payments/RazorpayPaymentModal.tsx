@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreditCard, Shield, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { shouldUseExternalBrowser, openRazorpayInBrowser, storePendingPayment, checkPendingPayment, clearPendingPayment } from "@/utils/razorpayHelper";
+import { App as CapApp } from '@capacitor/app';
 
 interface RazorpayPaymentModalProps {
   isOpen: boolean;
@@ -17,7 +19,6 @@ interface RazorpayPaymentModalProps {
   onFailure: (error: string) => void;
 }
 
-// Global type declaration for Razorpay
 declare global {
   interface Window {
     Razorpay: any;
@@ -25,16 +26,43 @@ declare global {
 }
 
 export const RazorpayPaymentModal = ({ 
-  isOpen, 
-  onClose, 
-  amount,
-  electricBillAmount = 0,
-  relationshipId,
-  rentId,
-  onSuccess, 
-  onFailure 
+  isOpen, onClose, amount, electricBillAmount = 0,
+  relationshipId, rentId, onSuccess, onFailure 
 }: RazorpayPaymentModalProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Listen for app resume to check pending external payments
+  useEffect(() => {
+    if (!shouldUseExternalBrowser() || !isOpen) return;
+
+    const listener = CapApp.addListener('appStateChange', async ({ isActive }) => {
+      if (isActive && isProcessing) {
+        const result = await checkPendingPayment();
+        if (result?.found && result.type === 'rent') {
+          if (result.success) {
+            clearPendingPayment();
+            setIsProcessing(false);
+            onSuccess({ verified: true });
+          } else {
+            setTimeout(async () => {
+              const retry = await checkPendingPayment();
+              if (retry?.found && retry.success) {
+                clearPendingPayment();
+                setIsProcessing(false);
+                onSuccess({ verified: true });
+              } else if (retry?.found) {
+                clearPendingPayment();
+                setIsProcessing(false);
+                onFailure('Payment was not completed. You can retry anytime.');
+              }
+            }, 3000);
+          }
+        }
+      }
+    });
+
+    return () => { listener.then(l => l.remove()); };
+  }, [isOpen, isProcessing]);
 
   const handlePayment = async (customAmount?: number) => {
     setIsProcessing(true);
@@ -42,13 +70,11 @@ export const RazorpayPaymentModal = ({
     try {
       const payAmount = typeof customAmount === 'number' ? customAmount : amount;
       
-      // Get authentication token
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session?.access_token) {
         throw new Error('Authentication required. Please log in again.');
       }
 
-      // Create payment order with proper error handling
       const result = await supabase.functions.invoke('create-payment-order', {
         body: { 
           amount: payAmount,
@@ -65,189 +91,105 @@ export const RazorpayPaymentModal = ({
       const { data: orderData, error: orderError } = result;
 
       if (orderError) {
-        console.error('Error creating payment order:', orderError);
-        const message = (orderError as any)?.message || (orderError as any)?.error || 'Failed to create payment order';
+        const message = (orderError as any)?.message || 'Failed to create payment order';
         throw new Error(message);
       }
 
       if (!orderData?.success || !orderData?.razorpayOrderId) {
-        console.error('Invalid response:', orderData);
         throw new Error('Invalid payment order response');
       }
 
-      // Load Razorpay script (reuse if already loaded)
-      if (window.Razorpay) {
-        const options = {
-          key: orderData.razorpayKeyId,
-          amount: orderData.amount, // Amount in paise from backend order
+      // --- EXTERNAL BROWSER for Android Capacitor ---
+      if (shouldUseExternalBrowser()) {
+        storePendingPayment({ type: 'rent', paymentId: orderData.paymentId });
+        
+        await openRazorpayInBrowser({
+          razorpayKeyId: orderData.razorpayKeyId,
+          razorpayOrderId: orderData.razorpayOrderId,
+          amount: orderData.amount,
           currency: 'INR',
-          name: 'Livenzo',
           description: 'Rent Payment',
-          order_id: orderData.razorpayOrderId,
-          config: {
-            display: {
-              blocks: {
-                banks: {
-                  name: 'Pay using UPI or other methods',
-                  instruments: [
-                    {
-                      method: 'upi'
-                    },
-                    {
-                      method: 'card'
-                    },
-                    {
-                      method: 'netbanking'
-                    },
-                    {
-                      method: 'wallet'
-                    }
-                  ]
-                }
-              },
-              sequence: ['block.banks'],
-              preferences: {
-                show_default_blocks: false
-              }
-            }
-          },
-          prefill: {
-            method: 'upi'
-          },
-          handler: async (response: any) => {
-            try {
-              // Verify payment
-              const { data: sessionData2 } = await supabase.auth.getSession();
-              const authHeader2 = sessionData2?.session?.access_token
-                ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
-                : undefined;
-              const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
-                body: {
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpaySignature: response.razorpay_signature,
-                  paymentId: orderData.paymentId
-                },
-                headers: authHeader2
-              });
-
-              if (verifyError) {
-                console.error('Payment verification failed:', verifyError);
-                onFailure('Payment verification failed. Please contact support.');
-                return;
-              }
-
-              console.log('Payment verified successfully');
-              onSuccess({
-                ...response,
-                paymentId: orderData.paymentId
-              });
-            } catch (error) {
-              console.error('Payment verification error:', error);
-              onFailure('Payment verification failed. Please contact support.');
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              setIsProcessing(false);
-              onFailure('Payment cancelled');
-            }
-          },
-          theme: { color: '#3B82F6' }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-        setIsProcessing(false);
-      } else {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        script.onload = () => {
-          const options = {
-            key: orderData.razorpayKeyId,
-            amount: orderData.amount, // Amount in paise from backend order
-            currency: 'INR',
-            name: 'Livenzo',
-            description: 'Rent Payment',
-            order_id: orderData.razorpayOrderId,
-            config: {
-              display: {
-                blocks: {
-                  banks: {
-                    name: 'Pay using UPI or other methods',
-                    instruments: [
-                      {
-                        method: 'upi'
-                      },
-                      {
-                        method: 'card'
-                      },
-                      {
-                        method: 'netbanking'
-                      },
-                      {
-                        method: 'wallet'
-                      }
-                    ]
-                  }
-                },
-                sequence: ['block.banks'],
-                preferences: {
-                  show_default_blocks: false
-                }
-              }
-            },
-            prefill: {
-              method: 'upi'
-            },
-            handler: async (response: any) => {
-              try {
-                const { data: sessionData2 } = await supabase.auth.getSession();
-                const authHeader2 = sessionData2?.session?.access_token
-                  ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
-                  : undefined;
-                const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
-                  body: {
-                    razorpayPaymentId: response.razorpay_payment_id,
-                    razorpayOrderId: response.razorpay_order_id,
-                    razorpaySignature: response.razorpay_signature,
-                    paymentId: orderData.paymentId
-                  },
-                  headers: authHeader2
-                });
-
-                if (verifyError) {
-                  console.error('Payment verification failed:', verifyError);
-                  onFailure('Payment verification failed. Please contact support.');
-                  return;
-                }
-
-                onSuccess({ ...response, paymentId: orderData.paymentId });
-              } catch (error) {
-                console.error('Payment verification error:', error);
-                onFailure('Payment verification failed. Please contact support.');
-              }
-            },
-            modal: {
-              ondismiss: () => {
-                setIsProcessing(false);
-                onFailure('Payment cancelled');
-              }
-            },
-            theme: { color: '#3B82F6' }
-          };
-
-          const rzp = new window.Razorpay(options);
-          rzp.open();
-          setIsProcessing(false);
-        };
-        script.onerror = () => {
-          setIsProcessing(false);
-          onFailure('Failed to load payment gateway');
-        };
-        document.body.appendChild(script);
+          paymentId: orderData.paymentId,
+          type: 'rent',
+        });
+        return;
       }
+
+      // --- STANDARD MODAL for web browser ---
+      if (!window.Razorpay) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load payment gateway'));
+          document.body.appendChild(script);
+        });
+      }
+
+      const options = {
+        key: orderData.razorpayKeyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Livenzo',
+        description: 'Rent Payment',
+        order_id: orderData.razorpayOrderId,
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Pay using UPI or other methods',
+                instruments: [
+                  { method: 'upi' },
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: { show_default_blocks: false }
+          }
+        },
+        prefill: { method: 'upi' },
+        handler: async (response: any) => {
+          try {
+            const { data: sessionData2 } = await supabase.auth.getSession();
+            const authHeader2 = sessionData2?.session?.access_token
+              ? { Authorization: `Bearer ${sessionData2.session.access_token}` }
+              : undefined;
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+              body: {
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                paymentId: orderData.paymentId
+              },
+              headers: authHeader2
+            });
+
+            if (verifyError) {
+              onFailure('Payment verification failed. Please contact support.');
+              return;
+            }
+
+            onSuccess({ ...response, paymentId: orderData.paymentId });
+          } catch (error) {
+            onFailure('Payment verification failed. Please contact support.');
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+            onFailure('Payment cancelled');
+          }
+        },
+        theme: { color: '#3B82F6' }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      setIsProcessing(false);
 
     } catch (error) {
       console.error('Payment error:', error);
@@ -295,29 +237,14 @@ export const RazorpayPaymentModal = ({
           </div>
 
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-              disabled={isProcessing}
-            >
+            <Button variant="outline" onClick={onClose} className="flex-1" disabled={isProcessing}>
               Cancel
             </Button>
-            <Button
-              onClick={() => handlePayment()}
-              className="flex-1"
-              disabled={isProcessing}
-            >
+            <Button onClick={() => handlePayment()} className="flex-1" disabled={isProcessing}>
               {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
               ) : (
-                <>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Pay Now
-                </>
+                <><CreditCard className="h-4 w-4 mr-2" />Pay Now</>
               )}
             </Button>
           </div>
