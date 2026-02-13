@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,13 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Browser } from '@capacitor/browser';
-import { App } from '@capacitor/app';
+
+// Global type declaration for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface BookingFlowSheetProps {
   open: boolean;
@@ -60,67 +65,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [paymentError, setPaymentError] = useState<string>('');
   const [dropDate, setDropDate] = useState<Date | undefined>(undefined);
   const [dropTime, setDropTime] = useState<string>('');
-  const [paymentListenerActive, setPaymentListenerActive] = useState(false);
-
-  // Listen for app resume / URL events to detect payment return
-  useEffect(() => {
-    if (!paymentListenerActive) return;
-
-    const checkPaymentStatus = async () => {
-      if (!bookingId) return;
-      
-      // Check booking status from DB
-      const { data } = await supabase
-        .from('booking_requests')
-        .select('token_paid, status, booking_stage')
-        .eq('id', bookingId)
-        .single();
-      
-      if (data?.token_paid) {
-        setStep('success');
-        setLoading(false);
-        setPaymentListenerActive(false);
-        try { await Browser.close(); } catch {}
-      }
-    };
-
-    // Listen for app URL (deep link return)
-    const urlListener = App.addListener('appUrlOpen', async (event) => {
-      const url = new URL(event.url);
-      const status = url.searchParams.get('payment_status');
-      
-      if (status === 'success') {
-        setStep('success');
-        setLoading(false);
-        setPaymentListenerActive(false);
-      } else if (status === 'failed' || status === 'cancelled') {
-        setPaymentError('Payment was not completed. You can retry anytime.');
-        setStep('failed');
-        setLoading(false);
-        setPaymentListenerActive(false);
-      }
-      try { await Browser.close(); } catch {}
-    });
-
-    // Listen for app resume (user switches back)
-    const resumeListener = App.addListener('appStateChange', async (state) => {
-      if (state.isActive) {
-        // Small delay to let backend process
-        setTimeout(checkPaymentStatus, 2000);
-      }
-    });
-
-    // Also listen for browser finished event
-    const browserListener = Browser.addListener('browserFinished', async () => {
-      setTimeout(checkPaymentStatus, 1500);
-    });
-
-    return () => {
-      urlListener.then(l => l.remove());
-      resumeListener.then(l => l.remove());
-      browserListener.then(l => l.remove());
-    };
-  }, [paymentListenerActive, bookingId]);
 
   const resetFlow = () => {
     setStep('user-type');
@@ -131,7 +75,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setPaymentError('');
     setDropDate(undefined);
     setDropTime('');
-    setPaymentListenerActive(false);
   };
 
   const handleClose = () => {
@@ -201,6 +144,22 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     }
   };
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayAndLock = async () => {
     setLoading(true);
     setStep('processing');
@@ -218,7 +177,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Authentication required. Please log in again.');
       }
 
-      // Create token payment order
+      // Create token payment order (NO relationship required)
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-token-payment', {
         body: {
           action: 'create_order',
@@ -240,31 +199,103 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Invalid payment order response');
       }
 
-      // Build the external checkout URL
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-      const checkoutParams = new URLSearchParams({
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Failed to load payment gateway');
+      }
+
+      // Open Razorpay checkout
+      const options = {
         key: orderData.razorpayKeyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Livenzo',
+        description: 'Livenzo Room Booking Token',
         order_id: orderData.razorpayOrderId,
-        amount: orderData.amount.toString(),
-        booking_request_id: currentBookingId,
-        room_id: roomId,
-        name: userName,
-        email: userEmail,
-        phone: userPhone,
-        token: sessionData.session.access_token,
-        app_scheme: window.location.origin
+        prefill: {
+          name: userName,
+          email: userEmail,
+          contact: userPhone
+        },
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Pay using UPI or other methods',
+                instruments: [
+                  { method: 'upi' },
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: { show_default_blocks: false }
+          }
+        },
+        handler: async (response: any) => {
+          try {
+            const { data: sessionData2 } = await supabase.auth.getSession();
+            if (!sessionData2?.session?.access_token) {
+              throw new Error('Authentication required. Please log in again.');
+            }
+
+            // Verify token payment and lock room server-side
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('create-token-payment', {
+              body: {
+                action: 'verify_payment',
+                bookingRequestId: currentBookingId,
+                roomId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature
+              },
+              headers: {
+                Authorization: `Bearer ${sessionData2.session.access_token}`
+              }
+            });
+
+            if (verifyError || !verifyData?.success) {
+              console.error('Token payment verification failed:', verifyError, verifyData);
+              await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+              setPaymentError('Payment verification failed. You can retry anytime to lock this room.');
+              setStep('failed');
+              setLoading(false);
+              return;
+            }
+
+            setStep('success');
+            setLoading(false);
+          } catch (error) {
+            console.error('Token payment verification error:', error);
+            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
+            setStep('failed');
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_cancelled');
+            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
+            setStep('failed');
+            setLoading(false);
+          }
+        },
+        theme: { color: '#3B82F6' }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', async (response: any) => {
+        console.error('Payment failed:', response.error);
+        await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
+        setPaymentError(response.error?.description || 'Payment was not completed. You can retry anytime to lock this room.');
+        setStep('failed');
+        setLoading(false);
       });
-
-      const checkoutUrl = `${supabaseUrl}/functions/v1/razorpay-checkout-page?${checkoutParams.toString()}`;
-
-      // Activate payment listeners before opening browser
-      setPaymentListenerActive(true);
-
-      // Open Razorpay checkout externally in Chrome/default browser
-      await Browser.open({ 
-        url: checkoutUrl,
-        presentationStyle: 'fullscreen'
-      });
+      rzp.open();
 
     } catch (error) {
       console.error('Payment error:', error);
@@ -272,7 +303,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       setPaymentError(error instanceof Error ? error.message : 'Payment failed');
       setStep('failed');
       setLoading(false);
-      setPaymentListenerActive(false);
     }
   };
 
