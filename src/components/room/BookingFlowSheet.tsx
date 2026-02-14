@@ -668,7 +668,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               </motion.div>
               <h2 className="text-xl font-semibold text-foreground">Schedule Your Drop</h2>
               <p className="text-sm text-muted-foreground">
-                Pick a date and time — we'll visit and drop you to your new room for free.
+
               </p>
             </div>
 
