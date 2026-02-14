@@ -82,29 +82,26 @@ const BookingStatusCard: React.FC = () => {
     return null;
   }
 
-  // Room locked, drop date in future — countdown
-  if (isConfirmed && dropDate && !isDropPassed && daysLeft !== null) {
+  // Drop scheduled with future date — clean minimal reminder
+  if (dropDate && !isDropPassed) {
+    const formattedDate = dropDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    const formattedTime = booking.drop_time
+      ? new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+      : null;
+
     return (
-      <Card className="border-0 shadow-soft bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
+      <Card className="border-0 shadow-soft bg-card overflow-hidden">
         <CardContent className="p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-xl">🚖</span>
             </div>
-            <div className="flex-1 space-y-1">
-              <h3 className="font-semibold text-green-900">Your Room is Secured! 🏠</h3>
-              <p className="text-sm text-green-700">
-                {room?.title || 'Your room'} is locked and waiting for you.
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm text-foreground tracking-tight">Drop Scheduled</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Your room drop is planned for <span className="font-medium text-foreground">{formattedDate}</span>
+                {formattedTime && <> at <span className="font-medium text-foreground">{formattedTime}</span></>}
               </p>
-              <div className="flex items-center gap-2 mt-3 bg-white/60 rounded-lg p-3">
-                <span className="text-2xl">🚗</span>
-                <div>
-                  <p className="text-lg font-bold text-green-900">
-                    {daysLeft === 0 ? "Today's the day!" : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left to shift`}
-                  </p>
-                  <p className="text-xs text-green-600">Looking forward to your shift!</p>
-                </div>
-              </div>
             </div>
           </div>
         </CardContent>
