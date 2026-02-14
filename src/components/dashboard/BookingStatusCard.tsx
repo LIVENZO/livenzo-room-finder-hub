@@ -131,7 +131,7 @@ const BookingStatusCard: React.FC = () => {
               <Clock className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1 space-y-2">
-              <h3 className="font-semibold text-blue-900">Lock Your Room</h3>
+              <h3 className="font-semibold text-blue-900">Booking In Progress</h3>
               <p className="text-sm text-blue-700">
                 Don't miss out!<br />Complete payment of ₹{amount.toLocaleString()} to secure it.
               </p>
