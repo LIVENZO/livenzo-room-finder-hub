@@ -71,24 +71,36 @@ const BookingStatusCard: React.FC = () => {
 
   if (loading || !booking) return null;
 
-  const isConfirmed = booking.booking_stage === 'confirmed' && booking.token_paid;
   const isPending = !booking.token_paid;
-  const dropDate = booking.drop_date ? parseISO(booking.drop_date) : null;
-  const isDropPassed = dropDate ? isPast(dropDate) : false;
-  const daysLeft = dropDate ? differenceInDays(dropDate, new Date()) : null;
+  const now = new Date();
 
-  // Backend confirmed (approved + token_paid) — hide card
+  // Parse drop datetime with time precision
+  let dropDateTime: Date | null = null;
+  if (booking.drop_date) {
+    const base = parseISO(booking.drop_date);
+    if (booking.drop_time) {
+      const [h, m] = booking.drop_time.split(':').map(Number);
+      base.setHours(h, m, 0, 0);
+    }
+    dropDateTime = base;
+  }
+
+  const isDropPassed = dropDateTime ? isPast(dropDateTime) : false;
+  const gracePeriodEnd = dropDateTime ? new Date(dropDateTime.getTime() + 24 * 60 * 60 * 1000) : null;
+  const isGracePassed = gracePeriodEnd ? isPast(gracePeriodEnd) : false;
+
+  // Backend confirmed — hide everything
   if (booking.status === 'approved' && booking.booking_stage === 'confirmed') {
     return null;
   }
 
-  // Drop scheduled with future date — clean minimal reminder
-  if (dropDate && !isDropPassed) {
-    const formattedDate = dropDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  // Sub-components
+  const DropBanner = () => {
+    if (!dropDateTime) return null;
+    const formattedDate = dropDateTime.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
     const formattedTime = booking.drop_time
       ? new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
       : null;
-
     return (
       <Card className="border-0 shadow-soft bg-card overflow-hidden">
         <CardContent className="p-5">
@@ -107,39 +119,9 @@ const BookingStatusCard: React.FC = () => {
         </CardContent>
       </Card>
     );
-  }
+  };
 
-  // Room locked but drop date has passed — change schedule
-  if (isConfirmed && dropDate && isDropPassed) {
-    return (
-      <Card className="border-0 shadow-soft bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
-        <CardContent className="p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-6 w-6 text-amber-600" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h3 className="font-semibold text-amber-900">Shift Date Passed</h3>
-              <p className="text-sm text-amber-700">
-                Your scheduled drop date has passed. Update your shift schedule to continue.
-              </p>
-              <Button
-                className="w-full mt-2"
-                variant="outline"
-                onClick={() => navigate(`/room/${booking.room_id}`)}
-              >
-                <CalendarCheck className="h-4 w-4 mr-2" />
-                Change Shift Schedule
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Payment not completed — pay now reminder
-  if (isPending) {
+  const LockBanner = () => {
     const amount = booking.token_amount || room?.price || 0;
     return (
       <Card className="border-0 shadow-soft bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
@@ -164,6 +146,33 @@ const BookingStatusCard: React.FC = () => {
         </CardContent>
       </Card>
     );
+  };
+
+  // --- Display Logic ---
+
+  // Drop NOT yet passed
+  if (dropDateTime && !isDropPassed) {
+    return (
+      <div className="space-y-4">
+        <DropBanner />
+        {isPending && <LockBanner />}
+      </div>
+    );
+  }
+
+  // Drop passed, within 24h grace — show only Lock banner
+  if (isDropPassed && !isGracePassed && isPending) {
+    return <LockBanner />;
+  }
+
+  // Drop passed + grace expired + unpaid — hide all
+  if (isDropPassed && isGracePassed && isPending) {
+    return null;
+  }
+
+  // No drop date, payment pending
+  if (!dropDateTime && isPending) {
+    return <LockBanner />;
   }
 
   return null;
