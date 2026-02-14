@@ -83,12 +83,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   };
 
   const createOrUpdateBookingRequest = async (
-    stage: string, 
-    tokenRequired: boolean, 
-    tokenPaid: boolean = false,
-    status: string = 'initiated',
-    razorpayPaymentId?: string
-  ) => {
+  stage: string,
+  tokenRequired: boolean,
+  tokenPaid: boolean = false,
+  status: string = 'initiated',
+  razorpayPaymentId?: string) =>
+  {
     try {
       if (bookingId) {
         const updateData: any = {
@@ -101,34 +101,34 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           token_amount: tokenAmount,
           status
         };
-        
+
         // Add razorpay_payment_id if payment was successful
         // Note: This field might need to be added to the table if not exists
-        
-        const { error } = await supabase
-          .from('booking_requests')
-          .update(updateData)
-          .eq('id', bookingId);
+
+        const { error } = await supabase.
+        from('booking_requests').
+        update(updateData).
+        eq('id', bookingId);
 
         if (error) throw error;
         return bookingId;
       } else {
-        const { data, error } = await supabase
-          .from('booking_requests')
-          .insert({
-            room_id: roomId,
-            user_id: userId,
-            user_type: userType,
-            user_details: userDetails,
-            stay_duration: stayDuration,
-            booking_stage: stage,
-            token_required: tokenRequired,
-            token_paid: tokenPaid,
-            token_amount: tokenAmount,
-            status
-          })
-          .select('id')
-          .single();
+        const { data, error } = await supabase.
+        from('booking_requests').
+        insert({
+          room_id: roomId,
+          user_id: userId,
+          user_type: userType,
+          user_details: userDetails,
+          stay_duration: stayDuration,
+          booking_stage: stage,
+          token_required: tokenRequired,
+          token_paid: tokenPaid,
+          token_amount: tokenAmount,
+          status
+        }).
+        select('id').
+        single();
 
         if (error) throw error;
         if (data) {
@@ -150,7 +150,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         resolve(true);
         return;
       }
-      
+
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
@@ -224,11 +224,11 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               banks: {
                 name: 'Pay using UPI or other methods',
                 instruments: [
-                  { method: 'upi' },
-                  { method: 'card' },
-                  { method: 'netbanking' },
-                  { method: 'wallet' }
-                ]
+                { method: 'upi' },
+                { method: 'card' },
+                { method: 'netbanking' },
+                { method: 'wallet' }]
+
               }
             },
             sequence: ['block.banks'],
@@ -354,8 +354,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6"
-          >
+            className="space-y-6">
+
             <div className="text-center">
               <h2 className="text-xl font-semibold text-foreground">Tell us about yourself</h2>
               <p className="text-sm text-muted-foreground mt-1">This helps us match you better</p>
@@ -364,13 +364,13 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <RadioGroup
               value={userType || ''}
               onValueChange={(value) => setUserType(value as UserType)}
-              className="space-y-3"
-            >
+              className="space-y-3">
+
               <label
                 className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  userType === 'student' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                }`}
-              >
+                userType === 'student' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`
+                }>
+
                 <RadioGroupItem value="student" id="student" />
                 <div className="flex-1">
                   <span className="font-medium text-foreground">🎓 Student</span>
@@ -380,9 +380,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               
               <label
                 className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  userType === 'professional' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                }`}
-              >
+                userType === 'professional' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`
+                }>
+
                 <RadioGroupItem value="professional" id="professional" />
                 <div className="flex-1">
                   <span className="font-medium text-foreground">💼 Working Professional</span>
@@ -394,12 +394,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <Button
               className="w-full h-12 text-base font-medium"
               onClick={handleUserTypeNext}
-              disabled={!userType}
-            >
+              disabled={!userType}>
+
               Next
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'details':
         return (
@@ -409,12 +409,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6"
-          >
+            className="space-y-6">
+
             <button
               onClick={() => setStep('user-type')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </button>
@@ -434,19 +434,19 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 placeholder={userType === 'student' ? 'e.g., B.Tech 3rd Year, MBA' : 'e.g., Software Engineer, Teacher'}
                 value={userDetails}
                 onChange={(e) => setUserDetails(e.target.value)}
-                className="h-12"
-              />
+                className="h-12" />
+
             </div>
 
             <Button
               className="w-full h-12 text-base font-medium"
               onClick={handleDetailsNext}
-              disabled={!userDetails.trim()}
-            >
+              disabled={!userDetails.trim()}>
+
               Next
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'duration':
         return (
@@ -456,12 +456,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6"
-          >
+            className="space-y-6">
+
             <button
               onClick={() => setStep('details')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </button>
@@ -474,31 +474,31 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <RadioGroup
               value={stayDuration?.toString() || ''}
               onValueChange={(value) => setStayDuration(parseInt(value))}
-              className="grid grid-cols-2 gap-3"
-            >
-              {[3, 6, 9, 12].map((months) => (
-                <label
-                  key={months}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    stayDuration === months ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                  }`}
-                >
+              className="grid grid-cols-2 gap-3">
+
+              {[3, 6, 9, 12].map((months) =>
+              <label
+                key={months}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                stayDuration === months ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`
+                }>
+
                   <RadioGroupItem value={months.toString()} className="sr-only" />
                   <span className="text-2xl font-bold text-foreground">{months}</span>
                   <span className="text-sm text-muted-foreground">months</span>
                 </label>
-              ))}
+              )}
             </RadioGroup>
 
             <Button
               className="w-full h-12 text-base font-medium"
               onClick={handleDurationContinue}
-              disabled={!stayDuration || loading}
-            >
+              disabled={!stayDuration || loading}>
+
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'not-eligible':
         return (
@@ -508,8 +508,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6 text-center"
-          >
+            className="space-y-6 text-center">
+
             <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center">
               <Info className="h-8 w-8 text-amber-600" />
             </div>
@@ -527,19 +527,19 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               <Button
                 variant="outline"
                 className="w-full h-12 text-base font-medium"
-                onClick={handleChangeDuration}
-              >
+                onClick={handleChangeDuration}>
+
                 Change Duration
               </Button>
               <Button
                 className="w-full h-12 text-base font-medium"
-                onClick={handleClose}
-              >
+                onClick={handleClose}>
+
                 Done
               </Button>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'token-confirm':
         return (
@@ -549,12 +549,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6"
-          >
+            className="space-y-6">
+
             <button
               onClick={() => setStep('duration')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </button>
@@ -564,13 +564,13 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="text-4xl"
-              >
+                className="text-4xl">
+
                 🎉
               </motion.div>
               <h2 className="text-xl font-semibold text-foreground">Great Choice! Your Room is Reserved</h2>
               <p className="text-muted-foreground mt-2 leading-relaxed">
-                You're one step away from your new home. We've reserved this room for you — confirm below to complete your booking.
+
               </p>
             </div>
 
@@ -578,9 +578,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🚗</span>
                 <div>
-                  <p className="font-medium text-foreground">Complimentary Room Visit & Drop</p>
-                  <p className="text-sm text-muted-foreground">
-                    We'll arrange a free visit and drop to your new room — on us!
+                  <p className="font-medium text-foreground">Why Pay for Transport? Your Room Drop is FREE</p>
+                  <p className="text-sm text-muted-foreground">We'll arrange a free drop to your new room under 15km — on us!
+
                   </p>
                 </div>
               </div>
@@ -589,27 +589,27 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Equals your monthly rent — fully refundable if not approved
+
               </p>
             </div>
 
             <Button
               className="w-full h-12 text-base font-medium"
               onClick={() => setStep('drop-schedule')}
-              disabled={loading}
-            >
-              Schedule My Complimentary Drop
+              disabled={loading}>
+
+              Schedule My Drop
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'drop-schedule':
         const timeSlots = [
-          '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-          '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-          '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-          '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
-        ];
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+        '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
+
         const formatTime = (t: string) => {
           const [h, m] = t.split(':').map(Number);
           const ampm = h >= 12 ? 'PM' : 'AM';
@@ -626,10 +626,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           try {
             const dateStr = format(dropDate, 'yyyy-MM-dd');
             if (bookingId) {
-              await supabase
-                .from('booking_requests')
-                .update({ drop_date: dateStr, drop_time: dropTime } as any)
-                .eq('id', bookingId);
+              await supabase.
+              from('booking_requests').
+              update({ drop_date: dateStr, drop_time: dropTime } as any).
+              eq('id', bookingId);
             }
             setLoading(false);
             setStep('drop-confirmed');
@@ -647,12 +647,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-5"
-          >
+            className="space-y-5">
+
             <button
               onClick={() => setStep('token-confirm')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </button>
@@ -662,8 +662,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="text-3xl"
-              >
+                className="text-3xl">
+
                 🚗
               </motion.div>
               <h2 className="text-xl font-semibold text-foreground">Schedule Your Drop</h2>
@@ -685,8 +685,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                     className={cn(
                       "w-full h-12 justify-start text-left font-normal",
                       !dropDate && "text-muted-foreground"
-                    )}
-                  >
+                    )}>
+
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dropDate ? format(dropDate, "PPP") : "Select a date"}
                   </Button>
@@ -698,8 +698,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                     onSelect={setDropDate}
                     disabled={(date) => date < addDays(new Date(), 1)}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                    className={cn("p-3 pointer-events-auto")} />
+
                 </PopoverContent>
               </Popover>
             </div>
@@ -715,38 +715,38 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                   <SelectValue placeholder="Select a time slot" />
                 </SelectTrigger>
                 <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
+                  {timeSlots.map((slot) =>
+                  <SelectItem key={slot} value={slot}>
                       {formatTime(slot)}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Summary */}
-            {dropDate && dropTime && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center"
-              >
+            {dropDate && dropTime &&
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+
                 <p className="text-sm text-muted-foreground">Your drop is scheduled for</p>
                 <p className="text-lg font-semibold text-foreground mt-1">
                   {format(dropDate, "EEE, MMM d")} at {formatTime(dropTime)}
                 </p>
               </motion.div>
-            )}
+            }
 
             <Button
               className="w-full h-12 text-base font-medium"
               onClick={handleConfirmDrop}
-              disabled={!dropDate || !dropTime || loading}
-            >
+              disabled={!dropDate || !dropTime || loading}>
+
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm Drop Schedule'}
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'drop-confirmed':
         const formatTimeDisplay = (t: string) => {
@@ -763,34 +763,34 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-5"
-          >
+            className="space-y-5">
+
             {/* Celebration Banner */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: 'spring', stiffness: 180, damping: 16 }}
-              className="text-center space-y-3 py-2"
-            >
+              className="text-center space-y-3 py-2">
+
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.15 }}
-                className="text-5xl"
-              >
+                className="text-5xl">
+
                 🎉
               </motion.div>
               <h2 className="text-xl font-bold text-foreground">Your Drop is Scheduled!</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Your room is almost yours — just one step to go!
               </p>
-              {dropDate && dropTime && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 inline-block">
+              {dropDate && dropTime &&
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 inline-block">
                   <p className="text-sm font-semibold text-foreground">
                     🚗 {format(dropDate, "EEE, MMM d")} at {formatTimeDisplay(dropTime)}
                   </p>
                 </div>
-              )}
+              }
             </motion.div>
 
             {/* Payment Card */}
@@ -798,8 +798,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-card border border-border rounded-2xl p-5 space-y-4"
-            >
+              className="bg-card border border-border rounded-2xl p-5 space-y-4">
+
               <div className="flex items-start gap-3">
                 <span className="text-2xl">🔒</span>
                 <div className="flex-1">
@@ -824,18 +824,18 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.45 }}
-            >
+              transition={{ delay: 0.45 }}>
+
               <Button
                 className="w-full h-12 text-base font-semibold"
                 onClick={handlePayAndLock}
-                disabled={loading}
-              >
+                disabled={loading}>
+
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} & Lock Room`}
               </Button>
             </motion.div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'processing':
         return (
@@ -845,13 +845,13 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6 text-center py-8"
-          >
+            className="space-y-6 text-center py-8">
+
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-16 h-16 mx-auto"
-            >
+              className="w-16 h-16 mx-auto">
+
               <Loader2 className="h-16 w-16 text-primary" />
             </motion.div>
 
@@ -861,8 +861,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 Please complete the payment in the Razorpay window
               </p>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'success':
         return (
@@ -872,14 +872,14 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6 text-center"
-          >
+            className="space-y-6 text-center">
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-              className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center"
-            >
+              className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </motion.div>
 
@@ -887,39 +887,39 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="space-y-2"
-            >
+              className="space-y-2">
+
               <h2 className="text-2xl font-semibold text-foreground">Your Room is Secured! 🎉</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Congratulations! Your room is now locked and waiting for you.
               </p>
-              {dropDate && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
+              {dropDate &&
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
                   <p className="text-sm text-muted-foreground">Your shift is scheduled for</p>
                   <p className="text-lg font-semibold text-foreground mt-1">
-                    🚗 {format(dropDate, "EEE, MMM d")}{dropTime ? ` at ${(() => { const [h, m] = dropTime.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })()}` : ''}
+                    🚗 {format(dropDate, "EEE, MMM d")}{dropTime ? ` at ${(() => {const [h, m] = dropTime.split(':').map(Number);return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;})()}` : ''}
                   </p>
                   <p className="text-sm text-primary font-medium mt-2">
                     Looking forward to your shift! 🏠
                   </p>
                 </div>
-              )}
+              }
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
+              transition={{ delay: 0.6 }}>
+
               <Button
                 className="w-full h-12 text-base font-medium"
-                onClick={handleClose}
-              >
+                onClick={handleClose}>
+
                 Go to Dashboard
               </Button>
             </motion.div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'failed':
         return (
@@ -929,14 +929,14 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="space-y-6 text-center"
-          >
+            className="space-y-6 text-center">
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center"
-            >
+              className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+
               <XCircle className="h-10 w-10 text-red-600" />
             </motion.div>
 
@@ -950,20 +950,20 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <div className="space-y-3">
               <Button
                 className="w-full h-12 text-base font-medium"
-                onClick={handleRetryPayment}
-              >
+                onClick={handleRetryPayment}>
+
                 Retry Payment
               </Button>
               <Button
                 variant="outline"
                 className="w-full h-12 text-base font-medium"
-                onClick={handleClose}
-              >
+                onClick={handleClose}>
+
                 Close
               </Button>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       default:
         return null;
@@ -974,16 +974,16 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl px-6 pb-8 pt-6 max-h-[85vh] overflow-y-auto"
-      >
+        className="rounded-t-3xl px-6 pb-8 pt-6 max-h-[85vh] overflow-y-auto">
+
         <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6" />
         
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>);
+
 };
 
 export default BookingFlowSheet;
