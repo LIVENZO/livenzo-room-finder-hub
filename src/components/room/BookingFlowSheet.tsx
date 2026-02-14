@@ -626,10 +626,22 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           try {
             const dateStr = format(dropDate, 'yyyy-MM-dd');
             if (bookingId) {
-              await supabase.
-              from('booking_requests').
-              update({ drop_date: dateStr, drop_time: dropTime } as any).
-              eq('id', bookingId);
+              const { error } = await supabase
+                .from('booking_requests')
+                .update({ drop_date: dateStr, drop_time: dropTime } as any)
+                .eq('id', bookingId)
+                .eq('user_id', userId);
+
+              if (error) {
+                console.error('Error updating drop schedule:', error);
+                toast.error('Failed to save schedule. Please try again.');
+                setLoading(false);
+                return;
+              }
+            } else {
+              toast.error('No active booking found. Please restart the flow.');
+              setLoading(false);
+              return;
             }
             setLoading(false);
             setStep('drop-confirmed');
