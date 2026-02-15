@@ -96,14 +96,21 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             <Share2 className="h-4 w-4 text-foreground/70" />
           </button>
         </div>
-        {/* Price and distance badges - top right */}
-        <div className="absolute top-2 right-2 flex gap-2">
-          {room.distance !== undefined && (
-            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
-              📍 {formatDistance(room.distance)}
+        {/* Price, distance, and walking badges - top right */}
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+          <div className="flex gap-2">
+            {room.distance !== undefined && (
+              <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
+                📍 {formatDistance(room.distance)}
+              </Badge>
+            )}
+            <RoomPriceBadge price={room.price} />
+          </div>
+          {room.walkingDuration && (
+            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium text-xs">
+              🚶 {room.walkingDuration} walking
             </Badge>
           )}
-          <RoomPriceBadge price={room.price} />
         </div>
       </AspectRatio>
       <CardContent className="p-4">

@@ -24,6 +24,8 @@ export interface Room {
   house_no?: string;
   house_name?: string;
   distance?: number; // Distance from search location in km
+  walkingDuration?: string; // Walking duration text from Google (e.g., "9 mins")
+  walkingDistance?: string; // Walking distance text from Google (e.g., "750 m")
   is_top_room?: boolean;
 }
 
