@@ -28,6 +28,10 @@ const FindRoom: React.FC = () => {
     nearMeError,
     activateNearMe,
     deactivateNearMe,
+    nearPlaceActive,
+    nearPlaceLoading,
+    nearPlaceError,
+    nearPlaceName,
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -153,6 +157,23 @@ const FindRoom: React.FC = () => {
         {nearMeError && (
           <div className="mb-4 p-3 bg-destructive/10 rounded-lg text-center text-sm text-destructive">
             {nearMeError}
+          </div>
+        )}
+
+        {/* Near Place Search Status Messages */}
+        {nearPlaceLoading && (
+          <div className="mb-4 p-3 bg-muted rounded-lg text-center text-sm text-muted-foreground">
+            🔍 Searching rooms near "{searchText.replace(/^.*\bnear\s+/i, '')}"...
+          </div>
+        )}
+        {nearPlaceActive && !nearPlaceLoading && (
+          <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center text-sm text-primary font-medium">
+            📍 Showing rooms within 1 km of {nearPlaceName} ({filteredRooms.length} found)
+          </div>
+        )}
+        {nearPlaceError && (
+          <div className="mb-4 p-3 bg-destructive/10 rounded-lg text-center text-sm text-destructive">
+            {nearPlaceError}
           </div>
         )}
         

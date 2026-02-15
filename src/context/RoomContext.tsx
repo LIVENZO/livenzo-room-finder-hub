@@ -1,11 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { Room, RoomFilters } from '@/types/room';
 import { fetchRooms as fetchRoomsService } from '@/services/roomService';
 import { useRoomFilters } from '@/hooks/useRoomFilters';
 import { useNearMe } from '@/hooks/useNearMe';
+import { useNearPlaceSearch } from '@/hooks/useNearPlaceSearch';
 
 interface RoomContextType {
   rooms: Room[];
@@ -24,6 +25,11 @@ interface RoomContextType {
   nearMeError: string | null;
   activateNearMe: () => void;
   deactivateNearMe: () => void;
+  // Near Place search state
+  nearPlaceActive: boolean;
+  nearPlaceLoading: boolean;
+  nearPlaceError: string | null;
+  nearPlaceName: string | null;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -42,6 +48,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     calculateRoomDistances,
   } = useNearMe();
 
+  const {
+    isActive: nearPlaceActive,
+    isLoading: nearPlaceLoading,
+    error: nearPlaceError,
+    placeName: nearPlaceName,
+    searchNearPlace,
+    resetNearPlace,
+  } = useNearPlaceSearch();
+
+  // Near place search results override
+  const [nearPlaceRooms, setNearPlaceRooms] = useState<Room[] | null>(null);
+
   // Apply distance calculations when near me is active
   const roomsWithDistance = useMemo(() => {
     if (nearMeActive) {
@@ -51,7 +69,48 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return rooms.map(room => ({ ...room, distance: undefined }));
   }, [rooms, nearMeActive, calculateRoomDistances]);
 
-  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(roomsWithDistance);
+  const { filters, setFilters, filteredRooms: baseFilteredRooms, clearAllFilters: baseClearAllFilters, searchText, setSearchText } = useRoomFilters(roomsWithDistance);
+
+  // Handle "near" place search when searchText changes
+  const searchDebounceRef = useRef<NodeJS.Timeout>();
+  
+  useEffect(() => {
+    // Check if searchText contains "near" pattern
+    const hasNearPattern = /\bnear\s+.{2,}/i.test(searchText);
+    
+    if (!hasNearPattern) {
+      if (nearPlaceRooms !== null) {
+        setNearPlaceRooms(null);
+        resetNearPlace();
+      }
+      return;
+    }
+
+    // Debounce the near place search
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(async () => {
+      const result = await searchNearPlace(searchText, rooms);
+      setNearPlaceRooms(result);
+    }, 600);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchText, rooms]);
+
+  // Use near place results when active, otherwise use normal filtered rooms
+  const filteredRooms = nearPlaceRooms !== null ? nearPlaceRooms : baseFilteredRooms;
+
+  const clearAllFilters = () => {
+    baseClearAllFilters();
+    setNearPlaceRooms(null);
+    resetNearPlace();
+  };
 
   // Fetch rooms from Supabase
   useEffect(() => {
@@ -104,6 +163,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         nearMeError,
         activateNearMe,
         deactivateNearMe,
+        nearPlaceActive,
+        nearPlaceLoading,
+        nearPlaceError,
+        nearPlaceName,
       }}
     >
       {children}
