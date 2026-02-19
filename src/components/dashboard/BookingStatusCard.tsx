@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { differenceInDays, parseISO, isPast } from 'date-fns';
@@ -110,28 +110,31 @@ const BookingStatusCard: React.FC = () => {
       : null;
     return (
       <motion.div key="drop-banner" variants={bannerVariants} initial="initial" animate="animate" exit="exit">
-        <Card className="border-0 shadow-soft bg-card overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
-                <span className="text-xl">🚗</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm text-foreground tracking-tight">Scheduled Room Drop</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Your room drop is planned for <span className="font-medium text-foreground">{formattedDate}</span>
-                  {formattedTime && <> at <span className="font-medium text-foreground">{formattedTime}</span></>}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 backdrop-blur-sm border border-border/50">
+          <span className="text-base">🚗</span>
+          <span className="text-sm font-medium text-foreground">
+            {formattedDate}{formattedTime && <> at {formattedTime}</>}
+          </span>
+        </div>
       </motion.div>
     );
   };
 
+  const hasValidDrop = !!(dropDateTime && !isDropPassed);
+
   const LockBanner = () => {
     const amount = booking.token_amount || room?.price || 0;
+
+    const handlePayClick = () => {
+      if (hasValidDrop) {
+        // Valid drop exists → go directly to room page (payment screen)
+        navigate(`/room/${booking.room_id}?step=payment`);
+      } else {
+        // No valid drop → go to room page (drop scheduling first)
+        navigate(`/room/${booking.room_id}?step=drop-schedule`);
+      }
+    };
+
     return (
       <motion.div key="lock-banner" variants={bannerVariants} initial="initial" animate="animate" exit="exit">
         <Card className="border-0 shadow-soft bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
@@ -147,9 +150,9 @@ const BookingStatusCard: React.FC = () => {
                 </p>
                 <Button
                   className="w-full mt-2"
-                  onClick={() => navigate(`/room/${booking.room_id}`)}
+                  onClick={handlePayClick}
                 >
-                  Pay ₹{amount.toLocaleString()} Now
+                  {hasValidDrop ? `Pay ₹${amount.toLocaleString()} Now` : 'Schedule Drop & Pay'}
                 </Button>
               </div>
             </div>
@@ -160,7 +163,7 @@ const BookingStatusCard: React.FC = () => {
   };
 
   // --- Display Logic ---
-  const showDrop = !!(dropDateTime && !isDropPassed);
+  const showDrop = hasValidDrop;
   const showLock =
     (dropDateTime && !isDropPassed && isPending) ||
     (isDropPassed && !isGracePassed && isPending) ||
