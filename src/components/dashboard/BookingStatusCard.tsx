@@ -114,7 +114,7 @@ const BookingStatusCard: React.FC = () => {
           <CardContent className="p-5">
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
-                <span className="text-xl">🚖</span>
+                <span className="text-xl">🚗</span>
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-sm text-foreground tracking-tight">Scheduled Room Drop</h3>
