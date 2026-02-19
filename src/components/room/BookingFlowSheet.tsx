@@ -56,7 +56,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   userEmail = ''
 }) => {
   const tokenAmount = roomPrice; // Dynamic: equals room rent
-  const [step, setStep] = useState<Step>('user-type');
+  const [step, setStep] = useState<Step>('token-confirm');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
   const [stayDuration, setStayDuration] = useState<number | null>(null);
@@ -67,7 +67,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [dropTime, setDropTime] = useState<string>('');
 
   const resetFlow = () => {
-    setStep('user-type');
+    setStep('token-confirm');
     setUserType(null);
     setUserDetails('');
     setStayDuration(null);
@@ -550,14 +550,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             animate="animate"
             exit="exit"
             className="space-y-6">
-
-            <button
-              onClick={() => setStep('duration')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </button>
 
             <div className="text-center space-y-3">
               <motion.div
