@@ -796,8 +796,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 <span className="text-2xl">🔒</span>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">Lock Your Room</h3>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    Pay the booking confirmation fee to secure this room before someone else does. This amount equals your monthly rent and is fully refundable if not approved.
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Pay the booking confirmation fee to secure this room before someone else does. This amount equals your monthly rent and is fully refundable.
+
                   </p>
                 </div>
               </div>
@@ -807,8 +807,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                ✅ Equals your monthly rent &nbsp;·&nbsp; 💰 Fully refundable if not approved
+              <p className="text-xs text-muted-foreground">✅ Equals your monthly rent  ·  💰 Fully refundable.
+
               </p>
             </motion.div>
 
