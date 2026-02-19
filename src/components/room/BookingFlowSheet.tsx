@@ -77,6 +77,40 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setDropTime('');
   };
 
+  // Create booking request immediately when sheet opens (triggers dashboard banner)
+  useEffect(() => {
+    if (open && !bookingId) {
+      const createInitialBooking = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('booking_requests')
+            .insert({
+              room_id: roomId,
+              user_id: userId,
+              booking_stage: 'initiated',
+              token_required: false,
+              token_paid: false,
+              token_amount: tokenAmount,
+              status: 'initiated'
+            })
+            .select('id')
+            .single();
+
+          if (error) {
+            console.error('Error creating initial booking:', error);
+            return;
+          }
+          if (data) {
+            setBookingId(data.id);
+          }
+        } catch (err) {
+          console.error('Error creating initial booking:', err);
+        }
+      };
+      createInitialBooking();
+    }
+  }, [open]);
+
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(resetFlow, 300);
