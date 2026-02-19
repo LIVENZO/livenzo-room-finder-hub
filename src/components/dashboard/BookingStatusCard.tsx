@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
-import { differenceInDays, parseISO, isPast } from 'date-fns';
+import { parseISO, isPast } from 'date-fns';
+import BookingFlowSheet from '@/components/room/BookingFlowSheet';
 
 interface BookingData {
   id: string;
@@ -16,6 +16,7 @@ interface BookingData {
   drop_time: string | null;
   status: string;
   token_amount: number | null;
+  created_at: string;
 }
 
 interface RoomData {
@@ -23,12 +24,14 @@ interface RoomData {
   price: number;
 }
 
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
 const BookingStatusCard: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [room, setRoom] = useState<RoomData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -37,7 +40,7 @@ const BookingStatusCard: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('booking_requests')
-          .select('id, room_id, booking_stage, token_paid, drop_date, drop_time, status, token_amount')
+          .select('id, room_id, booking_stage, token_paid, drop_date, drop_time, status, token_amount, created_at')
           .eq('user_id', user.id)
           .in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed'])
           .order('created_at', { ascending: false })
@@ -51,7 +54,6 @@ const BookingStatusCard: React.FC = () => {
 
         setBooking(data as BookingData);
 
-        // Fetch room details
         const { data: roomData } = await supabase
           .from('rooms')
           .select('title, price')
@@ -69,12 +71,18 @@ const BookingStatusCard: React.FC = () => {
     fetchActiveBooking();
   }, [user]);
 
-  if (loading || !booking) return null;
+  if (loading || !booking || !user) return null;
 
   const isPending = !booking.token_paid;
-  const now = new Date();
 
-  // Parse drop datetime with time precision
+  // Backend confirmed — hide everything
+  if (booking.status === 'approved' && booking.booking_stage === 'confirmed') {
+    return null;
+  }
+
+  if (!isPending) return null;
+
+  // Parse drop datetime
   let dropDateTime: Date | null = null;
   if (booking.drop_date) {
     const base = parseISO(booking.drop_date);
@@ -86,44 +94,33 @@ const BookingStatusCard: React.FC = () => {
   }
 
   const isDropPassed = dropDateTime ? isPast(dropDateTime) : false;
-  const gracePeriodEnd = dropDateTime ? new Date(dropDateTime.getTime() + 24 * 60 * 60 * 1000) : null;
-  const isGracePassed = gracePeriodEnd ? isPast(gracePeriodEnd) : false;
+  const hasValidDrop = dropDateTime && !isDropPassed;
 
-  // Backend confirmed — hide everything
-  if (booking.status === 'approved' && booking.booking_stage === 'confirmed') {
-    return null;
-  }
+  // 24h from booking creation
+  const bookingCreatedAt = parseISO(booking.created_at);
+  const creationGraceEnd = new Date(bookingCreatedAt.getTime() + TWENTY_FOUR_HOURS);
+  const isWithinCreationGrace = !isPast(creationGraceEnd);
 
-  // Sub-components
-  const DropBanner = () => {
-    if (!dropDateTime) return null;
-    const formattedDate = dropDateTime.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-    const formattedTime = booking.drop_time
-      ? new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-      : null;
-    return (
-      <Card className="border-0 shadow-soft bg-card overflow-hidden">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-xl">🚖</span>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-foreground tracking-tight">Drop Scheduled</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Your room drop is planned for <span className="font-medium text-foreground">{formattedDate}</span>
-                {formattedTime && <> at <span className="font-medium text-foreground">{formattedTime}</span></>}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+  // 24h grace after drop expires
+  const dropGraceEnd = dropDateTime ? new Date(dropDateTime.getTime() + TWENTY_FOUR_HOURS) : null;
+  const isWithinDropGrace = dropGraceEnd ? !isPast(dropGraceEnd) : false;
 
-  const LockBanner = () => {
-    const amount = booking.token_amount || room?.price || 0;
-    return (
+  // Show "Booking In Progress" if:
+  // - Within 24h of creation, OR
+  // - Drop exists and hasn't expired, OR
+  // - Drop expired but within 24h grace
+  const showBookingBanner = isWithinCreationGrace || hasValidDrop || (isDropPassed && isWithinDropGrace);
+
+  if (!showBookingBanner) return null;
+
+  const amount = booking.token_amount || room?.price || 0;
+
+  // Determine which step to open in the booking flow
+  // Valid drop → go to payment (drop-confirmed), no valid drop → schedule first
+  const sheetInitialStep = hasValidDrop ? 'drop-confirmed' : 'drop-schedule';
+
+  return (
+    <>
       <Card className="border-0 shadow-soft bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
         <CardContent className="p-5">
           <div className="flex items-start gap-4">
@@ -137,7 +134,7 @@ const BookingStatusCard: React.FC = () => {
               </p>
               <Button
                 className="w-full mt-2"
-                onClick={() => navigate(`/room/${booking.room_id}`)}
+                onClick={() => setSheetOpen(true)}
               >
                 Pay ₹{amount.toLocaleString()} Now
               </Button>
@@ -145,37 +142,22 @@ const BookingStatusCard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    );
-  };
 
-  // --- Display Logic ---
-
-  // Drop NOT yet passed
-  if (dropDateTime && !isDropPassed) {
-    return (
-      <div className="space-y-4">
-        <DropBanner />
-        {isPending && <LockBanner />}
-      </div>
-    );
-  }
-
-  // Drop passed, within 24h grace — show only Lock banner
-  if (isDropPassed && !isGracePassed && isPending) {
-    return <LockBanner />;
-  }
-
-  // Drop passed + grace expired + unpaid — hide all
-  if (isDropPassed && isGracePassed && isPending) {
-    return null;
-  }
-
-  // No drop date, payment pending
-  if (!dropDateTime && isPending) {
-    return <LockBanner />;
-  }
-
-  return null;
+      <BookingFlowSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        roomId={booking.room_id}
+        userId={user.id}
+        roomTitle={room?.title || ''}
+        roomPrice={room?.price || 0}
+        userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
+        userPhone={user.phone || user.user_metadata?.phone || ''}
+        userEmail={user.email || ''}
+        initialStep={sheetInitialStep as any}
+        existingBookingId={booking.id}
+      />
+    </>
+  );
 };
 
 export default BookingStatusCard;

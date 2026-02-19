@@ -31,6 +31,8 @@ interface BookingFlowSheetProps {
   userName?: string;
   userPhone?: string;
   userEmail?: string;
+  initialStep?: Step;
+  existingBookingId?: string;
 }
 
 type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'drop-confirmed' | 'processing' | 'success' | 'failed';
@@ -53,10 +55,13 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   roomPrice,
   userName = '',
   userPhone = '',
-  userEmail = ''
+  userEmail = '',
+  initialStep,
+  existingBookingId
 }) => {
   const tokenAmount = roomPrice; // Dynamic: equals room rent
-  const [step, setStep] = useState<Step>('token-confirm');
+  const effectiveInitialStep = initialStep || 'token-confirm';
+  const [step, setStep] = useState<Step>(effectiveInitialStep);
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
   const [stayDuration, setStayDuration] = useState<number | null>(null);
@@ -66,8 +71,18 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [dropDate, setDropDate] = useState<Date | undefined>(undefined);
   const [dropTime, setDropTime] = useState<string>('');
 
+  // Sync step and bookingId when sheet opens with props
+  useEffect(() => {
+    if (open) {
+      setStep(initialStep || 'token-confirm');
+      if (existingBookingId) {
+        setBookingId(existingBookingId);
+      }
+    }
+  }, [open, initialStep, existingBookingId]);
+
   const resetFlow = () => {
-    setStep('token-confirm');
+    setStep(effectiveInitialStep);
     setUserType(null);
     setUserDetails('');
     setStayDuration(null);
