@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersIcon, SearchIcon, Bell, Heart, MessageSquare, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookingStatusCard from './BookingStatusCard';
+import DropScheduleBanner from './DropScheduleBanner';
 
 const heroImages = [
   'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131737442_0ozzpm685nw.jpg',
@@ -93,6 +94,9 @@ const RenterDashboard: React.FC = () => {
     count: '12'
   }];
   return <div className="space-y-8 animate-fade-in">
+      {/* Drop Schedule Banner */}
+      <DropScheduleBanner />
+
       {/* Booking Status Card */}
       <BookingStatusCard />
 
