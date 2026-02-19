@@ -6,6 +6,7 @@ import { CalendarCheck, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { differenceInDays, parseISO, isPast } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface BookingData {
   id: string;
@@ -94,6 +95,12 @@ const BookingStatusCard: React.FC = () => {
     return null;
   }
 
+  const bannerVariants = {
+    initial: { opacity: 0, y: -12, scale: 0.97 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } },
+    exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const } },
+  };
+
   // Sub-components
   const DropBanner = () => {
     if (!dropDateTime) return null;
@@ -102,80 +109,80 @@ const BookingStatusCard: React.FC = () => {
       ? new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
       : null;
     return (
-      <Card className="border-0 shadow-soft bg-card overflow-hidden">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-xl">🚖</span>
+      <motion.div key="drop-banner" variants={bannerVariants} initial="initial" animate="animate" exit="exit">
+        <Card className="border-0 shadow-soft bg-card overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center shrink-0">
+                <span className="text-xl">🚖</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm text-foreground tracking-tight">Scheduled Room Drop</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Your room drop is planned for <span className="font-medium text-foreground">{formattedDate}</span>
+                  {formattedTime && <> at <span className="font-medium text-foreground">{formattedTime}</span></>}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-foreground tracking-tight">Drop Scheduled</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Your room drop is planned for <span className="font-medium text-foreground">{formattedDate}</span>
-                {formattedTime && <> at <span className="font-medium text-foreground">{formattedTime}</span></>}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   };
 
   const LockBanner = () => {
     const amount = booking.token_amount || room?.price || 0;
     return (
-      <Card className="border-0 shadow-soft bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
-        <CardContent className="p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-              <Clock className="h-6 w-6 text-blue-600" />
+      <motion.div key="lock-banner" variants={bannerVariants} initial="initial" animate="animate" exit="exit">
+        <Card className="border-0 shadow-soft bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                <Clock className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h3 className="font-semibold text-blue-900">Booking In Progress</h3>
+                <p className="text-sm text-blue-700">
+                  Don't miss out!<br />Complete payment of ₹{amount.toLocaleString()} to secure it.
+                </p>
+                <Button
+                  className="w-full mt-2"
+                  onClick={() => navigate(`/room/${booking.room_id}`)}
+                >
+                  Pay ₹{amount.toLocaleString()} Now
+                </Button>
+              </div>
             </div>
-            <div className="flex-1 space-y-2">
-              <h3 className="font-semibold text-blue-900">Booking In Progress</h3>
-              <p className="text-sm text-blue-700">
-                Don't miss out!<br />Complete payment of ₹{amount.toLocaleString()} to secure it.
-              </p>
-              <Button
-                className="w-full mt-2"
-                onClick={() => navigate(`/room/${booking.room_id}`)}
-              >
-                Pay ₹{amount.toLocaleString()} Now
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   };
 
   // --- Display Logic ---
-
-  // Drop NOT yet passed
-  if (dropDateTime && !isDropPassed) {
-    return (
-      <div className="space-y-4">
-        <DropBanner />
-        {isPending && <LockBanner />}
-      </div>
-    );
-  }
-
-  // Drop passed, within 24h grace — show only Lock banner
-  if (isDropPassed && !isGracePassed && isPending) {
-    return <LockBanner />;
-  }
+  const showDrop = !!(dropDateTime && !isDropPassed);
+  const showLock =
+    (dropDateTime && !isDropPassed && isPending) ||
+    (isDropPassed && !isGracePassed && isPending) ||
+    (!dropDateTime && isPending);
 
   // Drop passed + grace expired + unpaid — hide all
   if (isDropPassed && isGracePassed && isPending) {
     return null;
   }
 
-  // No drop date, payment pending
-  if (!dropDateTime && isPending) {
-    return <LockBanner />;
+  if (!showDrop && !showLock) {
+    return null;
   }
 
-  return null;
+  return (
+    <AnimatePresence mode="sync">
+      <div className="space-y-4">
+        {showDrop && <DropBanner />}
+        {showLock && <LockBanner />}
+      </div>
+    </AnimatePresence>
+  );
 };
 
 export default BookingStatusCard;
