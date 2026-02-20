@@ -9,7 +9,7 @@ import { Copy, Upload, Loader2, Check, Smartphone } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Capacitor } from "@capacitor/core";
+
 interface UpiPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -218,35 +218,19 @@ export const UpiPaymentModal = ({
   };
   const handlePayWithUpi = async () => {
     try {
-      // Simple UPI URL without pre-filled data - just opens the UPI app
-      const upiUrl = 'upi://';
-      if (Capacitor.isNativePlatform()) {
-        // Use window.open to trigger native UPI app chooser
-        const opened = window.open(upiUrl, '_system');
-        if (opened) {
-          toast({
-            title: "Opening UPI App",
-            description: "Complete the payment and return to submit proof with transaction ID."
-          });
-        } else {
-          throw new Error('Failed to open UPI app');
-        }
-      } else {
-        // On web platforms, just show a message
-        toast({
-          title: "UPI Available on Mobile",
-          description: "Please use a mobile device to open UPI apps directly."
-        });
-      }
+      const upiUrl = `upi://pay?pa=7488698970@ybl&pn=Rent%20Payment&am=${amount}&cu=INR`;
+      window.open(upiUrl, '_system');
+      toast({
+        title: "Opening UPI App",
+        description: "Complete the payment and return to submit proof with transaction ID."
+      });
     } catch (error) {
       console.error('Error opening UPI app:', error);
-      if (Capacitor.isNativePlatform()) {
-        toast({
-          title: "No UPI App Found",
-          description: "Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "No UPI App Found",
+        description: "Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
+        variant: "destructive"
+      });
     }
   };
   return <Dialog open={isOpen} onOpenChange={onClose}>
