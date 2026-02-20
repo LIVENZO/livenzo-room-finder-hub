@@ -17,7 +17,7 @@ const RoomContent: React.FC<RoomContentProps> = ({
   roomAmenities,
 }) => {
   return (
-    <Tabs defaultValue="description" className="mt-8">
+    <Tabs defaultValue="amenities" className="mt-8">
       <TabsList>
         <TabsTrigger value="description">Description</TabsTrigger>
         <TabsTrigger value="amenities">Amenities</TabsTrigger>
