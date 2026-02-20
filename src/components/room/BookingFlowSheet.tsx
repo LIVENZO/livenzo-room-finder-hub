@@ -411,7 +411,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 <div>
                   <p className="font-medium text-foreground">KOTA📍LIVENZO= Hustle Free Room Booking.
                   </p>
-                  <p className="text-sm text-muted-foreground">Free drop to your new room under 15km.</p>
+                  <p className="text-sm text-muted-foreground">Free drop under 15km.</p>
                 </div>
               </div>
               <BookingPriceBreakdown monthlyRent={roomPrice} />
