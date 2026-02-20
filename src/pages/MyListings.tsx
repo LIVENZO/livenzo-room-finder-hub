@@ -108,14 +108,28 @@ const MyListings: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : rooms.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <h3 className="text-xl font-medium mb-2">No Room Listings Yet</h3>
-            <p className="text-gray-500 mb-6">
-              Start by creating your first room listing.
+          <div className="text-center py-12 bg-muted/50 rounded-lg space-y-4">
+            <h3 className="text-xl font-medium text-foreground mb-2">No rooms listed yet.</h3>
+            <p className="text-muted-foreground">
+              Get a <span className="font-semibold text-primary">FREE</span> professional photographer for your first five listings.
             </p>
-            <Button onClick={() => navigate('/list-room')}>
-              List Your First Room
-            </Button>
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <Button onClick={() => navigate('/list-room')}>
+                List Your First Room
+              </Button>
+              <Button
+                variant="outline"
+                className="border-primary/50 text-primary hover:bg-primary/5"
+                onClick={() => {
+                  const message = encodeURIComponent(
+                    "Hi, I want to list a room on Livenzo.\n\nHouse Name:\nHouse Number:\nLocation:"
+                  );
+                  window.open(`https://wa.me/?text=${message}`, '_blank');
+                }}
+              >
+                📸 Book Photographer
+              </Button>
+            </div>
           </div>
         ) : (
           <RoomList 
