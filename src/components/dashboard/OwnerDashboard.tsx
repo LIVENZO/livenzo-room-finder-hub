@@ -97,7 +97,7 @@ const OwnerDashboard: React.FC = () => {
   };
 
   const handleStatsCardClick = (type: 'listings' | 'connections') => {
-    if (type === 'listings') {
+    if (type === 'listings' && listingsCount > 0) {
       handleViewListingsClick();
     } else if (type === 'connections') {
       // Always allow clicking on connections, regardless of pending count
