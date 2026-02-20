@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import LocationViewer from './LocationViewer';
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
+import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
 
 interface RoomActionCardProps {
   room: Room;
@@ -52,6 +53,9 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           >
             {room.available ? "Available" : "Not Available"}
           </Badge>
+
+          {/* Booking Fee Breakdown */}
+          {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} variant="compact" />}
           
           {/* Location Viewer - uses room.latitude/longitude which includes fallback */}
           <LocationViewer room={room} />

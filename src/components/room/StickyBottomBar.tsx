@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import BookingFlowSheet from './BookingFlowSheet';
+import { getConfirmationFee } from './BookingPriceBreakdown';
 
 interface StickyBottomBarProps {
   room: Room;
@@ -58,13 +59,13 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
         <div className="bg-background/95 backdrop-blur-lg border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="container max-w-6xl mx-auto px-4 py-3">
             <div className="flex items-center gap-4">
-              <div className="w-1/4 min-w-fit">
+              <div className="w-1/3 min-w-fit">
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-foreground">
-                    ₹{room.price.toLocaleString()}
+                    ₹{getConfirmationFee(room.price).toLocaleString()}
                   </span>
-                  <span className="text-xs text-muted-foreground -mt-0.5">
-                    / month
+                  <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
+                    25% of ₹{room.price.toLocaleString()}/mo
                   </span>
                 </div>
               </div>
