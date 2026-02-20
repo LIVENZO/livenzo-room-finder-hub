@@ -31,6 +31,8 @@ interface BookingFlowSheetProps {
   userName?: string;
   userPhone?: string;
   userEmail?: string;
+  initialStep?: Step;
+  existingBookingId?: string;
 }
 
 type Step = 'user-type' | 'details' | 'duration' | 'not-eligible' | 'token-confirm' | 'drop-schedule' | 'drop-confirmed' | 'processing' | 'success' | 'failed';
@@ -53,10 +55,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   roomPrice,
   userName = '',
   userPhone = '',
-  userEmail = ''
+  userEmail = '',
+  initialStep,
+  existingBookingId
 }) => {
   const tokenAmount = roomPrice; // Dynamic: equals room rent
-  const [step, setStep] = useState<Step>('token-confirm');
+  const [step, setStep] = useState<Step>(initialStep || 'token-confirm');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
   const [stayDuration, setStayDuration] = useState<number | null>(null);
@@ -77,9 +81,19 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     setDropTime('');
   };
 
+  // When opened with an existing booking (from dashboard), use that ID
+  useEffect(() => {
+    if (open && existingBookingId && !bookingId) {
+      setBookingId(existingBookingId);
+      if (initialStep) {
+        setStep(initialStep);
+      }
+    }
+  }, [open, existingBookingId]);
+
   // Create booking request immediately when sheet opens (triggers dashboard banner)
   useEffect(() => {
-    if (open && !bookingId) {
+    if (open && !bookingId && !existingBookingId) {
       const createInitialBooking = async () => {
         try {
           const { data, error } = await supabase

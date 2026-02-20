@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -11,19 +11,59 @@ import RoomActionCard from '@/components/room/RoomActionCard';
 import RoomImageViewer from '@/components/room/RoomImageViewer';
 import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
 import StickyBottomBar from '@/components/room/StickyBottomBar';
+import BookingFlowSheet from '@/components/room/BookingFlowSheet';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
+import { useAuth } from '@/context/auth';
 import ReferralBanner from '@/components/referral/ReferralBanner';
+import { supabase } from '@/integrations/supabase/client';
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { rooms } = useRooms();
+  const { user } = useAuth();
   
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
   const actionCardRef = useRef<HTMLDivElement>(null);
+  
+  // Deep-link: auto-open booking flow from dashboard banners
+  const stepParam = searchParams.get('step') as 'payment' | 'drop-schedule' | null;
+  const [deepLinkSheetOpen, setDeepLinkSheetOpen] = useState(false);
+  const [deepLinkBookingId, setDeepLinkBookingId] = useState<string | null>(null);
+  const [deepLinkStep, setDeepLinkStep] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (!stepParam || !user || !id) return;
+    
+    const loadExistingBooking = async () => {
+      const { data } = await supabase
+        .from('booking_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('room_id', id)
+        .in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        setDeepLinkBookingId(data.id);
+      }
+      
+      const mappedStep = stepParam === 'payment' ? 'token-confirm' : 'drop-schedule';
+      setDeepLinkStep(mappedStep);
+      setDeepLinkSheetOpen(true);
+      
+      // Clear query params so back navigation doesn't re-trigger
+      setSearchParams({}, { replace: true });
+    };
+    
+    loadExistingBooking();
+  }, [stepParam, user, id]);
   
   // Load room data
   useEffect(() => {
@@ -149,6 +189,23 @@ const RoomDetail = () => {
       
       {/* Sticky Bottom Bar - Mobile First */}
       <StickyBottomBar room={room} actionCardRef={actionCardRef} />
+      
+      {/* Deep-link Booking Flow Sheet */}
+      {user && deepLinkStep && (
+        <BookingFlowSheet
+          open={deepLinkSheetOpen}
+          onOpenChange={setDeepLinkSheetOpen}
+          roomId={room.id}
+          userId={user.id}
+          roomTitle={room.title}
+          roomPrice={room.price}
+          userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
+          userPhone={user.phone || user.user_metadata?.phone || ''}
+          userEmail={user.email || ''}
+          initialStep={deepLinkStep as any}
+          existingBookingId={deepLinkBookingId || undefined}
+        />
+      )}
     </Layout>
   );
 };
