@@ -10,6 +10,7 @@ import RoomLocation from './room/RoomLocation';
 import { formatDistance } from '@/utils/roomUtils';
 import { formatPrice } from '@/lib/utils';
 import { Heart, Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { addFavorite, removeFavorite, checkIsFavorite } from '@/services/FavoriteService';
 import { toast } from 'sonner';
@@ -149,8 +150,33 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         <h3 className="text-lg font-semibold line-clamp-1">{room.title}</h3>
         <RoomLocation location={room.location} />
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex flex-wrap gap-2">
-        <RoomFacilityBadges room={room} />
+      <CardFooter className="p-4 pt-0 flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2 w-full">
+          <RoomFacilityBadges room={room} />
+        </div>
+        <div className="flex gap-2 w-full">
+          <Button
+            size="sm"
+            className="flex-1 h-9 rounded-lg text-xs font-semibold"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/room/${room.id}`);
+            }}
+          >
+            Book
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.success(`You save ${formatPrice(Math.round(room.price * 0.25))} on first month!`);
+            }}
+          >
+            Save {formatPrice(Math.round(room.price * 0.25))}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
