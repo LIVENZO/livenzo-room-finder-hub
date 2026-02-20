@@ -59,7 +59,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner && (
             <div className="flex gap-2 w-full">
-              {/* WhatsApp Chat Support Button */}
+              {/* Offline Visit Button */}
               <Button 
                 className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white"
                 onClick={() => {
@@ -68,7 +68,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
                   const gender = facilities.gender === 'male' ? 'Boys' : facilities.gender === 'female' ? 'Girls' : 'Any';
                   const message = `Hi Livenzo,
 
-I'm interested in the ${room.title}
+I want to schedule an offline visit for ${room.title}
 
 ₹${room.price.toLocaleString()} | ${roomType} room | ${gender}
 
@@ -76,13 +76,13 @@ ${room.house_name || ''}, ${room.location}
 
 Room ID: ${room.id}
 
-Please help me.`;
+Please help me schedule a visit.`;
                   const encodedMessage = encodeURIComponent(message);
                   const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
                   window.open(whatsappUrl, '_blank');
                 }}
               >
-                💬 Chat Support
+                🏠 Offline Visit
               </Button>
               
               {/* Call Button */}
