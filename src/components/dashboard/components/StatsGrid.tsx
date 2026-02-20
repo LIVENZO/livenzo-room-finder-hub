@@ -26,7 +26,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({
       icon: Home,
       color: 'bg-gradient-primary',
       isLoading: isLoading,
-      isClickable: listingsCount > 0,
+      isClickable: true,
       onClick: () => onStatsCardClick('listings')
     },
     {
