@@ -9,6 +9,7 @@ import { Copy, Upload, Loader2, Check, Smartphone } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { QrPaymentScreen } from "./QrPaymentScreen";
 
 interface UpiPaymentModalProps {
   isOpen: boolean;
@@ -216,24 +217,12 @@ export const UpiPaymentModal = ({
       setLoading(false);
     }
   };
-  const handlePayWithUpi = async () => {
-    try {
-      const upiUrl = `upi://pay?pa=7488698970@ybl&pn=Rent%20Payment&am=${amount}&cu=INR`;
-      window.open(upiUrl, '_system');
-      toast({
-        title: "Opening UPI App",
-        description: "Complete the payment and return to submit proof with transaction ID."
-      });
-    } catch (error) {
-      console.error('Error opening UPI app:', error);
-      toast({
-        title: "No UPI App Found",
-        description: "Please install Google Pay, PhonePe, Paytm, or BHIM to continue.",
-        variant: "destructive"
-      });
-    }
+  const [showQrScreen, setShowQrScreen] = useState(false);
+
+  const handlePayWithUpi = () => {
+    setShowQrScreen(true);
   };
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+  return <><Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Pay via UPI Direct</DialogTitle>
@@ -310,5 +299,7 @@ export const UpiPaymentModal = ({
           </p>
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+    <QrPaymentScreen isOpen={showQrScreen} onClose={() => setShowQrScreen(false)} amount={amount} />
+    </>;
 };

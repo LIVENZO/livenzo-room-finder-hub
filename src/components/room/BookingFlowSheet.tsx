@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { QrPaymentScreen } from '@/components/payments/QrPaymentScreen';
 
 
 
@@ -65,7 +66,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   const [paymentError, setPaymentError] = useState<string>('');
   const [dropDate, setDropDate] = useState<Date | undefined>(undefined);
   const [dropTime, setDropTime] = useState<string>('');
-
+  const [showQrPayment, setShowQrPayment] = useState(false);
   const resetFlow = () => {
     setStep('token-confirm');
     setUserType(null);
@@ -199,22 +200,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Failed to create booking');
       }
 
-      // Get room price for UPI amount
-      const { data: roomData } = await supabase
-        .from('rooms')
-        .select('price')
-        .eq('id', roomId)
-        .single();
-
-      const payAmount = roomData?.price || 0;
-      const upiUrl = `upi://pay?pa=7488698970@ybl&pn=Livenzo%20Room%20Booking&am=${payAmount}&cu=INR`;
-      window.open(upiUrl, '_system');
-
-      // Mark booking as token_pending (user will complete in UPI app)
-      await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
-      
-      toast.success('UPI app opened. Complete the payment and return to confirm.');
-      setStep('token-confirm');
+      // Open QR payment screen
+      setShowQrPayment(true);
       setLoading(false);
 
     } catch (error) {
@@ -883,18 +870,25 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="rounded-t-3xl px-6 pb-8 pt-6 max-h-[85vh] overflow-y-auto">
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl px-6 pb-8 pt-6 max-h-[85vh] overflow-y-auto">
 
-        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6" />
-        
-        <AnimatePresence mode="wait">
-          {renderStep()}
-        </AnimatePresence>
-      </SheetContent>
-    </Sheet>);
+          <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6" />
+          
+          <AnimatePresence mode="wait">
+            {renderStep()}
+          </AnimatePresence>
+        </SheetContent>
+      </Sheet>
+      <QrPaymentScreen
+        isOpen={showQrPayment}
+        onClose={() => setShowQrPayment(false)}
+        amount={tokenAmount}
+      />
+    </>);
 
 };
 
