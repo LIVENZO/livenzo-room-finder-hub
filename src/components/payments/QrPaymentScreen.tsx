@@ -29,16 +29,21 @@ export const QrPaymentScreen = ({ isOpen, onClose, amount, returnPath }: QrPayme
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Pay ₹{amount.toLocaleString()}</DialogTitle>
+          <DialogTitle>Booking Confirmation Fee</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-2">
+          <div className="text-center">
+            <span className="text-3xl font-bold text-foreground">₹{amount.toLocaleString()}</span>
+            <p className="text-xs text-muted-foreground mt-1">25% of first month rent</p>
+          </div>
+
           {qrDataUrl && (
             <img src={qrDataUrl} alt="UPI QR Code" className="w-56 h-56" />
           )}
 
           <p className="text-sm text-muted-foreground text-center leading-relaxed">
-            Use your UPI app and pay by scanning this QR code or sending payment to this UPI ID.
+            Scan the QR code or pay using the UPI ID below.
           </p>
 
           <p className="text-base font-medium text-foreground select-all">{UPI_ID}</p>
