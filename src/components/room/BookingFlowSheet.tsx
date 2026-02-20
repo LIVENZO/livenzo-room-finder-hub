@@ -14,12 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Global type declaration for Razorpay
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+
+
 
 interface BookingFlowSheetProps {
   open: boolean;
@@ -192,22 +188,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     }
   };
 
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const handlePayAndLock = async () => {
     setLoading(true);
     setStep('processing');
@@ -219,131 +199,23 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
         throw new Error('Failed to create booking');
       }
 
-      // Get authentication token
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session?.access_token) {
-        throw new Error('Authentication required. Please log in again.');
-      }
+      // Get room price for UPI amount
+      const { data: roomData } = await supabase
+        .from('rooms')
+        .select('price')
+        .eq('id', roomId)
+        .single();
 
-      // Create token payment order (NO relationship required)
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-token-payment', {
-        body: {
-          action: 'create_order',
-          bookingRequestId: currentBookingId,
-          roomId
-        },
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        }
-      });
+      const payAmount = roomData?.price || 0;
+      const upiUrl = `upi://pay?pa=7488698970@ybl&pn=Livenzo%20Room%20Booking&am=${payAmount}&cu=INR`;
+      window.open(upiUrl, '_system');
 
-      if (orderError) {
-        console.error('Error creating token payment order:', orderError);
-        throw new Error('Failed to create payment order');
-      }
-
-      if (!orderData?.success || !orderData?.razorpayOrderId) {
-        console.error('Invalid response:', orderData);
-        throw new Error('Invalid payment order response');
-      }
-
-      // Load Razorpay script
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error('Failed to load payment gateway');
-      }
-
-      // Open Razorpay checkout
-      const options = {
-        key: orderData.razorpayKeyId,
-        amount: orderData.amount,
-        currency: 'INR',
-        name: 'Livenzo',
-        description: 'Livenzo Room Booking Token',
-        order_id: orderData.razorpayOrderId,
-        prefill: {
-          name: userName,
-          email: userEmail,
-          contact: userPhone
-        },
-        config: {
-          display: {
-            blocks: {
-              banks: {
-                name: 'Pay using UPI or other methods',
-                instruments: [
-                { method: 'upi' },
-                { method: 'card' },
-                { method: 'netbanking' },
-                { method: 'wallet' }]
-
-              }
-            },
-            sequence: ['block.banks'],
-            preferences: { show_default_blocks: false }
-          }
-        },
-        handler: async (response: any) => {
-          try {
-            const { data: sessionData2 } = await supabase.auth.getSession();
-            if (!sessionData2?.session?.access_token) {
-              throw new Error('Authentication required. Please log in again.');
-            }
-
-            // Verify token payment and lock room server-side
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('create-token-payment', {
-              body: {
-                action: 'verify_payment',
-                bookingRequestId: currentBookingId,
-                roomId,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature
-              },
-              headers: {
-                Authorization: `Bearer ${sessionData2.session.access_token}`
-              }
-            });
-
-            if (verifyError || !verifyData?.success) {
-              console.error('Token payment verification failed:', verifyError, verifyData);
-              await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-              setPaymentError('Payment verification failed. You can retry anytime to lock this room.');
-              setStep('failed');
-              setLoading(false);
-              return;
-            }
-
-            setStep('success');
-            setLoading(false);
-          } catch (error) {
-            console.error('Token payment verification error:', error);
-            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
-            setStep('failed');
-            setLoading(false);
-          }
-        },
-        modal: {
-          ondismiss: async () => {
-            await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_cancelled');
-            setPaymentError('Payment was not completed. You can retry anytime to lock this room.');
-            setStep('failed');
-            setLoading(false);
-          }
-        },
-        theme: { color: '#3B82F6' }
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', async (response: any) => {
-        console.error('Payment failed:', response.error);
-        await createOrUpdateBookingRequest('payment_failed', true, false, 'payment_failed');
-        setPaymentError(response.error?.description || 'Payment was not completed. You can retry anytime to lock this room.');
-        setStep('failed');
-        setLoading(false);
-      });
-      rzp.open();
+      // Mark booking as token_pending (user will complete in UPI app)
+      await createOrUpdateBookingRequest('token_pending', true, false, 'initiated');
+      
+      toast.success('UPI app opened. Complete the payment and return to confirm.');
+      setStep('token-confirm');
+      setLoading(false);
 
     } catch (error) {
       console.error('Payment error:', error);
@@ -896,9 +768,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             </motion.div>
 
             <div>
-              <h2 className="text-xl font-semibold text-foreground">Opening secure payment…</h2>
+              <h2 className="text-xl font-semibold text-foreground">Opening UPI payment…</h2>
               <p className="text-muted-foreground mt-2">
-                Please complete the payment in the Razorpay window
+                Please complete the payment in your UPI app
               </p>
             </div>
           </motion.div>);
