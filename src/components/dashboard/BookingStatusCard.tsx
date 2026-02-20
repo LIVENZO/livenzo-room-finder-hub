@@ -36,14 +36,14 @@ const BookingStatusCard: React.FC = () => {
 
     const fetchActiveBooking = async () => {
       try {
-        const { data, error } = await supabase
-          .from('booking_requests')
-          .select('id, room_id, booking_stage, token_paid, drop_date, drop_time, status, token_amount')
-          .eq('user_id', user.id)
-          .in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const { data, error } = await supabase.
+        from('booking_requests').
+        select('id, room_id, booking_stage, token_paid, drop_date, drop_time, status, token_amount').
+        eq('user_id', user.id).
+        in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed']).
+        order('created_at', { ascending: false }).
+        limit(1).
+        maybeSingle();
 
         if (error || !data) {
           setLoading(false);
@@ -53,11 +53,11 @@ const BookingStatusCard: React.FC = () => {
         setBooking(data as BookingData);
 
         // Fetch room details
-        const { data: roomData } = await supabase
-          .from('rooms')
-          .select('title, price')
-          .eq('id', data.room_id)
-          .maybeSingle();
+        const { data: roomData } = await supabase.
+        from('rooms').
+        select('title, price').
+        eq('id', data.room_id).
+        maybeSingle();
 
         if (roomData) setRoom(roomData);
       } catch (err) {
@@ -98,16 +98,16 @@ const BookingStatusCard: React.FC = () => {
   const bannerVariants = {
     initial: { opacity: 0, y: -12, scale: 0.97 },
     animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } },
-    exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const } },
+    exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const } }
   };
 
   // Sub-components
   const DropBanner = () => {
     if (!dropDateTime) return null;
     const formattedDate = dropDateTime.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-    const formattedTime = booking.drop_time
-      ? new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-      : null;
+    const formattedTime = booking.drop_time ?
+    new Date(`2000-01-01T${booking.drop_time}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) :
+    null;
     return (
       <motion.div key="drop-banner" variants={bannerVariants} initial="initial" animate="animate" exit="exit">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 backdrop-blur-sm border border-border/50">
@@ -116,8 +116,8 @@ const BookingStatusCard: React.FC = () => {
             {formattedDate}{formattedTime && <> at {formattedTime}</>}
           </span>
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   };
 
   const hasValidDrop = !!(dropDateTime && !isDropPassed);
@@ -145,29 +145,29 @@ const BookingStatusCard: React.FC = () => {
               </div>
               <div className="flex-1 space-y-2">
                 <h3 className="font-semibold text-blue-900">Booking In Progress</h3>
-                <p className="text-sm text-blue-700">
-                  Don't miss out!<br />Complete payment of ₹{amount.toLocaleString()} to secure it.
-                </p>
+                
+
+
                 <Button
                   className="w-full mt-2"
-                  onClick={handlePayClick}
-                >
+                  onClick={handlePayClick}>
+
                   {hasValidDrop ? `Pay ₹${amount.toLocaleString()} Now` : 'Schedule Drop & Pay'}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
-      </motion.div>
-    );
+      </motion.div>);
+
   };
 
   // --- Display Logic ---
   const showDrop = hasValidDrop;
   const showLock =
-    (dropDateTime && !isDropPassed && isPending) ||
-    (isDropPassed && !isGracePassed && isPending) ||
-    (!dropDateTime && isPending);
+  dropDateTime && !isDropPassed && isPending ||
+  isDropPassed && !isGracePassed && isPending ||
+  !dropDateTime && isPending;
 
   // Drop passed + grace expired + unpaid — hide all
   if (isDropPassed && isGracePassed && isPending) {
@@ -184,8 +184,8 @@ const BookingStatusCard: React.FC = () => {
         {showDrop && <DropBanner />}
         {showLock && <LockBanner />}
       </div>
-    </AnimatePresence>
-  );
+    </AnimatePresence>);
+
 };
 
 export default BookingStatusCard;
