@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Room } from '@/types/room';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import RoomFacilityBadges from './room/RoomFacilityBadges';
-import RoomPriceBadge from './room/RoomPriceBadge';
 import RoomLocation from './room/RoomLocation';
 import { formatDistance } from '@/utils/roomUtils';
+import { formatPrice } from '@/lib/utils';
 import { Heart, Share2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { addFavorite, removeFavorite, checkIsFavorite } from '@/services/FavoriteService';
@@ -58,10 +58,11 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
     const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
     
-    // Open WhatsApp directly
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, '_blank');
   };
+
+  const discountedPrice = Math.round(room.price * 0.75);
 
   return (
     <Card 
@@ -97,13 +98,23 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
           </button>
         </div>
         {/* Price and distance badges - top right */}
-        <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
           {room.distance !== undefined && (
             <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
               📍 {formatDistance(room.distance)}
             </Badge>
           )}
-          <RoomPriceBadge price={room.price} />
+          <div className="flex items-center gap-1.5">
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-muted-foreground text-[10px] line-through px-1.5 py-0.5">
+              {formatPrice(room.price)}
+            </Badge>
+            <Badge className="bg-primary text-primary-foreground font-semibold">
+              {formatPrice(discountedPrice)}/mo
+            </Badge>
+          </div>
+          <Badge variant="secondary" className="bg-green-500/90 text-white text-[10px] px-1.5 py-0.5 backdrop-blur-sm">
+            Save 25%
+          </Badge>
         </div>
       </AspectRatio>
       <CardContent className="p-4">

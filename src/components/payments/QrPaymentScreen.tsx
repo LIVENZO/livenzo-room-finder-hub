@@ -29,13 +29,13 @@ export const QrPaymentScreen = ({ isOpen, onClose, amount, returnPath }: QrPayme
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Booking Confirmation Fee</DialogTitle>
+          <DialogTitle>First Month Payment</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-2">
           <div className="text-center">
             <span className="text-3xl font-bold text-foreground">₹{amount.toLocaleString()}</span>
-            <p className="text-xs text-muted-foreground mt-1">25% of first month rent</p>
+            <p className="text-xs text-green-600 mt-1">First month price · 25% discount applied</p>
           </div>
 
           {qrDataUrl && (

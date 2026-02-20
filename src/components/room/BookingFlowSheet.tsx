@@ -53,7 +53,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   initialStep,
   existingBookingId
 }) => {
-  const tokenAmount = getConfirmationFee(roomPrice); // 25% of first month rent
+  const tokenAmount = getConfirmationFee(roomPrice); // First month price after 25% discount
   const [step, setStep] = useState<Step>(initialStep || 'token-confirm');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
@@ -612,7 +612,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
               <BookingPriceBreakdown monthlyRent={roomPrice} />
 
-              <p className="text-xs text-muted-foreground">💰 25% of first month rent · Fully refundable</p>
+              <p className="text-xs text-muted-foreground">💰 25% off first month · Limited offer</p>
             </motion.div>
 
             {/* Pay Button */}
@@ -624,7 +624,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 className="w-full h-12 text-base font-semibold"
                 onClick={handlePayAndLock}
                 disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} & Lock Room`}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month (25% Off)`}
               </Button>
             </motion.div>
           </motion.div>
