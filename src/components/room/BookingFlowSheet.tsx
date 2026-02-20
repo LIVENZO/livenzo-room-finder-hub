@@ -90,19 +90,19 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     if (open && !bookingId && !existingBookingId) {
       const createInitialBooking = async () => {
         try {
-          const { data, error } = await supabase
-            .from('booking_requests')
-            .insert({
-              room_id: roomId,
-              user_id: userId,
-              booking_stage: 'initiated',
-              token_required: false,
-              token_paid: false,
-              token_amount: tokenAmount,
-              status: 'initiated'
-            })
-            .select('id')
-            .single();
+          const { data, error } = await supabase.
+          from('booking_requests').
+          insert({
+            room_id: roomId,
+            user_id: userId,
+            booking_stage: 'initiated',
+            token_required: false,
+            token_paid: false,
+            token_amount: tokenAmount,
+            status: 'initiated'
+          }).
+          select('id').
+          single();
 
           if (error) {
             console.error('Error creating initial booking:', error);
@@ -125,12 +125,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   };
 
   const createOrUpdateBookingRequest = async (
-    stage: string,
-    tokenRequired: boolean,
-    tokenPaid: boolean = false,
-    status: string = 'initiated',
-    razorpayPaymentId?: string
-  ) => {
+  stage: string,
+  tokenRequired: boolean,
+  tokenPaid: boolean = false,
+  status: string = 'initiated',
+  razorpayPaymentId?: string) =>
+  {
     try {
       if (bookingId) {
         const updateData: any = {
@@ -144,30 +144,30 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           status
         };
 
-        const { error } = await supabase
-          .from('booking_requests')
-          .update(updateData)
-          .eq('id', bookingId);
+        const { error } = await supabase.
+        from('booking_requests').
+        update(updateData).
+        eq('id', bookingId);
 
         if (error) throw error;
         return bookingId;
       } else {
-        const { data, error } = await supabase
-          .from('booking_requests')
-          .insert({
-            room_id: roomId,
-            user_id: userId,
-            user_type: userType,
-            user_details: userDetails,
-            stay_duration: stayDuration,
-            booking_stage: stage,
-            token_required: tokenRequired,
-            token_paid: tokenPaid,
-            token_amount: tokenAmount,
-            status
-          })
-          .select('id')
-          .single();
+        const { data, error } = await supabase.
+        from('booking_requests').
+        insert({
+          room_id: roomId,
+          user_id: userId,
+          user_type: userType,
+          user_details: userDetails,
+          stay_duration: stayDuration,
+          booking_stage: stage,
+          token_required: tokenRequired,
+          token_paid: tokenPaid,
+          token_amount: tokenAmount,
+          status
+        }).
+        select('id').
+        single();
 
         if (error) throw error;
         if (data) {
@@ -278,8 +278,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <Button className="w-full h-12 text-base font-medium" onClick={handleUserTypeNext} disabled={!userType}>
               Next
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'details':
         return (
@@ -307,14 +307,14 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 placeholder={userType === 'student' ? 'e.g., B.Tech 3rd Year, MBA' : 'e.g., Software Engineer, Teacher'}
                 value={userDetails}
                 onChange={(e) => setUserDetails(e.target.value)}
-                className="h-12"
-              />
+                className="h-12" />
+
             </div>
             <Button className="w-full h-12 text-base font-medium" onClick={handleDetailsNext} disabled={!userDetails.trim()}>
               Next
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'duration':
         return (
@@ -336,21 +336,21 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               value={stayDuration?.toString() || ''}
               onValueChange={(value) => setStayDuration(parseInt(value))}
               className="grid grid-cols-2 gap-3">
-              {[3, 6, 9, 12].map((months) => (
-                <label
-                  key={months}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${stayDuration === months ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+              {[3, 6, 9, 12].map((months) =>
+              <label
+                key={months}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${stayDuration === months ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
                   <RadioGroupItem value={months.toString()} className="sr-only" />
                   <span className="text-2xl font-bold text-foreground">{months}</span>
                   <span className="text-sm text-muted-foreground">months</span>
                 </label>
-              ))}
+              )}
             </RadioGroup>
             <Button className="w-full h-12 text-base font-medium" onClick={handleDurationContinue} disabled={!stayDuration || loading}>
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'not-eligible':
         return (
@@ -380,8 +380,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 Done
               </Button>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'token-confirm':
         return (
@@ -397,10 +397,11 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="text-4xl">
-                🎉
+                className="text-4xl">🚗
+
               </motion.div>
-              <h2 className="text-xl font-semibold text-foreground">Great Choice! Your Room is Reserved</h2>
+              <h2 className="text-xl font-semibold text-foreground">FREE Drop To New LIVENZO Room.
+              </h2>
               <p className="text-muted-foreground mt-2 leading-relaxed"></p>
             </div>
 
@@ -418,16 +419,15 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
             <Button className="w-full h-12 text-base font-medium" onClick={() => setStep('drop-schedule')} disabled={loading}>
               Schedule My Drop
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
 
       case 'drop-schedule':
         const timeSlots = [
-          '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-          '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-          '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-          '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
-        ];
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+        '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
+
 
         const formatTime = (t: string) => {
           const [h, m] = t.split(':').map(Number);
@@ -445,10 +445,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           try {
             const dateStr = format(dropDate, 'yyyy-MM-dd');
             if (bookingId) {
-              await supabase
-                .from('booking_requests')
-                .update({ drop_date: dateStr, drop_time: dropTime } as any)
-                .eq('id', bookingId);
+              await supabase.
+              from('booking_requests').
+              update({ drop_date: dateStr, drop_time: dropTime } as any).
+              eq('id', bookingId);
             }
             setLoading(false);
             setStep('drop-confirmed');
@@ -507,8 +507,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                     onSelect={setDropDate}
                     disabled={(date) => date < addDays(new Date(), 1)}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                    className={cn("p-3 pointer-events-auto")} />
+
                 </PopoverContent>
               </Popover>
             </div>
@@ -524,33 +524,33 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                   <SelectValue placeholder="Select a time slot" />
                 </SelectTrigger>
                 <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
+                  {timeSlots.map((slot) =>
+                  <SelectItem key={slot} value={slot}>
                       {formatTime(slot)}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Summary */}
-            {dropDate && dropTime && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+            {dropDate && dropTime &&
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
                 <p className="text-sm text-muted-foreground">Your drop is scheduled for</p>
                 <p className="text-lg font-semibold text-foreground mt-1">
                   {format(dropDate, "EEE, MMM d")} at {formatTime(dropTime)}
                 </p>
               </motion.div>
-            )}
+            }
 
             <Button className="w-full h-12 text-base font-medium" onClick={handleConfirmDrop} disabled={!dropDate || !dropTime || loading}>
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm Drop Schedule'}
             </Button>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'drop-confirmed':
         const formatTimeDisplay = (t: string) => {
@@ -586,13 +586,13 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               <p className="text-muted-foreground leading-relaxed">
                 Your room is almost yours — just one step to go!
               </p>
-              {dropDate && dropTime && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 inline-block">
+              {dropDate && dropTime &&
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 inline-block">
                   <p className="text-sm font-semibold text-foreground">
                     🚗 {format(dropDate, "EEE, MMM d")} at {formatTimeDisplay(dropTime)}
                   </p>
                 </div>
-              )}
+              }
             </motion.div>
 
             {/* Payment Card */}
@@ -627,8 +627,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month (25% Off)`}
               </Button>
             </motion.div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'processing':
         return (
@@ -649,8 +649,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               <h2 className="text-xl font-semibold text-foreground">Opening UPI payment…</h2>
               <p className="text-muted-foreground mt-2">Please complete the payment in your UPI app</p>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'success':
         return (
@@ -677,17 +677,17 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               <p className="text-muted-foreground leading-relaxed">
                 Congratulations! Your room is now locked and waiting for you.
               </p>
-              {dropDate && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
+              {dropDate &&
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
                   <p className="text-sm text-muted-foreground">Your shift is scheduled for</p>
                   <p className="text-lg font-semibold text-foreground mt-1">
-                    🚗 {format(dropDate, "EEE, MMM d")}{dropTime ? ` at ${(() => { const [h, m] = dropTime.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })()}` : ''}
+                    🚗 {format(dropDate, "EEE, MMM d")}{dropTime ? ` at ${(() => {const [h, m] = dropTime.split(':').map(Number);return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;})()}` : ''}
                   </p>
                   <p className="text-sm text-primary font-medium mt-2">
                     Looking forward to your shift! 🏠
                   </p>
                 </div>
-              )}
+              }
             </motion.div>
             <motion.div
               initial={{ opacity: 0 }}
@@ -697,8 +697,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 Go to Dashboard
               </Button>
             </motion.div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       case 'failed':
         return (
@@ -730,8 +730,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 Close
               </Button>
             </div>
-          </motion.div>
-        );
+          </motion.div>);
+
 
       default:
         return null;
@@ -757,10 +757,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           onOpenChange(false);
         }}
         amount={tokenAmount}
-        returnPath={`/room/${roomId}`}
-      />
-    </>
-  );
+        returnPath={`/room/${roomId}`} />
+
+    </>);
+
 };
 
 export default BookingFlowSheet;
