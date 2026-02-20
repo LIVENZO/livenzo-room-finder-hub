@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import QRCode from "qrcode";
@@ -7,11 +8,13 @@ interface QrPaymentScreenProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
+  returnPath?: string;
 }
 
 const UPI_ID = "7488698970@ybl";
 
-export const QrPaymentScreen = ({ isOpen, onClose, amount }: QrPaymentScreenProps) => {
+export const QrPaymentScreen = ({ isOpen, onClose, amount, returnPath }: QrPaymentScreenProps) => {
+  const navigate = useNavigate();
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
   useEffect(() => {
@@ -40,7 +43,12 @@ export const QrPaymentScreen = ({ isOpen, onClose, amount }: QrPaymentScreenProp
 
           <p className="text-base font-medium text-foreground select-all">{UPI_ID}</p>
 
-          <Button variant="outline" onClick={onClose} className="w-full">
+          <Button variant="outline" onClick={() => {
+            onClose();
+            if (returnPath) {
+              navigate(returnPath, { replace: true });
+            }
+          }} className="w-full">
             Close
           </Button>
         </div>

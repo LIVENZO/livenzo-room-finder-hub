@@ -885,8 +885,12 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
       </Sheet>
       <QrPaymentScreen
         isOpen={showQrPayment}
-        onClose={() => setShowQrPayment(false)}
+        onClose={() => {
+          setShowQrPayment(false);
+          onOpenChange(false);
+        }}
         amount={tokenAmount}
+        returnPath={`/room/${roomId}`}
       />
     </>);
 
