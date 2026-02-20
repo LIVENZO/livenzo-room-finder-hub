@@ -124,7 +124,7 @@ const MyListings: React.FC = () => {
                   const message = encodeURIComponent(
                     "Hi, I want to list a room on Livenzo.\n\nHouse Name:\nHouse Number:\nLocation:"
                   );
-                  window.open(`https://wa.me/?text=${message}`, '_blank');
+                  window.open(`https://wa.me/917488698970?text=${message}`, '_blank');
                 }}
               >
                 📸 Book Photographer
