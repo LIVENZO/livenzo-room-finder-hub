@@ -449,59 +449,6 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
 
       case 'token-confirm':
-        return (
-          <motion.div
-            key="token-confirm"
-            variants={stepVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="space-y-6">
-
-            <div className="text-center space-y-3">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="text-4xl">
-
-                🎉
-              </motion.div>
-              <h2 className="text-xl font-semibold text-foreground">Great Choice! Your Room is Reserved</h2>
-              <p className="text-muted-foreground mt-2 leading-relaxed">
-
-              </p>
-            </div>
-
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🚗</span>
-                <div>
-                  <p className="font-medium text-foreground">Why Pay for Transport? Your new Room Drop is FREE</p>
-                  <p className="text-sm text-muted-foreground">Free drop to your new room under 15km.
-
-                  </p>
-                </div>
-              </div>
-              <div className="border-t border-primary/10 pt-3 flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Booking Confirmation Fee</span>
-                <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-
-              </p>
-            </div>
-
-            <Button
-              className="w-full h-12 text-base font-medium"
-              onClick={() => setStep('drop-schedule')}
-              disabled={loading}>
-
-              Schedule My Drop
-            </Button>
-          </motion.div>);
-
-
       case 'drop-schedule':
         const timeSlots = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -541,34 +488,51 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
         return (
           <motion.div
-            key="drop-schedule"
+            key="token-confirm-unified"
             variants={stepVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             className="space-y-5">
 
-            <button
-              onClick={() => setStep('token-confirm')}
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </button>
-
-            <div className="text-center space-y-2">
+            {/* Reservation Success Section */}
+            <div className="text-center space-y-3">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="text-3xl">
+                className="text-4xl">
 
-                🚗
+                🎉
               </motion.div>
-              <h2 className="text-xl font-semibold text-foreground">Schedule Your Drop</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl font-semibold text-foreground">Great Choice! Your Room is Reserved</h2>
+              <p className="text-muted-foreground mt-2 leading-relaxed">
 
               </p>
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🚗</span>
+                <div>
+                  <p className="font-medium text-foreground">Why Pay for Transport? Your new Room Drop is FREE</p>
+                  <p className="text-sm text-muted-foreground">Free drop to your new room under 15km.
+
+                  </p>
+                </div>
+              </div>
+              <div className="border-t border-primary/10 pt-3 flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">Booking Confirmation Fee</span>
+                <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+
+              </p>
+            </div>
+
+            {/* Schedule Your Drop Section */}
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">Schedule Your Drop</h3>
             </div>
 
             {/* Date Picker */}
