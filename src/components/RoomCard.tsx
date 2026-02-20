@@ -104,17 +104,19 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               📍 {formatDistance(room.distance)}
             </Badge>
           )}
-          <div className="flex items-center gap-1.5">
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-muted-foreground text-[10px] line-through px-1.5 py-0.5">
-              {formatPrice(room.price)}
-            </Badge>
-            <Badge className="bg-primary text-primary-foreground font-semibold">
-              {formatPrice(discountedPrice)}/mo
-            </Badge>
-          </div>
-          <Badge variant="secondary" className="bg-green-500/90 text-white text-[10px] px-1.5 py-0.5 backdrop-blur-sm">
-            Save 25%
+          <Badge className="bg-primary text-primary-foreground font-semibold">
+            {formatPrice(room.price)}/mo
           </Badge>
+        </div>
+        {/* Green discount sticker - bottom right of image */}
+        <div className="absolute bottom-2 right-2 rounded-lg px-3 py-2 backdrop-blur-sm shadow-md"
+          style={{ background: 'linear-gradient(135deg, hsl(142 60% 45%), hsl(152 55% 38%))' }}>
+          <p className="text-white font-bold text-sm leading-tight">25% OFF</p>
+          <p className="text-white/80 text-[10px] leading-tight">for First Month</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-white/60 text-[10px] line-through">{formatPrice(room.price)}</span>
+            <span className="text-white font-semibold text-xs">{formatPrice(discountedPrice)}/mo</span>
+          </div>
         </div>
       </AspectRatio>
       <CardContent className="p-4">
