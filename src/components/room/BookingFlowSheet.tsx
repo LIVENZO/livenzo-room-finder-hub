@@ -93,19 +93,19 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
     if (open && !bookingId && !existingBookingId) {
       const createInitialBooking = async () => {
         try {
-          const { data, error } = await supabase
-            .from('booking_requests')
-            .insert({
-              room_id: roomId,
-              user_id: userId,
-              booking_stage: 'initiated',
-              token_required: false,
-              token_paid: false,
-              token_amount: tokenAmount,
-              status: 'initiated'
-            })
-            .select('id')
-            .single();
+          const { data, error } = await supabase.
+          from('booking_requests').
+          insert({
+            room_id: roomId,
+            user_id: userId,
+            booking_stage: 'initiated',
+            token_required: false,
+            token_paid: false,
+            token_amount: tokenAmount,
+            status: 'initiated'
+          }).
+          select('id').
+          single();
 
           if (error) {
             console.error('Error creating initial booking:', error);
@@ -511,28 +511,30 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               </p>
             </div>
 
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🚗</span>
-                <div>
-                  <p className="font-medium text-foreground">Why Pay for Transport? Your new Room Drop is FREE</p>
-                  <p className="text-sm text-muted-foreground">Free drop to your new room under 15km.
+            
 
-                  </p>
-                </div>
-              </div>
-              <div className="border-t border-primary/10 pt-3 flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Booking Confirmation Fee</span>
-                <span className="text-2xl font-bold text-foreground">₹{tokenAmount.toLocaleString()}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
 
-              </p>
-            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* Schedule Your Drop Section */}
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">Schedule Your Drop</h3>
+              <h3 className="text-lg font-semibold text-foreground">🚗
+
+Schedule Your Drop</h3>
             </div>
 
             {/* Date Picker */}
@@ -543,12 +545,10 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal",
-                      !dropDate && "text-muted-foreground"
-                    )}>
+                  <Button variant="outline" className={cn(
+                    "w-full h-12 justify-start text-left font-normal",
+                    !dropDate && "text-muted-foreground"
+                  )}>
 
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dropDate ? format(dropDate, "PPP") : "Select a date"}
@@ -854,8 +854,8 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
           onOpenChange(false);
         }}
         amount={tokenAmount}
-        returnPath={`/room/${roomId}`}
-      />
+        returnPath={`/room/${roomId}`} />
+
     </>);
 
 };
