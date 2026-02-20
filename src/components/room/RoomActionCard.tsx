@@ -54,7 +54,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
             {room.available ? "Available" : "Not Available"}
           </Badge>
 
-          {/* Booking Fee Breakdown */}
+          {/* First Month Discount Breakdown */}
           {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} variant="compact" />}
           
           {/* Location Viewer - uses room.latitude/longitude which includes fallback */}

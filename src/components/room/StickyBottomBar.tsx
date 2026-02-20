@@ -64,8 +64,11 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
                   <span className="text-lg font-bold text-foreground">
                     ₹{getConfirmationFee(room.price).toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
-                    25% of ₹{room.price.toLocaleString()}/mo
+                  <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
+                    ₹{room.price.toLocaleString()}/mo
+                  </span>
+                  <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
+                    Save 25% first month
                   </span>
                 </div>
               </div>
