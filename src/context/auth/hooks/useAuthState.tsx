@@ -203,16 +203,18 @@ export function useAuthState() {
     }
   };
 
-  // Function to safely redirect to dashboard
+  // Function to safely redirect based on role
   const redirectToDashboard = useCallback(() => {
     const currentPath = window.location.pathname;
     // Only redirect if we're on the landing page
     if (currentPath === '/' || currentPath === '/index.html') {
-      console.log("Redirecting to dashboard...");
+      const storedRole = localStorage.getItem('userRole');
+      const target = storedRole === 'owner' ? '/my-listings' : '/dashboard';
+      console.log("Redirecting to:", target);
       
       // Use a small timeout to ensure all state is properly updated first
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = target;
       }, 300);
     }
   }, []);
