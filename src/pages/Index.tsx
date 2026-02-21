@@ -28,8 +28,10 @@ const Index: React.FC = () => {
       console.log('Referral code captured:', refCode);
     }
     
+    // Reset the renter find-room push flag on fresh app start
+    sessionStorage.removeItem('renterFindRoomPushed');
+    
     // Clear role conflict flag when user arrives at landing page
-    // This ensures a clean slate for the next login attempt
     if (getRoleConflictActive()) {
       setTimeout(() => setRoleConflictActive(false), 500);
     }
