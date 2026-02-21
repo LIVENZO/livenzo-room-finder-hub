@@ -28,24 +28,16 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    // Role-based launch: push the default screen on top of Dashboard
+    // Renters: if they land on dashboard directly (e.g. app reopen), push find-room on top
+    // so Find Room is the visible screen but Dashboard remains in the back stack
     const storedRole = localStorage.getItem('userRole');
-    const effectiveRole = storedRole || userRole;
-    if (window.location.pathname === '/dashboard') {
-      if (effectiveRole === 'owner') {
-        const alreadyLaunched = sessionStorage.getItem('ownerInitialLaunchDone');
-        if (!alreadyLaunched) {
-          sessionStorage.setItem('ownerInitialLaunchDone', 'true');
-          navigate('/my-listings', { replace: true });
-          return;
-        }
-      } else if (effectiveRole === 'renter') {
-        const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
-        if (!alreadyPushed) {
-          sessionStorage.setItem('renterFindRoomPushed', 'true');
-          navigate('/find-room');
-          return;
-        }
+    if ((storedRole === 'renter' || userRole === 'renter') && window.location.pathname === '/dashboard') {
+      // Only push if we're not already coming back from find-room (check history state)
+      const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
+      if (!alreadyPushed) {
+        sessionStorage.setItem('renterFindRoomPushed', 'true');
+        navigate('/find-room');
+        return;
       }
     }
 

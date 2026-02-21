@@ -54,12 +54,7 @@ const MobileMenu: React.FC = () => {
                 "justify-start gap-2",
                 isActive(item.href) && "bg-primary/10"
               )}
-              onClick={() => {
-                if (item.href === '/dashboard') {
-                  sessionStorage.setItem('ownerVisitedDashboardManually', 'true');
-                }
-                navigate(item.href);
-              }}
+              onClick={() => navigate(item.href)}
             >
               {item.icon}
               {item.label || item.title}

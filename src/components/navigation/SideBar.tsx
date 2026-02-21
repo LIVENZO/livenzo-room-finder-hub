@@ -41,10 +41,7 @@ const SideBar: React.FC = () => {
         <div className="p-6 border-b border-white/10">
           <div 
             className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => {
-              sessionStorage.setItem('ownerVisitedDashboardManually', 'true');
-              navigate('/dashboard');
-            }}
+            onClick={() => navigate('/dashboard')}
           >
             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
               <Home className="h-5 w-5 text-white" />
@@ -66,12 +63,7 @@ const SideBar: React.FC = () => {
                 "w-full justify-start gap-3 h-12 text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 font-medium",
                 isActive(item.href) && "bg-white/15 text-white shadow-soft border border-white/20"
               )}
-              onClick={() => {
-                if (item.href === '/dashboard') {
-                  sessionStorage.setItem('ownerVisitedDashboardManually', 'true');
-                }
-                navigate(item.href);
-              }}
+              onClick={() => navigate(item.href)}
             >
               <div className={cn(
                 "flex items-center justify-center w-5 h-5",

@@ -28,9 +28,8 @@ const Index: React.FC = () => {
       console.log('Referral code captured:', refCode);
     }
     
-    // Reset ALL launch flags on fresh app start
+    // Reset the renter find-room push flag on fresh app start
     sessionStorage.removeItem('renterFindRoomPushed');
-    sessionStorage.removeItem('ownerInitialLaunchDone');
     
     // Clear role conflict flag when user arrives at landing page
     if (getRoleConflictActive()) {
@@ -52,9 +51,7 @@ const Index: React.FC = () => {
         }
         
         const defaultRole = localStorage.getItem('userRole') || userRole;
-        if (defaultRole === 'owner') {
-          navigate('/my-listings', { replace: true });
-        } else if (defaultRole === 'renter') {
+        if (defaultRole === 'renter') {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
@@ -81,11 +78,9 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Role-based launch routing
+        // Renters always launch to Find Room, owners go to dashboard
         const storedRole = localStorage.getItem('userRole');
-        if (storedRole === 'owner') {
-          navigate('/my-listings', { replace: true });
-        } else if (storedRole === 'renter') {
+        if (storedRole === 'renter') {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
