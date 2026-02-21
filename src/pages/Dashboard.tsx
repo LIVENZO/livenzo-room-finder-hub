@@ -28,13 +28,6 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    // Renters always launch to Find Room page
-    const storedRole = localStorage.getItem('userRole');
-    if (storedRole === 'renter' || userRole === 'renter') {
-      navigate('/find-room', { replace: true });
-      return;
-    }
-
     // Debug current user state
     console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
   }, [user, userRole, isLoading, session, navigate]);
