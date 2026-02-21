@@ -28,9 +28,9 @@ const Index: React.FC = () => {
       console.log('Referral code captured:', refCode);
     }
     
-    // Reset launch push flags on fresh app start
+    // Reset ALL launch flags on fresh app start
     sessionStorage.removeItem('renterFindRoomPushed');
-    sessionStorage.removeItem('ownerInitialLaunchDone');
+    sessionStorage.removeItem('ownerVisitedDashboardManually');
     
     // Clear role conflict flag when user arrives at landing page
     if (getRoleConflictActive()) {
