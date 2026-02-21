@@ -48,7 +48,8 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        navigate('/dashboard');
+        const defaultRole = localStorage.getItem('userRole') || userRole;
+        navigate(defaultRole === 'renter' ? '/find-room' : '/dashboard');
         // No welcome toast per user request
         return;
       }
@@ -70,8 +71,9 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Navigate directly to dashboard instead of using window.location
-        navigate('/dashboard');
+        // Renters always launch to Find Room, owners go to dashboard
+        const storedRole = localStorage.getItem('userRole');
+        navigate(storedRole === 'renter' ? '/find-room' : '/dashboard');
         // No welcome toast per user request
       } else {
         console.log("No user detected on index page");
