@@ -52,7 +52,9 @@ const Index: React.FC = () => {
         }
         
         const defaultRole = localStorage.getItem('userRole') || userRole;
-        if (defaultRole === 'renter') {
+        if (defaultRole === 'owner') {
+          navigate('/my-listings', { replace: true });
+        } else if (defaultRole === 'renter') {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
@@ -79,9 +81,11 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Renters always launch to Find Room, owners go to dashboard
+        // Role-based launch routing
         const storedRole = localStorage.getItem('userRole');
-        if (storedRole === 'renter') {
+        if (storedRole === 'owner') {
+          navigate('/my-listings', { replace: true });
+        } else if (storedRole === 'renter') {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
