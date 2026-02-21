@@ -55,7 +55,7 @@ const Index: React.FC = () => {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
-          navigate('/my-listings', { replace: true });
+          navigate('/dashboard');
         }
         // No welcome toast per user request
         return;
@@ -78,13 +78,13 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Role-based launch: renters → find-room, owners → my-listings
+        // Renters always launch to Find Room, owners go to dashboard
         const storedRole = localStorage.getItem('userRole');
         if (storedRole === 'renter') {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
-          navigate('/my-listings', { replace: true });
+          navigate('/dashboard');
         }
         // No welcome toast per user request
       } else {
