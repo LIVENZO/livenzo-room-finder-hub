@@ -30,7 +30,7 @@ const Index: React.FC = () => {
     
     // Reset launch push flags on fresh app start
     sessionStorage.removeItem('renterFindRoomPushed');
-    sessionStorage.removeItem('ownerListingsPushed');
+    sessionStorage.removeItem('ownerInitialLaunchDone');
     
     // Clear role conflict flag when user arrives at landing page
     if (getRoleConflictActive()) {

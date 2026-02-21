@@ -33,9 +33,12 @@ const Dashboard: React.FC = () => {
     const effectiveRole = storedRole || userRole;
     if (window.location.pathname === '/dashboard') {
       if (effectiveRole === 'owner') {
-        // Owners ALWAYS launch to My Listings — no flags, no conditions
-        navigate('/my-listings', { replace: true });
-        return;
+        const alreadyLaunched = sessionStorage.getItem('ownerInitialLaunchDone');
+        if (!alreadyLaunched) {
+          sessionStorage.setItem('ownerInitialLaunchDone', 'true');
+          navigate('/my-listings', { replace: true });
+          return;
+        }
       } else if (effectiveRole === 'renter') {
         const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
         if (!alreadyPushed) {
