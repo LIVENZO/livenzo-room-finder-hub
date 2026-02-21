@@ -11,9 +11,9 @@ interface RoomResultsProps {
   searchText: string;
 }
 
-const RoomResults: React.FC<RoomResultsProps> = ({ 
-  isLoading, 
-  filteredRooms, 
+const RoomResults: React.FC<RoomResultsProps> = ({
+  isLoading,
+  filteredRooms,
   clearFilters,
   searchText
 }) => {
@@ -25,24 +25,24 @@ const RoomResults: React.FC<RoomResultsProps> = ({
     // WhatsApp support banner is shown in FindRoom.tsx, so return null here
     return null;
   }
-  
+
   return (
     <>
       <div className="mb-4">
-        <p className="text-muted-foreground">
-          {searchText 
-            ? `Showing ${filteredRooms.length} ${filteredRooms.length === 1 ? 'room' : 'rooms'} in ${searchText}`
-            : `Showing ${filteredRooms.length} ${filteredRooms.length === 1 ? 'room' : 'rooms'} in Kota`
-          }
-        </p>
+        
+
+
+
+
+
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRooms.map((room) => (
-          <RoomCard key={room.id} room={room} />
-        ))}
+        {filteredRooms.map((room) =>
+        <RoomCard key={room.id} room={room} />
+        )}
       </div>
-    </>
-  );
+    </>);
+
 };
 
 export default RoomResults;
