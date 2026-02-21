@@ -70,21 +70,9 @@ const Index: React.FC = () => {
           console.log("Setting default user role:", userRole);
         }
         
-        // Renter conditional launch: first open per hour → Find Room
-        const storedRole = localStorage.getItem('userRole');
-        if (storedRole === 'renter') {
-          const lastFindRoomTs = localStorage.getItem('lastFindRoomLaunchTs');
-          const now = Date.now();
-          const ONE_HOUR = 60 * 60 * 1000;
-          if (!lastFindRoomTs || (now - parseInt(lastFindRoomTs, 10)) >= ONE_HOUR) {
-            localStorage.setItem('lastFindRoomLaunchTs', String(now));
-            navigate('/find-room');
-          } else {
-            navigate('/dashboard');
-          }
-        } else {
-          navigate('/dashboard');
-        }
+        // Navigate directly to dashboard instead of using window.location
+        navigate('/dashboard');
+        // No welcome toast per user request
       } else {
         console.log("No user detected on index page");
         setCheckingSession(false);
