@@ -33,9 +33,9 @@ const Dashboard: React.FC = () => {
     const effectiveRole = storedRole || userRole;
     if (window.location.pathname === '/dashboard') {
       if (effectiveRole === 'owner') {
-        // Only redirect on initial launch — detect via a flag set by in-app nav
-        const cameFromInAppNav = sessionStorage.getItem('ownerVisitedDashboardManually');
-        if (!cameFromInAppNav) {
+        const alreadyLaunched = sessionStorage.getItem('ownerInitialLaunchDone');
+        if (!alreadyLaunched) {
+          sessionStorage.setItem('ownerInitialLaunchDone', 'true');
           navigate('/my-listings', { replace: true });
           return;
         }
