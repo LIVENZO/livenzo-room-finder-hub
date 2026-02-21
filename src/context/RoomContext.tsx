@@ -6,6 +6,8 @@ import { Room, RoomFilters } from '@/types/room';
 import { fetchRooms as fetchRoomsService } from '@/services/roomService';
 import { useRoomFilters } from '@/hooks/useRoomFilters';
 import { useNearMe } from '@/hooks/useNearMe';
+import { useHotspotSearch } from '@/hooks/useHotspotSearch';
+import { Hotspot } from '@/services/HotspotService';
 
 interface RoomContextType {
   rooms: Room[];
@@ -24,6 +26,12 @@ interface RoomContextType {
   nearMeError: string | null;
   activateNearMe: () => void;
   deactivateNearMe: () => void;
+  // Hotspot state
+  hotspotSuggestions: Hotspot[];
+  activeHotspot: Hotspot | null;
+  updateHotspotSuggestions: (query: string) => void;
+  selectHotspot: (hotspot: Hotspot) => void;
+  clearHotspot: () => void;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -42,16 +50,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     calculateRoomDistances,
   } = useNearMe();
 
+  const {
+    suggestions: hotspotSuggestions,
+    activeHotspot,
+    updateSuggestions: updateHotspotSuggestions,
+    selectHotspot,
+    clearHotspot,
+  } = useHotspotSearch();
+
   // Apply distance calculations when near me is active
   const roomsWithDistance = useMemo(() => {
     if (nearMeActive) {
       return calculateRoomDistances(rooms);
     }
-    // Clear distance when near me is off
     return rooms.map(room => ({ ...room, distance: undefined }));
   }, [rooms, nearMeActive, calculateRoomDistances]);
 
-  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(roomsWithDistance);
+  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(roomsWithDistance, activeHotspot);
 
   // Fetch rooms from Supabase
   useEffect(() => {
@@ -81,7 +96,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get a specific room by ID
   const getRoom = (id: string) => {
     return rooms.find(room => room.id === id);
   };
@@ -104,6 +118,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         nearMeError,
         activateNearMe,
         deactivateNearMe,
+        hotspotSuggestions,
+        activeHotspot,
+        updateHotspotSuggestions,
+        selectHotspot,
+        clearHotspot,
       }}
     >
       {children}
@@ -119,5 +138,4 @@ export const useRooms = () => {
   return context;
 };
 
-// Export the Room type from types/room
 export type { Room } from '@/types/room';

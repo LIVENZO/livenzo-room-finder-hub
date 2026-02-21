@@ -28,6 +28,11 @@ const FindRoom: React.FC = () => {
     nearMeError,
     activateNearMe,
     deactivateNearMe,
+    hotspotSuggestions,
+    activeHotspot,
+    updateHotspotSuggestions,
+    selectHotspot,
+    clearHotspot,
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -54,13 +59,14 @@ const FindRoom: React.FC = () => {
   const handleClearFilters = () => {
     clearAllFilters();
     deactivateNearMe();
+    clearHotspot();
   };
 
   // Check if any filters are active
   const hasActiveFilters = Object.keys(filters).some(key => {
     const value = filters[key as keyof RoomFilters];
     return value !== undefined && value !== '';
-  }) || searchText.trim() !== '' || nearMeActive;
+  }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
   
   if (!user) return null;
   
@@ -89,6 +95,11 @@ const FindRoom: React.FC = () => {
             nearMeLoading={nearMeLoading}
             onNearMeClick={activateNearMe}
             onNearMeDeactivate={deactivateNearMe}
+            hotspotSuggestions={hotspotSuggestions}
+            onHotspotQueryChange={updateHotspotSuggestions}
+            onHotspotSelect={selectHotspot}
+            activeHotspot={activeHotspot}
+            onHotspotClear={clearHotspot}
           />
           
           {/* Mobile Filter Button */}
@@ -148,6 +159,11 @@ const FindRoom: React.FC = () => {
         {nearMeActive && !nearMeLoading && (
           <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center text-sm text-primary font-medium">
             📍 Showing rooms near your location
+          </div>
+        )}
+        {activeHotspot && (
+          <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center text-sm text-primary font-medium">
+            📍 Showing rooms near {activeHotspot.name}
           </div>
         )}
         {nearMeError && (

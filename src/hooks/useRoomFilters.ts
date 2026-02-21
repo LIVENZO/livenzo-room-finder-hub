@@ -1,13 +1,13 @@
-
 import { useState, useMemo, useRef } from 'react';
 import { Room, RoomFilters } from '@/types/room';
 import { fetchTopRoomIds } from '@/services/topRoomsService';
+import { calculateDistance } from '@/utils/roomUtils';
+import { Hotspot } from '@/services/HotspotService';
 
 // Price bucket thresholds
 const PRICE_THRESHOLDS = {
-  LOW_MAX: 4000,      // Low: ≤ ₹4000
-  MEDIUM_MAX: 7000,   // Medium: ₹4001 - ₹7000
-                      // High: > ₹7000
+  LOW_MAX: 4000,
+  MEDIUM_MAX: 7000,
 };
 
 type PriceBucket = 'low' | 'medium' | 'high';
@@ -24,7 +24,6 @@ const getRandomStrategy = (): SortStrategy => {
   return strategies[Math.floor(Math.random() * strategies.length)];
 };
 
-// Shuffle array using Fisher-Yates algorithm
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -75,16 +74,16 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
   }
 };
 
-export const useRoomFilters = (rooms: Room[]) => {
+const HOTSPOT_RADIUS_KM = 2;
+
+export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = null) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
   
-  // Store the strategy for this session (changes on component mount)
   const strategyRef = useRef<SortStrategy>(getRandomStrategy());
   const topRoomIdsRef = useRef<Set<string>>(new Set());
   const fetchedRef = useRef(false);
 
-  // Fetch top room IDs once (using ref to avoid extra useState)
   if (!fetchedRef.current) {
     fetchedRef.current = true;
     fetchTopRoomIds().then(ids => {
@@ -97,12 +96,26 @@ export const useRoomFilters = (rooms: Room[]) => {
     setSearchText('');
   };
 
-  // Filter and sort rooms based on user criteria
   const filteredRooms = useMemo(() => {
     let result = rooms.filter(room => {
       if (room.available === false) return false;
 
-      if (searchText.trim()) {
+      // If hotspot is active, filter by geo-distance instead of text search
+      if (activeHotspot) {
+        if (room.latitude != null && room.longitude != null) {
+          const dist = calculateDistance(
+            activeHotspot.latitude,
+            activeHotspot.longitude,
+            room.latitude,
+            room.longitude
+          );
+          if (dist > HOTSPOT_RADIUS_KM) return false;
+        } else {
+          // Room has no coordinates, exclude from hotspot results
+          return false;
+        }
+      } else if (searchText.trim()) {
+        // Existing text search logic (unchanged)
         const searchLower = searchText.toLowerCase().trim();
         const locationMatch = room.location?.toLowerCase().includes(searchLower);
         const titleMatch = room.title?.toLowerCase().includes(searchLower);
@@ -120,7 +133,22 @@ export const useRoomFilters = (rooms: Room[]) => {
       return true;
     });
 
-    // Check if any room has distance (near me is active)
+    // If hotspot is active, sort by distance from hotspot
+    if (activeHotspot) {
+      result.sort((a, b) => {
+        const distA = calculateDistance(activeHotspot.latitude, activeHotspot.longitude, a.latitude!, a.longitude!);
+        const distB = calculateDistance(activeHotspot.latitude, activeHotspot.longitude, b.latitude!, b.longitude!);
+        return distA - distB;
+      });
+      // Attach distance for display
+      result = result.map(room => ({
+        ...room,
+        distance: calculateDistance(activeHotspot.latitude, activeHotspot.longitude, room.latitude!, room.longitude!),
+      }));
+      return result;
+    }
+
+    // Existing sorting logic (unchanged)
     const hasDistanceData = result.some(room => room.distance !== undefined);
 
     if (hasDistanceData) {
@@ -135,27 +163,23 @@ export const useRoomFilters = (rooms: Room[]) => {
         return b.price - a.price;
       });
     } else if (topRoomIdsRef.current.size > 0) {
-      // Split into top rooms and remaining
       const topRooms = result.filter(r => topRoomIdsRef.current.has(r.id));
       const remainingRooms = result.filter(r => !topRoomIdsRef.current.has(r.id));
 
-      // Shuffle top rooms with premium-first feel (high > med > low, shuffled within buckets)
       const topHigh = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'high'));
       const topMed = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'medium'));
       const topLow = shuffleArray(topRooms.filter(r => getPriceBucket(r.price) === 'low'));
       const orderedTop = [...topHigh, ...topMed, ...topLow];
 
-      // Apply existing strategy to remaining rooms
       const orderedRemaining = applyStrategy(remainingRooms, strategyRef.current);
 
       result = [...orderedTop, ...orderedRemaining];
     } else {
-      // Fallback: use existing strategy (all premium-first, never low-to-high)
       result = applyStrategy(result, strategyRef.current);
     }
 
     return result;
-  }, [rooms, filters, searchText]);
+  }, [rooms, filters, searchText, activeHotspot]);
 
   return { 
     filters, 

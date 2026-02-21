@@ -403,6 +403,33 @@ export type Database = {
         }
         Relationships: []
       }
+      hotspots: {
+        Row: {
+          city: string | null
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+        }
+        Relationships: []
+      }
       manual_payments: {
         Row: {
           amount: number
