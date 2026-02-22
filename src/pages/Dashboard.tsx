@@ -1,19 +1,56 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
 import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
 import LoadingState from '@/components/landing/LoadingState';
+import { toast } from 'sonner';
 import { AUTH_CONFIG } from '@/config/auth';
+import { getRoleConflictActive } from '@/context/auth/hooks/useAuthState';
 
 const Dashboard: React.FC = () => {
-  const { user, userRole, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const { user, userRole, isLoading, session } = useAuth();
 
+  useEffect(() => {
+    // If authentication is enabled, check for user session
+    if (AUTH_CONFIG.AUTH_ENABLED) {
+      if (!isLoading && !user && !session) {
+        console.log("No authenticated user found, redirecting to login");
+        navigate('/');
+        // Only show error message if NOT caused by role conflict
+        if (!getRoleConflictActive()) {
+          toast.error("Please sign in to access the dashboard");
+        }
+        return;
+      }
+    }
+
+    // Renters: if they land on dashboard directly (e.g. app reopen), push find-room on top
+    // so Find Room is the visible screen but Dashboard remains in the back stack
+    const storedRole = localStorage.getItem('userRole');
+    if ((storedRole === 'renter' || userRole === 'renter') && window.location.pathname === '/dashboard') {
+      // Only push if we're not already coming back from find-room (check history state)
+      const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
+      if (!alreadyPushed) {
+        sessionStorage.setItem('renterFindRoomPushed', 'true');
+        navigate('/find-room');
+        return;
+      }
+    }
+
+    // Debug current user state
+    console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
+  }, [user, userRole, isLoading, session, navigate]);
+
+  // Show loading state while checking authentication or determining role
   if (isLoading || !userRole) {
     return <LoadingState isRedirecting={false} />;
   }
 
+  // If auth is enabled and no user, don't render anything (redirect will happen)
   if (AUTH_CONFIG.AUTH_ENABLED && !user) {
     return null;
   }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CalendarCheck, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
-
+import LocationViewer from './LocationViewer';
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
 import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
@@ -57,7 +57,8 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           {/* First Month Discount Breakdown */}
           {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} variant="compact" />}
           
-
+          {/* Location Viewer - uses room.latitude/longitude which includes fallback */}
+          <LocationViewer room={room} />
           
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner && (
