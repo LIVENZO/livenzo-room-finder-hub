@@ -55,7 +55,7 @@ const Index: React.FC = () => {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
-          navigate('/dashboard');
+          navigate('/my-listings', { replace: true });
         }
         // No welcome toast per user request
         return;
@@ -84,7 +84,7 @@ const Index: React.FC = () => {
           navigate('/dashboard', { replace: true });
           setTimeout(() => navigate('/find-room'), 0);
         } else {
-          navigate('/dashboard');
+          navigate('/my-listings', { replace: true });
         }
         // No welcome toast per user request
       } else {
