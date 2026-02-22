@@ -78,7 +78,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
                   className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 rounded-xl"
                 >
                   <CalendarCheck className="h-5 w-5 mr-2" />
-                  Free drop to new room
+                  Free🚗drop to new room
                 </Button>
               </div>
             </div>
