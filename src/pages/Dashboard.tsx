@@ -1,67 +1,19 @@
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '@/context/auth';
 import Layout from '@/components/Layout';
 import RenterDashboard from '@/components/dashboard/RenterDashboard';
 import OwnerDashboard from '@/components/dashboard/OwnerDashboard';
 import LoadingState from '@/components/landing/LoadingState';
-import { toast } from 'sonner';
 import { AUTH_CONFIG } from '@/config/auth';
-import { getRoleConflictActive } from '@/context/auth/hooks/useAuthState';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, userRole, isLoading, session } = useAuth();
+  const { user, userRole, isLoading } = useAuth();
 
-  // Synchronous owner check — redirect before any paint
-  const storedRole = localStorage.getItem('userRole');
-  const isOwner = storedRole === 'owner' || userRole === 'owner';
-
-  useEffect(() => {
-    // Owners: handled by early return below, but ensure navigation fires
-    if (isOwner) {
-      navigate('/my-listings', { replace: true });
-      return;
-    }
-
-    // If authentication is enabled, check for user session
-    if (AUTH_CONFIG.AUTH_ENABLED) {
-      if (!isLoading && !user && !session) {
-        console.log("No authenticated user found, redirecting to login");
-        navigate('/');
-        if (!getRoleConflictActive()) {
-          toast.error("Please sign in to access the dashboard");
-        }
-        return;
-      }
-    }
-
-    if (window.location.pathname === '/dashboard') {
-      if (storedRole === 'renter' || userRole === 'renter') {
-        const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
-        if (!alreadyPushed) {
-          sessionStorage.setItem('renterFindRoomPushed', 'true');
-          navigate('/find-room');
-          return;
-        }
-      }
-    }
-
-    console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
-  }, [user, userRole, isLoading, session, navigate, isOwner, storedRole]);
-
-  // Owners: render nothing — navigation will fire from useEffect
-  if (isOwner) {
-    return null;
-  }
-
-  // Show loading state while checking authentication or determining role
   if (isLoading || !userRole) {
     return <LoadingState isRedirecting={false} />;
   }
 
-  // If auth is enabled and no user, don't render anything (redirect will happen)
   if (AUTH_CONFIG.AUTH_ENABLED && !user) {
     return null;
   }
@@ -70,7 +22,7 @@ const Dashboard: React.FC = () => {
     <Layout>
       <div className="w-full h-full min-h-screen bg-gradient-radial">
         <div className="w-full h-full">
-          <RenterDashboard />
+          {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
         </div>
       </div>
     </Layout>
