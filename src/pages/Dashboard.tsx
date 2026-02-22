@@ -28,16 +28,19 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    // Renters: if they land on dashboard directly (e.g. app reopen), push find-room on top
-    // so Find Room is the visible screen but Dashboard remains in the back stack
     const storedRole = localStorage.getItem('userRole');
-    if ((storedRole === 'renter' || userRole === 'renter') && window.location.pathname === '/dashboard') {
-      // Only push if we're not already coming back from find-room (check history state)
-      const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
-      if (!alreadyPushed) {
-        sessionStorage.setItem('renterFindRoomPushed', 'true');
-        navigate('/find-room');
+    if (window.location.pathname === '/dashboard') {
+      if (storedRole === 'owner' || userRole === 'owner') {
+        navigate('/my-listings', { replace: true });
         return;
+      }
+      if (storedRole === 'renter' || userRole === 'renter') {
+        const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
+        if (!alreadyPushed) {
+          sessionStorage.setItem('renterFindRoomPushed', 'true');
+          navigate('/find-room');
+          return;
+        }
       }
     }
 
