@@ -59,9 +59,12 @@ const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-blue-600 hover:bg-blue-700">
-          <MapPin className="h-4 w-4 mr-2" />
-          📍 View Location on Map
+        <Button 
+          variant="outline" 
+          className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/30 text-foreground font-medium transition-all"
+        >
+          <MapPin className="h-4 w-4 mr-1.5 text-primary" />
+          View Location on Map
         </Button>
       </DialogTrigger>
       

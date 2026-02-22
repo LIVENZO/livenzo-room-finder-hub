@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Room } from '@/types/room';
 import RoomFacilityBadges from './RoomFacilityBadges';
+import LocationViewer from './LocationViewer';
 import { toast } from 'sonner';
 
 interface RoomHeaderProps {
@@ -82,6 +83,14 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
         <span>Posted on {format(new Date(room.createdAt || new Date()), 'PP')}</span>
       </div>
       
+      {/* View Location - immediately after title & location */}
+      <div className="mt-4">
+        <LocationViewer room={room} />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mt-4">
+        <RoomFacilityBadges room={room} />
+      </div>
     </div>
   );
 };

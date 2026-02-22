@@ -33,44 +33,24 @@ const RoomContent: React.FC<RoomContentProps> = ({
         </ul>
       </TabsContent>
       <TabsContent value="amenities" className="py-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {Object.entries(roomAmenities).map(([key, value]) => {
             if (!value) return null;
             
-            const emojiMap: Record<string, string> = {
-              wifi: '📶',
-              bathroom: '🚿',
-              coolingType: '❄️',
-              food: '🍽️',
-              gender: '👦',
-              roomType: '🏠',
-            };
-            
             let displayText = key.replace(/([A-Z])/g, ' $1').trim();
             
+            // Handle specific fields with custom display
             if (key === 'coolingType' && typeof value === 'string') {
               displayText = value === 'ac' ? 'AC Room' : 'Cooler Room';
             } else if (key === 'food' && typeof value === 'string') {
               displayText = value === 'included' ? 'Food Included' : 'Food Not Included';
-            } else if (key === 'gender' && typeof value === 'string') {
-              displayText = value === 'male' ? 'Boys Only' : value === 'female' ? 'Girls Only' : 'Any Gender';
-            } else if (key === 'roomType' && typeof value === 'string') {
-              displayText = value === 'single' ? 'Single' : 'Sharing';
-            } else if (key === 'wifi') {
-              displayText = 'Wi-Fi';
-            } else if (key === 'bathroom') {
-              displayText = 'Connected Bathroom';
             }
             
-            const emoji = emojiMap[key] || '✅';
-            
             return (
-              <span
-                key={key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary"
-              >
-                {emoji} {displayText}
-              </span>
+              <div key={key} className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-primary mr-2" />
+                <span className="capitalize">{displayText}</span>
+              </div>
             );
           })}
         </div>
