@@ -9,7 +9,6 @@ import RoomHeader from '@/components/room/RoomHeader';
 import RoomContent from '@/components/room/RoomContent';
 import RoomActionCard from '@/components/room/RoomActionCard';
 import RoomImageViewer from '@/components/room/RoomImageViewer';
-import RoomVideoPlayer from '@/components/room/RoomVideoPlayer';
 import StickyBottomBar from '@/components/room/StickyBottomBar';
 import BookingFlowSheet from '@/components/room/BookingFlowSheet';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
@@ -132,12 +131,13 @@ const RoomDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Images and details */}
           <div className="lg:col-span-2">
-            {/* Image gallery */}
+            {/* Unified media carousel */}
             <RoomImageGallery 
               images={room.images} 
               selectedImage={selectedImage} 
               setSelectedImage={setSelectedImage}
               onImageClick={handleImageClick}
+              videos={room.videos}
             />
             
             {/* Fullscreen Image Viewer */}
@@ -147,13 +147,6 @@ const RoomDetail = () => {
               open={viewerOpen}
               onClose={() => setViewerOpen(false)}
             />
-            
-            {/* Video Tour - Below image gallery */}
-            {room.videos && room.videos.length > 0 && (
-              <div className="mt-6">
-                <RoomVideoPlayer videos={room.videos} />
-              </div>
-            )}
             
             {/* Room header information */}
             <RoomHeader 
