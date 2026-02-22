@@ -82,9 +82,6 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
         <span>Posted on {format(new Date(room.createdAt || new Date()), 'PP')}</span>
       </div>
       
-      <div className="flex flex-wrap gap-2 mt-4">
-        <RoomFacilityBadges room={room} />
-      </div>
     </div>
   );
 };
