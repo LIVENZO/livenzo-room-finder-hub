@@ -20,7 +20,7 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
   isFavorite,
   favoritesLoading,
   handleFavoriteToggle,
-  roomRating
+  roomRating,
 }) => {
   // Debug logging to check if house data is available
   console.log('Room data in RoomHeader:', {
@@ -32,7 +32,7 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
   const handleShare = () => {
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
     const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
-
+    
     // Open WhatsApp directly
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, '_blank');
@@ -47,8 +47,8 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={handleShare}>
-
+            onClick={handleShare}
+          >
             <Share2 className="h-5 w-5" />
           </Button>
           <Button
@@ -56,13 +56,13 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
             size="icon"
             className="rounded-full"
             onClick={handleFavoriteToggle}
-            disabled={favoritesLoading}>
-
-            {favoritesLoading ?
-            <Loader2 className="h-5 w-5 animate-spin" /> :
-
-            <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-            }
+            disabled={favoritesLoading}
+          >
+            {favoritesLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+            )}
           </Button>
         </div>
       </div>
@@ -84,11 +84,11 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
           <span>{roomRating || 'New'}</span>
         </div>
         <span className="text-muted-foreground">•</span>
-        
+        <span>Posted on {format(new Date(room.createdAt || new Date()), 'PP')}</span>
       </div>
       
-    </div>);
-
+    </div>
+  );
 };
 
 export default RoomHeader;
