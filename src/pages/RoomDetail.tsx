@@ -163,6 +163,7 @@ const RoomDetail = () => {
               roomId={room.id}
               roomRules={roomRules}
               roomAmenities={roomAmenities}
+              room={room}
             />
           </div>
           
