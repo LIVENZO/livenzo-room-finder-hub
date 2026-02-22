@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Room } from '@/types/room';
 import RoomFacilityBadges from './RoomFacilityBadges';
+import LocationViewer from './LocationViewer';
 import { toast } from 'sonner';
 
 interface RoomHeaderProps {
@@ -69,16 +70,21 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
       
       
       <div className="flex items-center mt-2">
-        <MapPin className="h-4 w-4 text-gray-500 mr-1" />
-        <span className="text-gray-500">{room.location}</span>
+        <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
+        <span className="text-muted-foreground">{room.location}</span>
+      </div>
+
+      {/* View Location on Map – positioned for immediate trust */}
+      <div className="mt-3">
+        <LocationViewer room={room} />
       </div>
       
-      <div className="flex items-center mt-2 space-x-2">
+      <div className="flex items-center mt-3 space-x-2">
         <div className="flex items-center">
           <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
           <span>{roomRating || 'New'}</span>
         </div>
-        <span className="text-gray-500">•</span>
+        <span className="text-muted-foreground">•</span>
         <span>Posted on {format(new Date(room.createdAt || new Date()), 'PP')}</span>
       </div>
       

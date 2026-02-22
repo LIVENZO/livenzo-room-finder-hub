@@ -59,9 +59,9 @@ const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-blue-600 hover:bg-blue-700">
+        <Button variant="outline" className="w-full border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-medium">
           <MapPin className="h-4 w-4 mr-2" />
-          📍 View Location on Map
+          View Location on Map
         </Button>
       </DialogTrigger>
       
@@ -75,16 +75,16 @@ const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
         
         <div className="space-y-4">
           {/* Property Info */}
-          <div className="bg-gray-50 rounded-lg p-3">
-            <h4 className="font-medium text-gray-900">{room.title}</h4>
-            <p className="text-sm text-gray-600">{room.location}</p>
+          <div className="bg-muted rounded-lg p-3">
+            <h4 className="font-medium text-foreground">{room.title}</h4>
+            <p className="text-sm text-muted-foreground">{room.location}</p>
           </div>
           
           {/* Map */}
           <div className="border rounded-lg overflow-hidden">
             {loading ? (
-              <div className="h-[250px] flex items-center justify-center bg-gray-100">
-                <div className="text-sm text-gray-500">Loading map...</div>
+              <div className="h-[250px] flex items-center justify-center bg-muted">
+                <div className="text-sm text-muted-foreground">Loading map...</div>
               </div>
             ) : mapsUrls?.embedUrl ? (
               <iframe
@@ -98,8 +98,8 @@ const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
                 title="Property Location"
               />
             ) : (
-              <div className="h-[250px] flex items-center justify-center bg-gray-100">
-                <div className="text-sm text-gray-500">Map unavailable</div>
+              <div className="h-[250px] flex items-center justify-center bg-muted">
+                <div className="text-sm text-muted-foreground">Map unavailable</div>
               </div>
             )}
           </div>
@@ -108,13 +108,13 @@ const LocationViewer: React.FC<LocationViewerProps> = ({ room }) => {
           <Button 
             onClick={handleGetDirections}
             disabled={!mapsUrls?.directionsUrl}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full"
           >
             <Navigation className="h-4 w-4 mr-2" />
-            🧭 Get Directions
+            Get Directions
           </Button>
           
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-muted-foreground text-center">
             Tap "Get Directions" to open Google Maps with navigation
           </div>
         </div>
