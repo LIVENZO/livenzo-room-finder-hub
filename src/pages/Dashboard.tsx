@@ -14,13 +14,22 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, userRole, isLoading, session } = useAuth();
 
+  // Synchronous owner check — redirect before any paint
+  const storedRole = localStorage.getItem('userRole');
+  const isOwner = storedRole === 'owner' || userRole === 'owner';
+
   useEffect(() => {
+    // Owners: handled by early return below, but ensure navigation fires
+    if (isOwner) {
+      navigate('/my-listings', { replace: true });
+      return;
+    }
+
     // If authentication is enabled, check for user session
     if (AUTH_CONFIG.AUTH_ENABLED) {
       if (!isLoading && !user && !session) {
         console.log("No authenticated user found, redirecting to login");
         navigate('/');
-        // Only show error message if NOT caused by role conflict
         if (!getRoleConflictActive()) {
           toast.error("Please sign in to access the dashboard");
         }
@@ -28,12 +37,7 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    const storedRole = localStorage.getItem('userRole');
     if (window.location.pathname === '/dashboard') {
-      if (storedRole === 'owner' || userRole === 'owner') {
-        navigate('/my-listings', { replace: true });
-        return;
-      }
       if (storedRole === 'renter' || userRole === 'renter') {
         const alreadyPushed = sessionStorage.getItem('renterFindRoomPushed');
         if (!alreadyPushed) {
@@ -44,9 +48,13 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    // Debug current user state
     console.log("Dashboard - User:", user?.email, "Role:", userRole, "Loading:", isLoading);
-  }, [user, userRole, isLoading, session, navigate]);
+  }, [user, userRole, isLoading, session, navigate, isOwner, storedRole]);
+
+  // Owners: render nothing — navigation will fire from useEffect
+  if (isOwner) {
+    return null;
+  }
 
   // Show loading state while checking authentication or determining role
   if (isLoading || !userRole) {
@@ -62,7 +70,7 @@ const Dashboard: React.FC = () => {
     <Layout>
       <div className="w-full h-full min-h-screen bg-gradient-radial">
         <div className="w-full h-full">
-          {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}
+          <RenterDashboard />
         </div>
       </div>
     </Layout>
