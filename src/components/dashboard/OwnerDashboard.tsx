@@ -148,7 +148,6 @@ const OwnerDashboard: React.FC = () => {
   
   return (
     <div className="space-y-8 animate-fade-in">
-      <WelcomeHeader />
 
       {/* Hero Carousel Section - identical to Renter Dashboard */}
       <div 
