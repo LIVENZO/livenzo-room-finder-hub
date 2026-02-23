@@ -22,7 +22,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({
     {
       title: 'Active Listings',
       value: listingsCount,
-      subtitle: listingsCount === 0 ? "No rooms listed yet" : `${listingsCount} room${listingsCount === 1 ? '' : 's'} available`,
+      subtitle: listingsCount === 0 ? "+ List your first Room" : `${listingsCount} room${listingsCount === 1 ? '' : 's'} available`,
       icon: Home,
       color: 'bg-gradient-primary',
       isLoading: isLoading,
