@@ -12,6 +12,8 @@ export interface Room {
   facilities: {
     wifi?: boolean;
     bathroom?: boolean;
+    laundry?: boolean;
+    electricBill?: boolean;
     gender?: 'male' | 'female' | 'any';
     roomType?: 'single' | 'sharing';
     coolingType?: 'ac' | 'cooler';

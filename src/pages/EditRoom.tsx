@@ -41,12 +41,14 @@ const EditRoom: React.FC = () => {
       house_name: '',
       location: '',
       price: 0,
-      gender: 'any',
-      roomType: 'single',
+      gender: undefined,
+      roomType: undefined,
       coolingType: undefined,
-      food: 'not_included',
-      wifi: false,
-      bathroom: false,
+      food: undefined,
+      wifi: undefined,
+      bathroom: undefined,
+      laundry: undefined,
+      electricBill: undefined,
       owner_phone: '',
     },
   });
@@ -78,6 +80,7 @@ const EditRoom: React.FC = () => {
         }
 
         // Parse facilities
+        const facilitiesRaw = typeof data.facilities === 'object' ? data.facilities as any : {};
         const facilities = parseFacilities(data.facilities);
 
         // Set form values
@@ -88,12 +91,14 @@ const EditRoom: React.FC = () => {
           house_name: data.house_name || '',
           location: data.location,
           price: Number(data.price),
-          gender: facilities.gender || 'any',
-          roomType: facilities.roomType || 'single',
-          coolingType: facilities.coolingType,
-          food: facilities.food || 'not_included',
-          wifi: facilities.wifi || false,
-          bathroom: facilities.bathroom || false,
+          gender: facilities.gender || undefined,
+          roomType: facilities.roomType || undefined,
+          coolingType: facilities.coolingType || (facilitiesRaw?.coolingType === undefined ? undefined : 'none'),
+          food: facilities.food || undefined,
+          wifi: facilities.wifi ? 'yes' : (facilitiesRaw?.wifi !== undefined ? 'no' : undefined),
+          bathroom: facilities.bathroom ? 'yes' : (facilitiesRaw?.bathroom !== undefined ? 'no' : undefined),
+          laundry: facilitiesRaw?.laundry === true ? 'yes' : (facilitiesRaw?.laundry === false ? 'no' : undefined),
+          electricBill: facilitiesRaw?.electricBill === true ? 'yes' : (facilitiesRaw?.electricBill === false ? 'no' : undefined),
           owner_phone: data.owner_phone,
         });
 
@@ -256,11 +261,13 @@ const EditRoom: React.FC = () => {
           price: data.price,
           owner_phone: data.owner_phone,
           facilities: {
-            wifi: data.wifi,
-            bathroom: data.bathroom,
+            wifi: data.wifi === 'yes',
+            bathroom: data.bathroom === 'yes',
+            laundry: data.laundry === 'yes',
+            electricBill: data.electricBill === 'yes',
             gender: data.gender,
             roomType: data.roomType,
-            coolingType: data.coolingType,
+            coolingType: data.coolingType === 'none' ? undefined : data.coolingType,
             food: data.food,
           },
           images: allImageUrls,

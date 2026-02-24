@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormValues } from './schemas/roomListingSchema';
 
 interface RoomPreferencesFieldsProps {
@@ -51,11 +50,11 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
         name="gender"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Gender Preference</FormLabel>
+            <FormLabel>Gender Preference *</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className="flex flex-col space-y-1"
               >
                 <div className="flex items-center space-x-2">
@@ -89,11 +88,11 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
         name="roomType"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Room Type</FormLabel>
+            <FormLabel>Room Type *</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -121,11 +120,11 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
         name="coolingType"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Cooling Type (Optional)</FormLabel>
+            <FormLabel>Cooling Type *</FormLabel>
             <FormControl>
               <RadioGroup
-                onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
-                value={field.value || 'none'}
+                onValueChange={field.onChange}
+                value={field.value}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -148,9 +147,6 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
                 </div>
               </RadioGroup>
             </FormControl>
-            <FormDescription>
-              Select if your room has AC or Cooler
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -162,11 +158,11 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
         name="food"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Food</FormLabel>
+            <FormLabel>Food *</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -189,46 +185,136 @@ const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }
       />
       
       {/* Amenities */}
-      <div className="space-y-3">
-        <FormLabel>Amenities</FormLabel>
+      <div className="space-y-4">
+        <FormLabel className="text-base">Amenities *</FormLabel>
         
-        <div className="flex space-x-6">
-          <FormField
-            control={control}
-            name="wifi"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>WiFi Available</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={control}
-            name="bathroom"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Connected Bathroom</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+        {/* WiFi */}
+        <FormField
+          control={control}
+          name="wifi"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>WiFi</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="wifi-yes" />
+                    <FormLabel htmlFor="wifi-yes" className="cursor-pointer font-normal">
+                      Yes
+                    </FormLabel>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="wifi-no" />
+                    <FormLabel htmlFor="wifi-no" className="cursor-pointer font-normal">
+                      No
+                    </FormLabel>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Connected Bathroom */}
+        <FormField
+          control={control}
+          name="bathroom"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Connected Bathroom</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="bathroom-yes" />
+                    <FormLabel htmlFor="bathroom-yes" className="cursor-pointer font-normal">
+                      Yes
+                    </FormLabel>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="bathroom-no" />
+                    <FormLabel htmlFor="bathroom-no" className="cursor-pointer font-normal">
+                      No
+                    </FormLabel>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Laundry */}
+        <FormField
+          control={control}
+          name="laundry"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Laundry Included</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="laundry-yes" />
+                    <FormLabel htmlFor="laundry-yes" className="cursor-pointer font-normal">
+                      Yes
+                    </FormLabel>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="laundry-no" />
+                    <FormLabel htmlFor="laundry-no" className="cursor-pointer font-normal">
+                      No
+                    </FormLabel>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Electric Bill */}
+        <FormField
+          control={control}
+          name="electricBill"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Electric Bill Included</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="electricBill-yes" />
+                    <FormLabel htmlFor="electricBill-yes" className="cursor-pointer font-normal">
+                      Yes
+                    </FormLabel>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="electricBill-no" />
+                    <FormLabel htmlFor="electricBill-no" className="cursor-pointer font-normal">
+                      No
+                    </FormLabel>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
       
       {/* Contact Phone */}

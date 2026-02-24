@@ -9,6 +9,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
       return {
         wifi: Boolean(facilitiesJson.wifi),
         bathroom: Boolean(facilitiesJson.bathroom),
+        laundry: Boolean(facilitiesJson.laundry),
+        electricBill: Boolean(facilitiesJson.electricBill),
         gender: (facilitiesJson.gender || 'any') as 'male' | 'female' | 'any',
         roomType: (facilitiesJson.roomType || 'single') as 'single' | 'sharing',
         coolingType: facilitiesJson.coolingType as 'ac' | 'cooler' | undefined,
@@ -23,6 +25,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
         return {
           wifi: Boolean(parsed.wifi),
           bathroom: Boolean(parsed.bathroom),
+          laundry: Boolean(parsed.laundry),
+          electricBill: Boolean(parsed.electricBill),
           gender: (parsed.gender || 'any') as 'male' | 'female' | 'any',
           roomType: (parsed.roomType || 'single') as 'single' | 'sharing',
           coolingType: parsed.coolingType as 'ac' | 'cooler' | undefined,
@@ -37,6 +41,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
     return {
       wifi: false,
       bathroom: false,
+      laundry: false,
+      electricBill: false,
       gender: 'any',
       roomType: 'single',
       food: 'not_included'
@@ -46,6 +52,8 @@ export const parseFacilities = (facilitiesJson: any): Room['facilities'] => {
     return {
       wifi: false,
       bathroom: false,
+      laundry: false,
+      electricBill: false,
       gender: 'any',
       roomType: 'single',
       food: 'not_included'
