@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import RoomReviews from '@/components/RoomReviews';
 import { Room } from '@/types/room';
 
@@ -13,6 +12,12 @@ interface RoomContentProps {
   room?: Room;
 }
 
+interface AmenityRow {
+  emoji: string;
+  label: string;
+  available: boolean;
+}
+
 const RoomContent: React.FC<RoomContentProps> = ({
   description,
   roomId,
@@ -20,23 +25,61 @@ const RoomContent: React.FC<RoomContentProps> = ({
   roomAmenities,
   room,
 }) => {
-  const facilityChips: { emoji: string; label: string }[] = [];
+  const amenities: AmenityRow[] = [];
 
   if (room) {
     const f = room.facilities;
-    facilityChips.push({
+
+    // Room type
+    amenities.push({
       emoji: f.roomType === 'sharing' ? '🛏️' : '🏠',
-      label: f.roomType === 'single' ? 'Single' : 'Sharing',
+      label: f.roomType === 'single' ? 'Single Room' : 'Sharing Room',
+      available: true,
     });
-    if (f.wifi) facilityChips.push({ emoji: '📶', label: 'Wi-Fi' });
-    if (f.gender === 'male') facilityChips.push({ emoji: '👦', label: 'Boys Only' });
-    else if (f.gender === 'female') facilityChips.push({ emoji: '👧', label: 'Girls Only' });
-    else facilityChips.push({ emoji: '👥', label: 'Any Gender' });
-    if (f.bathroom) facilityChips.push({ emoji: '🚿', label: 'Connected Bathroom' });
-    if (f.coolingType === 'ac') facilityChips.push({ emoji: '❄️', label: 'AC Room' });
-    else if (f.coolingType === 'cooler') facilityChips.push({ emoji: '🌀', label: 'Cooler Room' });
-    if (f.food === 'included') facilityChips.push({ emoji: '🍽️', label: 'Food Included' });
-    else if (f.food) facilityChips.push({ emoji: '🍽️', label: 'Food Not Included' });
+
+    // Gender
+    if (f.gender === 'male') amenities.push({ emoji: '👦', label: 'Boys Only', available: true });
+    else if (f.gender === 'female') amenities.push({ emoji: '👧', label: 'Girls Only', available: true });
+    else amenities.push({ emoji: '👥', label: 'Any Gender', available: true });
+
+    // Cooling
+    if (f.coolingType === 'ac') amenities.push({ emoji: '❄️', label: 'AC Room', available: true });
+    else if (f.coolingType === 'cooler') amenities.push({ emoji: '🌀', label: 'Cooler Room', available: true });
+
+    // Food
+    amenities.push({
+      emoji: '🍽️',
+      label: f.food === 'included' ? 'Food Included' : 'Food Not Included',
+      available: f.food === 'included',
+    });
+
+    // Wi-Fi
+    amenities.push({
+      emoji: '📶',
+      label: f.wifi ? 'Wi-Fi Available' : 'No Wi-Fi',
+      available: !!f.wifi,
+    });
+
+    // Bathroom
+    amenities.push({
+      emoji: '🚿',
+      label: f.bathroom ? 'Attached Bathroom' : 'No Attached Bathroom',
+      available: !!f.bathroom,
+    });
+
+    // Laundry
+    amenities.push({
+      emoji: '🧺',
+      label: f.laundry ? 'Laundry Included' : 'Laundry Not Included',
+      available: !!f.laundry,
+    });
+
+    // Electric bill
+    amenities.push({
+      emoji: '⚡',
+      label: f.electricBill ? 'Electricity Bill Included' : 'Electricity Bill Not Included',
+      available: !!f.electricBill,
+    });
   }
 
   return (
@@ -56,16 +99,24 @@ const RoomContent: React.FC<RoomContentProps> = ({
         </ul>
       </TabsContent>
       <TabsContent value="amenities" className="py-4">
-        <div className="flex flex-wrap gap-2">
-          {facilityChips.map((chip, idx) => (
-            <Badge
+        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/40">
+          {amenities.map((item, idx) => (
+            <div
               key={idx}
-              variant="outline"
-              className="text-sm px-3 py-1.5 border-primary/30 bg-primary/5 text-primary font-medium"
+              className="flex items-center gap-3 px-4 py-3.5"
             >
-              <span className="mr-1.5">{chip.emoji}</span>
-              {chip.label}
-            </Badge>
+              <span className="text-xl leading-none">{item.emoji}</span>
+              {!item.available && <span className="text-sm leading-none opacity-60">❌</span>}
+              <span
+                className={
+                  item.available
+                    ? 'text-sm font-medium text-foreground'
+                    : 'text-sm font-medium text-muted-foreground/70'
+                }
+              >
+                {item.label}
+              </span>
+            </div>
           ))}
         </div>
       </TabsContent>
