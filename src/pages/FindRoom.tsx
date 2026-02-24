@@ -11,6 +11,7 @@ import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
+import { openWhatsApp } from '@/utils/whatsappShare';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -138,7 +139,7 @@ const FindRoom: React.FC = () => {
                   onClick={() => {
                     const phoneNumber = '917488698970';
                     const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
-                    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                    openWhatsApp(`https://wa.me/${phoneNumber}?text=${message}`);
                   }}
                   className="w-full sm:w-auto px-6 py-3 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
                   style={{ backgroundColor: '#25D366' }}

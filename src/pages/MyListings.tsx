@@ -9,6 +9,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import RoomList from '@/components/dashboard/RoomList';
 import { parseFacilities } from '@/utils/roomUtils';
+import { openWhatsApp } from '@/utils/whatsappShare';
 
 const MyListings: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -124,7 +125,7 @@ const MyListings: React.FC = () => {
                 const message = encodeURIComponent(
                   "Hi, I want to list a room on Livenzo.\n\nHouse Name:\nHouse Number:\nLocation:"
                 );
-                window.open(`https://wa.me/917488698970?text=${message}`, '_blank');
+                openWhatsApp(`https://wa.me/917488698970?text=${message}`);
               }}>
 
                 📸 Book Photographer
