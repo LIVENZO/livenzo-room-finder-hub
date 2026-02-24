@@ -6,7 +6,6 @@ import { format } from 'date-fns';
 import { Room } from '@/types/room';
 import LocationViewer from './LocationViewer';
 import { toast } from 'sonner';
-import { openWhatsApp } from '@/utils/whatsappShare';
 
 interface RoomHeaderProps {
   room: Room;
@@ -34,8 +33,9 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
     const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
     
+    // Open WhatsApp directly
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-    openWhatsApp(whatsappUrl);
+    window.open(whatsappUrl, '_blank');
   };
 
   return (

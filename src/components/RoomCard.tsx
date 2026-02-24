@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { addFavorite, removeFavorite, checkIsFavorite } from '@/services/FavoriteService';
 import { toast } from 'sonner';
-import { openWhatsApp } from '@/utils/whatsappShare';
 
 interface RoomCardProps {
   room: Room;
@@ -61,7 +60,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-    openWhatsApp(whatsappUrl);
+    window.open(whatsappUrl, '_blank');
   };
 
   const discountedPrice = Math.round(room.price * 0.75);

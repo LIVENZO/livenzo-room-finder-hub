@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
-import { openWhatsApp } from '@/utils/whatsappShare';
 
 const APP_URL = 'https://livenzo-room-finder-hub.lovable.app';
 const REFERRAL_STORAGE_KEY = 'pendingReferralCode';
@@ -64,7 +63,7 @@ export const useReferral = () => {
     );
 
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    openWhatsApp(whatsappUrl);
+    window.open(whatsappUrl, '_blank');
   };
 
   // Capture referral code from URL
