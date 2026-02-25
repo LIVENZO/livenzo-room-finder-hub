@@ -318,9 +318,7 @@ export function useAuthState() {
   // Check for existing session
   const checkExistingSession = useCallback(async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-      const currentSession = data?.session ?? null;
-
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       console.log("Initial session check:", currentSession?.user?.email || "No session found");
       
       if (currentSession) {
