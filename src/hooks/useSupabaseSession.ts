@@ -8,15 +8,9 @@ export const useSupabaseSession = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session with timeout protection
     const getSession = async () => {
       try {
-        const SESSION_TIMEOUT = 8000;
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Session check timed out')), SESSION_TIMEOUT)
-        );
-        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+        const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
         } else {
@@ -24,9 +18,7 @@ export const useSupabaseSession = () => {
           setUser(session?.user ?? null);
         }
       } catch (err) {
-        console.warn('Session check timed out, continuing without session:', err);
-        setSession(null);
-        setUser(null);
+        console.error('Error getting session:', err);
       }
       setLoading(false);
     };

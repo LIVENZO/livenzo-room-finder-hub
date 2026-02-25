@@ -5,86 +5,17 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://naoqigivttgpkfwpzcgg.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw";
 
-// Safe localStorage wrapper that handles corrupted state
-const safeStorage: Storage = {
-  getItem: (key: string) => {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      console.warn('Failed to read from localStorage:', key, e);
-      return null;
-    }
-  },
-  setItem: (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      console.warn('Failed to write to localStorage:', key, e);
-    }
-  },
-  removeItem: (key: string) => {
-    try {
-      localStorage.removeItem(key);
-    } catch (e) {
-      console.warn('Failed to remove from localStorage:', key, e);
-    }
-  },
-  get length() { return localStorage.length; },
-  clear: () => { try { localStorage.clear(); } catch (e) { /* noop */ } },
-  key: (index: number) => { try { return localStorage.key(index); } catch { return null; } },
-};
-
-// Patch navigator.locks to add timeout protection against indefinite blocking
-if (typeof navigator !== 'undefined' && navigator.locks) {
-  const originalRequest = navigator.locks.request.bind(navigator.locks);
-  navigator.locks.request = async function patchedLockRequest(...args: any[]) {
-    const LOCK_TIMEOUT_MS = 5000;
-    try {
-      const result = await Promise.race([
-        (originalRequest as any)(...args),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Lock acquisition timed out')), LOCK_TIMEOUT_MS)
-        ),
-      ]);
-      return result;
-    } catch (err: any) {
-      if (err?.message?.includes('timed out')) {
-        console.warn('Navigator lock timed out – clearing stale auth and continuing');
-        // Clear potentially corrupted Supabase auth keys
-        try {
-          const keysToRemove: string[] = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && (k.startsWith('sb-') || k.includes('supabase'))) {
-              keysToRemove.push(k);
-            }
-          }
-          keysToRemove.forEach((k) => localStorage.removeItem(k));
-        } catch (_) { /* best effort */ }
-        return undefined;
-      }
-      throw err;
-    }
-  } as any;
-}
-
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(
-  SUPABASE_URL, 
-  SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      storage: safeStorage,
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'implicit',
-      lock: 'no-op' as any, // Disable Supabase's internal lock to prevent LockManager freezes
-    }
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'implicit',
   }
-);
+});
 
 // Set up real-time subscription
 supabase.channel('public:chat_messages').subscribe();
@@ -93,23 +24,3 @@ supabase.channel('public:chat_messages').subscribe();
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Supabase auth event:', event, session?.user?.email);
 });
-
-// Initialize session with timeout protection
-(async () => {
-  try {
-    const sessionPromise = supabase.auth.getSession();
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('getSession timed out')), 8000)
-    );
-    const { data, error } = await Promise.race([sessionPromise, timeoutPromise]);
-    if (error) {
-      console.error('Error getting session:', error);
-    } else if (data.session) {
-      console.log('Initial session loaded:', data.session.user.email);
-    } else {
-      console.log('No session found');
-    }
-  } catch (err) {
-    console.warn('Session initialization timed out or failed, app will continue without session:', err);
-  }
-})();
