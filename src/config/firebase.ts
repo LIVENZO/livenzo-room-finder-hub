@@ -7,6 +7,10 @@ let appInitPromise: Promise<import('firebase/app').FirebaseApp> | null = null;
 const fetchFirebaseConfig = async () => {
   const res = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/get-firebase-config', {
     method: 'GET',
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hb3FpZ2l2dHRncGtmd3B6Y2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTQwODIsImV4cCI6MjA2MDk3MDA4Mn0.dd6J5jxbWCRfs7z2C5idDu4z0J6ihnXCnK8d0g7noqw',
+      'Content-Type': 'application/json',
+    },
   });
   if (!res.ok) {
     const text = await res.text();
