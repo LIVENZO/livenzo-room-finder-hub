@@ -22,7 +22,10 @@ export const fetchRooms = async (): Promise<Room[]> => {
     
     if (error) {
       console.error('Error fetching rooms:', error);
-      toast.error(`Error fetching rooms: ${error.message}`);
+      // Don't show toast for network errors on landing page
+      if (error.message !== 'TypeError: Failed to fetch') {
+        toast.error(`Error fetching rooms: ${error.message}`);
+      }
       await securityAudit.logUnauthorizedAccess('rooms', 'fetch');
       return [];
     }
