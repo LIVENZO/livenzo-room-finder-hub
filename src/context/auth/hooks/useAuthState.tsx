@@ -315,34 +315,11 @@ export function useAuthState() {
     setIsLoading(false);
   }, [setupUserRole, redirectToDashboard]);
 
-  // Check for existing session with timeout protection
+  // Check for existing session
   const checkExistingSession = useCallback(async () => {
     try {
-      const SESSION_CHECK_TIMEOUT = 8000;
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Session check timed out')), SESSION_CHECK_TIMEOUT)
-      );
-
-      let currentSession: Session | null = null;
-      try {
-        const { data } = await Promise.race([sessionPromise, timeoutPromise]);
-        currentSession = data?.session ?? null;
-      } catch (timeoutErr) {
-        console.warn('Session check timed out – clearing stale auth data and continuing');
-        // Clear potentially corrupted local auth state
-        try {
-          const keysToRemove: string[] = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && (k.startsWith('sb-') || k.includes('supabase'))) {
-              keysToRemove.push(k);
-            }
-          }
-          keysToRemove.forEach((k) => localStorage.removeItem(k));
-        } catch (_) { /* best effort */ }
-        currentSession = null;
-      }
+      const { data } = await supabase.auth.getSession();
+      const currentSession = data?.session ?? null;
 
       console.log("Initial session check:", currentSession?.user?.email || "No session found");
       
