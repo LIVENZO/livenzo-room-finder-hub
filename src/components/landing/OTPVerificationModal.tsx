@@ -49,7 +49,7 @@ const OTPVerificationModal: React.FC<OTPVerificationModalProps> = ({
       await onResendOTP();
       toast.success('OTP resent successfully!');
     } catch (error) {
-      toast.error('Failed to resend OTP. Please try again.');
+      toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
     }
   };
 

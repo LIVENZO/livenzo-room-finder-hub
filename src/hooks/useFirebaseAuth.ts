@@ -190,7 +190,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
       // The result will come through event listeners
     } catch (err) {
       setIsLoading(false);
-      setError('Failed to send OTP');
+      setError('Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.');
       throw err;
     }
   };
@@ -208,7 +208,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
       // The result will come through event listeners
     } catch (err) {
       setIsLoading(false);
-      setError('Failed to verify OTP');
+      setError('Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.');
       throw err;
     }
   };
