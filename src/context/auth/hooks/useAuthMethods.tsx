@@ -464,7 +464,7 @@ export function useAuthMethods() {
       console.error('Error sending OTP:', error);
       // Only show generic error if it's not our custom conflict error
       if (!error.message?.includes('already registered')) {
-        toast.error(error.message || 'Failed to send OTP. Please try again.');
+        toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
       }
       throw error;
     } finally {
@@ -489,7 +489,7 @@ export function useAuthMethods() {
       } catch (e: any) {
         console.error('Firebase OTP verification failed:', e);
         clearConfirmationResult();
-        toast.error('Invalid OTP, please try again.');
+        toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
         throw e;
       }
 

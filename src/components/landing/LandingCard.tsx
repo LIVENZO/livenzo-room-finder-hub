@@ -66,7 +66,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
       setOtpModalOpen(true);
     } catch (error) {
       console.error('Failed to send OTP:', error);
-      toast.error('Failed to send OTP. Please try again.');
+      toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
     }
   };
   const handleVerifyOTP = async (otp: string) => {
