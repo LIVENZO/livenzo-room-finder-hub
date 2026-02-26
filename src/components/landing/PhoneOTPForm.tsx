@@ -63,7 +63,7 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
       toast.success('OTP sent successfully!');
     } catch (error: any) {
       console.error('Failed to send OTP:', error);
-      toast.error(error?.message || 'Failed to send OTP. Please try again.');
+      toast.error("We're experiencing temporary service disruption. Due to high traffic, OTP requests are temporarily unavailable. Please try again after a few minutes.");
       setOtpSent(false);
     }
   };

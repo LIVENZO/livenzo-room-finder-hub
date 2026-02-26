@@ -31,7 +31,7 @@ export const FirebaseAuthFlow: React.FC<FirebaseAuthFlowProps> = ({ onAuthSucces
       toast.success('OTP sent successfully!');
     } catch (err) {
       console.error('Error sending OTP:', err);
-      toast.error(error || 'Failed to send OTP');
+      toast.error("We're experiencing temporary service disruption. Due to high traffic, OTP requests are temporarily unavailable. Please try again after a few minutes.");
     }
   };
 
