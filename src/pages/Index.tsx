@@ -136,8 +136,8 @@ const Index: React.FC = () => {
         {/* Maintenance Banner */}
         <div className="w-full px-4 pt-4">
           <div className="w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-center">
-            <p className="text-sm font-medium text-amber-800">⚠️ Login services are temporarily experiencing high traffic. OTP delivery may be delayed. Please try again after a few minutes.  
-For immediate assistance feel free to contact on WhatsApp: 7488698970
+            <p className="text-sm font-medium text-amber-800">⚠️ Login services are temporarily experiencing high traffic. OTP delivery may be delayed. Please try again after a few minutes.
+For immediate assistance or room inquiries, feel free to contact us on WhatsApp: 7488698970
             </p>
           </div>
         </div>
