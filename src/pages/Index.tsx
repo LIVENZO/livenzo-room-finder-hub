@@ -27,29 +27,29 @@ const Index: React.FC = () => {
       sessionStorage.setItem('pendingReferralCode', refCode);
       console.log('Referral code captured:', refCode);
     }
-    
+
     // Reset the renter find-room push flag on fresh app start
     sessionStorage.removeItem('renterFindRoomPushed');
-    
+
     // Clear role conflict flag when user arrives at landing page
     if (getRoleConflictActive()) {
       setTimeout(() => setRoleConflictActive(false), 500);
     }
   }, [searchParams]);
-  
+
   useEffect(() => {
     const checkAuth = async () => {
       // If auth is disabled, redirect directly to dashboard
       if (!AUTH_CONFIG.AUTH_ENABLED) {
         console.log("Auth disabled, redirecting to dashboard");
         setIsRedirecting(true);
-        
+
         // Set default role if not already set
         if (!localStorage.getItem('userRole')) {
           localStorage.setItem('userRole', userRole);
           console.log("Setting default user role:", userRole);
         }
-        
+
         const defaultRole = localStorage.getItem('userRole') || userRole;
         if (defaultRole === 'renter') {
           navigate('/dashboard', { replace: true });
@@ -60,24 +60,24 @@ const Index: React.FC = () => {
         // No welcome toast per user request
         return;
       }
-      
+
       // Check if we have a user session and redirect if needed
       if (session && user) {
         console.log("User detected on index page, navigating to dashboard:", user.email);
         setIsRedirecting(true);
-        
+
         // Process referral for new users only (handled by database function)
         const pendingRef = sessionStorage.getItem('pendingReferralCode');
         if (pendingRef && user.id) {
           await processReferralForNewUser();
         }
-        
+
         // Store the user role if it wasn't already set during login
         if (!localStorage.getItem('userRole')) {
           localStorage.setItem('userRole', userRole);
           console.log("Setting default user role:", userRole);
         }
-        
+
         // Renters always launch to Find Room, owners go to dashboard
         const storedRole = localStorage.getItem('userRole');
         if (storedRole === 'renter') {
@@ -92,13 +92,13 @@ const Index: React.FC = () => {
         setCheckingSession(false);
       }
     };
-    
+
     // Only run the check if we're done with initial loading
     if (!isLoading) {
       checkAuth();
     }
   }, [user, session, navigate, isLoading, userRole, processReferralForNewUser]);
-  
+
   const handleGoogleLogin = async () => {
     console.log("Google login button clicked with role:", userRole);
     localStorage.setItem('selectedRole', userRole);
@@ -124,20 +124,20 @@ const Index: React.FC = () => {
       await verifyOTP(email, token);
     }
   };
-  
+
   // Show a loading state while checking for existing session or redirect
   if (checkingSession || isRedirecting) {
     return <LoadingState isRedirecting={isRedirecting} />;
   }
-  
+
   return (
     <Layout hideNav>
       <div className="w-full h-full min-h-screen flex flex-col bg-gradient-to-br from-primary/10 to-secondary/10">
         {/* Maintenance Banner */}
         <div className="w-full px-4 pt-4">
           <div className="w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-center">
-            <p className="text-sm font-medium text-amber-800">
-              ⚠️ Login services are temporarily experiencing high traffic. OTP delivery may be delayed. Please try again after a few minutes.
+            <p className="text-sm font-medium text-amber-800">⚠️ Login services are temporarily experiencing high traffic. OTP delivery may be delayed. Please try again after a few minutes. 
+FEEL free to ask any question Whats App
             </p>
           </div>
         </div>
@@ -149,15 +149,15 @@ const Index: React.FC = () => {
           </div>
           
           <div className="w-full">
-            <LandingCard 
+            <LandingCard
               userRole={userRole}
               setUserRole={setUserRole}
               canChangeRole={canChangeRole}
               isLoading={isLoading}
               handleGoogleLogin={handleGoogleLogin}
               handleFacebookLogin={handleFacebookLogin}
-              handleOTPAuth={handleOTPAuth}
-            />
+              handleOTPAuth={handleOTPAuth} />
+
           </div>
           
           <div className="w-full">
@@ -165,8 +165,8 @@ const Index: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
-  );
+    </Layout>);
+
 };
 
 export default Index;
