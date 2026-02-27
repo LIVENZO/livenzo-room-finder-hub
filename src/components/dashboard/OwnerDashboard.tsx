@@ -1,30 +1,29 @@
-
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Home } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/auth';
-import { fetchOwnerRelationships } from '@/services/relationship';
-import { useProfileCompletion } from '@/hooks/useProfileCompletion';
-import { fetchUserProfile } from '@/services/UserProfileService';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import WelcomeHeader from './components/WelcomeHeader';
-import OwnerDashboardTabs from './components/OwnerDashboardTabs';
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Home } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth";
+import { fetchOwnerRelationships } from "@/services/relationship";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { fetchUserProfile } from "@/services/UserProfileService";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import WelcomeHeader from "./components/WelcomeHeader";
+import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
 
 const ownerHeroImages = [
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549670438_r9uhoctwnhi.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/e02288a5-2628-4a59-9f90-ac99151177f9/1768481622588_ba4c1lww6ke.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770624046569_pmhxhc6obc.jpg',
+  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
+  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549670438_r9uhoctwnhi.jpg",
+  "https://api.livenzo.site/storage/v1/object/public/rooms/e02288a5-2628-4a59-9f90-ac99151177f9/1768481622588_ba4c1lww6ke.jpg",
+  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg",
+  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770624046569_pmhxhc6obc.jpg",
 ];
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
-  
+
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingConnections, setPendingConnections] = useState(0);
@@ -60,25 +59,22 @@ const OwnerDashboard: React.FC = () => {
     }
     setTouchStart(null);
   };
-  
+
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchListingsCount = async () => {
       try {
-        const { count, error } = await supabase
-          .from('rooms')
-          .select('id', { count: 'exact' })
-          .eq('owner_id', user.id);
-          
+        const { count, error } = await supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+
         if (error) {
-          console.error('Error fetching listings count:', error);
+          console.error("Error fetching listings count:", error);
           return;
         }
-        
+
         setListingsCount(count || 0);
       } catch (error) {
-        console.error('Error in fetchListingsCount:', error);
+        console.error("Error in fetchListingsCount:", error);
       } finally {
         setIsLoading(false);
       }
@@ -88,23 +84,23 @@ const OwnerDashboard: React.FC = () => {
       setLoadingConnections(true);
       try {
         const relationships = await fetchOwnerRelationships(user.id);
-        const pending = relationships.filter(r => r.status === 'pending').length;
+        const pending = relationships.filter((r) => r.status === "pending").length;
         setPendingConnections(pending);
         console.log(`Found ${pending} pending connection requests`);
       } catch (error) {
-        console.error('Error fetching connection requests:', error);
+        console.error("Error fetching connection requests:", error);
       } finally {
         setLoadingConnections(false);
       }
     };
-    
+
     fetchListingsCount();
     fetchConnectionRequests();
   }, [user]);
 
   const handleListRoomClick = async () => {
     if (!user) return;
-    
+
     try {
       // Only check if location is set - no need for complete property details to list a room
       const profile = await fetchUserProfile(user.id);
@@ -113,44 +109,43 @@ const OwnerDashboard: React.FC = () => {
         !!profile?.location_longitude &&
         typeof profile.location_latitude === "number" &&
         typeof profile.location_longitude === "number";
-        
+
       if (!hasValidLocation) {
-        toast.info('Set your property location before listing a room.');
-        navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
+        toast.info("Set your property location before listing a room.");
+        navigate("/set-location", { replace: true, state: { backTo: "/list-room" } });
         return;
       }
-      
+
       // Location is set, proceed to listing
-      navigate('/list-room');
+      navigate("/list-room");
     } catch (error) {
-      console.error('Error checking location:', error);
-      toast.error('Failed to check location. Please try again.');
+      console.error("Error checking location:", error);
+      toast.error("Failed to check location. Please try again.");
     }
   };
 
   const handleViewListingsClick = () => {
-    navigate('/my-listings');
+    navigate("/my-listings");
   };
 
   const handleManageConnectionsClick = () => {
-    navigate('/connections');
+    navigate("/connections");
   };
 
-  const handleStatsCardClick = (type: 'listings' | 'connections') => {
-    if (type === 'listings') {
+  const handleStatsCardClick = (type: "listings" | "connections") => {
+    if (type === "listings") {
       handleViewListingsClick();
-    } else if (type === 'connections') {
+    } else if (type === "connections") {
       handleManageConnectionsClick();
     }
   };
 
   if (!user) return null;
-  
+
   return (
     <div className="space-y-8 animate-fade-in">
-
       {/* Hero Carousel Section - identical to Renter Dashboard */}
-      <div 
+      <div
         className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-medium"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -160,14 +155,10 @@ const OwnerDashboard: React.FC = () => {
             key={index}
             className={cn(
               "absolute inset-0 transition-opacity duration-700",
-              index === currentSlide ? "opacity-100" : "opacity-0"
+              index === currentSlide ? "opacity-100" : "opacity-0",
             )}
           >
-            <img
-              src={image}
-              alt={`Room ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+            <img src={image} alt={`Room ${index + 1}`} className="w-full h-full object-cover" />
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -183,15 +174,13 @@ const OwnerDashboard: React.FC = () => {
               onClick={() => setCurrentSlide(index)}
               className={cn(
                 "w-2 h-2 rounded-full transition-all duration-300",
-                index === currentSlide 
-                  ? "bg-white w-4" 
-                  : "bg-white/50 hover:bg-white/70"
+                index === currentSlide ? "bg-white w-4" : "bg-white/50 hover:bg-white/70",
               )}
             />
           ))}
         </div>
       </div>
-      
+
       <OwnerDashboardTabs
         listingsCount={listingsCount}
         isLoading={isLoading}
