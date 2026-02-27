@@ -1,12 +1,12 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 
 // Firebase configuration is fetched from a Supabase Edge Function to avoid build-time envs
-let appInitPromise: Promise<import('firebase/app').FirebaseApp> | null = null;
+let appInitPromise: Promise<import("firebase/app").FirebaseApp> | null = null;
 
 const fetchFirebaseConfig = async () => {
-  const res = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/get-firebase-config', {
-    method: 'GET',
+  const res = await fetch("https://api.livenzo.site/functions/v1/get-firebase-config", {
+    method: "GET",
   });
   if (!res.ok) {
     const text = await res.text();
@@ -38,7 +38,7 @@ const getAuthInstance = async () => {
     const a = await getAuthInstance();
     a.useDeviceLanguage();
   } catch (e) {
-    console.warn('Auth initialization deferred:', e);
+    console.warn("Auth initialization deferred:", e);
   }
 })();
 
@@ -52,32 +52,32 @@ export const initializeRecaptcha = async () => {
 
   const auth = await getAuthInstance();
   // Ensure container exists
-  const containerId = 'recaptcha-container';
+  const containerId = "recaptcha-container";
   if (!document.getElementById(containerId)) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.id = containerId;
-    div.style.display = 'none';
+    div.style.display = "none";
     document.body.appendChild(div);
   }
 
   recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-    size: 'invisible',
+    size: "invisible",
     callback: () => {
-      console.log('reCAPTCHA solved');
+      console.log("reCAPTCHA solved");
     },
-    'expired-callback': () => {
-      console.log('reCAPTCHA expired');
+    "expired-callback": () => {
+      console.log("reCAPTCHA expired");
     },
   });
 
   await recaptchaVerifier.render();
-  
+
   // Hide the reCAPTCHA badge
-  const badge = document.querySelector('.grecaptcha-badge') as HTMLElement;
+  const badge = document.querySelector(".grecaptcha-badge") as HTMLElement;
   if (badge) {
-    badge.style.visibility = 'hidden';
+    badge.style.visibility = "hidden";
   }
-  
+
   return recaptchaVerifier;
 };
 
@@ -89,41 +89,43 @@ export const sendFirebaseOTP = async (phoneNumber: string): Promise<void> => {
 
     // Expect E.164 formatted phone number (e.g., +919876543210)
     confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
-    console.log('OTP sent successfully');
+    console.log("OTP sent successfully");
   } catch (error: any) {
-    console.error('Error sending OTP:', error);
+    console.error("Error sending OTP:", error);
 
     // Surface clear Firebase messages
     const code = error?.code;
     const message = error?.message;
-    if (code === 'auth/invalid-phone-number') {
-      throw new Error('Invalid phone number format');
-    } else if (code === 'auth/too-many-requests') {
-      throw new Error('Too many requests. Please try again later.');
-    } else if (code === 'auth/quota-exceeded') {
-      throw new Error('SMS quota exceeded. Please try again later.');
-    } else if (code === 'auth/app-not-authorized') {
-      throw new Error('App not authorized for Firebase project. Check Authorized Domains.');
-    } else if (code === 'auth/operation-not-allowed') {
-      throw new Error('Phone sign-in is disabled in Firebase Auth settings.');
+    if (code === "auth/invalid-phone-number") {
+      throw new Error("Invalid phone number format");
+    } else if (code === "auth/too-many-requests") {
+      throw new Error("Too many requests. Please try again later.");
+    } else if (code === "auth/quota-exceeded") {
+      throw new Error("SMS quota exceeded. Please try again later.");
+    } else if (code === "auth/app-not-authorized") {
+      throw new Error("App not authorized for Firebase project. Check Authorized Domains.");
+    } else if (code === "auth/operation-not-allowed") {
+      throw new Error("Phone sign-in is disabled in Firebase Auth settings.");
     } else {
-      throw new Error(message || 'Failed to send OTP. Please try again.');
+      throw new Error(message || "Failed to send OTP. Please try again.");
     }
   }
 };
 
 // Verify OTP via Firebase
-export const verifyFirebaseOTP = async (otp: string): Promise<{ idToken: string; uid: string; phoneNumber: string }> => {
+export const verifyFirebaseOTP = async (
+  otp: string,
+): Promise<{ idToken: string; uid: string; phoneNumber: string }> => {
   try {
     if (!confirmationResult) {
-      throw new Error('No OTP session found. Please request a new OTP.');
+      throw new Error("No OTP session found. Please request a new OTP.");
     }
 
     const result = await confirmationResult.confirm(otp);
     const user = result.user;
 
     if (!user.phoneNumber) {
-      throw new Error('Phone number not found in Firebase user');
+      throw new Error("Phone number not found in Firebase user");
     }
 
     // Get a fresh ID token for Supabase conversion (force refresh)
@@ -135,19 +137,19 @@ export const verifyFirebaseOTP = async (otp: string): Promise<{ idToken: string;
       phoneNumber: user.phoneNumber,
     };
   } catch (error: any) {
-    console.error('Error verifying OTP:', error);
+    console.error("Error verifying OTP:", error);
 
     // Handle specific Firebase errors
     const code = error?.code;
     const message = error?.message;
-    if (code === 'auth/invalid-verification-code') {
-      throw new Error('Invalid OTP. Please check and try again.');
-    } else if (code === 'auth/code-expired') {
-      throw new Error('OTP has expired. Please request a new one.');
-    } else if (code === 'auth/session-expired') {
-      throw new Error('Verification session expired. Please request a new OTP.');
+    if (code === "auth/invalid-verification-code") {
+      throw new Error("Invalid OTP. Please check and try again.");
+    } else if (code === "auth/code-expired") {
+      throw new Error("OTP has expired. Please request a new one.");
+    } else if (code === "auth/session-expired") {
+      throw new Error("Verification session expired. Please request a new OTP.");
     } else {
-      throw new Error(message || 'Failed to verify OTP. Please try again.');
+      throw new Error(message || "Failed to verify OTP. Please try again.");
     }
   }
 };
