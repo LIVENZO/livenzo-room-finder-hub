@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils';
 import BookingStatusCard from './BookingStatusCard';
 
 const heroImages = [
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131737442_0ozzpm685nw.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131738562_bd30txo9bd.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766132019346_v39iyaqqgs.jpg',
-  'https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767873415838_ncg44uvhnsj.jpg',
+  'https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131737442_0ozzpm685nw.jpg',
+  'https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766131738562_bd30txo9bd.jpg',
+  'https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg',
+  'https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1766132019346_v39iyaqqgs.jpg',
+  'https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767873415838_ncg44uvhnsj.jpg',
 ];
 
 const RenterDashboard: React.FC = () => {
