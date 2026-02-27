@@ -52,7 +52,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
             console.log('Syncing Firebase user to Supabase:', { firebaseUid, phoneNumber, hasFcmToken: !!fcmToken });
             
             // Call the sync function with FCM token
-            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+            const response = await fetch('https://api.livenzo.site/functions/v1/sync-firebase-user', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
           if (firebaseUid && phoneNumber && fcmToken) {
             console.log('Syncing FCM token for already logged in user');
             
-            const response = await fetch('https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user', {
+            const response = await fetch('https://api.livenzo.site/functions/v1/sync-firebase-user', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

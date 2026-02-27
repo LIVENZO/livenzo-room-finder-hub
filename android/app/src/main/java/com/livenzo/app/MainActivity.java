@@ -91,7 +91,7 @@ public class MainActivity extends BridgeActivity {
                 payload.put("phone_number", phoneNumber);
                 payload.put("fcm_token", fcmToken);
 
-                java.net.URL url = new java.net.URL("https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/sync-firebase-user");
+                java.net.URL url = new java.net.URL("https://api.livenzo.site/functions/v1/sync-firebase-user");
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
