@@ -6,7 +6,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { FacebookLogin } from '@capacitor-community/facebook-login';
 import { Capacitor } from '@capacitor/core';
 import { AUTH_CONFIG } from '@/config/auth';
-// Firebase OTP imports removed - now using Supabase native SMS OTP
+import { sendFirebaseOTP, verifyFirebaseOTP, clearConfirmationResult } from '@/config/firebase';
 
 // Function to check for phone role conflicts before authentication
 const checkPhoneRoleConflict = async (phone: string, selectedRole: string): Promise<{ hasConflict: boolean; existingRole: string | null }> => {
@@ -443,13 +443,13 @@ export function useAuthMethods() {
     }
   };
 
-  const sendOTP = async (phoneNumber: string): Promise<void> => {
+  const sendOTP = async (identifier: string): Promise<void> => {
     setIsLoading(true);
     try {
       const selectedRole = localStorage.getItem('selectedRole') || 'renter';
       
       // Check for phone role conflict BEFORE sending OTP
-      const { hasConflict, existingRole } = await checkPhoneRoleConflict(phoneNumber, selectedRole);
+      const { hasConflict, existingRole } = await checkPhoneRoleConflict(identifier, selectedRole);
       
       if (hasConflict && existingRole) {
         const displayRole = getRoleDisplayName(existingRole);
@@ -458,22 +458,13 @@ export function useAuthMethods() {
         throw new Error(`Phone number already registered as ${displayRole}`);
       }
       
-      // Use Supabase's native signInWithOtp for SMS
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phoneNumber,
-      });
-
-      if (error) {
-        console.error('Supabase OTP send error:', error);
-        toast.error(`Failed to send OTP: ${error.message}`);
-        throw error;
-      }
-
+      await sendFirebaseOTP(identifier);
       toast.success('OTP sent successfully!');
     } catch (error: any) {
       console.error('Error sending OTP:', error);
-      if (!error.message?.includes('already registered') && !error.message?.includes('Failed to send OTP')) {
-        toast.error(`OTP error: ${error.message || 'Unknown error occurred'}`);
+      // Only show generic error if it's not our custom conflict error
+      if (!error.message?.includes('already registered')) {
+        toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
       }
       throw error;
     } finally {
@@ -481,39 +472,58 @@ export function useAuthMethods() {
     }
   };
 
-  const verifyOTP = async (phoneNumber: string, token: string): Promise<void> => {
+  const verifyOTP = async (identifier: string, token: string): Promise<void> => {
     setIsLoading(true);
     try {
       const selectedRole = localStorage.getItem('selectedRole') || 'renter';
 
-      // Use Supabase's native verifyOtp for SMS
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: phoneNumber,
-        token: token,
-        type: 'sms',
+      // 1) Verify OTP with Firebase and get fresh ID token
+      let idToken: string;
+      let firebaseUid: string;
+      let phoneNumber: string;
+      try {
+        const verifyRes = await verifyFirebaseOTP(token);
+        idToken = verifyRes.idToken;
+        firebaseUid = verifyRes.uid;
+        phoneNumber = verifyRes.phoneNumber;
+      } catch (e: any) {
+        console.error('Firebase OTP verification failed:', e);
+        clearConfirmationResult();
+        toast.error("Service temporarily unavailable. We are currently experiencing high traffic and OTP delivery may be delayed. Please try again after a few minutes.");
+        throw e;
+      }
+
+      // 2) Exchange Firebase ID token for Supabase session via Edge Function
+      const { data, error } = await supabase.functions.invoke('sync-firebase-user', {
+        body: {
+          firebase_uid: firebaseUid,
+          phone_number: phoneNumber,
+          fcm_token: null, // Can be added later if needed
+        },
       });
 
       if (error) {
-        console.error('Supabase OTP verification failed:', error);
-        toast.error(`OTP verification failed: ${error.message}`);
+        console.error('Supabase session creation failed:', error);
+        toast.error('Unable to sign in, please try again later.');
         throw error;
       }
 
-      console.log('OTP verified successfully, session created:', data.user?.phone);
+      const { access_token, refresh_token } = data as { access_token: string; refresh_token: string };
 
-      // Store the selected role
-      if (selectedRole) {
-        localStorage.setItem('userRole', selectedRole);
-        localStorage.setItem('selectedRole', selectedRole);
+      // 3) Set the session in Supabase so it persists across restarts
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
+      if (sessionError) {
+        console.error('Setting Supabase session failed:', sessionError);
+        toast.error('Unable to sign in, please try again later.');
+        throw sessionError;
       }
 
+      console.log('OTP verified and Supabase session created successfully');
       toast.success('Phone number verified successfully!');
-    } catch (error: any) {
-      console.error('OTP verification error:', error);
-      if (!error.message?.includes('OTP verification failed')) {
-        toast.error(`Verification error: ${error.message || 'Unknown error occurred'}`);
-      }
-      throw error;
     } finally {
       setIsLoading(false);
     }

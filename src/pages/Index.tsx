@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -113,14 +114,14 @@ const Index: React.FC = () => {
   };
 
   const handleOTPAuth = {
-    sendOTP: async (phoneNumber: string) => {
-      console.log("OTP send initiated for:", phoneNumber, "with role:", userRole);
+    sendOTP: async (email: string) => {
+      console.log("OTP send initiated for:", email, "with role:", userRole);
       localStorage.setItem('selectedRole', userRole);
-      await sendOTP(phoneNumber);
+      await sendOTP(email);
     },
-    verifyOTP: async (phoneNumber: string, token: string) => {
-      console.log("OTP verification initiated for:", phoneNumber, "with role:", userRole);
-      await verifyOTP(phoneNumber, token);
+    verifyOTP: async (email: string, token: string) => {
+      console.log("OTP verification initiated for:", email, "with role:", userRole);
+      await verifyOTP(email, token);
     }
   };
 
