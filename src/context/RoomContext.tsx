@@ -1,13 +1,12 @@
-
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
-import { useAuth } from './AuthContext';
-import { Room, RoomFilters } from '@/types/room';
-import { fetchRooms as fetchRoomsService } from '@/services/roomService';
-import { useRoomFilters } from '@/hooks/useRoomFilters';
-import { useNearMe } from '@/hooks/useNearMe';
-import { useHotspotSearch } from '@/hooks/useHotspotSearch';
-import { Hotspot } from '@/services/HotspotService';
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
+import { useAuth } from "./AuthContext";
+import { Room, RoomFilters } from "@/types/room";
+import { fetchRooms as fetchRoomsService } from "@/services/roomService";
+import { useRoomFilters } from "@/hooks/useRoomFilters";
+import { useNearMe } from "@/hooks/useNearMe";
+import { useHotspotSearch } from "@/hooks/useHotspotSearch";
+import { Hotspot } from "@/services/HotspotService";
 
 interface RoomContextType {
   rooms: Room[];
@@ -40,7 +39,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
-  
+
   const {
     isActive: nearMeActive,
     isLoading: nearMeLoading,
@@ -63,16 +62,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (nearMeActive) {
       return calculateRoomDistances(rooms);
     }
-    return rooms.map(room => ({ ...room, distance: undefined }));
+    return rooms.map((room) => ({ ...room, distance: undefined }));
   }, [rooms, nearMeActive, calculateRoomDistances]);
 
-  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(roomsWithDistance, activeHotspot);
+  const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(
+    roomsWithDistance,
+    activeHotspot,
+  );
 
   // Fetch rooms from Supabase
   useEffect(() => {
     setIsLoading(true);
     loadRooms();
-  }, [user]);
+  }, [user?.id]);
 
   const loadRooms = async () => {
     try {
@@ -88,16 +90,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const fetchedRooms = await fetchRoomsService();
       setRooms(fetchedRooms);
-      toast.success('Rooms refreshed successfully');
+      toast.success("Rooms refreshed successfully");
     } catch (error) {
-      toast.error('Failed to refresh rooms');
+      toast.error("Failed to refresh rooms");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getRoom = (id: string) => {
-    return rooms.find(room => room.id === id);
+    return rooms.find((room) => room.id === id);
   };
 
   return (
@@ -133,9 +135,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useRooms = () => {
   const context = useContext(RoomContext);
   if (context === undefined) {
-    throw new Error('useRooms must be used within a RoomProvider');
+    throw new Error("useRooms must be used within a RoomProvider");
   }
   return context;
 };
 
-export type { Room } from '@/types/room';
+export type { Room } from "@/types/room";
