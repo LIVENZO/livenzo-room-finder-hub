@@ -1,19 +1,18 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Room } from '@/types/room';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import RoomFacilityBadges from './room/RoomFacilityBadges';
-import RoomLocation from './room/RoomLocation';
-import { formatDistance } from '@/utils/roomUtils';
-import { formatPrice } from '@/lib/utils';
-import { Heart, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { addFavorite, removeFavorite, checkIsFavorite } from '@/services/FavoriteService';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Room } from "@/types/room";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import RoomFacilityBadges from "./room/RoomFacilityBadges";
+import RoomLocation from "./room/RoomLocation";
+import { formatDistance } from "@/utils/roomUtils";
+import { formatPrice } from "@/lib/utils";
+import { Heart, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { addFavorite, removeFavorite, checkIsFavorite } from "@/services/FavoriteService";
+import { toast } from "sonner";
 
 interface RoomCardProps {
   room: Room;
@@ -33,15 +32,15 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!user) {
       toast.error("Please sign in to save favorites");
-      navigate('/');
+      navigate("/");
       return;
     }
 
     setIsLoading(true);
-    
+
     if (isFavorite) {
       const result = await removeFavorite(user.id, room.id);
       if (result) setIsFavorite(false);
@@ -49,33 +48,29 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
       const result = await addFavorite(user.id, room.id);
       if (result) setIsFavorite(true);
     }
-    
+
     setIsLoading(false);
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
     const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
-    
+
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
   };
 
   const discountedPrice = Math.round(room.price * 0.75);
 
   return (
-    <Card 
+    <Card
       className="overflow-hidden cursor-pointer transition-all hover:shadow-lg"
       onClick={() => navigate(`/room/${room.id}`)}
     >
-      <AspectRatio ratio={16/9} className="relative">
-        <img 
-          src={room.images[0]} 
-          alt={room.title} 
-          className="w-full h-full object-cover"
-        />
+      <AspectRatio ratio={16 / 9} className="relative">
+        <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}
         <div className="absolute top-2 left-2 flex gap-1.5">
           <button
@@ -84,10 +79,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95 transition-colors shadow-sm"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart 
-              className={`h-4 w-4 transition-colors ${
-                isFavorite ? 'fill-red-500 text-red-500' : 'text-foreground/70'
-              }`} 
+            <Heart
+              className={`h-4 w-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"}`}
             />
           </button>
           <button
@@ -105,22 +98,22 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               📍 {formatDistance(room.distance)}
             </Badge>
           )}
-          <Badge className="bg-primary text-primary-foreground font-semibold">
-            {formatPrice(room.price)}/mo
-          </Badge>
+          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
         </div>
         {/* Green discount sticker - bottom right of image */}
-        <div className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
-          style={{ 
-            background: 'linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))',
-            minWidth: '140px',
-          }}>
+        <div
+          className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
+          style={{
+            background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
+            minWidth: "140px",
+          }}
+        >
           {/* Sparkle decorations */}
           <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
           <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
           <div className="absolute bottom-4 left-3 w-0.5 h-0.5 rounded-full bg-white/30" />
           <div className="absolute top-2 left-1/2 w-[3px] h-[3px] rounded-full bg-white/20" />
-          
+
           <div className="relative px-3.5 pt-2 pb-2.5">
             {/* Top row: discount + icon */}
             <div className="flex items-start justify-between">
@@ -128,12 +121,18 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
                 <p className="text-white font-extrabold text-base leading-none tracking-tight">
                   25<span className="text-xs align-top">%</span> OFF
                 </p>
-                <p className="text-white/85 text-[10px] font-medium mt-0.5 leading-tight">
-                  for First Month
-                </p>
+                <p className="text-white/85 text-[10px] font-medium mt-0.5 leading-tight">for First Month</p>
               </div>
               <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
-                <svg className="w-3 h-3 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  className="w-3 h-3 text-white/90"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
