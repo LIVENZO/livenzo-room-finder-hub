@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Layout from '@/components/Layout';
+import { uploadImagesToStorage, uploadVideosToStorage } from '@/services/storage';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -16,7 +17,6 @@ import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFiel
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
 import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { fetchUserProfile } from '@/services/UserProfileService';
-import { mediaProcessingQueue } from '@/services/MediaProcessingQueue';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -29,6 +29,7 @@ const ListRoom: React.FC = () => {
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [profileChecked, setProfileChecked] = useState(false);
 
+  // Initialize form with react-hook-form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,7 +59,7 @@ const ListRoom: React.FC = () => {
       try {
         const parsedData = JSON.parse(savedData);
         form.reset(parsedData);
-        localStorage.removeItem('list-room-form-data');
+        localStorage.removeItem('list-room-form-data'); // Clear after restoring
         toast.success('Your form data has been restored. You can now publish your room.');
       } catch (error) {
         console.error('Error restoring form data:', error);
@@ -73,6 +74,7 @@ const ListRoom: React.FC = () => {
       navigate('/');
       return;
     }
+    
     if (userRole !== 'owner') {
       toast.error('Only property owners can list rooms');
       navigate('/dashboard');
@@ -80,22 +82,25 @@ const ListRoom: React.FC = () => {
     }
   }, [user, userRole, navigate]);
   
-  // Owner location check
+  // Owner location check: Must have location set before listing
   useEffect(() => {
     if (!user) return;
     const checkLocation = async () => {
       const profile = await fetchUserProfile(user.id);
+      // Check both latitude and longitude presence and ensure they're not null/0/undefined
       const hasValidLocation =
         !!profile?.location_latitude &&
         !!profile?.location_longitude &&
         typeof profile.location_latitude === "number" &&
         typeof profile.location_longitude === "number";
       if (!hasValidLocation) {
+        // Save current form data before redirecting
         const currentValues = form.getValues();
         localStorage.setItem('list-room-form-data', JSON.stringify({
           ...currentValues,
-          imageFiles: imageFiles.length,
+          imageFiles: imageFiles.length, // Store count for reference
         }));
+        
         toast.info('Please set your location before publishing your room.');
         navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
       } else {
@@ -105,85 +110,86 @@ const ListRoom: React.FC = () => {
     checkLocation();
   }, [user, navigate, form, imageFiles]);
   
+  // Only render the page after checking the location
   if (!user || !profileChecked) return null;
   
+  // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+    
+    // Check if adding these files would exceed the 5 image limit
     if (imageFiles.length + files.length > 5) {
       toast.error('You can upload a maximum of 5 images');
       return;
     }
+    
+    // Convert FileList to array and add to state
     const newFiles = Array.from(files);
     setImageFiles(prev => [...prev, ...newFiles]);
+    
+    // Create and store image previews
     const newPreviews = newFiles.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
   };
   
+  // Remove an image
   const removeImage = (index: number) => {
+    // Revoke the object URL to avoid memory leaks
     URL.revokeObjectURL(imagePreviews[index]);
+    
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Handle video selection
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+    
+    // Check if adding these files would exceed the 2 video limit
     if (videoFiles.length + files.length > 2) {
       toast.error('You can upload a maximum of 2 videos');
       return;
     }
-    const newFiles = Array.from(files);
+    
+    // Validate each file
+    const newFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      if (file.type !== 'video/mp4') {
+        toast.error(`${file.name}: Only MP4 format is allowed`);
+        continue;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name}: Maximum size is 100MB`);
+        continue;
+      }
+      newFiles.push(file);
+    }
+    
+    if (newFiles.length === 0) return;
+    
     setVideoFiles(prev => [...prev, ...newFiles]);
+    
+    // Create and store video previews
     const newPreviews = newFiles.map(file => URL.createObjectURL(file));
     setVideoPreviews(prev => [...prev, ...newPreviews]);
   };
 
+  // Remove a video
   const removeVideo = (index: number) => {
     URL.revokeObjectURL(videoPreviews[index]);
     setVideoFiles(prev => prev.filter((_, i) => i !== index));
     setVideoPreviews(prev => prev.filter((_, i) => i !== index));
   };
   
-  /**
-   * Upload original (uncompressed) files directly for instant save.
-   * Background queue will compress and replace them later.
-   */
-  const uploadOriginalFiles = async (
-    files: File[],
-    userId: string,
-    bucket: string,
-    subfolder: string
-  ): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const file of files) {
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substring(2, 8);
-      const ext = file.name.split('.').pop() || 'jpg';
-      const filePath = `${userId}/${subfolder}/${timestamp}_${random}.${ext}`;
-
-      const { data, error } = await supabase.storage.from(bucket).upload(filePath, file, {
-        cacheControl: '31536000',
-        upsert: false,
-      });
-
-      if (error) {
-        console.error('Upload error:', error);
-        continue;
-      }
-
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      if (urlData?.publicUrl) urls.push(urlData.publicUrl);
-    }
-    return urls;
-  };
-
-  // Handle form submission - instant save with background processing
+  // Handle form submission
   const onSubmit = async (values: FormValues) => {
     if (!user) {
       toast.error('You must be logged in to list a room');
       return;
     }
+    
     if (imageFiles.length === 0) {
       toast.error('Please upload at least one image');
       return;
@@ -192,26 +198,36 @@ const ListRoom: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const toastId = toast.loading('Uploading media…');
+      console.log('Starting room listing process...');
+      console.log('User ID:', user.id);
+      console.log('Images to upload:', imageFiles.length);
+      console.log('Videos to upload:', videoFiles.length);
       
-      // Upload originals (no compression - fast!)
-      const imageUrls = await uploadOriginalFiles(imageFiles, user.id, 'rooms', 'originals');
+      // Step 1: Upload images to Supabase Storage
+      const toastId = toast.loading('Uploading images...');
+      
+      const imageUrls = await uploadImagesToStorage(imageFiles, user.id, 'rooms');
       
       if (imageUrls.length === 0) {
-        toast.error('Failed to upload images. Please try again.', { id: toastId });
+        console.error('Image upload failed - no URLs returned');
+        toast.error('Failed to upload images. Please try again or contact support.', { id: toastId });
         setIsSubmitting(false);
         return;
       }
+      
+      console.log('Images uploaded successfully:', imageUrls);
 
+      // Step 2: Upload videos if any
       let videoUrls: string[] = [];
       if (videoFiles.length > 0) {
-        toast.loading('Uploading videos…', { id: toastId });
-        videoUrls = await uploadOriginalFiles(videoFiles, user.id, 'rooms', 'originals');
+        toast.loading('Uploading videos...', { id: toastId });
+        videoUrls = await uploadVideosToStorage(videoFiles, user.id, 'rooms');
+        console.log('Videos uploaded:', videoUrls);
       }
       
-      toast.loading('Creating listing…', { id: toastId });
+      toast.loading('Creating room listing...', { id: toastId });
       
-      // Save room with original media + media_processing flag
+      // Step 3: Save room data to Supabase
       const roomData = {
         title: values.title,
         description: values.description,
@@ -234,8 +250,9 @@ const ListRoom: React.FC = () => {
         owner_phone: values.owner_phone,
         images: imageUrls,
         videos: videoUrls,
-        media_processing: true, // Flag: background compression pending
       };
+      
+      console.log('Inserting room data:', roomData);
       
       const { data: room, error } = await supabase
         .from('rooms')
@@ -244,24 +261,21 @@ const ListRoom: React.FC = () => {
         .single();
       
       if (error) {
+        console.error('Error inserting room:', error);
         toast.error(`Failed to create listing: ${error.message}`, { id: toastId });
         setIsSubmitting(false);
         return;
       }
       
-      toast.success('Listing saved! Media is being optimized in the background.', { id: toastId });
-
-      // Navigate immediately so submit flow feels instant
-      navigate('/my-listings', { replace: true });
-
-      // Start compression asynchronously (decoupled from ListRoom UI lifecycle)
-      setTimeout(() => {
-        mediaProcessingQueue.enqueue(room.id, user.id, imageUrls, videoUrls);
-      }, 0);
+      console.log('Room created successfully:', room);
+      toast.success('Room listed successfully!', { id: toastId });
+      
+      // Step 4: Redirect to my listings
+      navigate('/my-listings');
       
     } catch (error: any) {
       console.error('Error in room submission:', error);
-      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}`);
+      toast.error(`An unexpected error occurred: ${error.message || 'Unknown error'}. Please contact support if this persists.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -298,6 +312,7 @@ const ListRoom: React.FC = () => {
                 
                 <RoomPreferencesFields control={form.control} />
                 
+                {/* Submit Button */}
                 <Button
                   type="submit"
                   className="w-full"

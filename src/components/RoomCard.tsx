@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { addFavorite, removeFavorite, checkIsFavorite } from "@/services/FavoriteService";
 import { toast } from "sonner";
-import { getThumbnailUrl } from "@/utils/imageCompression";
 
 interface RoomCardProps {
   room: Room;
@@ -71,14 +70,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
       onClick={() => navigate(`/room/${room.id}`)}
     >
       <AspectRatio ratio={16 / 9} className="relative">
-        <img
-          src={getThumbnailUrl(room.images[0])}
-          alt={room.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          decoding="async"
-          onError={(e) => { (e.target as HTMLImageElement).src = room.images[0]; }}
-        />
+        <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}
         <div className="absolute top-2 left-2 flex gap-1.5">
           <button

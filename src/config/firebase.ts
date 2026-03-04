@@ -5,7 +5,7 @@ import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult }
 let appInitPromise: Promise<import("firebase/app").FirebaseApp> | null = null;
 
 const fetchFirebaseConfig = async () => {
-  const res = await fetch("https://naoqigivttgpkfwpzcgg.supabase.co/functions/v1/get-firebase-config", {
+  const res = await fetch("https://api.livenzo.site/functions/v1/get-firebase-config", {
     method: "GET",
   });
   if (!res.ok) {

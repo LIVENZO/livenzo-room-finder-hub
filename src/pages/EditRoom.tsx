@@ -177,10 +177,26 @@ const EditRoom: React.FC = () => {
       return;
     }
 
-    setVideoFiles(prev => [...prev, ...files]);
+    // Validate files
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (file.type !== 'video/mp4') {
+        toast.error(`${file.name}: Only MP4 format is allowed`);
+        continue;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name}: Maximum size is 100MB`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setVideoFiles(prev => [...prev, ...validFiles]);
     
     // Create previews for new files and append to existing previews
-    const newPreviews = files.map(file => URL.createObjectURL(file));
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
     setVideoPreviews(prev => [...existingVideos, ...prev.slice(existingVideos.length), ...newPreviews]);
   };
 
