@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { getThumbnailUrl } from '@/utils/imageCompression';
 
 type MediaItem = { type: 'image'; src: string } | { type: 'video'; src: string };
 
@@ -132,7 +133,14 @@ const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
             }`}
           >
             {item.type === 'image' ? (
-              <img src={item.src} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+              <img
+                src={getThumbnailUrl(item.src)}
+                alt={`Thumb ${idx + 1}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => { (e.target as HTMLImageElement).src = item.src; }}
+              />
             ) : (
               <div className="w-full h-full bg-black relative">
                 <video src={item.src} preload="metadata" className="w-full h-full object-cover" />
