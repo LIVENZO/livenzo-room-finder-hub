@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
 const ALLOWED_VIDEO_TYPES = ['video/mp4'];
 
 /**
@@ -14,7 +14,7 @@ const validateVideoFile = (file: File): { valid: boolean; error?: string } => {
   
   if (file.size > MAX_VIDEO_SIZE) {
     const sizeMB = Math.round(file.size / (1024 * 1024));
-    return { valid: false, error: `${file.name} is ${sizeMB}MB. Maximum size is 100MB.` };
+    return { valid: false, error: `${file.name} is ${sizeMB}MB. Maximum size is 15MB.` };
   }
   
   return { valid: true };

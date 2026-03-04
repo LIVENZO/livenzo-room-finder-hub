@@ -44,7 +44,7 @@ const VideoUploadSection: React.FC<VideoUploadSectionProps> = ({
           >
             <Video className="h-12 w-12 text-gray-400" />
             <p className="mt-2 text-gray-600">Upload Room Video Tour</p>
-            <p className="text-xs text-gray-500 mt-1">MP4 format only, max 100MB each (up to 2 videos)</p>
+            <p className="text-xs text-gray-500 mt-1">MP4 format only, max 15MB each (up to 2 videos)</p>
           </label>
         ) : (
           <div className="space-y-4">
@@ -88,7 +88,7 @@ const VideoUploadSection: React.FC<VideoUploadSectionProps> = ({
         )}
       </div>
       <FormDescription>
-        Upload up to 2 video tours of your room (MP4 format, max 100MB each)
+        Upload up to 2 video tours of your room (MP4 format, max 15MB each)
       </FormDescription>
     </div>
   );
