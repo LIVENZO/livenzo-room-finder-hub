@@ -153,21 +153,7 @@ const ListRoom: React.FC = () => {
       return;
     }
     
-    // Validate each file
-    const newFiles: File[] = [];
-    for (const file of Array.from(files)) {
-      if (file.type !== 'video/mp4') {
-        toast.error(`${file.name}: Only MP4 format is allowed`);
-        continue;
-      }
-      if (file.size > 100 * 1024 * 1024) {
-        toast.error(`${file.name}: Maximum size is 100MB`);
-        continue;
-      }
-      newFiles.push(file);
-    }
-    
-    if (newFiles.length === 0) return;
+    const newFiles = Array.from(files);
     
     setVideoFiles(prev => [...prev, ...newFiles]);
     

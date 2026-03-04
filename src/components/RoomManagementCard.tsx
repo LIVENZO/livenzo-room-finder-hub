@@ -102,7 +102,7 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
   };
   return <Card className="overflow-hidden">
       <div className="relative h-40 w-full">
-        <img src={room.images[0] || '/placeholder.svg'} alt={room.title} className="h-full w-full object-cover" />
+        <img src={room.images[0] || '/placeholder.svg'} alt={room.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute top-2 right-2">
           <div className={`text-xs font-medium px-2 py-1 rounded ${isAvailable ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'}`}>
             {isAvailable ? 'Available' : 'Unavailable'}
