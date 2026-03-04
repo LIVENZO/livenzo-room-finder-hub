@@ -249,13 +249,15 @@ const ListRoom: React.FC = () => {
         return;
       }
       
-      toast.success('Room listed! Media is being optimized in the background.', { id: toastId });
-      
-      // Queue background compression
-      mediaProcessingQueue.enqueue(room.id, user.id, imageUrls, videoUrls);
-      
-      // Navigate immediately - user is free!
-      navigate('/my-listings');
+      toast.success('Listing saved! Media is being optimized in the background.', { id: toastId });
+
+      // Navigate immediately so submit flow feels instant
+      navigate('/my-listings', { replace: true });
+
+      // Start compression asynchronously (decoupled from ListRoom UI lifecycle)
+      setTimeout(() => {
+        mediaProcessingQueue.enqueue(room.id, user.id, imageUrls, videoUrls);
+      }, 0);
       
     } catch (error: any) {
       console.error('Error in room submission:', error);
