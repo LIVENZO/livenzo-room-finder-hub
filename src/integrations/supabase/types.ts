@@ -1154,7 +1154,6 @@ export type Database = {
           location: string
           location_latitude: number | null
           location_longitude: number | null
-          media_processing: boolean
           owner_id: string
           owner_phone: string
           price: number
@@ -1177,7 +1176,6 @@ export type Database = {
           location: string
           location_latitude?: number | null
           location_longitude?: number | null
-          media_processing?: boolean
           owner_id: string
           owner_phone: string
           price: number
@@ -1200,7 +1198,6 @@ export type Database = {
           location?: string
           location_latitude?: number | null
           location_longitude?: number | null
-          media_processing?: boolean
           owner_id?: string
           owner_phone?: string
           price?: number

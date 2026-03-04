@@ -158,7 +158,7 @@ const OwnerDashboard: React.FC = () => {
               index === currentSlide ? "opacity-100" : "opacity-0",
             )}
           >
-            <img src={image} alt={`Room ${index + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <img src={image} alt={`Room ${index + 1}`} className="w-full h-full object-cover" />
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
