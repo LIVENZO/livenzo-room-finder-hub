@@ -53,9 +53,11 @@ const EditRoom: React.FC = () => {
     },
   });
 
-  // Load existing room data
+  // Load existing room data - runs only once on mount
+  const hasLoaded = React.useRef(false);
   useEffect(() => {
-    if (!user || !id) return;
+    if (!user || !id || hasLoaded.current) return;
+    hasLoaded.current = true;
     
     const loadRoomData = async () => {
       try {
@@ -79,11 +81,9 @@ const EditRoom: React.FC = () => {
           return;
         }
 
-        // Parse facilities
         const facilitiesRaw = typeof data.facilities === 'object' ? data.facilities as any : {};
         const facilities = parseFacilities(data.facilities);
 
-        // Set form values
         form.reset({
           title: data.title,
           description: data.description,
@@ -102,22 +102,14 @@ const EditRoom: React.FC = () => {
           owner_phone: data.owner_phone,
         });
 
-        // Set existing images
         if (data.images && Array.isArray(data.images)) {
           setExistingImages(data.images);
           setImagePreviews(data.images);
-        } else {
-          setExistingImages([]);
-          setImagePreviews([]);
         }
 
-        // Set existing videos
         if (data.videos && Array.isArray(data.videos)) {
           setExistingVideos(data.videos);
           setVideoPreviews(data.videos);
-        } else {
-          setExistingVideos([]);
-          setVideoPreviews([]);
         }
 
         setIsLoading(false);
@@ -129,7 +121,7 @@ const EditRoom: React.FC = () => {
     };
 
     loadRoomData();
-  }, [user, id, navigate, form]);
+  }, [user, id, navigate]);
 
   // Redirect if not logged in or not an owner
   useEffect(() => {
