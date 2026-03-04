@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
+import { MediaProcessingProvider } from "./context/MediaProcessingContext";
+import MediaProcessingIndicator from "./components/MediaProcessingIndicator";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
@@ -52,6 +54,7 @@ const App = () => {
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
+          <MediaProcessingProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -82,6 +85,8 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          <MediaProcessingIndicator />
+          </MediaProcessingProvider>
         </RoomProvider>
       </AuthProvider>
     </TooltipProvider>
