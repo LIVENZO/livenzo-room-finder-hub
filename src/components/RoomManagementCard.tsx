@@ -4,11 +4,13 @@ import { Room } from '@/types/room';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Pencil, Trash2, Eye, Loader2, Star } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { invalidateTopRoomsCache } from '@/services/topRoomsService';
+import { useMediaProcessing } from '@/context/MediaProcessingContext';
 interface RoomManagementCardProps {
   room: Room;
   isUpdating: boolean;
@@ -20,6 +22,9 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
   setUpdatingRoom
 }) => {
   const navigate = useNavigate();
+  const { getJob } = useMediaProcessing();
+  const processingJob = getJob(room.id);
+  const isProcessing = processingJob && (processingJob.status === 'queued' || processingJob.status === 'processing');
   const [isAvailable, setIsAvailable] = useState(room.available !== false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTopRoom, setIsTopRoom] = useState(room.is_top_room ?? false);
@@ -103,10 +108,16 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
   return <Card className="overflow-hidden">
       <div className="relative h-40 w-full">
         <img src={room.images[0] || '/placeholder.svg'} alt={room.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
           <div className={`text-xs font-medium px-2 py-1 rounded ${isAvailable ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'}`}>
             {isAvailable ? 'Available' : 'Unavailable'}
           </div>
+          {isProcessing && (
+            <Badge variant="secondary" className="text-[10px] bg-primary/90 text-primary-foreground animate-pulse">
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Optimizing {processingJob.progress}%
+            </Badge>
+          )}
         </div>
       </div>
       
