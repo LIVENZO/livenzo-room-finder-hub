@@ -46,9 +46,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
                 <User className="w-6 h-6 text-black peer-checked:text-white" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">
-
-              </h3>
+                <h3 className="text-lg font-semibold text-black peer-checked:text-white transition-colors duration-300">Student👨🏿‍🎓</h3>
                 
               </div>
               <div className="flex-shrink-0">
