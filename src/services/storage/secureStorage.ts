@@ -3,10 +3,43 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { validateAuthentication } from '../security/authValidator';
 import { validateFiles, sanitizeFileName } from '../security/fileUploadSecurity';
-import { compressImages } from '@/utils/imageCompression';
+import { compressImages, generateThumbnails } from '@/utils/imageCompression';
+
+/**
+ * Upload a single file to storage and return its public URL
+ */
+const uploadSingleFile = async (
+  file: File,
+  bucket: string,
+  filePath: string
+): Promise<string | null> => {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file, {
+      cacheControl: '31536000', // 1 year cache for immutable assets
+      upsert: false,
+    });
+
+  if (error) {
+    if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+      const retryPath = filePath.replace(/(\.\w+)$/, `_${Math.random().toString(36).substring(2, 8)}$1`);
+      const { data: retryData, error: retryError } = await supabase.storage
+        .from(bucket)
+        .upload(retryPath, file, { cacheControl: '31536000', upsert: false });
+      if (retryError) return null;
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(retryData.path);
+      return urlData?.publicUrl || null;
+    }
+    return null;
+  }
+
+  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+  return urlData?.publicUrl || null;
+};
 
 /**
  * Securely uploads files to Supabase storage with comprehensive validation
+ * For images: compresses to WebP, generates thumbnails, uploads both
  */
 export const uploadFilesSecure = async (
   files: File[], 
@@ -19,33 +52,26 @@ export const uploadFilesSecure = async (
   let uploadToastId: string | number | undefined;
   
   try {
-    console.log('Starting secure file upload...', { 
-      fileCount: files.length, 
-      bucket, 
-      fileType,
-      userId 
-    });
+    console.log('Starting secure file upload...', { fileCount: files.length, bucket, fileType });
     
     // Validate authentication
     const authResult = await validateAuthentication();
     if (!authResult.isValid || authResult.userId !== userId) {
-      console.error('Authentication validation failed:', authResult);
       toast.error('Please log in again to upload files');
       return [];
     }
     
-    console.log('Authentication validated successfully');
-    
-    // Compress images before validation if uploading images
+    // Compress images before validation
     let filesToValidate = files;
+    let thumbnailFiles: File[] = [];
+    
     if (fileType === 'image') {
-      const compressToastId = toast.loading('Preparing images...');
+      const compressToastId = toast.loading('Optimizing images...');
       try {
         filesToValidate = await compressImages(files);
+        thumbnailFiles = await generateThumbnails(filesToValidate);
         toast.dismiss(compressToastId);
-        console.log('Images prepared successfully');
       } catch (error: any) {
-        console.error('Image preparation failed:', error);
         toast.error(error.message || 'Unable to process images', { id: compressToastId });
         return [];
       }
@@ -53,169 +79,56 @@ export const uploadFilesSecure = async (
     
     // Validate files
     const { validFiles, errors } = validateFiles(filesToValidate, fileType);
-    
-    if (errors.length > 0) {
-      errors.forEach(error => {
-        console.error('File validation error:', error);
-        toast.error(error);
-      });
-    }
+    errors.forEach(error => toast.error(error));
     
     if (validFiles.length === 0) {
-      console.error('No valid files to upload');
-      toast.error(`No valid ${fileType}s to upload. Please check file format and size.`);
+      toast.error(`No valid ${fileType}s to upload.`);
       return [];
     }
     
-    console.log(`${validFiles.length} valid files ready for upload`);
+    // Test bucket access
+    const { error: listError } = await supabase.storage.from(bucket).list('', { limit: 1 });
+    if (listError) {
+      toast.error(`Storage access error: ${listError.message}`);
+      return [];
+    }
     
     const uploadedUrls: string[] = [];
     uploadToastId = toast.loading(`Uploading ${validFiles.length} files...`);
     
-    // Test bucket access and permissions
-    try {
-      console.log('Testing bucket access for:', bucket);
-      
-      // First, try to list files in the bucket to test access
-      const { data: testList, error: listError } = await supabase.storage
-        .from(bucket)
-        .list('', { limit: 1 });
-        
-      if (listError) {
-        console.error('Bucket access test failed:', listError);
-        
-        if (listError.message.includes('not found') || listError.message.includes('does not exist')) {
-          toast.error(`Storage bucket '${bucket}' does not exist. Please contact support.`, {
-            id: uploadToastId,
-            duration: 8000
-          });
-          return [];
-        } else if (listError.message.includes('permission') || listError.message.includes('authorized')) {
-          toast.error(`No permission to access '${bucket}' bucket. Please contact support.`, {
-            id: uploadToastId,
-            duration: 8000
-          });
-          return [];
-        } else {
-          toast.error(`Bucket access error: ${listError.message}`, {
-            id: uploadToastId,
-            duration: 8000
-          });
-          return [];
-        }
-      }
-      
-      console.log(`Bucket '${bucket}' access confirmed`);
-    } catch (bucketError) {
-      console.error('Error during bucket validation:', bucketError);
-      toast.error('Storage system error. Please contact support.', {
-        id: uploadToastId,
-        duration: 5000
-      });
-      return [];
-    }
-    
-    // Upload each valid file
     for (const [index, file] of validFiles.entries()) {
-      console.log(`Uploading file ${index + 1}/${validFiles.length}:`, file.name);
+      toast.loading(`Uploading file ${index + 1} of ${validFiles.length}...`, { id: uploadToastId });
       
-      toast.loading(`Uploading file ${index + 1} of ${validFiles.length}...`, {
-        id: uploadToastId
-      });
-      
-      // Sanitize file name and create unique path
       const sanitizedName = sanitizeFileName(file.name);
       const fileExt = sanitizedName.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
+      const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${userId}/${uniqueName}`;
       
-      console.log('Uploading to bucket:', bucket, 'with path:', filePath);
+      const url = await uploadSingleFile(file, bucket, filePath);
       
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      let uploadData = data;
-      
-      if (error) {
-        console.error('Supabase storage upload error:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
+      if (url) {
+        uploadedUrls.push(url);
         
-        if (error.message.includes('permissions') || 
-            error.message.includes('denied') ||
-            error.message.includes('authorized') ||
-            error.message.includes('JWT')) {
-          toast.error('Permission denied. Please log out and log back in.', { id: uploadToastId });
-          break;
-        } else if (error.message.includes('size') || error.message.includes('too large')) {
-          console.log('File size error, should not happen after compression');
-          toast.error(`Upload failed. Please try with a different image.`);
-          continue;
-        } else if (error.message.includes('type') || error.message.includes('format')) {
-          toast.error(`File "${file.name}" has invalid format.`);
-          continue;
-        } else if (error.message.includes('duplicate') || error.message.includes('already exists')) {
-          // File with same name exists, try with different name
-          const retryFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 20)}.${fileExt}`;
-          const retryFilePath = `${userId}/${retryFileName}`;
-          console.log('Retrying upload with new filename:', retryFilePath);
-          
-          const { data: retryData, error: retryError } = await supabase.storage
-            .from(bucket)
-            .upload(retryFilePath, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-            
-          if (retryError) {
-            console.error('Retry upload failed:', retryError);
-            toast.error(`Failed to upload "${file.name}". Please try again.`);
-            continue;
-          } else {
-            uploadData = retryData;
-          }
-        } else {
-          console.error('Unknown upload error:', error.message);
-          toast.error(`Upload failed: ${error.message}. Please contact support if this persists.`);
-          continue;
+        // Upload corresponding thumbnail (best effort, don't fail on error)
+        if (fileType === 'image' && thumbnailFiles[index]) {
+          const thumbPath = `${userId}/thumbs/${uniqueName}`;
+          await uploadSingleFile(thumbnailFiles[index], bucket, thumbPath).catch((e) =>
+            console.warn('Thumbnail upload failed (non-critical):', e)
+          );
         }
-      }
-      
-      if (uploadData) {
-        console.log('Upload successful, getting public URL for:', uploadData.path);
-        
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(uploadData.path);
-        
-        if (publicUrlData?.publicUrl) {
-          console.log('Public URL generated:', publicUrlData.publicUrl);
-          uploadedUrls.push(publicUrlData.publicUrl);
-        } else {
-          console.error('Failed to generate public URL for:', uploadData.path);
-          toast.error('Upload completed but failed to generate file URL. Please contact support.');
+      } else {
+        console.error('Upload failed for:', file.name);
+        if (fileType !== 'image') {
+          toast.error(`Failed to upload "${file.name}".`);
         }
       }
     }
     
-    if (uploadToastId) {
-      toast.dismiss(uploadToastId);
-    }
+    if (uploadToastId) toast.dismiss(uploadToastId);
     
     if (uploadedUrls.length > 0) {
-      console.log(`Successfully uploaded ${uploadedUrls.length} files`);
-      if (fileType === 'image') {
-        toast.success(`${uploadedUrls.length} images uploaded successfully!`);
-      } else {
-        toast.success(`${uploadedUrls.length} documents uploaded successfully!`);
-      }
+      toast.success(`${uploadedUrls.length} ${fileType === 'image' ? 'images' : 'documents'} uploaded!`);
     } else {
-      console.error('No files were successfully uploaded');
       toast.error('All uploads failed. Please check your connection and try again.');
     }
 
