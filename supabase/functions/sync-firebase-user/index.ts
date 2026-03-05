@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=deno
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface SyncUserRequest {
@@ -14,8 +14,7 @@ interface SyncUserRequest {
 
 /**
  * Generate a deterministic password from firebase_uid + a secret.
- * This ensures the same user always gets the same password,
- * so we don't need to update it on every login.
+ * Same firebase_uid always produces the same password.
  */
 async function generateDeterministicPassword(
   firebaseUid: string,
@@ -35,7 +34,6 @@ async function generateDeterministicPassword(
     encoder.encode(firebaseUid)
   );
   const hashArray = Array.from(new Uint8Array(signature));
-  // Convert to base64url for a safe password string
   const base64 = btoa(String.fromCharCode(...hashArray));
   return "Lv!" + base64.replace(/\+/g, "-").replace(/\//g, "_").slice(0, 40);
 }
@@ -61,140 +59,126 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const publicClient = createClient(supabaseUrl, anonKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
     const body: SyncUserRequest = await req.json();
     const { firebase_uid, phone_number, fcm_token } = body;
 
     if (!firebase_uid || !phone_number) {
       return new Response(
-        JSON.stringify({
-          error: "firebase_uid and phone_number are required",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "firebase_uid and phone_number are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const email = `${phone_number.replace("+", "")}@livenzo.app`;
-    // Deterministic password: same firebase_uid always produces the same password
+    const email = `${phone_number.replace(/\+/g, "")}@livenzo.app`;
     const password = await generateDeterministicPassword(firebase_uid, serviceRoleKey);
 
-    console.log("Syncing user:", {
-      firebase_uid,
-      phone_number,
-      email,
-      has_fcm_token: !!fcm_token,
-    });
+    console.log("sync-firebase-user:", { firebase_uid, phone_number, email });
 
-    // Find existing user
-    const { data: list, error: listErr } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
+    // ─── Step 1: Check if user already exists ───
+    // First check our mapping table (fast, no auth API call)
+    let supabaseUserId: string | null = null;
 
-    if (listErr) {
-      console.error("listUsers error:", listErr);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to check users",
-          details: listErr.message,
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    const { data: mapping } = await admin
+      .from("firebase_user_mappings")
+      .select("supabase_user_id")
+      .eq("firebase_uid", firebase_uid)
+      .maybeSingle();
+
+    if (mapping?.supabase_user_id) {
+      supabaseUserId = mapping.supabase_user_id;
+      console.log("Found user via mapping table:", supabaseUserId);
     }
 
-    let supabaseUserId: string | null = null;
-    let finalEmail = email;
-
-    const existing = list.users.find(
-      (u: { phone?: string; email?: string }) =>
-        u.phone === phone_number || u.email === email
-    );
-
-    if (existing) {
-      supabaseUserId = existing.id;
-      finalEmail = existing.email || email;
-
-      // For existing users: only update metadata, do NOT change the password
-      // unless this is the first time we're setting the deterministic password.
-      // We try signing in first; if it fails, we update the password.
-      console.log("Found existing user:", supabaseUserId);
-
-      // Update metadata only (no password change)
-      const { error: updErr } = await admin.auth.admin.updateUserById(
-        existing.id,
-        {
-          email: finalEmail,
-          email_confirm: true,
-          phone_confirm: true,
-          user_metadata: {
-            ...(existing.user_metadata || {}),
-            firebase_uid,
-            phone: phone_number,
-          },
+    // If no mapping, try getUserByEmail (efficient single-user lookup, no listUsers)
+    if (!supabaseUserId) {
+      try {
+        const { data: existingUser } = await admin.auth.admin.getUserByEmail(email);
+        if (existingUser?.user) {
+          supabaseUserId = existingUser.user.id;
+          console.log("Found user via email lookup:", supabaseUserId);
         }
-      );
-
-      if (updErr) {
-        console.error("updateUserById metadata error:", updErr);
-        // Non-fatal, continue to try sign-in
+      } catch (_e) {
+        // getUserByEmail throws if user not found — that's fine, means new user
+        console.log("No existing user found by email, will create new user");
       }
+    }
 
-      // Try signing in with deterministic password
+    // ─── Step 2: Handle existing vs new user ───
+    if (supabaseUserId) {
+      // EXISTING USER: Try to sign in with deterministic password
+      console.log("Existing user flow for:", supabaseUserId);
+
+      // Try sign-in first (most common case for returning users)
+      const signInClient = createClient(supabaseUrl, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+
       const { data: signInData, error: signInErr } =
-        await publicClient.auth.signInWithPassword({
-          email: finalEmail,
-          password,
-        });
+        await signInClient.auth.signInWithPassword({ email, password });
 
       if (signInData?.session) {
         console.log("Existing user signed in successfully");
-        // Save FCM token and profile in background
-        await syncProfileAndFcm(admin, supabaseUserId!, firebase_uid, phone_number, fcm_token);
-
-        return new Response(
-          JSON.stringify({
-            access_token: signInData.session.access_token,
-            refresh_token: signInData.session.refresh_token,
-            user_id: supabaseUserId,
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+        // Background: sync profile, mapping, FCM
+        await syncAll(admin, supabaseUserId, firebase_uid, phone_number, fcm_token);
+        return jsonResponse(200, {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+          user_id: supabaseUserId,
+        });
       }
 
-      // Sign-in failed — likely old user with random password. Update to deterministic password.
-      console.log("Sign-in failed for existing user, resetting password to deterministic:", signInErr?.message);
+      // Sign-in failed — legacy user with old random password
+      // Update password to deterministic and retry
+      console.log("Sign-in failed, migrating password:", signInErr?.message);
+
       const { error: pwdErr } = await admin.auth.admin.updateUserById(
-        existing.id,
-        { password }
+        supabaseUserId,
+        {
+          password,
+          email,
+          email_confirm: true,
+          phone: phone_number,
+          phone_confirm: true,
+          user_metadata: { firebase_uid, phone: phone_number },
+        }
       );
 
       if (pwdErr) {
-        console.error("Password reset error:", pwdErr);
-        return new Response(
-          JSON.stringify({
-            error: "Failed to reset user credentials",
-            details: pwdErr.message,
-          }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+        console.error("Password migration error:", pwdErr);
+        return jsonResponse(500, { error: "Failed to migrate user credentials", details: pwdErr.message });
       }
+
+      // Small delay to let auth state propagate
+      await new Promise((r) => setTimeout(r, 300));
+
+      // Retry sign-in after password update
+      const signInClient2 = createClient(supabaseUrl, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+
+      const { data: retryData, error: retryErr } =
+        await signInClient2.auth.signInWithPassword({ email, password });
+
+      if (!retryData?.session) {
+        console.error("Retry sign-in failed:", retryErr);
+        return jsonResponse(500, {
+          error: "Failed to create session after password migration",
+          details: retryErr?.message || "Unknown error",
+        });
+      }
+
+      console.log("Existing user signed in after password migration");
+      await syncAll(admin, supabaseUserId, firebase_uid, phone_number, fcm_token);
+      return jsonResponse(200, {
+        access_token: retryData.session.access_token,
+        refresh_token: retryData.session.refresh_token,
+        user_id: supabaseUserId,
+      });
+
     } else {
-      // New user: create with deterministic password
+      // NEW USER: Create with deterministic password
+      console.log("New user flow — creating user");
+
       const { data: created, error: createErr } =
         await admin.auth.admin.createUser({
           phone: phone_number,
@@ -206,126 +190,136 @@ Deno.serve(async (req: Request) => {
         });
 
       if (createErr) {
-        console.error("createUser error:", createErr);
-        return new Response(
-          JSON.stringify({
-            error: "Failed to create user",
-            details: createErr.message,
-          }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        // Handle edge case: user was created between our check and create call
+        if (createErr.message?.includes("already been registered") ||
+            createErr.message?.includes("already exists")) {
+          console.log("User was created concurrently, retrying as existing user");
+          // Retry as existing user
+          try {
+            const { data: raceUser } = await admin.auth.admin.getUserByEmail(email);
+            if (raceUser?.user) {
+              supabaseUserId = raceUser.user.id;
+
+              // Update password to our deterministic one
+              await admin.auth.admin.updateUserById(supabaseUserId, { password });
+              await new Promise((r) => setTimeout(r, 300));
+
+              const raceClient = createClient(supabaseUrl, anonKey, {
+                auth: { autoRefreshToken: false, persistSession: false },
+              });
+              const { data: raceSign } = await raceClient.auth.signInWithPassword({ email, password });
+
+              if (raceSign?.session) {
+                await syncAll(admin, supabaseUserId, firebase_uid, phone_number, fcm_token);
+                return jsonResponse(200, {
+                  access_token: raceSign.session.access_token,
+                  refresh_token: raceSign.session.refresh_token,
+                  user_id: supabaseUserId,
+                });
+              }
+            }
+          } catch (_raceErr) {
+            // fall through to error
           }
-        );
+          return jsonResponse(500, { error: "Failed to create user (race condition)", details: createErr.message });
+        }
+
+        console.error("createUser error:", createErr);
+        return jsonResponse(500, { error: "Failed to create user", details: createErr.message });
       }
+
       supabaseUserId = created.user.id;
-      finalEmail = email;
       console.log("Created new user:", supabaseUserId);
-    }
 
-    // Sync profile and FCM token
-    await syncProfileAndFcm(admin, supabaseUserId!, firebase_uid, phone_number, fcm_token);
+      // Sync profile, mapping, FCM
+      await syncAll(admin, supabaseUserId, firebase_uid, phone_number, fcm_token);
 
-    // Create session via sign-in
-    console.log("Creating session for:", finalEmail);
-    const { data: signInData, error: signInErr } =
-      await publicClient.auth.signInWithPassword({
-        email: finalEmail,
-        password,
+      // Small delay before sign-in for new user
+      await new Promise((r) => setTimeout(r, 200));
+
+      // Sign in to create session
+      const newClient = createClient(supabaseUrl, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
       });
 
-    if (signInErr || !signInData?.session) {
-      console.error("signInWithPassword error:", signInErr);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to create session",
-          details: signInErr?.message || "signInWithPassword failed",
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+      const { data: newSignIn, error: newSignErr } =
+        await newClient.auth.signInWithPassword({ email, password });
 
-    return new Response(
-      JSON.stringify({
-        access_token: signInData.session.access_token,
-        refresh_token: signInData.session.refresh_token,
-        user_id: supabaseUserId,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (!newSignIn?.session) {
+        console.error("New user sign-in failed:", newSignErr);
+        return jsonResponse(500, {
+          error: "Failed to create session for new user",
+          details: newSignErr?.message || "Unknown error",
+        });
       }
-    );
+
+      console.log("New user session created successfully");
+      return jsonResponse(200, {
+        access_token: newSignIn.session.access_token,
+        refresh_token: newSignIn.session.refresh_token,
+        user_id: supabaseUserId,
+      });
+    }
   } catch (error) {
-    console.error("Sync user error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("sync-firebase-user unhandled error:", error);
+    return jsonResponse(500, { error: "Internal server error" });
   }
 });
 
+/** JSON response helper */
+function jsonResponse(status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 /**
- * Helper: upsert user_profiles and save FCM token
+ * Sync profile, firebase mapping, and FCM token (best-effort, non-blocking errors)
  */
-async function syncProfileAndFcm(
+async function syncAll(
   admin: ReturnType<typeof createClient>,
   userId: string,
   firebaseUid: string,
   phoneNumber: string,
   fcmToken?: string | null
 ) {
-  // Upsert user_profiles
-  const profilePayload: Record<string, unknown> = {
-    id: userId,
-    firebase_uid: firebaseUid,
-    phone: phoneNumber,
-    updated_at: new Date().toISOString(),
-  };
-  if (fcmToken) profilePayload.fcm_token = fcmToken;
+  // 1. Upsert firebase_user_mappings
+  const { error: mapErr } = await admin
+    .from("firebase_user_mappings")
+    .upsert(
+      {
+        firebase_uid: firebaseUid,
+        supabase_user_id: userId,
+        phone_number: phoneNumber,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "firebase_uid" }
+    );
+  if (mapErr) console.error("firebase_user_mappings upsert error:", mapErr);
 
+  // 2. Upsert user_profiles
   const { error: profileErr } = await admin
     .from("user_profiles")
-    .upsert(profilePayload, { onConflict: "id", ignoreDuplicates: false })
-    .select()
-    .maybeSingle();
+    .upsert(
+      {
+        id: userId,
+        firebase_uid: firebaseUid,
+        phone: phoneNumber,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id", ignoreDuplicates: false }
+    );
+  if (profileErr) console.error("user_profiles upsert error:", profileErr);
 
-  if (profileErr) {
-    console.error("user_profiles upsert error:", profileErr);
-  }
-
-  // Save FCM token
+  // 3. Save FCM token
   if (fcmToken) {
-    console.log("Saving FCM token for user:", userId);
-    try {
-      const { error: fcmErr } = await admin.rpc("upsert_fcm_token_safe", {
-        p_user_id: userId,
-        p_token: fcmToken,
-      });
-
-      if (fcmErr) {
-        console.error("FCM RPC failed, trying fallback:", fcmErr.message);
-        const { error: fallbackErr } = await admin
-          .from("fcm_tokens")
-          .upsert(
-            [
-              {
-                user_id: userId,
-                token: fcmToken,
-                created_at: new Date().toISOString(),
-              },
-            ],
-            { onConflict: "user_id", ignoreDuplicates: false }
-          );
-        if (fallbackErr) {
-          console.error("Fallback FCM upsert failed:", fallbackErr);
-        }
-      }
-    } catch (error) {
-      console.error("Exception saving FCM token:", error);
-    }
+    const { error: fcmErr } = await admin
+      .from("fcm_tokens")
+      .upsert(
+        { user_id: userId, token: fcmToken, created_at: new Date().toISOString() },
+        { onConflict: "user_id", ignoreDuplicates: false }
+      );
+    if (fcmErr) console.error("FCM token upsert error:", fcmErr);
   }
 }
