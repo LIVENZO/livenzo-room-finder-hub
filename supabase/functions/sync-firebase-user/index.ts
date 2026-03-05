@@ -12,12 +12,32 @@ interface SyncUserRequest {
   fcm_token?: string | null;
 }
 
-function generateTempPassword(length = 32): string {
-  const chars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_!@#$%^&*()";
-  const array = new Uint32Array(length);
-  crypto.getRandomValues(array);
-  return Array.from(array, (v) => chars[v % chars.length]).join("");
+/**
+ * Generate a deterministic password from firebase_uid + a secret.
+ * This ensures the same user always gets the same password,
+ * so we don't need to update it on every login.
+ */
+async function generateDeterministicPassword(
+  firebaseUid: string,
+  secret: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(firebaseUid)
+  );
+  const hashArray = Array.from(new Uint8Array(signature));
+  // Convert to base64url for a safe password string
+  const base64 = btoa(String.fromCharCode(...hashArray));
+  return "Lv!" + base64.replace(/\+/g, "-").replace(/\//g, "_").slice(0, 40);
 }
 
 Deno.serve(async (req: Request) => {
@@ -61,7 +81,8 @@ Deno.serve(async (req: Request) => {
     }
 
     const email = `${phone_number.replace("+", "")}@livenzo.app`;
-    const tempPassword = generateTempPassword();
+    // Deterministic password: same firebase_uid always produces the same password
+    const password = await generateDeterministicPassword(firebase_uid, serviceRoleKey);
 
     console.log("Syncing user:", {
       firebase_uid,
@@ -102,13 +123,18 @@ Deno.serve(async (req: Request) => {
       supabaseUserId = existing.id;
       finalEmail = existing.email || email;
 
+      // For existing users: only update metadata, do NOT change the password
+      // unless this is the first time we're setting the deterministic password.
+      // We try signing in first; if it fails, we update the password.
+      console.log("Found existing user:", supabaseUserId);
+
+      // Update metadata only (no password change)
       const { error: updErr } = await admin.auth.admin.updateUserById(
         existing.id,
         {
           email: finalEmail,
           email_confirm: true,
           phone_confirm: true,
-          password: tempPassword,
           user_metadata: {
             ...(existing.user_metadata || {}),
             firebase_uid,
@@ -118,11 +144,48 @@ Deno.serve(async (req: Request) => {
       );
 
       if (updErr) {
-        console.error("updateUserById error:", updErr);
+        console.error("updateUserById metadata error:", updErr);
+        // Non-fatal, continue to try sign-in
+      }
+
+      // Try signing in with deterministic password
+      const { data: signInData, error: signInErr } =
+        await publicClient.auth.signInWithPassword({
+          email: finalEmail,
+          password,
+        });
+
+      if (signInData?.session) {
+        console.log("Existing user signed in successfully");
+        // Save FCM token and profile in background
+        await syncProfileAndFcm(admin, supabaseUserId!, firebase_uid, phone_number, fcm_token);
+
         return new Response(
           JSON.stringify({
-            error: "Failed to update user",
-            details: updErr.message,
+            access_token: signInData.session.access_token,
+            refresh_token: signInData.session.refresh_token,
+            user_id: supabaseUserId,
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Sign-in failed — likely old user with random password. Update to deterministic password.
+      console.log("Sign-in failed for existing user, resetting password to deterministic:", signInErr?.message);
+      const { error: pwdErr } = await admin.auth.admin.updateUserById(
+        existing.id,
+        { password }
+      );
+
+      if (pwdErr) {
+        console.error("Password reset error:", pwdErr);
+        return new Response(
+          JSON.stringify({
+            error: "Failed to reset user credentials",
+            details: pwdErr.message,
           }),
           {
             status: 500,
@@ -130,13 +193,13 @@ Deno.serve(async (req: Request) => {
           }
         );
       }
-      console.log("Updated existing user:", supabaseUserId);
     } else {
+      // New user: create with deterministic password
       const { data: created, error: createErr } =
         await admin.auth.admin.createUser({
           phone: phone_number,
           email,
-          password: tempPassword,
+          password,
           phone_confirm: true,
           email_confirm: true,
           user_metadata: { firebase_uid, phone: phone_number },
@@ -160,77 +223,15 @@ Deno.serve(async (req: Request) => {
       console.log("Created new user:", supabaseUserId);
     }
 
-    // Upsert user_profiles
-    const profilePayload: Record<string, unknown> = {
-      id: supabaseUserId,
-      firebase_uid,
-      phone: phone_number,
-      updated_at: new Date().toISOString(),
-    };
-    if (fcm_token) profilePayload.fcm_token = fcm_token;
+    // Sync profile and FCM token
+    await syncProfileAndFcm(admin, supabaseUserId!, firebase_uid, phone_number, fcm_token);
 
-    const { error: profileErr } = await admin
-      .from("user_profiles")
-      .upsert(profilePayload, { onConflict: "id", ignoreDuplicates: false })
-      .select()
-      .maybeSingle();
-
-    if (profileErr) {
-      console.error("user_profiles upsert error:", profileErr);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to sync user profile",
-          details: profileErr.message,
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Save FCM token
-    if (fcm_token && supabaseUserId) {
-      console.log("Saving FCM token for user:", supabaseUserId);
-      try {
-        const { error: fcmErr } = await admin.rpc("upsert_fcm_token_safe", {
-          p_user_id: supabaseUserId,
-          p_token: fcm_token,
-        });
-
-        if (fcmErr) {
-          console.error("FCM RPC failed, trying fallback:", fcmErr.message);
-          const { error: fallbackErr } = await admin
-            .from("fcm_tokens")
-            .upsert(
-              [
-                {
-                  user_id: supabaseUserId,
-                  token: fcm_token,
-                  created_at: new Date().toISOString(),
-                },
-              ],
-              { onConflict: "user_id", ignoreDuplicates: false }
-            );
-          if (fallbackErr) {
-            console.error("Fallback FCM upsert failed:", fallbackErr);
-          } else {
-            console.log("FCM token saved via fallback");
-          }
-        } else {
-          console.log("FCM token saved via RPC");
-        }
-      } catch (error) {
-        console.error("Exception saving FCM token:", error);
-      }
-    }
-
-    // Create session
+    // Create session via sign-in
     console.log("Creating session for:", finalEmail);
     const { data: signInData, error: signInErr } =
       await publicClient.auth.signInWithPassword({
         email: finalEmail,
-        password: tempPassword,
+        password,
       });
 
     if (signInErr || !signInData?.session) {
@@ -266,3 +267,65 @@ Deno.serve(async (req: Request) => {
     });
   }
 });
+
+/**
+ * Helper: upsert user_profiles and save FCM token
+ */
+async function syncProfileAndFcm(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  firebaseUid: string,
+  phoneNumber: string,
+  fcmToken?: string | null
+) {
+  // Upsert user_profiles
+  const profilePayload: Record<string, unknown> = {
+    id: userId,
+    firebase_uid: firebaseUid,
+    phone: phoneNumber,
+    updated_at: new Date().toISOString(),
+  };
+  if (fcmToken) profilePayload.fcm_token = fcmToken;
+
+  const { error: profileErr } = await admin
+    .from("user_profiles")
+    .upsert(profilePayload, { onConflict: "id", ignoreDuplicates: false })
+    .select()
+    .maybeSingle();
+
+  if (profileErr) {
+    console.error("user_profiles upsert error:", profileErr);
+  }
+
+  // Save FCM token
+  if (fcmToken) {
+    console.log("Saving FCM token for user:", userId);
+    try {
+      const { error: fcmErr } = await admin.rpc("upsert_fcm_token_safe", {
+        p_user_id: userId,
+        p_token: fcmToken,
+      });
+
+      if (fcmErr) {
+        console.error("FCM RPC failed, trying fallback:", fcmErr.message);
+        const { error: fallbackErr } = await admin
+          .from("fcm_tokens")
+          .upsert(
+            [
+              {
+                user_id: userId,
+                token: fcmToken,
+                created_at: new Date().toISOString(),
+              },
+            ],
+            { onConflict: "user_id", ignoreDuplicates: false }
+          );
+        if (fallbackErr) {
+          console.error("Fallback FCM upsert failed:", fallbackErr);
+        }
+      }
+    } catch (error) {
+      console.error("Exception saving FCM token:", error);
+    }
+  }
+}
