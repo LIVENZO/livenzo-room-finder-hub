@@ -7,7 +7,6 @@ import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 
 import { toast } from 'sonner';
-import { openExternalUrl } from '@/utils/openExternalUrl';
 import BookingFlowSheet from './BookingFlowSheet';
 import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
 
@@ -82,7 +81,7 @@ Room ID: ${room.id}
 Please help me schedule a visit.`;
                 const encodedMessage = encodeURIComponent(message);
                 const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
-                openExternalUrl(whatsappUrl);
+                window.open(whatsappUrl, '_blank');
               }}>
 
                 🏠 Offline Visit

@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { openExternalUrl } from '@/utils/openExternalUrl';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
@@ -139,7 +138,7 @@ const FindRoom: React.FC = () => {
                 onClick={() => {
                   const phoneNumber = '917488698970';
                   const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
-                  openExternalUrl(`https://wa.me/${phoneNumber}?text=${message}`);
+                  window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
                 }}
                 className="w-full sm:w-auto px-6 py-3 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
                 style={{ backgroundColor: '#25D366' }}>
