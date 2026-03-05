@@ -67,24 +67,20 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
 
             const result = await response.json();
             
-            if (result.success) {
+            if (result.access_token && result.refresh_token) {
               console.log('User synced successfully to Supabase:', result);
               try {
-                if (result.access_token && result.refresh_token) {
-                  const { data, error } = await supabase.auth.setSession({
-                    access_token: result.access_token,
-                    refresh_token: result.refresh_token
-                  });
-                  if (error) {
-                    console.error('Failed to set Supabase session:', error);
-                    setError('Failed to establish app session');
-                    setIsLoading(false);
-                    return;
-                  }
-                  console.log('Supabase session established:', data?.session?.user?.id);
-                } else {
-                  console.warn('No tokens returned from sync function');
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: result.access_token,
+                  refresh_token: result.refresh_token
+                });
+                if (error) {
+                  console.error('Failed to set Supabase session:', error);
+                  setError('Failed to establish app session');
+                  setIsLoading(false);
+                  return;
                 }
+                console.log('Supabase session established:', data?.session?.user?.id);
                 setIsLoading(false);
                 setError(null);
                 setIsLoggedIn(true);
@@ -149,7 +145,7 @@ export const useFirebaseAuth = (): FirebaseAuthState & FirebaseAuthMethods => {
             });
 
             const result = await response.json();
-            if (result.success) {
+            if (result.access_token) {
               console.log('FCM token synced successfully for logged in user');
             }
           }
