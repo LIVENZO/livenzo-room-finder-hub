@@ -82,29 +82,22 @@ Deno.serve(async (req: Request) => {
     } else {
       console.log("Sign-in failed, looking up or creating user. Reason:", signInErr?.message);
 
-      // Try to find user by email first
+      // Search for existing user by scanning listUsers (most reliable)
       let existingUser = null;
-      try {
-        const { data: byEmail } = await admin.auth.admin.getUserByEmail(email);
-        if (byEmail?.user) existingUser = byEmail.user;
-      } catch (_) { /* not found */ }
-
-      // If not found by email, try by phone (getUserByPhone not available, search via listUsers pages)
-      if (!existingUser) {
-        let page = 1;
-        const perPage = 1000;
-        let found = false;
-        while (!found) {
-          const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
-          if (listErr || !list?.users?.length) break;
-          const match = list.users.find((u: { phone?: string }) => u.phone === phone_number);
-          if (match) {
-            existingUser = match;
-            found = true;
-          }
-          if (list.users.length < perPage) break;
-          page++;
+      let page = 1;
+      const perPage = 1000;
+      while (!existingUser) {
+        const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+        if (listErr || !list?.users?.length) break;
+        const match = list.users.find((u: any) => 
+          u.email === email || u.phone === phone_number
+        );
+        if (match) {
+          existingUser = match;
+          break;
         }
+        if (list.users.length < perPage) break;
+        page++;
       }
 
       if (existingUser) {
@@ -115,6 +108,7 @@ Deno.serve(async (req: Request) => {
         const { error: updErr } = await admin.auth.admin.updateUserById(existingUser.id, {
           email: finalEmail,
           email_confirm: true,
+          phone: phone_number,
           phone_confirm: true,
           password,
           user_metadata: {
@@ -144,15 +138,41 @@ Deno.serve(async (req: Request) => {
         });
 
         if (createErr) {
-          console.error("createUser error:", createErr);
-          return new Response(
-            JSON.stringify({ error: "Failed to create user", details: createErr.message }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+          // If email/phone already exists, retry lookup once more
+          if (createErr.message?.includes("already been registered")) {
+            console.log("Create failed with duplicate, retrying lookup...");
+            const { data: retryList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            const retryMatch = retryList?.users?.find((u: any) => u.email === email || u.phone === phone_number);
+            if (retryMatch) {
+              supabaseUserId = retryMatch.id;
+              finalEmail = retryMatch.email || email;
+              await admin.auth.admin.updateUserById(retryMatch.id, {
+                password,
+                phone: phone_number,
+                phone_confirm: true,
+                email_confirm: true,
+                user_metadata: { ...(retryMatch.user_metadata || {}), firebase_uid, phone: phone_number },
+              });
+              console.log("Updated user on retry:", supabaseUserId);
+            } else {
+              console.error("createUser error (user not found on retry):", createErr);
+              return new Response(
+                JSON.stringify({ error: "Failed to create user", details: createErr.message }),
+                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+          } else {
+            console.error("createUser error:", createErr);
+            return new Response(
+              JSON.stringify({ error: "Failed to create user", details: createErr.message }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } else {
+          supabaseUserId = created.user.id;
+          finalEmail = email;
+          console.log("Created new user:", supabaseUserId);
         }
-        supabaseUserId = created.user.id;
-        finalEmail = email;
-        console.log("Created new user:", supabaseUserId);
       }
 
       // Now sign in with the deterministic password to get session tokens
