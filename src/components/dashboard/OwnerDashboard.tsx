@@ -12,11 +12,11 @@ import WelcomeHeader from "./components/WelcomeHeader";
 import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
 
 const ownerHeroImages = [
-  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
-  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549670438_r9uhoctwnhi.jpg",
-  "https://api.livenzo.site/storage/v1/object/public/rooms/e02288a5-2628-4a59-9f90-ac99151177f9/1768481622588_ba4c1lww6ke.jpg",
-  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg",
-  "https://api.livenzo.site/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770624046569_pmhxhc6obc.jpg",
+  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
+  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549670438_r9uhoctwnhi.jpg",
+  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/e02288a5-2628-4a59-9f90-ac99151177f9/1768481622588_ba4c1lww6ke.jpg",
+  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg",
+  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770624046569_pmhxhc6obc.jpg",
 ];
 
 const OwnerDashboard: React.FC = () => {
