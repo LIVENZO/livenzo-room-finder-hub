@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { openExternalUrl } from '@/utils/openExternalUrl';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth'; // Updated import
 import { supabase } from '@/integrations/supabase/client';
@@ -124,7 +125,7 @@ const MyListings: React.FC = () => {
                 const message = encodeURIComponent(
                   "Hi, I want to list a room on Livenzo.\n\nHouse Name:\nHouse Number:\nLocation:"
                 );
-                window.open(`https://wa.me/917488698970?text=${message}`, '_blank');
+                openExternalUrl(`https://wa.me/917488698970?text=${message}`);
               }}>
 
                 📸 Book Photographer

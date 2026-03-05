@@ -63,7 +63,8 @@ export const useReferral = () => {
     );
 
     const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    const { openExternalUrl } = await import('@/utils/openExternalUrl');
+    openExternalUrl(whatsappUrl);
   };
 
   // Capture referral code from URL
