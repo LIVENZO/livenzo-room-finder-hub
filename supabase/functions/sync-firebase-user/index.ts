@@ -138,24 +138,80 @@ Deno.serve(async (req: Request) => {
         });
 
         if (createErr) {
-          // If email/phone already exists, retry lookup once more
-          if (createErr.message?.includes("already been registered")) {
-            console.log("Create failed with duplicate, retrying lookup...");
-            const { data: retryList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-            const retryMatch = retryList?.users?.find((u: any) => u.email === email || u.phone === phone_number);
-            if (retryMatch) {
+          const isDuplicateIdentityError =
+            createErr.code === "phone_exists" ||
+            createErr.code === "email_exists" ||
+            createErr.message?.includes("already been registered") ||
+            createErr.message?.includes("already registered");
+
+          // If email/phone already exists, do a full lookup and convert to update flow
+          if (isDuplicateIdentityError) {
+            console.log("Create failed with duplicate identity, retrying lookup...");
+
+            let retryMatch: any = null;
+            let retryPage = 1;
+            const retryPerPage = 1000;
+
+            while (!retryMatch) {
+              const { data: retryList, error: retryListErr } = await admin.auth.admin.listUsers({
+                page: retryPage,
+                perPage: retryPerPage,
+              });
+
+              if (retryListErr || !retryList?.users?.length) break;
+
+              retryMatch = retryList.users.find(
+                (u: any) => u.email === email || u.phone === phone_number
+              ) || null;
+
+              if (retryMatch || retryList.users.length < retryPerPage) break;
+              retryPage++;
+            }
+
+            // Extra fallback: map through user_profiles when auth list lookup misses
+            if (!retryMatch) {
+              const { data: profileByPhone } = await admin
+                .from("user_profiles")
+                .select("id")
+                .eq("phone", phone_number)
+                .maybeSingle();
+
+              if (profileByPhone?.id) {
+                retryMatch = { id: profileByPhone.id, email };
+              }
+            }
+
+            if (retryMatch?.id) {
               supabaseUserId = retryMatch.id;
               finalEmail = retryMatch.email || email;
-              await admin.auth.admin.updateUserById(retryMatch.id, {
+
+              const { error: retryUpdateErr } = await admin.auth.admin.updateUserById(retryMatch.id, {
+                email: finalEmail,
                 password,
                 phone: phone_number,
                 phone_confirm: true,
                 email_confirm: true,
-                user_metadata: { ...(retryMatch.user_metadata || {}), firebase_uid, phone: phone_number },
+                user_metadata: {
+                  ...(retryMatch.user_metadata || {}),
+                  firebase_uid,
+                  phone: phone_number,
+                },
               });
-              console.log("Updated user on retry:", supabaseUserId);
+
+              if (retryUpdateErr) {
+                console.error("updateUserById after duplicate lookup failed:", retryUpdateErr);
+                return new Response(
+                  JSON.stringify({
+                    error: "Failed to update duplicate user",
+                    details: retryUpdateErr.message,
+                  }),
+                  { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
+
+              console.log("Updated user on duplicate retry:", supabaseUserId);
             } else {
-              console.error("createUser error (user not found on retry):", createErr);
+              console.error("createUser duplicate error (user not found on retry):", createErr);
               return new Response(
                 JSON.stringify({ error: "Failed to create user", details: createErr.message }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
