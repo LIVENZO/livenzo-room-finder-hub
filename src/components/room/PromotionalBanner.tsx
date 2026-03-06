@@ -20,13 +20,13 @@ const offers: [OfferDetail, OfferDetail] = [
     title: 'Get Flat 25% OFF',
     subtitle: 'On Your First Booking',
     description:
-      'Book your first room through Livenzo and get a flat 25% discount on your first month\'s rent. Valid for new users only. Terms & conditions apply.',
+      "Book your first room through Livenzo and get a flat 25% discount on your first month's rent. Valid for new users only. Terms & conditions apply.",
   },
   {
     title: 'Enjoy Free Drop',
     subtitle: 'To Your Accommodation',
     description:
-      'When you book through Livenzo, we'll arrange a free drop to your accommodation from major arrival points in the city. Available for bookings above ₹3,000/month.',
+      "When you book through Livenzo, we'll arrange a free drop to your accommodation from major arrival points in the city. Available for bookings above ₹3,000/month.",
   },
 ];
 
