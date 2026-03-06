@@ -11,6 +11,7 @@ import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
+import PromotionalBanner from '@/components/room/PromotionalBanner';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
