@@ -124,6 +124,9 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
         
+        {/* Limited Time Offer Banner */}
+        <LimitedOfferBanner />
+
         {/* WhatsApp Support Banner - shown when no rooms found */}
         {!isLoading && filteredRooms.length === 0 &&
         <div className="mb-4">
