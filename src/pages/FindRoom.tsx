@@ -9,6 +9,7 @@ import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
+import LimitedOfferBanner from '@/components/room/LimitedOfferBanner';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -123,6 +124,9 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
         
+        {/* Limited Time Offer Banner */}
+        <LimitedOfferBanner />
+
         {/* WhatsApp Support Banner - shown when no rooms found */}
         {!isLoading && filteredRooms.length === 0 &&
         <div className="mb-4">
