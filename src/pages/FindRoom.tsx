@@ -11,6 +11,7 @@ import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
+import PromotionalBanner from '@/components/room/PromotionalBanner';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -123,6 +124,9 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
         
+        {/* Promotional Banner */}
+        <PromotionalBanner />
+
         {/* WhatsApp Support Banner - shown when no rooms found */}
         {!isLoading && filteredRooms.length === 0 &&
         <div className="mb-4">
