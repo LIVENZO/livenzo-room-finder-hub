@@ -62,7 +62,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     window.open(whatsappUrl, "_blank");
   };
 
-  const discountedPrice = Math.round(room.price * 0.75);
+  const hasDiscount = !!room.minimum_price;
+  const displayPrice = room.minimum_price ?? room.price;
 
   return (
     <Card
