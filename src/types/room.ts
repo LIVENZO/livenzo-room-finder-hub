@@ -27,8 +27,6 @@ export interface Room {
   house_name?: string;
   distance?: number; // Distance from search location in km
   is_top_room?: boolean;
-  maximum_price?: number;
-  minimum_price?: number;
 }
 
 export interface SearchLocation {

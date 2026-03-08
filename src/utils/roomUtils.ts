@@ -80,9 +80,7 @@ export const mapDbRoomToRoom = (data: any): Room => {
     createdAt: data.created_at,
     house_no: data.house_no,
     house_name: data.house_name,
-    is_top_room: data.is_top_room ?? false,
-    maximum_price: data.maximum_price ? Number(data.maximum_price) : undefined,
-    minimum_price: data.minimum_price ? Number(data.minimum_price) : undefined,
+    is_top_room: data.is_top_room ?? false
   };
 };
 
