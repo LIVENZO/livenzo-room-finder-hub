@@ -55,7 +55,7 @@ const BookingStatusCard: React.FC = () => {
         // Fetch room details
         const { data: roomData } = await supabase.
         from('rooms').
-        select('title, price').
+        select('title, price, maximum_price, minimum_price').
         eq('id', data.room_id).
         maybeSingle();
 
