@@ -158,17 +158,18 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             
             Book
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
-            onClick={(e) => {
-              e.stopPropagation();
-              toast.success(`You save ${formatPrice(Math.round(room.price * 0.25))} on first month!`);
-            }}>
-            
-            Save {formatPrice(Math.round(room.price * 0.25))}
-          </Button>
+          {hasDiscount && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              onClick={(e) => {
+                e.stopPropagation();
+                toast.success(`You save ${formatPrice(room.price - displayPrice)} on first month!`);
+              }}>
+              Save {formatPrice(room.price - displayPrice)}
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>);
