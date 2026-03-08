@@ -4,8 +4,8 @@ import { CalendarCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
+import { getRoomPricing } from '@/utils/pricingUtils';
 import BookingFlowSheet from './BookingFlowSheet';
-import { getConfirmationFee } from './BookingPriceBreakdown';
 
 interface StickyBottomBarProps {
   room: Room;
@@ -16,6 +16,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const pricing = getRoomPricing(room);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,13 +63,15 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
               <div className="w-1/3 min-w-fit">
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-foreground">
-                    ₹{getConfirmationFee(room.price).toLocaleString()}
+                    ₹{pricing.finalPrice.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
-                    ₹{room.price.toLocaleString()}/mo
-                  </span>
+                  {pricing.originalPrice !== pricing.finalPrice && (
+                    <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
+                      ₹{pricing.originalPrice.toLocaleString()}/mo
+                    </span>
+                  )}
                   <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
-                    Save 25% first month
+                    Save {pricing.discountPercent}% first month
                   </span>
                 </div>
               </div>
@@ -94,7 +97,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
           roomId={room.id}
           userId={user.id}
           roomTitle={room.title}
-          roomPrice={room.price}
+          roomPrice={pricing.finalPrice}
           userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
           userPhone={user.phone || user.user_metadata?.phone || ''}
           userEmail={user.email || ''}
