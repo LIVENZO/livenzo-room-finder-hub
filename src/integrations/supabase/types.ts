@@ -1650,6 +1650,8 @@ export type Database = {
           location: string
           location_latitude: number
           location_longitude: number
+          maximum_price: number
+          minimum_price: number
           owner_id: string
           owner_phone: string
           price: number
@@ -1671,6 +1673,8 @@ export type Database = {
           location: string
           location_latitude: number
           location_longitude: number
+          maximum_price: number
+          minimum_price: number
           owner_id: string
           owner_phone: string
           price: number
