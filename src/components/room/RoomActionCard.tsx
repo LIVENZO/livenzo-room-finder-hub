@@ -39,9 +39,23 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
     <>
       <Card className="sticky top-6">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            ₹{room.price.toLocaleString()}
-            <span className="text-base font-normal text-muted-foreground">/month</span>
+          <CardTitle className="flex items-baseline gap-2">
+            {room.maximum_price && room.minimum_price ? (
+              <>
+                <span className="text-base font-normal text-muted-foreground line-through">
+                  ₹{room.maximum_price.toLocaleString('en-IN')}
+                </span>
+                <span className="text-2xl font-bold text-foreground">
+                  ₹{room.minimum_price.toLocaleString('en-IN')}
+                </span>
+                <span className="text-base font-normal text-muted-foreground">/ month</span>
+              </>
+            ) : (
+              <>
+                <span className="text-2xl font-bold">₹{room.price.toLocaleString('en-IN')}</span>
+                <span className="text-base font-normal text-muted-foreground">/ month</span>
+              </>
+            )}
           </CardTitle>
         </CardHeader>
         
