@@ -60,23 +60,26 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
           <div className="container max-w-6xl mx-auto px-4 py-3">
             <div className="flex items-center gap-4">
               <div className="w-1/3 min-w-fit">
-              <div className="flex flex-col">
-                  {room.minimum_price ? (
+                <div className="flex flex-col">
+                  {room.maximum_price && room.minimum_price ? (
                     <>
                       <span className="text-lg font-bold text-foreground">
                         ₹{room.minimum_price.toLocaleString('en-IN')}
                       </span>
                       <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
-                        ₹{room.price.toLocaleString('en-IN')}/mo
+                        ₹{room.maximum_price.toLocaleString('en-IN')}/mo
                       </span>
                     </>
                   ) : (
                     <>
                       <span className="text-lg font-bold text-foreground">
-                        ₹{room.price.toLocaleString('en-IN')}
+                        ₹{getConfirmationFee(room.price).toLocaleString('en-IN')}
                       </span>
-                      <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
-                        /mo
+                      <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
+                        ₹{room.price.toLocaleString('en-IN')}/mo
+                      </span>
+                      <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
+                        Save 25% first month
                       </span>
                     </>
                   )}
