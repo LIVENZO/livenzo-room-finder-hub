@@ -140,7 +140,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             {/* Price row */}
             <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
               <span className="text-white/50 text-[10px] line-through">{formatPrice(room.price)}</span>
-              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(discountedPrice)}/mo</span>
+              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(discountedPrice)}</span>
             </div>
           </div>
         </div>
