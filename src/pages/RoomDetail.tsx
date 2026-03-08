@@ -193,7 +193,7 @@ const RoomDetail = () => {
           roomId={room.id}
           userId={user.id}
           roomTitle={room.title}
-          roomPrice={room.price}
+          roomPrice={getRoomPricing(room).finalPrice}
           userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
           userPhone={user.phone || user.user_metadata?.phone || ''}
           userEmail={user.email || ''}
