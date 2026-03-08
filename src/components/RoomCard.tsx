@@ -108,50 +108,36 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
           )}
         </div>
-        {/* Green discount sticker - bottom right of image */}
-        <div
-          className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
-          style={{
-            background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
-            minWidth: "140px"
-          }}>
-          
-          {/* Sparkle decorations */}
-          <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
-          <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
-          <div className="absolute bottom-4 left-3 w-0.5 h-0.5 rounded-full bg-white/30" />
-          <div className="absolute top-2 left-1/2 w-[3px] h-[3px] rounded-full bg-white/20" />
-
-          <div className="relative px-3.5 pt-2 pb-2.5">
-            {/* Top row: discount + icon */}
-            <div className="flex items-start justify-between">
-              <div>
+        {hasDiscount && (
+          <div
+            className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
+              minWidth: "140px"
+            }}>
+            <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
+            <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
+            <div className="absolute bottom-4 left-3 w-0.5 h-0.5 rounded-full bg-white/30" />
+            <div className="absolute top-2 left-1/2 w-[3px] h-[3px] rounded-full bg-white/20" />
+            <div className="relative px-3.5 pt-2 pb-2.5">
+              <div className="flex items-start justify-between">
                 <p className="text-white font-extrabold text-base leading-none tracking-tight">
-                  25<span className="text-xs align-top">%</span> OFF
+                  {Math.round(((room.price - displayPrice) / room.price) * 100)}
+                  <span className="text-xs align-top">%</span> OFF
                 </p>
-                
+                <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
+                  <svg className="w-3 h-3 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 17l9.2-9.2M17 17V7H7" />
+                  </svg>
+                </div>
               </div>
-              <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
-                <svg
-                  className="w-3 h-3 text-white/90"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  
-                  <path d="M7 17l9.2-9.2M17 17V7H7" />
-                </svg>
+              <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
+                <span className="text-white/50 text-[10px] line-through">{formatPrice(room.price)}</span>
+                <span className="text-white font-bold text-sm tracking-tight">{formatPrice(displayPrice)}</span>
               </div>
-            </div>
-            {/* Price row */}
-            <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
-              <span className="text-white/50 text-[10px] line-through">{formatPrice(room.price)}</span>
-              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(discountedPrice)}</span>
             </div>
           </div>
-        </div>
+        )}
       </AspectRatio>
       <CardContent className="p-4">
         <h3 className="text-lg font-semibold line-clamp-1">{room.title}</h3>
