@@ -61,13 +61,16 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
             <div className="flex items-center gap-4">
               <div className="w-1/3 min-w-fit">
                 <div className="flex flex-col">
-                  {room.minimum_price ? (
+                  {room.minimum_price && room.minimum_price < room.price ? (
                     <>
+                      <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
+                        ₹{room.price.toLocaleString('en-IN')}
+                      </span>
                       <span className="text-lg font-bold text-foreground">
                         ₹{room.minimum_price.toLocaleString('en-IN')}
                       </span>
-                      <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
-                        ₹{room.price.toLocaleString('en-IN')}/mo
+                      <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
+                        / month
                       </span>
                     </>
                   ) : (
@@ -76,7 +79,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
                         ₹{room.price.toLocaleString('en-IN')}
                       </span>
                       <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
-                        /mo
+                        / month
                       </span>
                     </>
                   )}
