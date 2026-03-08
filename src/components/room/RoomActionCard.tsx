@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { CalendarCheck, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
+import { getRoomPricing } from '@/utils/pricingUtils';
 
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
-import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
+import BookingPriceBreakdown from './BookingPriceBreakdown';
 
 interface RoomActionCardProps {
   room: Room;
@@ -23,6 +24,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 }) => {
   const { user } = useAuth();
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const pricing = getRoomPricing(room);
 
   // Check if current user is the owner
   const isOwner = user?.id === room.ownerId;
@@ -39,9 +41,16 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
     <>
       <Card className="sticky top-6">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            ₹{room.price.toLocaleString()}
+          <CardTitle className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold">
+              ₹{pricing.finalPrice.toLocaleString()}
+            </span>
             <span className="text-base font-normal text-muted-foreground">/month</span>
+            {pricing.originalPrice !== pricing.finalPrice && (
+              <span className="text-sm text-muted-foreground line-through">
+                ₹{pricing.originalPrice.toLocaleString()}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         
@@ -50,13 +59,11 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           <Badge
             variant={room.available ? "default" : "secondary"}
             className={room.available ? "bg-green-100 text-green-800" : ""}>
-
             {room.available ? "Available" : "Not Available"}
           </Badge>
 
           {/* First Month Discount Breakdown */}
-          {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} variant="compact" />}
-          
+          {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
           
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner &&
@@ -72,7 +79,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 
 I want to schedule an offline visit for ${room.title}
 
-₹${room.price.toLocaleString()} | ${roomType} room | ${gender}
+₹${pricing.finalPrice.toLocaleString()} | ${roomType} room | ${gender}
 
 ${room.house_name || ''}, ${room.location}
 
@@ -83,7 +90,6 @@ Please help me schedule a visit.`;
                 const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
                 window.open(whatsappUrl, '_blank');
               }}>
-
                 🏠 Offline Visit
               </Button>
               
@@ -92,7 +98,6 @@ Please help me schedule a visit.`;
               variant="outline"
               className="flex-1 border-primary/30 hover:bg-primary/5 hover:border-primary/50"
               onClick={onCallOwner}>
-
                 <Calendar className="h-4 w-4 mr-2" />
                 Call
               </Button>
@@ -104,33 +109,10 @@ Please help me schedule a visit.`;
           <Button
             className="w-full"
             onClick={handleBookNow}>
-
               <CalendarCheck className="h-4 w-4 mr-2" />
               Book & Pay After Shift
             </Button>
           }
-          
-          {/* Property Details */}
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         </CardContent>
       </Card>
 
@@ -142,14 +124,12 @@ Please help me schedule a visit.`;
         roomId={room.id}
         userId={user.id}
         roomTitle={room.title}
-        roomPrice={room.price}
+        roomPrice={pricing.finalPrice}
         userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
         userPhone={user.phone || user.user_metadata?.phone || ''}
         userEmail={user.email || ''} />
-
       }
     </>);
-
 };
 
 export default RoomActionCard;

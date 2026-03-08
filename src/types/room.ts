@@ -6,6 +6,8 @@ export interface Room {
   images: string[];
   videos?: string[]; // Room video tour URLs (max 2 videos)
   price: number;
+  maximum_price?: number | null;
+  minimum_price?: number | null;
   location: string;
   latitude?: number;
   longitude?: number;

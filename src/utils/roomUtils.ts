@@ -70,6 +70,8 @@ export const mapDbRoomToRoom = (data: any): Room => {
     images: data.images || [],
     videos: data.videos || [],
     price: Number(data.price),
+    maximum_price: data.maximum_price != null ? Number(data.maximum_price) : null,
+    minimum_price: data.minimum_price != null ? Number(data.minimum_price) : null,
     location: data.location,
     latitude: data.location_latitude ? Number(data.location_latitude) : undefined,
     longitude: data.location_longitude ? Number(data.location_longitude) : undefined,

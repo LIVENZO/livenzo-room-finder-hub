@@ -8,6 +8,7 @@ import RoomFacilityBadges from "./room/RoomFacilityBadges";
 import RoomLocation from "./room/RoomLocation";
 import { formatDistance } from "@/utils/roomUtils";
 import { formatPrice } from "@/lib/utils";
+import { getRoomPricing } from "@/utils/pricingUtils";
 import { Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +24,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const pricing = getRoomPricing(room);
 
   useEffect(() => {
     if (user && room.id) {
@@ -56,13 +59,11 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     e.stopPropagation();
 
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
-    const shareText = `Check out this room on Livenzo 👇\n₹${room.price.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
+    const shareText = `Check out this room on Livenzo 👇\n₹${pricing.finalPrice.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, "_blank");
   };
-
-  const discountedPrice = Math.round(room.price * 0.75);
 
   return (
     <Card
@@ -78,16 +79,13 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             disabled={isLoading}
             className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95 transition-colors shadow-sm"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}>
-            
             <Heart
               className={`h-4 w-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
-            
           </button>
           <button
             onClick={handleShare}
             className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95 transition-colors shadow-sm"
             aria-label="Share room">
-            
             <Share2 className="h-4 w-4 text-foreground/70" />
           </button>
         </div>
@@ -98,7 +96,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               📍 {formatDistance(room.distance)}
             </Badge>
           }
-          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
+          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(pricing.finalPrice)}</Badge>
         </div>
         {/* Green discount sticker - bottom right of image */}
         <div
@@ -119,9 +117,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-white font-extrabold text-base leading-none tracking-tight">
-                  25<span className="text-xs align-top">%</span> OFF
+                  {pricing.discountPercent}<span className="text-xs align-top">%</span> OFF
                 </p>
-                
               </div>
               <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
                 <svg
@@ -132,15 +129,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round">
-                  
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
             </div>
             {/* Price row */}
             <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
-              <span className="text-white/50 text-[10px] line-through">{formatPrice(room.price)}</span>
-              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(discountedPrice)}</span>
+              <span className="text-white/50 text-[10px] line-through">{formatPrice(pricing.originalPrice)}</span>
+              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(pricing.finalPrice)}</span>
             </div>
           </div>
         </div>
@@ -161,7 +157,6 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               e.stopPropagation();
               navigate(`/room/${room.id}`);
             }}>
-            
             Book
           </Button>
           <Button
@@ -170,15 +165,13 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
             onClick={(e) => {
               e.stopPropagation();
-              toast.success(`You save ${formatPrice(Math.round(room.price * 0.25))} on first month!`);
+              toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
             }}>
-            
-            Save {formatPrice(Math.round(room.price * 0.25))}
+            Save {formatPrice(pricing.savings)}
           </Button>
         </div>
       </CardFooter>
     </Card>);
-
 };
 
 export default RoomCard;
