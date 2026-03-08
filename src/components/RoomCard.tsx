@@ -67,8 +67,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   return (
     <Card
       className="overflow-hidden cursor-pointer transition-all hover:shadow-lg"
-      onClick={() => navigate(`/room/${room.id}`)}
-    >
+      onClick={() => navigate(`/room/${room.id}`)}>
+      
       <AspectRatio ratio={16 / 9} className="relative">
         <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}
@@ -77,27 +77,27 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             onClick={handleFavoriteToggle}
             disabled={isLoading}
             className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95 transition-colors shadow-sm"
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+            
             <Heart
-              className={`h-4 w-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"}`}
-            />
+              className={`h-4 w-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
+            
           </button>
           <button
             onClick={handleShare}
             className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/95 transition-colors shadow-sm"
-            aria-label="Share room"
-          >
+            aria-label="Share room">
+            
             <Share2 className="h-4 w-4 text-foreground/70" />
           </button>
         </div>
         {/* Price and distance badges - top right */}
         <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
-          {room.distance !== undefined && (
-            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
+          {room.distance !== undefined &&
+          <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground font-medium">
               📍 {formatDistance(room.distance)}
             </Badge>
-          )}
+          }
           <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
         </div>
         {/* Green discount sticker - bottom right of image */}
@@ -105,9 +105,9 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
           className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
           style={{
             background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
-            minWidth: "140px",
-          }}
-        >
+            minWidth: "140px"
+          }}>
+          
           {/* Sparkle decorations */}
           <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
           <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
@@ -121,7 +121,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
                 <p className="text-white font-extrabold text-base leading-none tracking-tight">
                   25<span className="text-xs align-top">%</span> OFF
                 </p>
-                <p className="text-white/85 text-[10px] font-medium mt-0.5 leading-tight">for First Month</p>
+                
               </div>
               <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
                 <svg
@@ -131,8 +131,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
                   stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                  strokeLinejoin="round">
+                  
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
@@ -160,8 +160,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/room/${room.id}`);
-            }}
-          >
+            }}>
+            
             Book
           </Button>
           <Button
@@ -171,14 +171,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             onClick={(e) => {
               e.stopPropagation();
               toast.success(`You save ${formatPrice(Math.round(room.price * 0.25))} on first month!`);
-            }}
-          >
+            }}>
+            
             Save {formatPrice(Math.round(room.price * 0.25))}
           </Button>
         </div>
       </CardFooter>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export default RoomCard;
