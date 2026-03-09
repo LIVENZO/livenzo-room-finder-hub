@@ -96,7 +96,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               📍 {formatDistance(room.distance)}
             </Badge>
           }
-          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(pricing.finalPrice)}</Badge>
+          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}</Badge>
         </div>
         {/* Green discount sticker - bottom right of image */}
         <div
