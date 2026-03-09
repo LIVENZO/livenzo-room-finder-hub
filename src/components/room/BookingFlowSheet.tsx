@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QrPaymentScreen } from '@/components/payments/QrPaymentScreen';
 import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
+import { Room } from '@/types/room';
 
 
 interface BookingFlowSheetProps {
@@ -24,6 +25,7 @@ interface BookingFlowSheetProps {
   userId: string;
   roomTitle: string;
   roomPrice: number;
+  room?: Room;
   userName?: string;
   userPhone?: string;
   userEmail?: string;
@@ -47,6 +49,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   userId,
   roomTitle,
   roomPrice,
+  room,
   userName = '',
   userPhone = '',
   userEmail = '',
@@ -414,7 +417,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                   <p className="text-sm text-muted-foreground">Free drop under 15km.</p>
                 </div>
               </div>
-              <BookingPriceBreakdown monthlyRent={roomPrice} />
+              <BookingPriceBreakdown monthlyRent={roomPrice} room={room} />
             </div>
 
             <Button className="w-full h-12 text-base font-medium" onClick={() => setStep('drop-schedule')} disabled={loading}>
