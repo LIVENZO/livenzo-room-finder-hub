@@ -49,6 +49,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   userId,
   roomTitle,
   roomPrice,
+  room,
   userName = '',
   userPhone = '',
   userEmail = '',
