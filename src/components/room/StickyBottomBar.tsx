@@ -97,7 +97,8 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
           roomId={room.id}
           userId={user.id}
           roomTitle={room.title}
-          roomPrice={pricing.finalPrice}
+          roomPrice={room.price}
+          room={room}
           userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
           userPhone={user.phone || user.user_metadata?.phone || ''}
           userEmail={user.email || ''}

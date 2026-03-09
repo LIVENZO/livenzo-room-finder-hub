@@ -417,7 +417,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                   <p className="text-sm text-muted-foreground">Free drop under 15km.</p>
                 </div>
               </div>
-              <BookingPriceBreakdown monthlyRent={roomPrice} />
+              <BookingPriceBreakdown monthlyRent={roomPrice} room={room} />
             </div>
 
             <Button className="w-full h-12 text-base font-medium" onClick={() => setStep('drop-schedule')} disabled={loading}>
