@@ -21,28 +21,8 @@ export interface RoomPricing {
  * - Otherwise → use `price` with an automatic 25% discount.
  */
 export const getRoomPricing = (room: Room): RoomPricing => {
-  const hasExplicit =
-    room.maximum_price != null &&
-    room.minimum_price != null &&
-    room.maximum_price > 0 &&
-    room.minimum_price > 0;
-
-  if (hasExplicit) {
-    const original = room.maximum_price!;
-    const final_ = room.minimum_price!;
-    const savings = original - final_;
-    const discountPercent = original > 0 ? Math.round((savings / original) * 100) : 0;
-
-    return {
-      finalPrice: final_,
-      originalPrice: original,
-      discountPercent,
-      savings,
-      hasExplicitPricing: true,
-    };
-  }
-
-  // Fallback: auto 25% discount from price
+  // Always use the `price` column as the base and apply a 25% discount.
+  // Never calculate discount from minimum_price.
   const original = room.price;
   const savings = Math.round(original * 0.25);
   const final_ = original - savings;
