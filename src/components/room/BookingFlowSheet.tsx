@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QrPaymentScreen } from '@/components/payments/QrPaymentScreen';
 import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
+import { Room } from '@/types/room';
 
 
 interface BookingFlowSheetProps {
@@ -24,6 +25,7 @@ interface BookingFlowSheetProps {
   userId: string;
   roomTitle: string;
   roomPrice: number;
+  room?: Room;
   userName?: string;
   userPhone?: string;
   userEmail?: string;
