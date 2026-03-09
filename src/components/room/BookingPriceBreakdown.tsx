@@ -36,14 +36,19 @@ const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
   variant = 'default',
   className = '',
 }) => {
-  const { finalPrice, originalPrice, savings, discountPercent } = usePricing(room, monthlyRent);
+  const { finalPrice, savings, discountPercent, displayRent, showStrikethrough, basePrice } = usePricing(room, monthlyRent);
 
   if (variant === 'compact') {
     return (
       <div className={`space-y-2 ${className}`}>
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Monthly Rent</span>
-          <span className="text-muted-foreground line-through">₹{originalPrice.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-foreground font-medium">₹{displayRent.toLocaleString()}</span>
+            {showStrikethrough && (
+              <span className="text-muted-foreground line-through">₹{basePrice.toLocaleString()}</span>
+            )}
+          </div>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-green-600">First Month Discount ({discountPercent}%)</span>
@@ -61,7 +66,12 @@ const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
     <div className={`bg-muted/40 border border-border rounded-xl p-4 space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">Monthly Rent</span>
-        <span className="text-sm text-muted-foreground line-through">₹{originalPrice.toLocaleString()}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">₹{displayRent.toLocaleString()}</span>
+          {showStrikethrough && (
+            <span className="text-sm text-muted-foreground line-through">₹{basePrice.toLocaleString()}</span>
+          )}
+        </div>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-green-600">First Month Discount ({discountPercent}%)</span>
