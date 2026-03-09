@@ -20,11 +20,14 @@ export const getConfirmationFee = getFirstMonthPrice;
 const usePricing = (room?: Room, monthlyRent?: number) => {
   if (room) {
     const p = getRoomPricing(room);
-    return { finalPrice: p.finalPrice, originalPrice: p.originalPrice, savings: p.savings, discountPercent: p.discountPercent };
+    // Monthly rent display uses minimum_price if available, otherwise price
+    const displayRent = room.minimum_price != null ? room.minimum_price : room.price;
+    const showStrikethrough = room.minimum_price != null && room.minimum_price !== room.price;
+    return { finalPrice: p.finalPrice, originalPrice: p.originalPrice, savings: p.savings, discountPercent: p.discountPercent, displayRent, showStrikethrough, basePrice: room.price };
   }
   // Legacy fallback
   const savings = Math.round((monthlyRent || 0) * 0.25);
-  return { finalPrice: (monthlyRent || 0) - savings, originalPrice: monthlyRent || 0, savings, discountPercent: 25 };
+  return { finalPrice: (monthlyRent || 0) - savings, originalPrice: monthlyRent || 0, savings, discountPercent: 25, displayRent: monthlyRent || 0, showStrikethrough: false, basePrice: monthlyRent || 0 };
 };
 
 const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
