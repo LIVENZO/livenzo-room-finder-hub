@@ -471,7 +471,8 @@ export function useAuthMethods() {
       
       if (hasConflict && existingRole) {
         const displayRole = getRoleDisplayName(existingRole);
-        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
+        const requestedDisplayRole = getRoleDisplayName(selectedRole);
+        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
         setIsLoading(false);
         throw new Error(`Phone number already registered as ${displayRole}`);
       }
