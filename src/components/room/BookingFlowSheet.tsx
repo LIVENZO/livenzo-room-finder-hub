@@ -613,7 +613,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 </div>
               </div>
 
-              <BookingPriceBreakdown monthlyRent={roomPrice} room={room} />
+              <BookingPriceBreakdown monthlyRent={roomPrice} />
 
               <p className="text-xs text-muted-foreground">💰 25% off first month · Limited offer</p>
             </motion.div>
