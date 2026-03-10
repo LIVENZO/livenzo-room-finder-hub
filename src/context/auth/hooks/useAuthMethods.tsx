@@ -13,21 +13,39 @@ const checkPhoneRoleConflict = async (phone: string, selectedRole: string): Prom
   try {
     console.log("Checking phone role conflict:", { phone, selectedRole });
     
-    const { data, error } = await supabase
+    // Check the phone column first
+    const { data: phoneData, error: phoneError } = await supabase
       .from('user_role_assignments')
       .select('role')
       .eq('phone', phone)
       .neq('role', selectedRole)
       .limit(1);
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error checking phone role conflict:', error);
-      return { hasConflict: false, existingRole: null };
+    if (phoneError && phoneError.code !== 'PGRST116') {
+      console.error('Error checking phone role conflict:', phoneError);
     }
 
-    if (data && data.length > 0) {
-      const existingRole = data[0].role;
-      console.log("Phone role conflict detected:", existingRole);
+    if (phoneData && phoneData.length > 0) {
+      const existingRole = phoneData[0].role;
+      console.log("Phone role conflict detected (phone column):", existingRole);
+      return { hasConflict: true, existingRole };
+    }
+
+    // Also check email column as fallback (legacy data stored phone in email)
+    const { data: emailData, error: emailError } = await supabase
+      .from('user_role_assignments')
+      .select('role')
+      .eq('email', phone)
+      .neq('role', selectedRole)
+      .limit(1);
+
+    if (emailError && emailError.code !== 'PGRST116') {
+      console.error('Error checking phone role conflict (email column):', emailError);
+    }
+
+    if (emailData && emailData.length > 0) {
+      const existingRole = emailData[0].role;
+      console.log("Phone role conflict detected (email column):", existingRole);
       return { hasConflict: true, existingRole };
     }
 

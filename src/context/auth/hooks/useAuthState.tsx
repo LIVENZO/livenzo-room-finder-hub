@@ -79,9 +79,10 @@ export function useAuthState() {
   const ensureUserRoleAssignment = useCallback(async (user: User, selectedRole: string) => {
     try {
       const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
-      const userEmail = user.email || user.phone; // Use phone as fallback if no email
+      const userEmail = user.email || null;
+      const userPhone = user.phone || user.user_metadata?.phone || null;
       
-      console.log("Ensuring role assignment for user:", userEmail, "role:", selectedRole, "auth method:", user.app_metadata?.provider);
+      console.log("Ensuring role assignment for user:", userEmail || userPhone, "role:", selectedRole, "auth method:", user.app_metadata?.provider);
       
       // Check if user already has a role assignment
       const { data: existingRole, error } = await supabase
@@ -92,15 +93,16 @@ export function useAuthState() {
 
       if (error && error.code === 'PGRST116') {
         // No role assignment found, create one
-        console.log("Creating role assignment for user:", userEmail, "role:", selectedRole);
+        console.log("Creating role assignment for user:", userEmail || userPhone, "role:", selectedRole);
         
         const { error: insertError } = await supabase
           .from('user_role_assignments')
           .insert({
             user_id: user.id,
-            email: userEmail, // This will handle both email and phone users
+            email: userEmail,
+            phone: userPhone,
             role: selectedRole,
-            google_id: googleId // This will be null for phone auth, which is fine
+            google_id: googleId
           });
 
         if (insertError) {
@@ -109,6 +111,14 @@ export function useAuthState() {
           console.log("Successfully created role assignment for", selectedRole);
         }
       } else if (existingRole) {
+        // Update phone column if it's missing (backfill for existing users)
+        if (userPhone && existingRole) {
+          await supabase
+            .from('user_role_assignments')
+            .update({ phone: userPhone })
+            .eq('user_id', user.id)
+            .is('phone', null);
+        }
         console.log("User already has role assignment:", existingRole.role);
       }
     } catch (error) {
