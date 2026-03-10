@@ -155,8 +155,9 @@ export function useAuthState() {
         } else if (phoneData && phoneData.length > 0) {
           const existingRole = phoneData[0].role;
           const displayRole = getRoleDisplayName(existingRole);
+          const requestedDisplayRole = getRoleDisplayName(selectedRole);
           console.log("Role conflict detected by phone:", existingRole);
-          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
+          toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
           return true;
         }
       }
