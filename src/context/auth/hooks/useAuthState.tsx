@@ -201,8 +201,9 @@ export function useAuthState() {
         } else if (emailData && emailData.length > 0) {
           const existingRole = emailData[0].role;
           const displayRole = getRoleDisplayName(existingRole);
+          const requestedDisplayRole = getRoleDisplayName(selectedRole);
           console.log("Role conflict detected by email:", existingRole);
-          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
+          toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
           return true;
         }
       }
