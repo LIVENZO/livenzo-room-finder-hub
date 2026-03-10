@@ -512,12 +512,22 @@ export function useAuthMethods() {
         throw e;
       }
 
+      // Re-check role conflict after OTP verification (in case of race condition)
+      const { hasConflict: postConflict, existingRole: postExistingRole } = await checkPhoneRoleConflict(phoneNumber, selectedRole);
+      if (postConflict && postExistingRole) {
+        const displayRole = getRoleDisplayName(postExistingRole);
+        const requestedDisplayRole = getRoleDisplayName(selectedRole);
+        clearConfirmationResult();
+        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+        throw new Error(`Phone number already registered as ${displayRole}`);
+      }
+
       // 2) Exchange Firebase ID token for Supabase session via Edge Function
       const { data, error } = await supabase.functions.invoke('sync-firebase-user', {
         body: {
           firebase_uid: firebaseUid,
           phone_number: phoneNumber,
-          fcm_token: null, // Can be added later if needed
+          fcm_token: null,
         },
       });
 
