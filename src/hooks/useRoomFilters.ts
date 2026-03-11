@@ -192,6 +192,19 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
       result = applyStrategy(result, strategyRef.current);
     }
 
+    // Override price for PG_HOSTEL rooms based on active property type filter
+    if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
+      result = result.map(room => {
+        if (room.property_type === 'PG_HOSTEL') {
+          const overridePrice = activePropertyFilter === 'PG'
+            ? (room.pg_rent ?? room.price)
+            : (room.hostel_rent ?? room.price);
+          return { ...room, price: overridePrice };
+        }
+        return room;
+      });
+    }
+
     return result;
   }, [rooms, filters, searchText, activeHotspot]);
 
