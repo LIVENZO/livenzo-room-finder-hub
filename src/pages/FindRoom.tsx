@@ -74,6 +74,7 @@ const FindRoom: React.FC = () => {
   // Check if any filters are active
   const hasActiveFilters = Object.keys(filters).some((key) => {
     const value = filters[key as keyof RoomFilters];
+    if (key === 'propertyType') return value !== undefined && value !== 'all';
     return value !== undefined && value !== '';
   }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
 
