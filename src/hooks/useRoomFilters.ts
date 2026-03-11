@@ -97,17 +97,19 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
   };
 
   const filteredRooms = useMemo(() => {
+    const activePropertyFilter = filters.propertyType && filters.propertyType !== 'all' ? filters.propertyType : null;
+
     let result = rooms.filter(room => {
       if (room.available === false) return false;
 
       // Property type filter
-      if (filters.propertyType && filters.propertyType !== 'all') {
+      if (activePropertyFilter) {
         const pt = room.property_type;
-        if (filters.propertyType === 'PG') {
+        if (activePropertyFilter === 'PG') {
           if (pt !== 'PG' && pt !== 'PG_HOSTEL') return false;
-        } else if (filters.propertyType === 'Hostel') {
+        } else if (activePropertyFilter === 'Hostel') {
           if (pt !== 'Hostel' && pt !== 'PG_HOSTEL') return false;
-        } else if (filters.propertyType === 'BHK') {
+        } else if (activePropertyFilter === 'BHK') {
           if (pt !== 'BHK') return false;
         }
       }
@@ -188,6 +190,19 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
       result = [...orderedTop, ...orderedRemaining];
     } else {
       result = applyStrategy(result, strategyRef.current);
+    }
+
+    // Override price for PG_HOSTEL rooms based on active property type filter
+    if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
+      result = result.map(room => {
+        if (room.property_type === 'PG_HOSTEL') {
+          const overridePrice = activePropertyFilter === 'PG'
+            ? (room.pg_rent ?? room.price)
+            : (room.hostel_rent ?? room.price);
+          return { ...room, price: overridePrice };
+        }
+        return room;
+      });
     }
 
     return result;
