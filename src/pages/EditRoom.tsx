@@ -87,13 +87,19 @@ const EditRoom: React.FC = () => {
         const facilitiesRaw = typeof data.facilities === 'object' ? data.facilities as any : {};
         const facilities = parseFacilities(data.facilities);
 
+        const propertyType = (data as any).property_type as string | null;
+        const isPgHostel = propertyType === 'PG_HOSTEL';
+
         form.reset({
           title: data.title,
           description: data.description,
           house_no: data.house_no || '',
           house_name: data.house_name || '',
           location: data.location,
-          price: Number(data.price),
+          propertyType: (propertyType as any) || undefined,
+          price: isPgHostel ? undefined : Number(data.price),
+          pgRent: isPgHostel ? Number((data as any).pg_rent) : undefined,
+          hostelRent: isPgHostel ? Number((data as any).hostel_rent) : undefined,
           gender: facilities.gender || undefined,
           roomType: facilities.roomType || undefined,
           coolingType: facilities.coolingType || (facilitiesRaw?.coolingType === undefined ? undefined : 'none'),
