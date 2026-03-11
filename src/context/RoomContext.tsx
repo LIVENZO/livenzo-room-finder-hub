@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
-import { Room, RoomFilters } from "@/types/room";
+import { Room, RoomFilters, PropertyTypeFilter } from "@/types/room";
 import { fetchRooms as fetchRoomsService } from "@/services/roomService";
 import { useRoomFilters } from "@/hooks/useRoomFilters";
 import { useNearMe } from "@/hooks/useNearMe";
@@ -39,6 +39,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
+  const fetchRequestRef = useRef(0);
 
   const {
     isActive: nearMeActive,
@@ -70,31 +71,43 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     activeHotspot,
   );
 
-  // Fetch rooms from Supabase
-  useEffect(() => {
-    setIsLoading(true);
-    loadRooms();
-  }, [user?.id]);
+  const loadRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all') => {
+    const requestId = ++fetchRequestRef.current;
 
-  const loadRooms = async () => {
     try {
-      const fetchedRooms = await fetchRoomsService();
+      const fetchedRooms = await fetchRoomsService(propertyType);
+      if (requestId !== fetchRequestRef.current) return;
       setRooms(fetchedRooms);
     } finally {
-      setIsLoading(false);
+      if (requestId === fetchRequestRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
-  const refreshRooms = async () => {
+  // Fetch rooms from Supabase with property type filtering
+  useEffect(() => {
     setIsLoading(true);
+    void loadRooms(filters.propertyType ?? 'all');
+  }, [user?.id, filters.propertyType]);
+
+  const refreshRooms = async () => {
+    const requestId = ++fetchRequestRef.current;
+    setIsLoading(true);
+
     try {
-      const fetchedRooms = await fetchRoomsService();
+      const fetchedRooms = await fetchRoomsService(filters.propertyType ?? 'all');
+      if (requestId !== fetchRequestRef.current) return;
       setRooms(fetchedRooms);
       toast.success("Rooms refreshed successfully");
     } catch (error) {
-      toast.error("Failed to refresh rooms");
+      if (requestId === fetchRequestRef.current) {
+        toast.error("Failed to refresh rooms");
+      }
     } finally {
-      setIsLoading(false);
+      if (requestId === fetchRequestRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

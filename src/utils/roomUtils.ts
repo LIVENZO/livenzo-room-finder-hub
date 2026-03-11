@@ -80,7 +80,7 @@ export const mapDbRoomToRoom = (data: any): Room => {
     longitude: data.location_longitude ? Number(data.location_longitude) : undefined,
     facilities: parseFacilities(data.facilities),
     ownerId: data.owner_id,
-    ownerPhone: data.owner_phone,
+    ownerPhone: data.owner_phone ?? 'Contact via app',
     available: data.available,
     createdAt: data.created_at,
     house_no: data.house_no,
