@@ -68,6 +68,7 @@ const FindRoom: React.FC = () => {
     clearAllFilters();
     deactivateNearMe();
     clearHotspot();
+    setPropertyTypeFilter('all');
   };
 
   // Check if any filters are active
