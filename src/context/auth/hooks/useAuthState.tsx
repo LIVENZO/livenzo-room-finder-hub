@@ -79,10 +79,9 @@ export function useAuthState() {
   const ensureUserRoleAssignment = useCallback(async (user: User, selectedRole: string) => {
     try {
       const googleId = user.user_metadata?.sub || user.user_metadata?.provider_id;
-      const userEmail = user.email || null;
-      const userPhone = user.phone || user.user_metadata?.phone || null;
+      const userEmail = user.email || user.phone; // Use phone as fallback if no email
       
-      console.log("Ensuring role assignment for user:", userEmail || userPhone, "role:", selectedRole, "auth method:", user.app_metadata?.provider);
+      console.log("Ensuring role assignment for user:", userEmail, "role:", selectedRole, "auth method:", user.app_metadata?.provider);
       
       // Check if user already has a role assignment
       const { data: existingRole, error } = await supabase
@@ -93,16 +92,15 @@ export function useAuthState() {
 
       if (error && error.code === 'PGRST116') {
         // No role assignment found, create one
-        console.log("Creating role assignment for user:", userEmail || userPhone, "role:", selectedRole);
+        console.log("Creating role assignment for user:", userEmail, "role:", selectedRole);
         
         const { error: insertError } = await supabase
           .from('user_role_assignments')
           .insert({
             user_id: user.id,
-            email: userEmail,
-            phone: userPhone,
+            email: userEmail, // This will handle both email and phone users
             role: selectedRole,
-            google_id: googleId
+            google_id: googleId // This will be null for phone auth, which is fine
           });
 
         if (insertError) {
@@ -111,14 +109,6 @@ export function useAuthState() {
           console.log("Successfully created role assignment for", selectedRole);
         }
       } else if (existingRole) {
-        // Update phone column if it's missing (backfill for existing users)
-        if (userPhone && existingRole) {
-          await supabase
-            .from('user_role_assignments')
-            .update({ phone: userPhone })
-            .eq('user_id', user.id)
-            .is('phone', null);
-        }
         console.log("User already has role assignment:", existingRole.role);
       }
     } catch (error) {
@@ -155,9 +145,8 @@ export function useAuthState() {
         } else if (phoneData && phoneData.length > 0) {
           const existingRole = phoneData[0].role;
           const displayRole = getRoleDisplayName(existingRole);
-          const requestedDisplayRole = getRoleDisplayName(selectedRole);
           console.log("Role conflict detected by phone:", existingRole);
-          toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
           return true;
         }
       }
@@ -178,9 +167,8 @@ export function useAuthState() {
         } else if (googleData && googleData.length > 0) {
           const existingRole = googleData[0].role;
           const displayRole = getRoleDisplayName(existingRole);
-          const requestedDisplayRole = getRoleDisplayName(selectedRole);
           console.log("Role conflict detected by Google ID:", existingRole);
-          toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
           return true;
         }
       }
@@ -201,9 +189,8 @@ export function useAuthState() {
         } else if (emailData && emailData.length > 0) {
           const existingRole = emailData[0].role;
           const displayRole = getRoleDisplayName(existingRole);
-          const requestedDisplayRole = getRoleDisplayName(selectedRole);
           console.log("Role conflict detected by email:", existingRole);
-          toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+          toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
           return true;
         }
       }

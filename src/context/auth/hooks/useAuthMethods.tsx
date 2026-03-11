@@ -13,39 +13,21 @@ const checkPhoneRoleConflict = async (phone: string, selectedRole: string): Prom
   try {
     console.log("Checking phone role conflict:", { phone, selectedRole });
     
-    // Check the phone column first
-    const { data: phoneData, error: phoneError } = await supabase
+    const { data, error } = await supabase
       .from('user_role_assignments')
       .select('role')
       .eq('phone', phone)
       .neq('role', selectedRole)
       .limit(1);
 
-    if (phoneError && phoneError.code !== 'PGRST116') {
-      console.error('Error checking phone role conflict:', phoneError);
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking phone role conflict:', error);
+      return { hasConflict: false, existingRole: null };
     }
 
-    if (phoneData && phoneData.length > 0) {
-      const existingRole = phoneData[0].role;
-      console.log("Phone role conflict detected (phone column):", existingRole);
-      return { hasConflict: true, existingRole };
-    }
-
-    // Also check email column as fallback (legacy data stored phone in email)
-    const { data: emailData, error: emailError } = await supabase
-      .from('user_role_assignments')
-      .select('role')
-      .eq('email', phone)
-      .neq('role', selectedRole)
-      .limit(1);
-
-    if (emailError && emailError.code !== 'PGRST116') {
-      console.error('Error checking phone role conflict (email column):', emailError);
-    }
-
-    if (emailData && emailData.length > 0) {
-      const existingRole = emailData[0].role;
-      console.log("Phone role conflict detected (email column):", existingRole);
+    if (data && data.length > 0) {
+      const existingRole = data[0].role;
+      console.log("Phone role conflict detected:", existingRole);
       return { hasConflict: true, existingRole };
     }
 
@@ -83,9 +65,8 @@ const checkRoleConflict = async (googleId: string | null, email: string | null, 
       } else if (googleData && googleData.length > 0) {
         const existingRole = googleData[0].role;
         const displayRole = getRoleDisplayName(existingRole);
-        const requestedDisplayRole = getRoleDisplayName(selectedRole);
         console.log("Role conflict detected by Google ID:", existingRole);
-        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
         return true;
       }
     }
@@ -106,9 +87,8 @@ const checkRoleConflict = async (googleId: string | null, email: string | null, 
       } else if (emailData && emailData.length > 0) {
         const existingRole = emailData[0].role;
         const displayRole = getRoleDisplayName(existingRole);
-        const requestedDisplayRole = getRoleDisplayName(selectedRole);
         console.log("Role conflict detected by email:", existingRole);
-        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
         return true;
       }
     }
@@ -473,8 +453,7 @@ export function useAuthMethods() {
       
       if (hasConflict && existingRole) {
         const displayRole = getRoleDisplayName(existingRole);
-        const requestedDisplayRole = getRoleDisplayName(selectedRole);
-        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
+        toast.error(`This number is already registered as an ${displayRole}. Please try a different number.`);
         setIsLoading(false);
         throw new Error(`Phone number already registered as ${displayRole}`);
       }
@@ -514,22 +493,12 @@ export function useAuthMethods() {
         throw e;
       }
 
-      // Re-check role conflict after OTP verification (in case of race condition)
-      const { hasConflict: postConflict, existingRole: postExistingRole } = await checkPhoneRoleConflict(phoneNumber, selectedRole);
-      if (postConflict && postExistingRole) {
-        const displayRole = getRoleDisplayName(postExistingRole);
-        const requestedDisplayRole = getRoleDisplayName(selectedRole);
-        clearConfirmationResult();
-        toast.error(`Your number is already registered as ${displayRole}. To access as ${requestedDisplayRole}, please use a different phone number.`);
-        throw new Error(`Phone number already registered as ${displayRole}`);
-      }
-
       // 2) Exchange Firebase ID token for Supabase session via Edge Function
       const { data, error } = await supabase.functions.invoke('sync-firebase-user', {
         body: {
           firebase_uid: firebaseUid,
           phone_number: phoneNumber,
-          fcm_token: null,
+          fcm_token: null, // Can be added later if needed
         },
       });
 
