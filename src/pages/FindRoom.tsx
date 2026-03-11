@@ -38,6 +38,12 @@ const FindRoom: React.FC = () => {
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
+
+  const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
+    setPropertyTypeFilter(value);
+    setFilters({ ...filters, propertyType: value });
+  };
 
   useEffect(() => {
     if (!user) {
