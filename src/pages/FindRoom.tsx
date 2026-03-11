@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
-import { RoomFilters } from '@/types/room';
+import { RoomFilters, PropertyTypeFilter as PropertyTypeFilterValue } from '@/types/room';
 import Layout from '@/components/Layout';
 import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
 import LimitedOfferBanner from '@/components/room/LimitedOfferBanner';
+import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -37,6 +38,12 @@ const FindRoom: React.FC = () => {
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
+
+  const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
+    setPropertyTypeFilter(value);
+    setFilters({ ...filters, propertyType: value });
+  };
 
   useEffect(() => {
     if (!user) {
@@ -61,11 +68,13 @@ const FindRoom: React.FC = () => {
     clearAllFilters();
     deactivateNearMe();
     clearHotspot();
+    setPropertyTypeFilter('all');
   };
 
   // Check if any filters are active
   const hasActiveFilters = Object.keys(filters).some((key) => {
     const value = filters[key as keyof RoomFilters];
+    if (key === 'propertyType') return value !== undefined && value !== 'all';
     return value !== undefined && value !== '';
   }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
 
@@ -74,14 +83,15 @@ const FindRoom: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Kota👨🏿‍🎓</h1>
+        {/* Property Type Filter */}
+        <div className="flex items-center justify-between mb-4">
+          <PropertyTypeFilter value={propertyTypeFilter} onChange={handlePropertyTypeChange} />
           {hasActiveFilters &&
-          <Button
-            onClick={handleClearFilters}
-            variant="outline"
-            size="sm">
-            
+            <Button
+              onClick={handleClearFilters}
+              variant="outline"
+              size="sm"
+              className="shrink-0 ml-2">
               Clear Filters
             </Button>
           }

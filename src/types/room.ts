@@ -41,6 +41,8 @@ export interface SearchLocation {
   radius?: number; // Search radius in km
 }
 
+export type PropertyTypeFilter = 'all' | 'PG' | 'Hostel' | 'BHK';
+
 export interface RoomFilters {
   location?: string;
   searchLocation?: SearchLocation;
@@ -51,4 +53,5 @@ export interface RoomFilters {
   roomType?: 'single' | 'sharing';
   coolingType?: 'ac' | 'cooler';
   food?: 'included' | 'not_included';
+  propertyType?: PropertyTypeFilter;
 }

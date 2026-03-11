@@ -100,6 +100,18 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
     let result = rooms.filter(room => {
       if (room.available === false) return false;
 
+      // Property type filter
+      if (filters.propertyType && filters.propertyType !== 'all') {
+        const pt = room.property_type;
+        if (filters.propertyType === 'PG') {
+          if (pt !== 'PG' && pt !== 'PG_HOSTEL') return false;
+        } else if (filters.propertyType === 'Hostel') {
+          if (pt !== 'Hostel' && pt !== 'PG_HOSTEL') return false;
+        } else if (filters.propertyType === 'BHK') {
+          if (pt !== 'BHK') return false;
+        }
+      }
+
       // If hotspot is active, filter by geo-distance instead of text search
       if (activeHotspot) {
         if (room.latitude != null && room.longitude != null) {
