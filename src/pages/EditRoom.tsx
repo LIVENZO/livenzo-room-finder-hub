@@ -40,7 +40,10 @@ const EditRoom: React.FC = () => {
       house_no: '',
       house_name: '',
       location: '',
-      price: 0,
+      propertyType: undefined,
+      price: undefined,
+      pgRent: undefined,
+      hostelRent: undefined,
       gender: undefined,
       roomType: undefined,
       coolingType: undefined,
@@ -84,13 +87,19 @@ const EditRoom: React.FC = () => {
         const facilitiesRaw = typeof data.facilities === 'object' ? data.facilities as any : {};
         const facilities = parseFacilities(data.facilities);
 
+        const propertyType = (data as any).property_type as string | null;
+        const isPgHostel = propertyType === 'PG_HOSTEL';
+
         form.reset({
           title: data.title,
           description: data.description,
           house_no: data.house_no || '',
           house_name: data.house_name || '',
           location: data.location,
-          price: Number(data.price),
+          propertyType: (propertyType as any) || undefined,
+          price: isPgHostel ? undefined : Number(data.price),
+          pgRent: isPgHostel ? Number((data as any).pg_rent) : undefined,
+          hostelRent: isPgHostel ? Number((data as any).hostel_rent) : undefined,
           gender: facilities.gender || undefined,
           roomType: facilities.roomType || undefined,
           coolingType: facilities.coolingType || (facilitiesRaw?.coolingType === undefined ? undefined : 'none'),
@@ -242,6 +251,7 @@ const EditRoom: React.FC = () => {
       const allVideoUrls = [...existingVideos, ...newVideoUrls];
 
       // Update room in database
+      const isPgHostel = data.propertyType === 'PG_HOSTEL';
       const { error: updateError } = await supabase
         .from('rooms')
         .update({
@@ -250,7 +260,10 @@ const EditRoom: React.FC = () => {
           house_no: data.house_no || null,
           house_name: data.house_name || null,
           location: data.location,
-          price: data.price,
+          property_type: data.propertyType,
+          price: isPgHostel ? (data.pgRent || 0) : (data.price || 0),
+          pg_rent: isPgHostel ? (data.pgRent || null) : null,
+          hostel_rent: isPgHostel ? (data.hostelRent || null) : null,
           owner_phone: data.owner_phone,
           facilities: {
             wifi: data.wifi === 'yes',
@@ -265,7 +278,7 @@ const EditRoom: React.FC = () => {
           images: allImageUrls,
           videos: allVideoUrls,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', id)
         .eq('owner_id', user!.id);
 

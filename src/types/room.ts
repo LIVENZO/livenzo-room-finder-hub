@@ -8,6 +8,9 @@ export interface Room {
   price: number;
   maximum_price?: number | null;
   minimum_price?: number | null;
+  property_type?: string | null;
+  pg_rent?: number | null;
+  hostel_rent?: number | null;
   location: string;
   latitude?: number;
   longitude?: number;

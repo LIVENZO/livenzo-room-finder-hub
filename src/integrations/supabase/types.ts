@@ -1146,6 +1146,7 @@ export type Database = {
           created_at: string
           description: string
           facilities: Json
+          hostel_rent: number | null
           house_name: string | null
           house_no: string | null
           id: string
@@ -1159,7 +1160,9 @@ export type Database = {
           minimum_price: number | null
           owner_id: string
           owner_phone: string
+          pg_rent: number | null
           price: number
+          property_type: string | null
           room_number: string | null
           title: string
           updated_at: string | null
@@ -1171,6 +1174,7 @@ export type Database = {
           created_at?: string
           description: string
           facilities?: Json
+          hostel_rent?: number | null
           house_name?: string | null
           house_no?: string | null
           id?: string
@@ -1184,7 +1188,9 @@ export type Database = {
           minimum_price?: number | null
           owner_id: string
           owner_phone: string
+          pg_rent?: number | null
           price: number
+          property_type?: string | null
           room_number?: string | null
           title: string
           updated_at?: string | null
@@ -1196,6 +1202,7 @@ export type Database = {
           created_at?: string
           description?: string
           facilities?: Json
+          hostel_rent?: number | null
           house_name?: string | null
           house_no?: string | null
           id?: string
@@ -1209,7 +1216,9 @@ export type Database = {
           minimum_price?: number | null
           owner_id?: string
           owner_phone?: string
+          pg_rent?: number | null
           price?: number
+          property_type?: string | null
           room_number?: string | null
           title?: string
           updated_at?: string | null

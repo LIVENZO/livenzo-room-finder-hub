@@ -39,7 +39,10 @@ const ListRoom: React.FC = () => {
       house_name: '',
       room_number: '',
       location: '',
-      price: 0,
+      propertyType: undefined,
+      price: undefined,
+      pgRent: undefined,
+      hostelRent: undefined,
       gender: undefined,
       roomType: undefined,
       coolingType: undefined,
@@ -228,6 +231,7 @@ const ListRoom: React.FC = () => {
       toast.loading('Creating room listing...', { id: toastId });
       
       // Step 3: Save room data to Supabase
+      const isPgHostel = values.propertyType === 'PG_HOSTEL';
       const roomData = {
         title: values.title,
         description: values.description,
@@ -235,7 +239,10 @@ const ListRoom: React.FC = () => {
         house_name: values.house_name || null,
         room_number: values.room_number || null,
         location: values.location,
-        price: values.price,
+        property_type: values.propertyType,
+        price: isPgHostel ? (values.pgRent || 0) : (values.price || 0),
+        pg_rent: isPgHostel ? (values.pgRent || null) : null,
+        hostel_rent: isPgHostel ? (values.hostelRent || null) : null,
         facilities: {
           wifi: values.wifi === 'yes',
           bathroom: values.bathroom === 'yes',
