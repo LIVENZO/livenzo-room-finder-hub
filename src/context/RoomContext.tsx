@@ -37,6 +37,7 @@ const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [searchScopeRooms, setSearchScopeRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
   const fetchRequestRef = useRef(0);
@@ -58,26 +59,38 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearHotspot,
   } = useHotspotSearch();
 
-  // Apply distance calculations when near me is active
-  const roomsWithDistance = useMemo(() => {
-    if (nearMeActive) {
-      return calculateRoomDistances(rooms);
-    }
-    return rooms.map((room) => ({ ...room, distance: undefined }));
-  }, [rooms, nearMeActive, calculateRoomDistances]);
-
   const { filters, setFilters, filteredRooms, clearAllFilters, searchText, setSearchText } = useRoomFilters(
-    roomsWithDistance,
+    useMemo(() => {
+      if (nearMeActive) {
+        return calculateRoomDistances(searchScopeRooms);
+      }
+      return searchScopeRooms.map((room) => ({ ...room, distance: undefined }));
+    }, [searchScopeRooms, nearMeActive, calculateRoomDistances]),
     activeHotspot,
   );
 
-  const loadRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all') => {
+  const syncRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all', showSuccessToast = false) => {
     const requestId = ++fetchRequestRef.current;
+    setIsLoading(true);
 
     try {
-      const fetchedRooms = await fetchRoomsService(propertyType);
+      const [allRooms, scopedRooms] = await Promise.all([
+        fetchRoomsService('all'),
+        propertyType === 'all' ? Promise.resolve<Room[] | null>(null) : fetchRoomsService(propertyType),
+      ]);
+
       if (requestId !== fetchRequestRef.current) return;
-      setRooms(fetchedRooms);
+
+      setRooms(allRooms);
+      setSearchScopeRooms(scopedRooms ?? allRooms);
+
+      if (showSuccessToast) {
+        toast.success("Rooms refreshed successfully");
+      }
+    } catch {
+      if (requestId === fetchRequestRef.current) {
+        toast.error(showSuccessToast ? "Failed to refresh rooms" : "Failed to load rooms");
+      }
     } finally {
       if (requestId === fetchRequestRef.current) {
         setIsLoading(false);
@@ -85,30 +98,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch rooms from Supabase with property type filtering
   useEffect(() => {
-    setIsLoading(true);
-    void loadRooms(filters.propertyType ?? 'all');
+    if (!user) {
+      setRooms([]);
+      setSearchScopeRooms([]);
+      setIsLoading(false);
+      return;
+    }
+
+    void syncRooms(filters.propertyType ?? 'all');
   }, [user?.id, filters.propertyType]);
 
   const refreshRooms = async () => {
-    const requestId = ++fetchRequestRef.current;
-    setIsLoading(true);
-
-    try {
-      const fetchedRooms = await fetchRoomsService(filters.propertyType ?? 'all');
-      if (requestId !== fetchRequestRef.current) return;
-      setRooms(fetchedRooms);
-      toast.success("Rooms refreshed successfully");
-    } catch (error) {
-      if (requestId === fetchRequestRef.current) {
-        toast.error("Failed to refresh rooms");
-      }
-    } finally {
-      if (requestId === fetchRequestRef.current) {
-        setIsLoading(false);
-      }
-    }
+    await syncRooms(filters.propertyType ?? 'all', true);
   };
 
   const getRoom = (id: string) => {
