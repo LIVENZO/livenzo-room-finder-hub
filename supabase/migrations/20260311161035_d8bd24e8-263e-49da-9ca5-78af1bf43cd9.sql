@@ -1,0 +1,5 @@
+
+ALTER TABLE public.rooms 
+ADD COLUMN IF NOT EXISTS property_type text DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS pg_rent numeric DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS hostel_rent numeric DEFAULT NULL;
