@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
+import { Control, useWatch } from 'react-hook-form';
 import {
   FormControl,
   FormField,
@@ -18,31 +18,112 @@ interface RoomPreferencesFieldsProps {
 }
 
 const RoomPreferencesFields: React.FC<RoomPreferencesFieldsProps> = ({ control }) => {
+  const propertyType = useWatch({ control, name: 'propertyType' });
+
   return (
     <>
-      {/* Room Cost */}
+      {/* Property Type */}
       <FormField
         control={control}
-        name="price"
+        name="propertyType"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel>Monthly Rent</FormLabel>
+          <FormItem className="space-y-3">
+            <FormLabel>Property Type *</FormLabel>
             <FormControl>
-              <Input
-                type="number"
-                placeholder="0"
-                min="1"
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-              />
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="grid grid-cols-2 gap-3"
+              >
+                {[
+                  { value: 'PG', label: 'PG' },
+                  { value: 'Hostel', label: 'Hostel' },
+                  { value: 'BHK', label: 'BHK' },
+                  { value: 'PG_HOSTEL', label: 'PG + Hostel' },
+                ].map((opt) => (
+                  <div key={opt.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={opt.value} id={`property-${opt.value}`} />
+                    <FormLabel htmlFor={`property-${opt.value}`} className="cursor-pointer font-normal">
+                      {opt.label}
+                    </FormLabel>
+                  </div>
+                ))}
+              </RadioGroup>
             </FormControl>
-            <FormDescription>
-              Enter the monthly rent amount
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
+
+      {/* Dynamic Rent Fields */}
+      {propertyType === 'PG_HOSTEL' ? (
+        <div className="space-y-4">
+          <FormField
+            control={control}
+            name="pgRent"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>PG Monthly Rent *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="₹ Enter PG Rent"
+                    min="1"
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="hostelRent"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hostel Monthly Rent *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="₹ Enter Hostel Rent"
+                    min="1"
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      ) : (
+        <FormField
+          control={control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Monthly Rent *</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="₹ Enter Monthly Rent"
+                  min="1"
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                />
+              </FormControl>
+              <FormDescription>
+                Enter the monthly rent amount
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
       
       {/* Gender Preference */}
       <FormField

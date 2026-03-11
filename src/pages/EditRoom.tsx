@@ -251,6 +251,7 @@ const EditRoom: React.FC = () => {
       const allVideoUrls = [...existingVideos, ...newVideoUrls];
 
       // Update room in database
+      const isPgHostel = data.propertyType === 'PG_HOSTEL';
       const { error: updateError } = await supabase
         .from('rooms')
         .update({
@@ -259,7 +260,10 @@ const EditRoom: React.FC = () => {
           house_no: data.house_no || null,
           house_name: data.house_name || null,
           location: data.location,
-          price: data.price,
+          property_type: data.propertyType,
+          price: isPgHostel ? (data.pgRent || 0) : (data.price || 0),
+          pg_rent: isPgHostel ? (data.pgRent || null) : null,
+          hostel_rent: isPgHostel ? (data.hostelRent || null) : null,
           owner_phone: data.owner_phone,
           facilities: {
             wifi: data.wifi === 'yes',
@@ -274,7 +278,7 @@ const EditRoom: React.FC = () => {
           images: allImageUrls,
           videos: allVideoUrls,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', id)
         .eq('owner_id', user!.id);
 
