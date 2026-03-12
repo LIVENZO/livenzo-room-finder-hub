@@ -1,4 +1,5 @@
 import { Room, PropertyTypeFilter } from '@/types/room';
+import { isOfferDiscountActive } from '@/hooks/useOfferStatus';
 
 export interface RoomPricing {
   /** The final price to display (bold, prominent) */
@@ -15,8 +16,6 @@ export interface RoomPricing {
 
 /**
  * Apply PG_HOSTEL price overrides based on active property filter.
- * Returns a new Room object with price/minimum_price adjusted.
- * For non-PG_HOSTEL rooms, returns the room unchanged.
  */
 export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilter): Room => {
   if (room.property_type !== 'PG_HOSTEL' || !activeFilter) return room;
@@ -44,13 +43,22 @@ export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilt
 /**
  * Centralized pricing logic for room display.
  *
- * Rules:
- * - If BOTH maximum_price and minimum_price exist → use them directly (no calculated discount).
- * - Otherwise → use `price` with an automatic 25% discount.
+ * When the offer is active (7-day or lucky 24h): 25% discount on price.
+ * When the offer is expired/fully_expired: no discount, show base price.
  */
 export const getRoomPricing = (room: Room): RoomPricing => {
-  // Always use the `price` column as the base and apply a 25% discount.
-  // Never calculate discount from minimum_price.
+  const discountActive = isOfferDiscountActive();
+
+  if (!discountActive) {
+    return {
+      finalPrice: room.price,
+      originalPrice: room.price,
+      discountPercent: 0,
+      savings: 0,
+      hasExplicitPricing: false,
+    };
+  }
+
   const original = room.price;
   const savings = Math.round(original * 0.25);
   const final_ = original - savings;
