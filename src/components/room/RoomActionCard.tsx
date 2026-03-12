@@ -25,6 +25,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 }) => {
   const { user } = useAuth();
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
   // Monthly rent = minimum_price if available, otherwise price
   const monthlyRent = room.minimum_price != null ? room.minimum_price : room.price;
