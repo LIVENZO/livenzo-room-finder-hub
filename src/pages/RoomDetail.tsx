@@ -15,13 +15,13 @@ import { useRoomDetail } from '@/hooks/useRoomDetail';
 import { useAuth } from '@/context/auth';
 import ReferralBanner from '@/components/referral/ReferralBanner';
 import { supabase } from '@/integrations/supabase/client';
-import { getRoomPricing } from '@/utils/pricingUtils';
+import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { rooms } = useRooms();
+  const { rooms, filters } = useRooms();
   const { user } = useAuth();
   
   const [room, setRoom] = useState(null);
