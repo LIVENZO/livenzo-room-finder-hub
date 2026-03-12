@@ -196,10 +196,19 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
     if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
       result = result.map(room => {
         if (room.property_type === 'PG_HOSTEL') {
-          const overridePrice = activePropertyFilter === 'PG'
-            ? (room.pg_rent ?? room.price)
-            : (room.hostel_rent ?? room.price);
-          return { ...room, price: overridePrice };
+          if (activePropertyFilter === 'PG') {
+            return {
+              ...room,
+              price: room.pg_rent ?? room.price,
+              // keep minimum_price as-is
+            };
+          } else {
+            return {
+              ...room,
+              price: room.hostel_rent ?? room.price,
+              minimum_price: room.maximum_price ?? null,
+            };
+          }
         }
         return room;
       });
