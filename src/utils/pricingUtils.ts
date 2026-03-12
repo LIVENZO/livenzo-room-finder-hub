@@ -1,4 +1,4 @@
-import { Room } from '@/types/room';
+import { Room, PropertyTypeFilter } from '@/types/room';
 
 export interface RoomPricing {
   /** The final price to display (bold, prominent) */
@@ -12,6 +12,33 @@ export interface RoomPricing {
   /** Whether max/min prices were used directly */
   hasExplicitPricing: boolean;
 }
+
+/**
+ * Apply PG_HOSTEL price overrides based on active property filter.
+ * Returns a new Room object with price/minimum_price adjusted.
+ * For non-PG_HOSTEL rooms, returns the room unchanged.
+ */
+export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilter): Room => {
+  if (room.property_type !== 'PG_HOSTEL' || !activeFilter) return room;
+
+  if (activeFilter === 'PG') {
+    return {
+      ...room,
+      price: room.pg_rent ?? room.price,
+      // keep minimum_price as-is
+    };
+  }
+
+  if (activeFilter === 'Hostel') {
+    return {
+      ...room,
+      price: room.hostel_rent ?? room.price,
+      minimum_price: room.maximum_price ?? null,
+    };
+  }
+
+  return room;
+};
 
 /**
  * Centralized pricing logic for room display.

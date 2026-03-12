@@ -15,13 +15,13 @@ import { useRoomDetail } from '@/hooks/useRoomDetail';
 import { useAuth } from '@/context/auth';
 import ReferralBanner from '@/components/referral/ReferralBanner';
 import { supabase } from '@/integrations/supabase/client';
-import { getRoomPricing } from '@/utils/pricingUtils';
+import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { rooms } = useRooms();
+  const { rooms, filters } = useRooms();
   const { user } = useAuth();
   
   const [room, setRoom] = useState(null);
@@ -70,9 +70,10 @@ const RoomDetail = () => {
     if (!id) return;
     
     const roomData = rooms.find(r => r.id === id);
-    setRoom(roomData || null);
+    // Apply PG_HOSTEL price overrides based on active property filter
+    setRoom(roomData ? applyPgHostelPricing(roomData, filters.propertyType) : null);
     setLoading(false);
-  }, [id, rooms]);
+  }, [id, rooms, filters.propertyType]);
   
   // Use custom hook to handle room detail logic
   const {
