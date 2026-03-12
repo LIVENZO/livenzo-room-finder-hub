@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import { getRoomPricing } from '@/utils/pricingUtils';
+import { useOfferStatus } from '@/hooks/useOfferStatus';
 import BookingFlowSheet from './BookingFlowSheet';
 
 interface StickyBottomBarProps {
@@ -16,6 +17,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
 
   useEffect(() => {
@@ -37,7 +39,6 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [actionCardRef]);
 
-  // Don't render the sticky bar for property owners
   if (isOwner) {
     return null;
   }
@@ -65,14 +66,21 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
                   <span className="text-lg font-bold text-foreground">
                     ₹{pricing.finalPrice.toLocaleString()}
                   </span>
-                  {pricing.originalPrice !== pricing.finalPrice && (
+                  {isDiscountActive && pricing.originalPrice !== pricing.finalPrice && (
                     <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
                       ₹{pricing.originalPrice.toLocaleString()}/mo
                     </span>
                   )}
-                  <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
-                    Save {pricing.discountPercent}% first month
-                  </span>
+                  {isDiscountActive && (
+                    <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
+                      Save {pricing.discountPercent}% first month
+                    </span>
+                  )}
+                  {!isDiscountActive && (
+                    <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
+                      /month
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex-1">
