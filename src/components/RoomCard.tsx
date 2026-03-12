@@ -9,6 +9,7 @@ import RoomLocation from "./room/RoomLocation";
 import { formatDistance } from "@/utils/roomUtils";
 import { formatPrice } from "@/lib/utils";
 import { getRoomPricing } from "@/utils/pricingUtils";
+import { useOfferStatus } from "@/hooks/useOfferStatus";
 import { Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
