@@ -163,16 +163,29 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             }}>
             Book
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
-            onClick={(e) => {
-              e.stopPropagation();
-              toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
-            }}>
-            Save {formatPrice(pricing.savings)}
-          </Button>
+          {isDiscountActive ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              onClick={(e) => {
+                e.stopPropagation();
+                toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
+              }}>
+              Save {formatPrice(pricing.savings)}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/room/${room.id}`);
+              }}>
+              View Details
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>);
