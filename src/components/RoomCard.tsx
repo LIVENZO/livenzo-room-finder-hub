@@ -9,6 +9,7 @@ import RoomLocation from "./room/RoomLocation";
 import { formatDistance } from "@/utils/roomUtils";
 import { formatPrice } from "@/lib/utils";
 import { getRoomPricing } from "@/utils/pricingUtils";
+import { useOfferStatus } from "@/hooks/useOfferStatus";
 import { Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +25,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { isDiscountActive } = useOfferStatus();
 
   const pricing = getRoomPricing(room);
 
@@ -98,7 +100,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
           }
           <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
         </div>
-        {/* Green discount sticker - bottom right of image */}
+        {/* Green discount sticker - bottom right of image (only when offer active) */}
+        {isDiscountActive && (
         <div
           className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
           style={{
@@ -140,6 +143,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             </div>
           </div>
         </div>
+        )}
       </AspectRatio>
       <CardContent className="p-4">
         <h3 className="text-lg font-semibold line-clamp-1">{room.title}</h3>
@@ -159,16 +163,29 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             }}>
             Book
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
-            onClick={(e) => {
-              e.stopPropagation();
-              toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
-            }}>
-            Save {formatPrice(pricing.savings)}
-          </Button>
+          {isDiscountActive ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              onClick={(e) => {
+                e.stopPropagation();
+                toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
+              }}>
+              Save {formatPrice(pricing.savings)}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/room/${room.id}`);
+              }}>
+              View Details
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>);

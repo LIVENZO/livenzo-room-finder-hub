@@ -14,20 +14,15 @@ export const getDiscountAmount = (monthlyRent: number) => Math.round(monthlyRent
 export const getFirstMonthPrice = (monthlyRent: number) => monthlyRent - getDiscountAmount(monthlyRent);
 export const getConfirmationFee = getFirstMonthPrice;
 
-/**
- * Get pricing from a Room object or fall back to legacy monthlyRent calculation.
- */
 const usePricing = (room?: Room, monthlyRent?: number) => {
   if (room) {
     const p = getRoomPricing(room);
-    // Monthly rent display uses minimum_price if available, otherwise price
     const displayRent = room.minimum_price != null ? room.minimum_price : room.price;
     const showStrikethrough = room.minimum_price != null && room.minimum_price !== room.price;
-    return { finalPrice: p.finalPrice, originalPrice: p.originalPrice, savings: p.savings, discountPercent: p.discountPercent, displayRent, showStrikethrough, basePrice: room.price };
+    return { finalPrice: p.finalPrice, originalPrice: p.originalPrice, savings: p.savings, discountPercent: p.discountPercent, displayRent, showStrikethrough, basePrice: room.price, hasDiscount: p.discountPercent > 0 };
   }
-  // Legacy fallback
   const savings = Math.round((monthlyRent || 0) * 0.25);
-  return { finalPrice: (monthlyRent || 0) - savings, originalPrice: monthlyRent || 0, savings, discountPercent: 25, displayRent: monthlyRent || 0, showStrikethrough: false, basePrice: monthlyRent || 0 };
+  return { finalPrice: (monthlyRent || 0) - savings, originalPrice: monthlyRent || 0, savings, discountPercent: 25, displayRent: monthlyRent || 0, showStrikethrough: false, basePrice: monthlyRent || 0, hasDiscount: true };
 };
 
 const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
@@ -36,7 +31,7 @@ const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
   variant = 'default',
   className = '',
 }) => {
-  const { finalPrice, savings, discountPercent, displayRent, showStrikethrough, basePrice } = usePricing(room, monthlyRent);
+  const { finalPrice, savings, discountPercent, displayRent, showStrikethrough, basePrice, hasDiscount } = usePricing(room, monthlyRent);
 
   if (variant === 'compact') {
     return (
@@ -50,13 +45,28 @@ const BookingPriceBreakdown: React.FC<BookingPriceBreakdownProps> = ({
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-green-600">First Month Discount ({discountPercent}%)</span>
-          <span className="text-green-600">−₹{savings.toLocaleString()}</span>
-        </div>
-        <div className="border-t border-border pt-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">First Month Price</span>
-          <span className="text-lg font-bold text-foreground">₹{finalPrice.toLocaleString()}</span>
+        {hasDiscount && (
+          <>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-green-600">First Month Discount ({discountPercent}%)</span>
+              <span className="text-green-600">−₹{savings.toLocaleString()}</span>
+            </div>
+            <div className="border-t border-border pt-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">First Month Price</span>
+              <span className="text-lg font-bold text-foreground">₹{finalPrice.toLocaleString()}</span>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (!hasDiscount) {
+    return (
+      <div className={`bg-muted/40 border border-border rounded-xl p-4 space-y-3 ${className}`}>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Monthly Rent</span>
+          <span className="text-2xl font-bold text-foreground">₹{displayRent.toLocaleString()}</span>
         </div>
       </div>
     );

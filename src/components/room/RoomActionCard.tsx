@@ -6,6 +6,7 @@ import { CalendarCheck, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import { getRoomPricing } from '@/utils/pricingUtils';
+import { useOfferStatus } from '@/hooks/useOfferStatus';
 
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
@@ -24,6 +25,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 }) => {
   const { user } = useAuth();
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
   // Monthly rent = minimum_price if available, otherwise price
   const monthlyRent = room.minimum_price != null ? room.minimum_price : room.price;
@@ -45,10 +47,10 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
         <CardHeader>
           <CardTitle className="flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl font-bold">
-              ₹{isOwner ? room.price.toLocaleString() : monthlyRent.toLocaleString()}
+              ₹{isOwner ? room.price.toLocaleString() : (isDiscountActive ? monthlyRent.toLocaleString() : room.price.toLocaleString())}
             </span>
             <span className="text-base font-normal text-muted-foreground">/month</span>
-            {!isOwner && room.minimum_price != null && room.minimum_price !== room.price && (
+            {!isOwner && isDiscountActive && room.minimum_price != null && room.minimum_price !== room.price && (
               <span className="text-base text-muted-foreground line-through">
                 ₹{room.price.toLocaleString()}
               </span>
@@ -65,7 +67,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           </Badge>
 
           {/* First Month Discount Breakdown */}
-          {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
+          {!isOwner && isDiscountActive && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
           
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner &&

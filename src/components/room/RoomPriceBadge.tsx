@@ -16,7 +16,7 @@ const RoomPriceBadge: React.FC<RoomPriceBadgeProps> = ({ price, room }) => {
     return (
       <div className="flex items-center gap-1.5">
         <Badge className="bg-primary font-semibold">{formatPrice(pricing.finalPrice)}</Badge>
-        {pricing.originalPrice !== pricing.finalPrice && (
+        {pricing.discountPercent > 0 && pricing.originalPrice !== pricing.finalPrice && (
           <span className="text-xs text-muted-foreground line-through">{formatPrice(pricing.originalPrice)}</span>
         )}
       </div>
