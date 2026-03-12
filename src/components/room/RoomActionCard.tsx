@@ -47,10 +47,10 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
         <CardHeader>
           <CardTitle className="flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl font-bold">
-              ₹{isOwner ? room.price.toLocaleString() : monthlyRent.toLocaleString()}
+              ₹{isOwner ? room.price.toLocaleString() : (isDiscountActive ? monthlyRent.toLocaleString() : room.price.toLocaleString())}
             </span>
             <span className="text-base font-normal text-muted-foreground">/month</span>
-            {!isOwner && room.minimum_price != null && room.minimum_price !== room.price && (
+            {!isOwner && isDiscountActive && room.minimum_price != null && room.minimum_price !== room.price && (
               <span className="text-base text-muted-foreground line-through">
                 ₹{room.price.toLocaleString()}
               </span>
