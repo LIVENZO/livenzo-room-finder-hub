@@ -100,7 +100,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
           }
           <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
         </div>
-        {/* Green discount sticker - bottom right of image */}
+        {/* Green discount sticker - bottom right of image (only when offer active) */}
+        {isDiscountActive && (
         <div
           className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
           style={{
@@ -142,6 +143,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             </div>
           </div>
         </div>
+        )}
       </AspectRatio>
       <CardContent className="p-4">
         <h3 className="text-lg font-semibold line-clamp-1">{room.title}</h3>
