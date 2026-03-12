@@ -25,6 +25,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { isDiscountActive } = useOfferStatus();
 
   const pricing = getRoomPricing(room);
 
