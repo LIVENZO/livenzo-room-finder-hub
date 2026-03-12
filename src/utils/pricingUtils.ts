@@ -25,7 +25,7 @@ export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilt
     return {
       ...room,
       price: room.pg_rent ?? room.price,
-      // keep minimum_price as-is
+      facilities: { ...room.facilities, food: 'not_included' as const },
     };
   }
 
@@ -34,6 +34,7 @@ export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilt
       ...room,
       price: room.hostel_rent ?? room.price,
       minimum_price: room.maximum_price ?? null,
+      facilities: { ...room.facilities, food: 'included' as const },
     };
   }
 
