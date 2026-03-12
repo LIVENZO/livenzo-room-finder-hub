@@ -143,7 +143,7 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
       if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) return false;
       if (filters.roomType && room.facilities.roomType !== filters.roomType) return false;
       if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) return false;
-      if (filters.food && room.facilities.food !== filters.food) return false;
+      // food filter removed from UI, no longer filtered here
       
       return true;
     });
