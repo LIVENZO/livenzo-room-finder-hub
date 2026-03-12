@@ -70,9 +70,10 @@ const RoomDetail = () => {
     if (!id) return;
     
     const roomData = rooms.find(r => r.id === id);
-    setRoom(roomData || null);
+    // Apply PG_HOSTEL price overrides based on active property filter
+    setRoom(roomData ? applyPgHostelPricing(roomData, filters.propertyType) : null);
     setLoading(false);
-  }, [id, rooms]);
+  }, [id, rooms, filters.propertyType]);
   
   // Use custom hook to handle room detail logic
   const {
