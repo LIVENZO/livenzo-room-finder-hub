@@ -116,11 +116,8 @@ const RoomManagementCard: React.FC<RoomManagementCardProps> = ({
           <div className="font-medium">{room.title}</div>
           <p className="text-sm text-gray-500 truncate">{room.location}</p>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-semibold">{formatPrice(getRoomPricing(room).finalPrice)}</span>
-            <span className="text-sm font-normal text-gray-500">/mo</span>
-            {getRoomPricing(room).originalPrice !== getRoomPricing(room).finalPrice && (
-              <span className="text-xs text-gray-400 line-through">{formatPrice(getRoomPricing(room).originalPrice)}</span>
-            )}
+            <span className="text-lg font-semibold">{formatPrice(room.price)}</span>
+            <span className="text-sm font-normal text-muted-foreground">/mo</span>
           </div>
         </div>
       </CardContent>
