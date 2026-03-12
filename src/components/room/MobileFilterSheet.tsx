@@ -147,25 +147,29 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label>Food</Label>
+            <Label>Type</Label>
             <RadioGroup 
-              value={tempFilters.food || ''} 
+              value={tempFilters.propertyType || ''} 
               onValueChange={(value) => 
-                setTempFilters({ ...tempFilters, food: value ? value as 'included' | 'not_included' : undefined })
+                setTempFilters({ ...tempFilters, propertyType: value ? value as 'PG' | 'Hostel' | 'BHK' : undefined })
               }
               className="flex items-center space-x-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="included" id="mobile-food-included" />
-                <Label htmlFor="mobile-food-included">Included</Label>
+                <RadioGroupItem value="PG" id="mobile-type-pg" />
+                <Label htmlFor="mobile-type-pg">PG</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="not_included" id="mobile-food-not-included" />
-                <Label htmlFor="mobile-food-not-included">Not Included</Label>
+                <RadioGroupItem value="Hostel" id="mobile-type-hostel" />
+                <Label htmlFor="mobile-type-hostel">Hostel</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="" id="mobile-any-food" />
-                <Label htmlFor="mobile-any-food">Any</Label>
+                <RadioGroupItem value="BHK" id="mobile-type-bhk" />
+                <Label htmlFor="mobile-type-bhk">BHK</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="" id="mobile-type-any" />
+                <Label htmlFor="mobile-type-any">Any</Label>
               </div>
             </RadioGroup>
           </div>
