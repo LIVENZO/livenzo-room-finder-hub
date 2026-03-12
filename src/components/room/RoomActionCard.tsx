@@ -6,6 +6,7 @@ import { CalendarCheck, Calendar } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import { getRoomPricing } from '@/utils/pricingUtils';
+import { useOfferStatus } from '@/hooks/useOfferStatus';
 
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
