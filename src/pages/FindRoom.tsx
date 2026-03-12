@@ -57,6 +57,7 @@ const FindRoom: React.FC = () => {
 
   const applyFilters = () => {
     setFilters(tempFilters);
+    setPropertyTypeFilter(tempFilters.propertyType || 'all');
     setShowMobileFilters(false);
   };
 
