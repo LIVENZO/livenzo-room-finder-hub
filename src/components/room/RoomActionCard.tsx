@@ -67,7 +67,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           </Badge>
 
           {/* First Month Discount Breakdown */}
-          {!isOwner && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
+          {!isOwner && isDiscountActive && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
           
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner &&
