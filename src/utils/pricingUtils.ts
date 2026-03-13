@@ -72,7 +72,7 @@ export const getRoomPricing = (room: Room): RoomPricing => {
   const offerActive = isOfferDiscountActive();
   const firstMonthDiscount = offerActive
     ? (() => {
-        const discountAmount = Math.round(currentRoomPrice * 0.25);
+        const discountAmount = Math.round(basePrice * 0.25);
         return {
           discountPercent: 25,
           discountAmount,
