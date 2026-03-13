@@ -15,9 +15,9 @@ const RoomPriceBadge: React.FC<RoomPriceBadgeProps> = ({ price, room }) => {
     const pricing = getRoomPricing(room);
     return (
       <div className="flex items-center gap-1.5">
-        <Badge className="bg-primary font-semibold">{formatPrice(pricing.finalPrice)}</Badge>
-        {pricing.discountPercent > 0 && pricing.originalPrice !== pricing.finalPrice && (
-          <span className="text-xs text-muted-foreground line-through">{formatPrice(pricing.originalPrice)}</span>
+        <Badge className="bg-primary font-semibold">{formatPrice(pricing.currentRoomPrice)}</Badge>
+        {pricing.hasBaseDiscount && (
+          <span className="text-xs text-muted-foreground line-through">{formatPrice(pricing.basePrice)}</span>
         )}
       </div>
     );

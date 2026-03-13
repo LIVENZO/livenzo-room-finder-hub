@@ -1,16 +1,31 @@
 import { Room, PropertyTypeFilter } from '@/types/room';
 import { isOfferDiscountActive } from '@/hooks/useOfferStatus';
 
-export interface RoomPricing {
-  /** The final price to display (bold, prominent) */
-  finalPrice: number;
-  /** The original/strikethrough price */
-  originalPrice: number;
-  /** Discount percentage (0 if no discount) */
+interface FirstMonthDiscountPricing {
   discountPercent: number;
-  /** Amount saved */
+  discountAmount: number;
+  discountedPrice: number;
+}
+
+export interface RoomPricing {
+  /** Permanent listed/original room price (e.g. ₹12,999) */
+  basePrice: number;
+  /** Permanent current room price after base room discount (e.g. ₹11,999) */
+  currentRoomPrice: number;
+  /** Whether base room discount exists (basePrice -> currentRoomPrice) */
+  hasBaseDiscount: boolean;
+  /** Time-limited 25% first month offer details; null when offer expired */
+  firstMonthDiscount: FirstMonthDiscountPricing | null;
+
+  /** @deprecated Legacy compatibility: first month payable when offer active, otherwise currentRoomPrice */
+  finalPrice: number;
+  /** @deprecated Legacy compatibility: currentRoomPrice while offer active, else basePrice */
+  originalPrice: number;
+  /** @deprecated Legacy compatibility: offer percent */
+  discountPercent: number;
+  /** @deprecated Legacy compatibility: offer savings */
   savings: number;
-  /** Whether max/min prices were used directly */
+  /** Whether min/max pricing overrides are present */
   hasExplicitPricing: boolean;
 }
 
@@ -40,34 +55,43 @@ export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilt
   return room;
 };
 
+const getCurrentRoomPrice = (room: Room): number => {
+  return room.minimum_price != null ? room.minimum_price : room.price;
+};
+
 /**
- * Centralized pricing logic for room display.
- *
- * When the offer is active (7-day or lucky 24h): 25% discount on price.
- * When the offer is expired/fully_expired: no discount, show base price.
+ * Centralized pricing logic with two independent layers:
+ * 1) Base room pricing (permanent): basePrice -> currentRoomPrice
+ * 2) First-month offer pricing (time-limited): 25% off currentRoomPrice
  */
 export const getRoomPricing = (room: Room): RoomPricing => {
-  const discountActive = isOfferDiscountActive();
+  const basePrice = room.price;
+  const currentRoomPrice = getCurrentRoomPrice(room);
+  const hasBaseDiscount = currentRoomPrice !== basePrice;
 
-  if (!discountActive) {
-    return {
-      finalPrice: room.price,
-      originalPrice: room.price,
-      discountPercent: 0,
-      savings: 0,
-      hasExplicitPricing: false,
-    };
-  }
-
-  const original = room.price;
-  const savings = Math.round(original * 0.25);
-  const final_ = original - savings;
+  const offerActive = isOfferDiscountActive();
+  const firstMonthDiscount = offerActive
+    ? (() => {
+        const discountAmount = Math.round(currentRoomPrice * 0.25);
+        return {
+          discountPercent: 25,
+          discountAmount,
+          discountedPrice: currentRoomPrice - discountAmount,
+        };
+      })()
+    : null;
 
   return {
-    finalPrice: final_,
-    originalPrice: original,
-    discountPercent: 25,
-    savings,
-    hasExplicitPricing: false,
+    basePrice,
+    currentRoomPrice,
+    hasBaseDiscount,
+    firstMonthDiscount,
+
+    // Backward-compatible fields
+    finalPrice: firstMonthDiscount?.discountedPrice ?? currentRoomPrice,
+    originalPrice: firstMonthDiscount ? currentRoomPrice : basePrice,
+    discountPercent: firstMonthDiscount?.discountPercent ?? 0,
+    savings: firstMonthDiscount?.discountAmount ?? 0,
+    hasExplicitPricing: room.minimum_price != null || room.maximum_price != null,
   };
 };

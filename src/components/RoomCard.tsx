@@ -28,6 +28,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   const { isDiscountActive } = useOfferStatus();
 
   const pricing = getRoomPricing(room);
+  const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   useEffect(() => {
     if (user && room.id) {
@@ -61,7 +62,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     e.stopPropagation();
 
     const shareUrl = `https://livenzo-room-finder-hub.lovable.app/room/${room.id}`;
-    const shareText = `Check out this room on Livenzo 👇\n₹${pricing.finalPrice.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
+    const shareText = `Check out this room on Livenzo 👇\n₹${pricing.currentRoomPrice.toLocaleString()}/month – ${room.title}, ${room.location}\n${shareUrl}`;
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, "_blank");
@@ -71,7 +72,6 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     <Card
       className="overflow-hidden cursor-pointer transition-all hover:shadow-lg"
       onClick={() => navigate(`/room/${room.id}`)}>
-      
       <AspectRatio ratio={16 / 9} className="relative">
         <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}
@@ -98,51 +98,55 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
               📍 {formatDistance(room.distance)}
             </Badge>
           }
-          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(room.price)}/mo</Badge>
+          <Badge className="bg-primary text-primary-foreground font-semibold">{formatPrice(pricing.currentRoomPrice)}/mo</Badge>
+          {pricing.hasBaseDiscount && (
+            <Badge variant="secondary" className="bg-background/90 text-muted-foreground line-through">
+              {formatPrice(pricing.basePrice)}
+            </Badge>
+          )}
         </div>
-        {/* Green discount sticker - bottom right of image (only when offer active) */}
-        {isDiscountActive && (
-        <div
-          className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
-          style={{
-            background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
-            minWidth: "140px"
-          }}>
-          
-          {/* Sparkle decorations */}
-          <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
-          <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
-          <div className="absolute bottom-4 left-3 w-0.5 h-0.5 rounded-full bg-white/30" />
-          <div className="absolute top-2 left-1/2 w-[3px] h-[3px] rounded-full bg-white/20" />
+        {/* Green discount sticker - bottom right of image (only when first-month offer is active) */}
+        {firstMonthOffer && (
+          <div
+            className="absolute bottom-2 right-2 overflow-hidden rounded-xl shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, hsl(145 65% 48%), hsl(160 60% 42%), hsl(150 55% 38%))",
+              minWidth: "140px"
+            }}>
+            {/* Sparkle decorations */}
+            <div className="absolute top-1 right-3 w-1 h-1 rounded-full bg-white/60" />
+            <div className="absolute top-3 right-6 w-0.5 h-0.5 rounded-full bg-white/40" />
+            <div className="absolute bottom-4 left-3 w-0.5 h-0.5 rounded-full bg-white/30" />
+            <div className="absolute top-2 left-1/2 w-[3px] h-[3px] rounded-full bg-white/20" />
 
-          <div className="relative px-3.5 pt-2 pb-2.5">
-            {/* Top row: discount + icon */}
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-white font-extrabold text-base leading-none tracking-tight">
-                  {pricing.discountPercent}<span className="text-xs align-top">%</span> OFF
-                </p>
+            <div className="relative px-3.5 pt-2 pb-2.5">
+              {/* Top row: discount + icon */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-white font-extrabold text-base leading-none tracking-tight">
+                    {firstMonthOffer.discountPercent}<span className="text-xs align-top">%</span> OFF
+                  </p>
+                </div>
+                <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
+                  <svg
+                    className="w-3 h-3 text-white/90"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <path d="M7 17l9.2-9.2M17 17V7H7" />
+                  </svg>
+                </div>
               </div>
-              <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center mt-0.5">
-                <svg
-                  className="w-3 h-3 text-white/90"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M7 17l9.2-9.2M17 17V7H7" />
-                </svg>
+              {/* Price row */}
+              <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
+                <span className="text-white/50 text-[10px] line-through">{formatPrice(pricing.currentRoomPrice)}</span>
+                <span className="text-white font-bold text-sm tracking-tight">{formatPrice(firstMonthOffer.discountedPrice)}</span>
               </div>
-            </div>
-            {/* Price row */}
-            <div className="flex items-baseline gap-1.5 mt-1.5 border-t border-white/15 pt-1.5">
-              <span className="text-white/50 text-[10px] line-through">{formatPrice(pricing.originalPrice)}</span>
-              <span className="text-white font-bold text-sm tracking-tight">{formatPrice(pricing.finalPrice)}</span>
             </div>
           </div>
-        </div>
         )}
       </AspectRatio>
       <CardContent className="p-4">
@@ -163,16 +167,16 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
             }}>
             Book
           </Button>
-          {isDiscountActive ? (
+          {firstMonthOffer ? (
             <Button
               variant="outline"
               size="sm"
               className="flex-1 h-9 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5"
               onClick={(e) => {
                 e.stopPropagation();
-                toast.success(`You save ${formatPrice(pricing.savings)} on first month!`);
+                toast.success(`You save ${formatPrice(firstMonthOffer.discountAmount)} on first month!`);
               }}>
-              Save {formatPrice(pricing.savings)}
+              Save {formatPrice(firstMonthOffer.discountAmount)}
             </Button>
           ) : (
             <Button
@@ -192,3 +196,4 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
 };
 
 export default RoomCard;
+

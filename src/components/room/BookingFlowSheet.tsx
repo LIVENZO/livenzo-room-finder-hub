@@ -14,9 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QrPaymentScreen } from '@/components/payments/QrPaymentScreen';
-import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
+import BookingPriceBreakdown from './BookingPriceBreakdown';
 import { Room } from '@/types/room';
-
+import { getRoomPricing } from '@/utils/pricingUtils';
 
 interface BookingFlowSheetProps {
   open: boolean;
@@ -56,7 +56,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   initialStep,
   existingBookingId
 }) => {
-  const tokenAmount = getConfirmationFee(roomPrice); // First month price after 25% discount
+  const pricing = room ? getRoomPricing(room) : null;
+  const tokenAmount = pricing?.firstMonthDiscount?.discountedPrice ?? pricing?.currentRoomPrice ?? roomPrice;
+  const firstMonthOffer = pricing?.firstMonthDiscount ?? null;
   const [step, setStep] = useState<Step>(initialStep || 'token-confirm');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
@@ -615,7 +617,11 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
               <BookingPriceBreakdown monthlyRent={roomPrice} room={room} />
 
-              <p className="text-xs text-muted-foreground">💰 25% off first month · Limited offer</p>
+              {firstMonthOffer && (
+                <p className="text-xs text-muted-foreground">
+                  💰 {firstMonthOffer.discountPercent}% off first month · Limited offer
+                </p>
+              )}
             </motion.div>
 
             {/* Pay Button */}
@@ -627,7 +633,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 className="w-full h-12 text-base font-semibold"
                 onClick={handlePayAndLock}
                 disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month (25% Off)`}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month${firstMonthOffer ? ` (${firstMonthOffer.discountPercent}% Off)` : ''}`}
               </Button>
             </motion.div>
           </motion.div>);
