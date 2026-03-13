@@ -14,9 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QrPaymentScreen } from '@/components/payments/QrPaymentScreen';
-import BookingPriceBreakdown, { getConfirmationFee } from './BookingPriceBreakdown';
+import BookingPriceBreakdown from './BookingPriceBreakdown';
 import { Room } from '@/types/room';
-
+import { getRoomPricing } from '@/utils/pricingUtils';
 
 interface BookingFlowSheetProps {
   open: boolean;
