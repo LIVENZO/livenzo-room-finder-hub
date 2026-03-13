@@ -617,7 +617,11 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
 
               <BookingPriceBreakdown monthlyRent={roomPrice} room={room} />
 
-              <p className="text-xs text-muted-foreground">💰 25% off first month · Limited offer</p>
+              {firstMonthOffer && (
+                <p className="text-xs text-muted-foreground">
+                  💰 {firstMonthOffer.discountPercent}% off first month · Limited offer
+                </p>
+              )}
             </motion.div>
 
             {/* Pay Button */}
@@ -629,7 +633,7 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
                 className="w-full h-12 text-base font-semibold"
                 onClick={handlePayAndLock}
                 disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month (25% Off)`}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${tokenAmount.toLocaleString()} — First Month${firstMonthOffer ? ` (${firstMonthOffer.discountPercent}% Off)` : ''}`}
               </Button>
             </motion.div>
           </motion.div>);
