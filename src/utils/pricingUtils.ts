@@ -76,7 +76,7 @@ export const getRoomPricing = (room: Room): RoomPricing => {
         return {
           discountPercent: 25,
           discountAmount,
-          discountedPrice: currentRoomPrice - discountAmount,
+          discountedPrice: basePrice - discountAmount,
         };
       })()
     : null;
