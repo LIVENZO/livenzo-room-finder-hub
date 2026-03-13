@@ -19,6 +19,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
+  const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,19 +65,18 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
               <div className="w-1/3 min-w-fit">
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-foreground">
-                    ₹{pricing.finalPrice.toLocaleString()}
+                    ₹{pricing.currentRoomPrice.toLocaleString()}
                   </span>
-                  {isDiscountActive && pricing.originalPrice !== pricing.finalPrice && (
+                  {pricing.hasBaseDiscount && (
                     <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
-                      ₹{pricing.originalPrice.toLocaleString()}/mo
+                      ₹{pricing.basePrice.toLocaleString()}/mo
                     </span>
                   )}
-                  {isDiscountActive && (
+                  {firstMonthOffer ? (
                     <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
-                      Save {pricing.discountPercent}% first month
+                      Save {firstMonthOffer.discountPercent}% first month
                     </span>
-                  )}
-                  {!isDiscountActive && (
+                  ) : (
                     <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
                       /month
                     </span>

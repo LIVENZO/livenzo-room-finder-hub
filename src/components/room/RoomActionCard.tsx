@@ -27,8 +27,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
-  // Monthly rent = minimum_price if available, otherwise price
-  const monthlyRent = room.minimum_price != null ? room.minimum_price : room.price;
+  const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   // Check if current user is the owner
   const isOwner = user?.id === room.ownerId;
@@ -47,17 +46,17 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
         <CardHeader>
           <CardTitle className="flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl font-bold">
-              ₹{isOwner ? room.price.toLocaleString() : (isDiscountActive ? monthlyRent.toLocaleString() : room.price.toLocaleString())}
+              ₹{isOwner ? room.price.toLocaleString() : pricing.currentRoomPrice.toLocaleString()}
             </span>
             <span className="text-base font-normal text-muted-foreground">/month</span>
-            {!isOwner && isDiscountActive && room.minimum_price != null && room.minimum_price !== room.price && (
+            {!isOwner && pricing.hasBaseDiscount && (
               <span className="text-base text-muted-foreground line-through">
-                ₹{room.price.toLocaleString()}
+                ₹{pricing.basePrice.toLocaleString()}
               </span>
             )}
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {/* Availability Badge */}
           <Badge
@@ -67,8 +66,8 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           </Badge>
 
           {/* First Month Discount Breakdown */}
-          {!isOwner && isDiscountActive && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
-          
+          {!isOwner && firstMonthOffer && <BookingPriceBreakdown monthlyRent={room.price} room={room} variant="compact" />}
+
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner &&
           <div className="flex gap-2 w-full">
@@ -83,7 +82,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
 
 I want to schedule an offline visit for ${room.title}
 
-₹${pricing.finalPrice.toLocaleString()} | ${roomType} room | ${gender}
+₹${pricing.currentRoomPrice.toLocaleString()} | ${roomType} room | ${gender}
 
 ${room.house_name || ''}, ${room.location}
 
@@ -96,7 +95,7 @@ Please help me schedule a visit.`;
               }}>
                 🏠 Offline Visit
               </Button>
-              
+
               {/* Call Button */}
               <Button
               variant="outline"
@@ -107,7 +106,7 @@ Please help me schedule a visit.`;
               </Button>
             </div>
           }
-          
+
           {/* Book & Pay After Shift Button - Primary CTA, Hidden for property owner */}
           {!isOwner &&
           <Button
