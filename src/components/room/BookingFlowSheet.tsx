@@ -56,7 +56,9 @@ const BookingFlowSheet: React.FC<BookingFlowSheetProps> = ({
   initialStep,
   existingBookingId
 }) => {
-  const tokenAmount = getConfirmationFee(roomPrice); // First month price after 25% discount
+  const pricing = room ? getRoomPricing(room) : null;
+  const tokenAmount = pricing?.firstMonthDiscount?.discountedPrice ?? pricing?.currentRoomPrice ?? roomPrice;
+  const firstMonthOffer = pricing?.firstMonthDiscount ?? null;
   const [step, setStep] = useState<Step>(initialStep || 'token-confirm');
   const [userType, setUserType] = useState<UserType | null>(null);
   const [userDetails, setUserDetails] = useState('');
