@@ -145,7 +145,6 @@ const RoomDetail = () => {
               onImageClick={handleImageClick}
               videos={room.videos}
             />
-            </div>
             
             {/* Fullscreen Image Viewer */}
             <RoomImageViewer
