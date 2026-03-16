@@ -14,6 +14,7 @@ import BookingFlowSheet from '@/components/room/BookingFlowSheet';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
 import { useAuth } from '@/context/auth';
 import ReferralBanner from '@/components/referral/ReferralBanner';
+import FreeDropOverlay from '@/components/room/FreeDropOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 
