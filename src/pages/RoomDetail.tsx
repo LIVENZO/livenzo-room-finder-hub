@@ -14,6 +14,7 @@ import BookingFlowSheet from '@/components/room/BookingFlowSheet';
 import { useRoomDetail } from '@/hooks/useRoomDetail';
 import { useAuth } from '@/context/auth';
 import ReferralBanner from '@/components/referral/ReferralBanner';
+import FreeDropOverlay from '@/components/room/FreeDropOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 
@@ -133,14 +134,17 @@ const RoomDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Images and details */}
           <div className="lg:col-span-2">
-            {/* Unified media carousel */}
-            <RoomImageGallery 
+            {/* Unified media carousel with free drop icon */}
+            <div className="relative">
+              <FreeDropOverlay />
+              <RoomImageGallery
               images={room.images} 
               selectedImage={selectedImage} 
               setSelectedImage={setSelectedImage}
               onImageClick={handleImageClick}
               videos={room.videos}
             />
+            </div>
             
             {/* Fullscreen Image Viewer */}
             <RoomImageViewer
