@@ -134,10 +134,11 @@ const RoomDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Images and details */}
           <div className="lg:col-span-2">
-            {/* Unified media carousel with free drop icon */}
-            <div className="relative">
-              <FreeDropOverlay />
-              <RoomImageGallery
+            {/* Free Drop sticker above carousel */}
+            <FreeDropOverlay />
+            
+            {/* Media carousel */}
+            <RoomImageGallery
               images={room.images} 
               selectedImage={selectedImage} 
               setSelectedImage={setSelectedImage}
