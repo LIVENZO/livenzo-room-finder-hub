@@ -19,68 +19,68 @@ import { supabase } from '@/integrations/supabase/client';
 import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 
 const RoomDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{id: string;}>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { rooms, filters } = useRooms();
   const { user } = useAuth();
-  
+
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
   const actionCardRef = useRef<HTMLDivElement>(null);
-  
+
   // Deep-link: auto-open booking flow from dashboard banners
   const stepParam = searchParams.get('step') as 'payment' | 'drop-schedule' | null;
   const [deepLinkSheetOpen, setDeepLinkSheetOpen] = useState(false);
   const [deepLinkBookingId, setDeepLinkBookingId] = useState<string | null>(null);
   const [deepLinkStep, setDeepLinkStep] = useState<string | null>(null);
-  
+
   useEffect(() => {
     if (!stepParam || !user || !id) return;
-    
+
     const loadExistingBooking = async () => {
-      const { data } = await supabase
-        .from('booking_requests')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('room_id', id)
-        .in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
+      const { data } = await supabase.
+      from('booking_requests').
+      select('id').
+      eq('user_id', user.id).
+      eq('room_id', id).
+      in('status', ['initiated', 'approved', 'payment_cancelled', 'payment_failed']).
+      order('created_at', { ascending: false }).
+      limit(1).
+      maybeSingle();
+
       if (data) {
         setDeepLinkBookingId(data.id);
       }
-      
+
       const mappedStep = stepParam === 'payment' ? 'token-confirm' : 'drop-schedule';
       setDeepLinkStep(mappedStep);
       setDeepLinkSheetOpen(true);
-      
+
       // Clear query params so back navigation doesn't re-trigger
       setSearchParams({}, { replace: true });
     };
-    
+
     loadExistingBooking();
   }, [stepParam, user, id]);
-  
+
   // Load room data
   useEffect(() => {
     if (!id) return;
-    
-    const roomData = rooms.find(r => r.id === id);
+
+    const roomData = rooms.find((r) => r.id === id);
     // Apply PG_HOSTEL price overrides based on active property filter
     setRoom(roomData ? applyPgHostelPricing(roomData, filters.propertyType) : null);
     setLoading(false);
   }, [id, rooms, filters.propertyType]);
-  
+
   // Use custom hook to handle room detail logic
   const {
     isFavorite,
     favoritesLoading,
-    selectedImage, 
+    selectedImage,
     setSelectedImage,
     ownerPhone,
     handleFavoriteToggle,
@@ -88,24 +88,24 @@ const RoomDetail = () => {
     roomRating,
     roomRules,
     roomAmenities,
-    roomAvailability,
+    roomAvailability
   } = useRoomDetail(id, room);
-  
+
   const handleImageClick = (index: number) => {
     setViewerInitialIndex(index);
     setViewerOpen(true);
   };
-  
+
   if (loading) {
     return (
       <Layout>
         <div className="container max-w-6xl py-10 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
-    );
+      </Layout>);
+
   }
-  
+
   if (!room) {
     return (
       <Layout>
@@ -116,20 +116,20 @@ const RoomDetail = () => {
             <Button onClick={() => navigate('/find-room')}>Browse Available Rooms</Button>
           </div>
         </div>
-      </Layout>
-    );
+      </Layout>);
+
   }
-  
+
   return (
     <Layout>
       <div className="container max-w-6xl py-10">
-        <Button
-          variant="ghost"
-          className="mb-4 pl-0"
-          onClick={() => navigate(-1)}
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" /> Back
-        </Button>
+        
+
+
+
+
+
+        
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Images and details */}
@@ -139,47 +139,47 @@ const RoomDetail = () => {
             
             {/* Media carousel */}
             <RoomImageGallery
-              images={room.images} 
-              selectedImage={selectedImage} 
+              images={room.images}
+              selectedImage={selectedImage}
               setSelectedImage={setSelectedImage}
               onImageClick={handleImageClick}
-              videos={room.videos}
-            />
+              videos={room.videos} />
+            
             
             {/* Fullscreen Image Viewer */}
             <RoomImageViewer
               images={room.images}
               initialIndex={viewerInitialIndex}
               open={viewerOpen}
-              onClose={() => setViewerOpen(false)}
-            />
+              onClose={() => setViewerOpen(false)} />
+            
             
             {/* Room header information */}
-            <RoomHeader 
+            <RoomHeader
               room={room}
               isFavorite={isFavorite}
               favoritesLoading={favoritesLoading}
               handleFavoriteToggle={handleFavoriteToggle}
-              roomRating={roomRating}
-            />
+              roomRating={roomRating} />
+            
             
             {/* Room content tabs */}
-            <RoomContent 
+            <RoomContent
               description={room.description}
               roomId={room.id}
               roomRules={roomRules}
               roomAmenities={roomAmenities}
-              room={room}
-            />
+              room={room} />
+            
           </div>
           
           {/* Right column - Action card */}
           <div ref={actionCardRef}>
-            <RoomActionCard 
-              room={room} 
+            <RoomActionCard
+              room={room}
               ownerPhone={ownerPhone}
-              onCallOwner={handleCallOwner}
-            />
+              onCallOwner={handleCallOwner} />
+            
           </div>
         </div>
       </div>
@@ -191,24 +191,24 @@ const RoomDetail = () => {
       <StickyBottomBar room={room} actionCardRef={actionCardRef} />
       
       {/* Deep-link Booking Flow Sheet */}
-      {user && deepLinkStep && (
-        <BookingFlowSheet
-          open={deepLinkSheetOpen}
-          onOpenChange={setDeepLinkSheetOpen}
-          roomId={room.id}
-          userId={user.id}
-          roomTitle={room.title}
-          roomPrice={room.price}
-          room={room}
-          userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
-          userPhone={user.phone || user.user_metadata?.phone || ''}
-          userEmail={user.email || ''}
-          initialStep={deepLinkStep as any}
-          existingBookingId={deepLinkBookingId || undefined}
-        />
-      )}
-    </Layout>
-  );
+      {user && deepLinkStep &&
+      <BookingFlowSheet
+        open={deepLinkSheetOpen}
+        onOpenChange={setDeepLinkSheetOpen}
+        roomId={room.id}
+        userId={user.id}
+        roomTitle={room.title}
+        roomPrice={room.price}
+        room={room}
+        userName={user.user_metadata?.full_name || user.user_metadata?.name || ''}
+        userPhone={user.phone || user.user_metadata?.phone || ''}
+        userEmail={user.email || ''}
+        initialStep={deepLinkStep as any}
+        existingBookingId={deepLinkBookingId || undefined} />
+
+      }
+    </Layout>);
+
 };
 
 export default RoomDetail;
