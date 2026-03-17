@@ -171,6 +171,10 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
         ...room,
         distance: calculateDistance(effectiveHotspot!.latitude, effectiveHotspot!.longitude, room.latitude!, room.longitude!),
       }));
+      // Apply PG_HOSTEL pricing overrides for hotspot results too
+      if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
+        result = result.map(room => applyPgHostelPricing(room, activePropertyFilter));
+      }
       return result;
     }
 
