@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { Room, RoomFilters } from '@/types/room';
 import { fetchTopRoomIds } from '@/services/topRoomsService';
 import { calculateDistance } from '@/utils/roomUtils';
-import { Hotspot } from '@/services/HotspotService';
+import { Hotspot, findMatchingHotspot } from '@/services/HotspotService';
 import { applyPgHostelPricing } from '@/utils/pricingUtils';
 
 // Price bucket thresholds
