@@ -9,7 +9,7 @@ import SearchBar from '@/components/room/SearchBar';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
-import LimitedOfferBanner from '@/components/room/LimitedOfferBanner';
+import PromoBannerSlider from '@/components/room/PromoBannerSlider';
 import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
