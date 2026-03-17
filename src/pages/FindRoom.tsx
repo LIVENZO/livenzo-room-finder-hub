@@ -34,7 +34,8 @@ const FindRoom: React.FC = () => {
     activeHotspot,
     updateHotspotSuggestions,
     selectHotspot,
-    clearHotspot
+    clearHotspot,
+    allHotspots
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
