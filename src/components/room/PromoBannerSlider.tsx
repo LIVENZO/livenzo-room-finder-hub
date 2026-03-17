@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Clock, Sparkles, AlertTriangle, MapPin, Car } from 'lucide-react';
-import { useOfferStatus, OfferStatus } from '@/hooks/useOfferStatus';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Clock, Sparkles, AlertTriangle, MapPin, Car } from "lucide-react";
+import { useOfferStatus, OfferStatus } from "@/hooks/useOfferStatus";
+import { cn } from "@/lib/utils";
 
 /* ── Timer helpers ── */
 const TimeBlock = ({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center">
-    <span className="text-lg font-bold tabular-nums leading-none text-white">
-      {String(value).padStart(2, '0')}
-    </span>
+    <span className="text-lg font-bold tabular-nums leading-none text-white">{String(value).padStart(2, "0")}</span>
     <span className="text-[9px] text-white/70 uppercase tracking-wider mt-0.5">{label}</span>
   </div>
 );
@@ -68,7 +66,10 @@ const OfferBannerExpired = ({ onUnlock }: { onUnlock: () => void }) => (
         <p className="text-[11px] text-white/70 pl-5.5">Unlock it again for 24 hours</p>
       </div>
       <button
-        onClick={(e) => { e.stopPropagation(); onUnlock(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onUnlock();
+        }}
         className="shrink-0 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-md text-xs flex items-center gap-1.5 active:scale-95 transition-transform"
       >
         <Sparkles className="h-3.5 w-3.5" />
@@ -124,11 +125,11 @@ const PromoBannerSlider: React.FC = () => {
   // Build slides based on offer status
   const slides: React.ReactNode[] = [];
 
-  if (offerStatus === 'active_7_day') {
+  if (offerStatus === "active_7_day") {
     slides.push(<OfferBanner7Day key="7day" remaining={remaining} />);
-  } else if (offerStatus === 'expired') {
+  } else if (offerStatus === "expired") {
     slides.push(<OfferBannerExpired key="expired" onUnlock={unlockLuckyOffer} />);
-  } else if (offerStatus === 'lucky_24h') {
+  } else if (offerStatus === "lucky_24h") {
     slides.push(<OfferBannerLucky key="lucky" remaining={remaining} />);
   }
 
@@ -148,12 +149,14 @@ const PromoBannerSlider: React.FC = () => {
     if (slideCount <= 1) return;
     autoSlideRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % slideCount);
-    }, 3000);
+    }, 6000);
   }, [slideCount]);
 
   useEffect(() => {
     startAutoSlide();
-    return () => { if (autoSlideRef.current) clearInterval(autoSlideRef.current); };
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
   }, [startAutoSlide]);
 
   // Touch/swipe support
@@ -165,7 +168,7 @@ const PromoBannerSlider: React.FC = () => {
     if (slideCount <= 1) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 40) {
-      setActiveIndex((prev) => diff > 0 ? (prev + 1) % slideCount : (prev - 1 + slideCount) % slideCount);
+      setActiveIndex((prev) => (diff > 0 ? (prev + 1) % slideCount : (prev - 1 + slideCount) % slideCount));
       startAutoSlide(); // Reset timer after manual swipe
     }
   };
@@ -197,10 +200,13 @@ const PromoBannerSlider: React.FC = () => {
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => { setActiveIndex(i); startAutoSlide(); }}
+              onClick={() => {
+                setActiveIndex(i);
+                startAutoSlide();
+              }}
               className={cn(
                 "h-1.5 rounded-full transition-all duration-300",
-                i === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30"
+                i === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30",
               )}
             />
           ))}
