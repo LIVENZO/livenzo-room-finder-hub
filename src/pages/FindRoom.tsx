@@ -112,7 +112,8 @@ const FindRoom: React.FC = () => {
             onHotspotQueryChange={updateHotspotSuggestions}
             onHotspotSelect={selectHotspot}
             activeHotspot={activeHotspot}
-            onHotspotClear={clearHotspot} />
+            onHotspotClear={clearHotspot}
+            allHotspots={allHotspots} />
           
           
           {/* Mobile Filter Button */}
