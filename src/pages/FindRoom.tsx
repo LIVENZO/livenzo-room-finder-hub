@@ -12,7 +12,7 @@ import RoomResults from '@/components/room/RoomResults';
 import PromoBannerSlider from '@/components/room/PromoBannerSlider';
 import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
