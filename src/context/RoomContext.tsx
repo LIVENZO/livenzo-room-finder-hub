@@ -52,6 +52,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useNearMe();
 
   const {
+    hotspots,
     suggestions: hotspotSuggestions,
     activeHotspot,
     updateSuggestions: updateHotspotSuggestions,
