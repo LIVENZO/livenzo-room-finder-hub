@@ -12,7 +12,7 @@ import RoomResults from '@/components/room/RoomResults';
 import PromoBannerSlider from '@/components/room/PromoBannerSlider';
 import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -92,9 +92,9 @@ const FindRoom: React.FC = () => {
             <Button
               onClick={handleClearFilters}
               variant="outline"
-              size="sm"
-              className="shrink-0 ml-2">
-              Clear Filters
+              size="icon"
+              className="shrink-0 ml-2 h-8 w-8">
+              <RotateCcw className="h-4 w-4" />
             </Button>
           }
         </div>
