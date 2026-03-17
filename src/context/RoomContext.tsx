@@ -67,6 +67,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return searchScopeRooms.map((room) => ({ ...room, distance: undefined }));
     }, [searchScopeRooms, nearMeActive, calculateRoomDistances]),
     activeHotspot,
+    hotspots,
   );
 
   const syncRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all', showSuccessToast = false) => {
