@@ -77,7 +77,7 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
 
 const HOTSPOT_RADIUS_KM = 2;
 
-export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = null) => {
+export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = null, hotspots: Hotspot[] = []) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
   
