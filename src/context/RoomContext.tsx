@@ -31,6 +31,7 @@ interface RoomContextType {
   updateHotspotSuggestions: (query: string) => void;
   selectHotspot: (hotspot: Hotspot) => void;
   clearHotspot: () => void;
+  allHotspots: Hotspot[];
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
