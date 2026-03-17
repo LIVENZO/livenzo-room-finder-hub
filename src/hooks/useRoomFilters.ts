@@ -100,65 +100,76 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
   const filteredRooms = useMemo(() => {
     const activePropertyFilter = filters.propertyType && filters.propertyType !== 'all' ? filters.propertyType : null;
 
-    let result = rooms.filter(room => {
-      if (room.available === false) return false;
+    const applyFilters = (roomList: Room[], hotspot: Hotspot | null, textSearch: string) => {
+      return roomList.filter(room => {
+        if (room.available === false) return false;
 
-      // Property type filter
-      if (activePropertyFilter) {
-        const pt = room.property_type;
-        if (activePropertyFilter === 'PG') {
-          if (pt !== 'PG' && pt !== 'PG_HOSTEL') return false;
-        } else if (activePropertyFilter === 'Hostel') {
-          if (pt !== 'Hostel' && pt !== 'PG_HOSTEL') return false;
-        } else if (activePropertyFilter === 'BHK') {
-          if (pt !== 'BHK') return false;
+        // Property type filter
+        if (activePropertyFilter) {
+          const pt = room.property_type;
+          if (activePropertyFilter === 'PG') {
+            if (pt !== 'PG' && pt !== 'PG_HOSTEL') return false;
+          } else if (activePropertyFilter === 'Hostel') {
+            if (pt !== 'Hostel' && pt !== 'PG_HOSTEL') return false;
+          } else if (activePropertyFilter === 'BHK') {
+            if (pt !== 'BHK') return false;
+          }
         }
-      }
 
-      // If hotspot is active, filter by geo-distance instead of text search
-      if (activeHotspot) {
-        if (room.latitude != null && room.longitude != null) {
-          const dist = calculateDistance(
-            activeHotspot.latitude,
-            activeHotspot.longitude,
-            room.latitude,
-            room.longitude
-          );
-          if (dist > HOTSPOT_RADIUS_KM) return false;
-        } else {
-          // Room has no coordinates, exclude from hotspot results
-          return false;
+        // If hotspot is active, filter by geo-distance instead of text search
+        if (hotspot) {
+          if (room.latitude != null && room.longitude != null) {
+            const dist = calculateDistance(
+              hotspot.latitude,
+              hotspot.longitude,
+              room.latitude,
+              room.longitude
+            );
+            if (dist > HOTSPOT_RADIUS_KM) return false;
+          } else {
+            return false;
+          }
+        } else if (textSearch.trim()) {
+          const searchLower = textSearch.toLowerCase().trim();
+          const locationMatch = room.location?.toLowerCase().includes(searchLower);
+          const titleMatch = room.title?.toLowerCase().includes(searchLower);
+          if (!locationMatch && !titleMatch) return false;
         }
-      } else if (searchText.trim()) {
-        // Existing text search logic (unchanged)
-        const searchLower = searchText.toLowerCase().trim();
-        const locationMatch = room.location?.toLowerCase().includes(searchLower);
-        const titleMatch = room.title?.toLowerCase().includes(searchLower);
-        if (!locationMatch && !titleMatch) return false;
-      }
-      
-      if (filters.maxPrice && room.price > filters.maxPrice) return false;
-      if (filters.wifi && !room.facilities.wifi) return false;
-      if (filters.bathroom && !room.facilities.bathroom) return false;
-      if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) return false;
-      if (filters.roomType && room.facilities.roomType !== filters.roomType) return false;
-      if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) return false;
-      // food filter removed from UI, no longer filtered here
-      
-      return true;
-    });
+        
+        if (filters.maxPrice && room.price > filters.maxPrice) return false;
+        if (filters.wifi && !room.facilities.wifi) return false;
+        if (filters.bathroom && !room.facilities.bathroom) return false;
+        if (filters.gender && room.facilities.gender !== 'any' && room.facilities.gender !== filters.gender) return false;
+        if (filters.roomType && room.facilities.roomType !== filters.roomType) return false;
+        if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) return false;
+        
+        return true;
+      });
+    };
 
-    // If hotspot is active, sort by distance from hotspot
-    if (activeHotspot) {
+    let result = applyFilters(rooms, activeHotspot, searchText);
+
+    // Hotspot fallback: if text search returned 0 results and no hotspot is active,
+    // try to find a matching hotspot and filter by proximity
+    let effectiveHotspot = activeHotspot;
+    if (result.length === 0 && !activeHotspot && searchText.trim() && hotspots.length > 0) {
+      const fallbackHotspot = findMatchingHotspot(searchText, hotspots);
+      if (fallbackHotspot) {
+        effectiveHotspot = fallbackHotspot;
+        result = applyFilters(rooms, fallbackHotspot, '');
+      }
+    }
+
+    // If hotspot is active (or fallback), sort by distance from hotspot
+    if (effectiveHotspot) {
       result.sort((a, b) => {
-        const distA = calculateDistance(activeHotspot.latitude, activeHotspot.longitude, a.latitude!, a.longitude!);
-        const distB = calculateDistance(activeHotspot.latitude, activeHotspot.longitude, b.latitude!, b.longitude!);
+        const distA = calculateDistance(effectiveHotspot!.latitude, effectiveHotspot!.longitude, a.latitude!, a.longitude!);
+        const distB = calculateDistance(effectiveHotspot!.latitude, effectiveHotspot!.longitude, b.latitude!, b.longitude!);
         return distA - distB;
       });
-      // Attach distance for display
       result = result.map(room => ({
         ...room,
-        distance: calculateDistance(activeHotspot.latitude, activeHotspot.longitude, room.latitude!, room.longitude!),
+        distance: calculateDistance(effectiveHotspot!.latitude, effectiveHotspot!.longitude, room.latitude!, room.longitude!),
       }));
       return result;
     }
@@ -199,7 +210,7 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
     }
 
     return result;
-  }, [rooms, filters, searchText, activeHotspot]);
+  }, [rooms, filters, searchText, activeHotspot, hotspots]);
 
   return { 
     filters, 
