@@ -143,6 +143,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateHotspotSuggestions,
         selectHotspot,
         clearHotspot,
+        allHotspots: hotspots,
       }}
     >
       {children}
