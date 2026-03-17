@@ -92,9 +92,9 @@ const FindRoom: React.FC = () => {
             <Button
               onClick={handleClearFilters}
               variant="outline"
-              size="sm"
-              className="shrink-0 ml-2">
-              Clear Filters
+              size="icon"
+              className="shrink-0 ml-2 h-8 w-8">
+              <RotateCcw className="h-4 w-4" />
             </Button>
           }
         </div>
