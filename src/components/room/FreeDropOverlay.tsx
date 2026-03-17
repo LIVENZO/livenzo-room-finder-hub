@@ -13,18 +13,14 @@ const FreeDropOverlay: React.FC = () => {
 
   return (
     <>
-      {/* Minimal car sticker above carousel */}
-      <div className="flex justify-center mb-3">
-        <button
-          onClick={() => setOpen(true)}
-          className="relative w-11 h-11 rounded-full bg-background shadow-md flex items-center justify-center transition-transform duration-200 active:scale-95 animate-[bounce_2s_ease-in-out_1]"
-          aria-label="Free drop service"
-        >
-          <Car className="h-5 w-5 text-primary" />
-          {/* Subtle pulse ring */}
-          <span className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping pointer-events-none" style={{ animationIterationCount: 3, animationDuration: '1.5s' }} />
-        </button>
-      </div>
+      {/* Floating badge – positioned by parent via absolute */}
+      <button
+        onClick={() => setOpen(true)}
+        className="absolute top-3 right-3 z-10 w-11 h-11 rounded-full bg-background/95 backdrop-blur-sm shadow-lg ring-1 ring-primary/10 flex items-center justify-center animate-[slideGlow_0.5s_ease-out_both]"
+        aria-label="Free drop service"
+      >
+        <Car className="h-5 w-5 text-primary" />
+      </button>
 
       {/* Bottom sheet */}
       <Sheet open={open} onOpenChange={setOpen}>
