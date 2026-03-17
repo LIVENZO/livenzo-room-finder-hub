@@ -39,7 +39,7 @@ const FreeDropOverlay: React.FC = () => {
               </SheetTitle>
             </div>
             <SheetDescription className="text-sm text-muted-foreground leading-relaxed pt-2">
-              Book this room through Livenzo and we will drop you directly to the property.
+              Book this room through Livenzo and we will drop you directly to the accommodation.
             </SheetDescription>
           </SheetHeader>
 
