@@ -134,16 +134,16 @@ const RoomDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Images and details */}
           <div className="lg:col-span-2">
-            {/* Free Drop sticker above carousel */}
-            <FreeDropOverlay />
-            
-            {/* Media carousel */}
-            <RoomImageGallery
-              images={room.images}
-              selectedImage={selectedImage}
-              setSelectedImage={setSelectedImage}
-              onImageClick={handleImageClick}
-              videos={room.videos} />
+            {/* Media carousel with floating Free Drop badge */}
+            <div className="relative">
+              <FreeDropOverlay />
+              <RoomImageGallery
+                images={room.images}
+                selectedImage={selectedImage}
+                setSelectedImage={setSelectedImage}
+                onImageClick={handleImageClick}
+                videos={room.videos} />
+            </div>
             
             
             {/* Fullscreen Image Viewer */}
