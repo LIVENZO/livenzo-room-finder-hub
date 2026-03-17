@@ -144,6 +144,12 @@ export default {
 				'pulse-scale-renter': {
 					'0%, 25%, 75%, 100%': { transform: 'scale(1)' },
 					'37.5%': { transform: 'scale(1.05)' }
+				},
+				'slideGlow': {
+					'0%': { opacity: '0', transform: 'translateX(12px) scale(0.9)' },
+					'60%': { opacity: '1', transform: 'translateX(0) scale(1.08)' },
+					'80%': { opacity: '1', transform: 'translateX(0) scale(0.97)' },
+					'100%': { opacity: '1', transform: 'translateX(0) scale(1)' }
 				}
 			},
 			animation: {
