@@ -13,12 +13,12 @@ interface SearchBarProps {
   nearMeLoading?: boolean;
   onNearMeClick?: () => void;
   onNearMeDeactivate?: () => void;
-  // Hotspot props
   hotspotSuggestions?: Hotspot[];
   onHotspotQueryChange?: (query: string) => void;
   onHotspotSelect?: (hotspot: Hotspot) => void;
   activeHotspot?: Hotspot | null;
   onHotspotClear?: () => void;
+  allHotspots?: Hotspot[];
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ 
@@ -33,11 +33,27 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onHotspotSelect,
   activeHotspot,
   onHotspotClear,
+  allHotspots = [],
 }) => {
   const debounceRef = useRef<NodeJS.Timeout>();
   const [inputValue, setInputValue] = useState(searchText);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
+  // Rotate placeholder hotspot names
+  useEffect(() => {
+    if (allHotspots.length === 0 || inputValue.trim()) return;
+    const interval = setInterval(() => {
+      setPlaceholderVisible(false);
+      setTimeout(() => {
+        setPlaceholderIndex((prev) => (prev + 1) % allHotspots.length);
+        setPlaceholderVisible(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [allHotspots.length, inputValue]);
 
   // Sync input when activeHotspot changes
   useEffect(() => {
@@ -59,17 +75,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleChange = (value: string) => {
     setInputValue(value);
-
-    // If there's an active hotspot and user starts typing differently, clear it
     if (activeHotspot) {
       onHotspotClear?.();
     }
-
-    // Update hotspot suggestions
     onHotspotQueryChange?.(value);
     setShowSuggestions(true);
-
-    // Debounce regular text search
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -82,7 +92,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setInputValue(hotspot.name);
     setShowSuggestions(false);
     onHotspotSelect?.(hotspot);
-    // Clear text search since hotspot takes over
     onSearchChange('');
   };
 
@@ -110,14 +119,30 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const showClearButton = inputValue.trim() || activeHotspot;
+  const currentPlaceholder = allHotspots.length > 0 && !inputValue.trim()
+    ? allHotspots[placeholderIndex]?.name ?? ''
+    : '';
 
   return (
     <div className="flex-1 flex gap-2">
       <div className="flex-1 relative" ref={wrapperRef}>
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+        
+        {/* Custom animated placeholder */}
+        {!inputValue.trim() && currentPlaceholder && (
+          <div 
+            className={cn(
+              "absolute left-10 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none z-[1] transition-all duration-300 ease-in-out",
+              placeholderVisible ? "opacity-100 translate-y-[-50%]" : "opacity-0 translate-y-[calc(-50%-6px)]"
+            )}
+          >
+            {currentPlaceholder}
+          </div>
+        )}
+
         <Input
           type="text"
-          placeholder="Search area or landmark in Kota"
+          placeholder=""
           className={cn("pl-10", showClearButton && "pr-8")}
           value={inputValue}
           onChange={(e) => handleChange(e.target.value)}

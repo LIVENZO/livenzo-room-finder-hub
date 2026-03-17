@@ -31,6 +31,7 @@ interface RoomContextType {
   updateHotspotSuggestions: (query: string) => void;
   selectHotspot: (hotspot: Hotspot) => void;
   clearHotspot: () => void;
+  allHotspots: Hotspot[];
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -142,6 +143,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateHotspotSuggestions,
         selectHotspot,
         clearHotspot,
+        allHotspots: hotspots,
       }}
     >
       {children}
