@@ -39,7 +39,7 @@ const FreeDropOverlay: React.FC = () => {
               </SheetTitle>
             </div>
             <SheetDescription className="text-sm text-muted-foreground leading-relaxed pt-2">
-              Book this room through Livenzo and we will drop you directly to the property.
+              Book this room through Livenzo and we will drop you directly to the accommodation.
             </SheetDescription>
           </SheetHeader>
 
@@ -51,7 +51,7 @@ const FreeDropOverlay: React.FC = () => {
           <div className="space-y-3">
             {[
               { icon: Car, label: 'Comfortable ride' },
-              { icon: MapPin, label: 'Direct to property' },
+              { icon: MapPin, label: 'Direct to accommodation' },
               { icon: Shield, label: 'No extra cost' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-accent/60">
