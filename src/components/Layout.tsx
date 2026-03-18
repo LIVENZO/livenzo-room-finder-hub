@@ -26,7 +26,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
       {!isMobile && <SideBar />}
 
       {/* Main content */}
-      <main className={cn("flex-1 bg-gradient-radial w-full h-full", isMobile ? "pt-16 pb-20" : "ml-[280px]")}>
+      <main className={cn("flex-1 bg-gradient-radial w-full h-full", isMobile ? "pb-20" : "ml-[280px]")} style={isMobile ? { paddingTop: 'calc(env(safe-area-inset-top, 0px) + 4rem)' } : undefined}>
         <div className="relative w-full h-full overflow-hidden">
           {/* Subtle background pattern - hidden on mobile for performance */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none hidden md:block">
