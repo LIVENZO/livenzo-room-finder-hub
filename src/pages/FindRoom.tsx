@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
@@ -82,8 +82,22 @@ const FindRoom: React.FC = () => {
     return value !== undefined && value !== '';
   }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
 
-  const { scrollDirection, isAtTop } = useScrollDirection(5);
-  const showStickyHeader = !isAtTop && scrollDirection === 'up';
+  const originalBarRef = useRef<HTMLDivElement>(null);
+  const [originalBarVisible, setOriginalBarVisible] = useState(true);
+  const { scrollDirection } = useScrollDirection(5);
+
+  useEffect(() => {
+    const el = originalBarRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOriginalBarVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const showStickyHeader = !originalBarVisible && scrollDirection === 'up';
 
   if (!user) return null;
 
@@ -155,7 +169,7 @@ const FindRoom: React.FC = () => {
         </div>
         
         {/* Search and Filter Bar */}
-        <div className="flex gap-2 mb-4">
+        <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
             searchText={searchText}
             onSearchChange={setSearchText}
