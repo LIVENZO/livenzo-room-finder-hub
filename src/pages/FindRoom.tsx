@@ -89,6 +89,56 @@ const FindRoom: React.FC = () => {
 
   return (
     <Layout>
+      {/* Sticky Smart Header */}
+      <div
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm transition-transform duration-300 ease-out",
+          "md:left-[280px]",
+          showStickyHeader ? "translate-y-0" : "-translate-y-full"
+        )}
+      >
+        <div className="container mx-auto px-4 py-2 max-w-7xl space-y-2">
+          {/* Property Type Filter Row */}
+          <div className="flex items-center justify-between">
+            <PropertyTypeFilter value={propertyTypeFilter} onChange={handlePropertyTypeChange} />
+            {hasActiveFilters &&
+              <Button
+                onClick={handleClearFilters}
+                variant="outline"
+                size="icon"
+                className="shrink-0 ml-2 h-8 w-8">
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            }
+          </div>
+          {/* Search Row */}
+          <div className="flex gap-2">
+            <SearchBar
+              searchText={searchText}
+              onSearchChange={setSearchText}
+              nearMeActive={nearMeActive}
+              nearMeLoading={nearMeLoading}
+              onNearMeClick={activateNearMe}
+              onNearMeDeactivate={deactivateNearMe}
+              hotspotSuggestions={hotspotSuggestions}
+              onHotspotQueryChange={updateHotspotSuggestions}
+              onHotspotSelect={selectHotspot}
+              activeHotspot={activeHotspot}
+              onHotspotClear={clearHotspot}
+              allHotspots={allHotspots} />
+            <div className="block lg:hidden">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowMobileFilters(true)}
+                className="shrink-0">
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Property Type Filter */}
         <div className="flex items-center justify-between mb-4">
