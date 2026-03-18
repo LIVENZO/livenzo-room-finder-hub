@@ -82,8 +82,22 @@ const FindRoom: React.FC = () => {
     return value !== undefined && value !== '';
   }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
 
-  const { scrollDirection, isAtTop } = useScrollDirection(5);
-  const showStickyHeader = !isAtTop && scrollDirection === 'up';
+  const originalBarRef = useRef<HTMLDivElement>(null);
+  const [originalBarVisible, setOriginalBarVisible] = useState(true);
+  const { scrollDirection } = useScrollDirection(5);
+
+  useEffect(() => {
+    const el = originalBarRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOriginalBarVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const showStickyHeader = !originalBarVisible && scrollDirection === 'up';
 
   if (!user) return null;
 
