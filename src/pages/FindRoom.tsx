@@ -110,6 +110,7 @@ const FindRoom: React.FC = () => {
           "md:left-[280px]",
           showStickyHeader ? "translate-y-0" : "-translate-y-full"
         )}
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="container mx-auto px-4 py-2 max-w-7xl space-y-2">
           {/* Property Type Filter Row */}
