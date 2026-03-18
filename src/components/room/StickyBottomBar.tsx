@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import { getRoomPricing } from '@/utils/pricingUtils';
-import { useOfferStatus } from '@/hooks/useOfferStatus';
 import BookingFlowSheet from './BookingFlowSheet';
 
 interface StickyBottomBarProps {
@@ -17,9 +15,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
-  const { isDiscountActive } = useOfferStatus();
   const pricing = getRoomPricing(room);
-  const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +40,25 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
     return null;
   }
 
+  const handleBookVisit = () => {
+    const facilities = room.facilities || {};
+    const roomType = (facilities as any).roomType === 'single' ? 'Single' : (facilities as any).roomType === 'sharing' ? 'Sharing' : 'Room';
+    const gender = (facilities as any).gender === 'male' ? 'Boys' : (facilities as any).gender === 'female' ? 'Girls' : 'Any';
+    const message = `Hi Livenzo,
+
+I want to schedule an offline visit for ${room.title}
+
+₹${pricing.currentRoomPrice.toLocaleString()} | ${roomType} room | ${gender}
+
+${room.house_name || ''}, ${room.location}
+
+Room ID: ${room.id}
+
+Please help me schedule a visit.`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/917488698970?text=${encodedMessage}`, '_blank');
+  };
+
   const handleBookNow = () => {
     if (!user) {
       toast.error('Please login to book a room');
@@ -61,37 +76,20 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
       >
         <div className="bg-background/95 backdrop-blur-lg border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="container max-w-6xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
-              <div className="w-1/3 min-w-fit">
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold text-foreground">
-                    ₹{pricing.currentRoomPrice.toLocaleString()}
-                  </span>
-                  {pricing.hasBaseDiscount && (
-                    <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight line-through">
-                      ₹{pricing.basePrice.toLocaleString()}/mo
-                    </span>
-                  )}
-                  {firstMonthOffer ? (
-                    <span className="text-[10px] text-green-600 -mt-0.5 leading-tight">
-                      Save {firstMonthOffer.discountPercent}% first month
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground -mt-0.5 leading-tight">
-                      /month
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex-1">
-                <Button
-                  onClick={handleBookNow}
-                  className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 rounded-xl"
-                >
-                  <CalendarCheck className="h-5 w-5 mr-2" />
-                  Free🚗drop to new room
-                </Button>
-              </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={handleBookVisit}
+                className="flex-1 h-12 rounded-full text-sm font-semibold border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 active:scale-[0.97] transition-all duration-150"
+              >
+                Book a Visit
+              </Button>
+              <Button
+                onClick={handleBookNow}
+                className="flex-1 h-12 rounded-full text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.97] transition-all duration-150"
+              >
+                Book Now 🏠
+              </Button>
             </div>
           </div>
         </div>
