@@ -13,6 +13,8 @@ import PromoBannerSlider from '@/components/room/PromoBannerSlider';
 import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { useScrollDirection } from '@/hooks/useScrollDirection';
+import { cn } from '@/lib/utils';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
