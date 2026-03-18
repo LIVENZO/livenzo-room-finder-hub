@@ -82,6 +82,9 @@ const FindRoom: React.FC = () => {
     return value !== undefined && value !== '';
   }) || searchText.trim() !== '' || nearMeActive || !!activeHotspot;
 
+  const { scrollDirection, isAtTop } = useScrollDirection(5);
+  const showStickyHeader = !isAtTop && scrollDirection === 'up';
+
   if (!user) return null;
 
   return (
