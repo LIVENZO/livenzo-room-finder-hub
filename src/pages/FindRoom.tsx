@@ -169,7 +169,7 @@ const FindRoom: React.FC = () => {
         </div>
         
         {/* Search and Filter Bar */}
-        <div className="flex gap-2 mb-4">
+        <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
             searchText={searchText}
             onSearchChange={setSearchText}
