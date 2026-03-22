@@ -36,7 +36,7 @@ const TimerDisplay = ({ remaining }: { remaining: number }) => {
 };
 
 const LimitedOfferBanner: React.FC<{ onCtaClick?: () => void }> = ({ onCtaClick }) => {
-  const { offerStatus, remaining, unlockLuckyOffer } = useOfferStatus();
+  const { offerStatus, remaining } = useOfferStatus();
 
   // Stage 1: Active 7-day offer
   if (offerStatus === 'active_7_day') {
