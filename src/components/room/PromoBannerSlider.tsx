@@ -117,8 +117,8 @@ const PromoBannerSlider: React.FC = () => {
 
   if (offerStatus === "active_7_day") {
     slides.push(<OfferBanner7Day key="7day" remaining={remaining} />);
-  } else if (offerStatus === "expired") {
-    slides.push(<OfferBannerExpired key="expired" onUnlock={unlockLuckyOffer} />);
+  } else if (offerStatus === "expired" || offerStatus === "fully_expired") {
+    slides.push(<OfferBannerExpired key="expired" />);
   } else if (offerStatus === "lucky_24h") {
     slides.push(<OfferBannerLucky key="lucky" remaining={remaining} />);
   }
