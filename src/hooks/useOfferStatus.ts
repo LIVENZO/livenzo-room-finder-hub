@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export type OfferStatus = 'active_7_day' | 'expired' | 'lucky_24h' | 'fully_expired';
 
@@ -46,6 +48,35 @@ const computeStatus = (): { status: OfferStatus; remaining: number } => {
 
 export const useOfferStatus = () => {
   const [state, setState] = useState(computeStatus);
+  const { user } = useAuth();
+
+  // Check for admin-triggered restart from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const checkAdminRestart = async () => {
+      const { data } = await supabase
+        .from('offer_overrides')
+        .select('restarted_at')
+        .eq('user_id', user.id)
+        .order('restarted_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const restartTime = new Date(data[0].restarted_at).getTime();
+        const currentStart = getStoredNumber(STORAGE_KEY_START);
+
+        // Only apply if restart is newer than current offer start
+        if (!currentStart || restartTime > currentStart) {
+          localStorage.setItem(STORAGE_KEY_START, restartTime.toString());
+          localStorage.removeItem(STORAGE_KEY_LUCKY);
+          setState(computeStatus());
+        }
+      }
+    };
+
+    checkAdminRestart();
+  }, [user?.id]);
 
   useEffect(() => {
     if (state.remaining <= 0) return;
@@ -57,18 +88,12 @@ export const useOfferStatus = () => {
     return () => clearInterval(id);
   }, [state.status]);
 
-  const unlockLuckyOffer = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY_LUCKY, Date.now().toString());
-    setState(computeStatus());
-  }, []);
-
   const isDiscountActive = state.status === 'active_7_day' || state.status === 'lucky_24h';
 
   return {
     offerStatus: state.status,
     remaining: state.remaining,
     isDiscountActive,
-    unlockLuckyOffer,
   };
 };
 
