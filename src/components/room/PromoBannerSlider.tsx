@@ -117,7 +117,7 @@ const FreeDropBanner = () => (
 /* ── Main Slider ── */
 
 const PromoBannerSlider: React.FC = () => {
-  const { offerStatus, remaining, unlockLuckyOffer } = useOfferStatus();
+  const { offerStatus, remaining } = useOfferStatus();
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef(0);
   const autoSlideRef = useRef<ReturnType<typeof setInterval>>();

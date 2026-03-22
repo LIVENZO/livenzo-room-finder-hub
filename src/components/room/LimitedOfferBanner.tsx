@@ -67,35 +67,25 @@ const LimitedOfferBanner: React.FC<{ onCtaClick?: () => void }> = ({ onCtaClick 
     );
   }
 
-  // Stage 2: Expired — show unlock CTA
-  if (offerStatus === 'expired') {
+  // Stage 2: Expired — offer ended, no user action available
+  if (offerStatus === 'expired' || offerStatus === 'fully_expired') {
     return (
       <div className="w-full animate-fade-in mb-4">
         <div className="relative overflow-hidden rounded-xl shadow-lg bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 p-4 sm:p-5">
           <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/5" />
           <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative flex flex-col gap-3">
+          <div className="relative flex flex-col gap-2">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                 <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
-                  ⚠️ Your 25% Offer Just Expired
+                  ⚠️ Your 25% Offer Has Expired
                 </h3>
               </div>
               <p className="text-xs sm:text-sm text-white/70 pl-6">
-                You used your 7-day window. But you can unlock the offer again for a limited time.
+                Your exclusive first month discount window has ended.
               </p>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                unlockLuckyOffer();
-              }}
-              className="self-start ml-6 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center gap-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              Unlock 24-Hour Lucky Offer
-            </button>
           </div>
         </div>
       </div>
