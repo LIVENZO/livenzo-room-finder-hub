@@ -54,27 +54,17 @@ const OfferBanner7Day = ({ remaining }: { remaining: number }) => (
   </div>
 );
 
-const OfferBannerExpired = ({ onUnlock }: { onUnlock: () => void }) => (
+const OfferBannerExpired = () => (
   <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 p-4">
     <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/5" />
-    <div className="relative flex items-center justify-between gap-3">
+    <div className="relative flex items-center gap-3">
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
           <h3 className="text-sm font-bold text-white truncate">⚠️ Offer Expired</h3>
         </div>
-        <p className="text-[11px] text-white/70 pl-5.5">Unlock it again for 24 hours</p>
+        <p className="text-[11px] text-white/70 pl-5.5">Your 25% first month discount has ended.</p>
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onUnlock();
-        }}
-        className="shrink-0 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-md text-xs flex items-center gap-1.5 active:scale-95 transition-transform"
-      >
-        <Sparkles className="h-3.5 w-3.5" />
-        Unlock
-      </button>
     </div>
   </div>
 );
@@ -117,7 +107,7 @@ const FreeDropBanner = () => (
 /* ── Main Slider ── */
 
 const PromoBannerSlider: React.FC = () => {
-  const { offerStatus, remaining, unlockLuckyOffer } = useOfferStatus();
+  const { offerStatus, remaining } = useOfferStatus();
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef(0);
   const autoSlideRef = useRef<ReturnType<typeof setInterval>>();
@@ -127,8 +117,8 @@ const PromoBannerSlider: React.FC = () => {
 
   if (offerStatus === "active_7_day") {
     slides.push(<OfferBanner7Day key="7day" remaining={remaining} />);
-  } else if (offerStatus === "expired") {
-    slides.push(<OfferBannerExpired key="expired" onUnlock={unlockLuckyOffer} />);
+  } else if (offerStatus === "expired" || offerStatus === "fully_expired") {
+    slides.push(<OfferBannerExpired key="expired" />);
   } else if (offerStatus === "lucky_24h") {
     slides.push(<OfferBannerLucky key="lucky" remaining={remaining} />);
   }
