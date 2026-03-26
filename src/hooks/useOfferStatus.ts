@@ -23,10 +23,8 @@ const computeStatus = (): { status: OfferStatus; remaining: number } => {
     if (luckyLeft > 0) {
       return { status: 'lucky_24h', remaining: luckyLeft };
     }
-    // Full cycle complete → restart with fresh 7-day offer
-    localStorage.removeItem(STORAGE_KEY_LUCKY);
-    localStorage.setItem(STORAGE_KEY_START, now.toString());
-    return { status: 'active_7_day', remaining: SEVEN_DAYS_MS };
+    // Lucky offer expired
+    return { status: 'fully_expired', remaining: 0 };
   }
 
   // Check 7-day offer
