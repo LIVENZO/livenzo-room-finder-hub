@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export type OfferStatus = 'active_7_day' | 'expired' | 'lucky_24h' | 'fully_expired';
 
@@ -23,7 +24,7 @@ const computeStatus = (): { status: OfferStatus; remaining: number } => {
     if (luckyLeft > 0) {
       return { status: 'lucky_24h', remaining: luckyLeft };
     }
-    // Lucky offer expired
+    // Lucky offer expired — permanently done until admin reset
     return { status: 'fully_expired', remaining: 0 };
   }
 
@@ -44,8 +45,54 @@ const computeStatus = (): { status: OfferStatus; remaining: number } => {
   return { status: 'expired', remaining: 0 };
 };
 
+/**
+ * Check if admin has triggered a manual offer reset via the offer_overrides table.
+ * If restarted_at is newer than the current offer cycle, reset localStorage.
+ */
+const checkAdminReset = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('offer_overrides')
+      .select('restarted_at')
+      .eq('user_id', userId)
+      .order('restarted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    const restartedAt = new Date(data.restarted_at).getTime();
+    const offerStart = getStoredNumber(STORAGE_KEY_START);
+
+    // Reset only if admin restart is newer than current offer cycle start
+    if (!offerStart || restartedAt > offerStart) {
+      localStorage.setItem(STORAGE_KEY_START, restartedAt.toString());
+      localStorage.removeItem(STORAGE_KEY_LUCKY);
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+};
+
 export const useOfferStatus = () => {
   const [state, setState] = useState(computeStatus);
+
+  // Check for admin-triggered reset on mount
+  useEffect(() => {
+    const checkReset = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const wasReset = await checkAdminReset(session.user.id);
+      if (wasReset) {
+        setState(computeStatus());
+      }
+    };
+    checkReset();
+  }, []);
 
   useEffect(() => {
     if (state.remaining <= 0) return;
