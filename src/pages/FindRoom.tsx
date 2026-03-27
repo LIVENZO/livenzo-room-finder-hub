@@ -283,7 +283,8 @@ const FindRoom: React.FC = () => {
               isLoading={isLoading}
               filteredRooms={filteredRooms}
               clearFilters={handleClearFilters}
-              searchText={searchText} />
+              searchText={searchText}
+              searchContext={{ searchQuery: searchText, selectedCategory: propertyTypeFilter }} />
             
           </div>
         </div>
