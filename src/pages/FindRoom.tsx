@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
+import { logSearch } from '@/services/SearchAnalyticsService';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
