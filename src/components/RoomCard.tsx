@@ -73,7 +73,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, searchContext }) => {
   return (
     <Card
       className="overflow-hidden cursor-pointer transition-all hover:shadow-lg"
-      onClick={() => navigate(`/room/${room.id}`)}>
+      onClick={() => {
+        logPropertyClick(room.id, searchContext?.searchQuery, searchContext?.selectedCategory);
+        navigate(`/room/${room.id}`);
+      }}>
       <AspectRatio ratio={16 / 9} className="relative">
         <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}
