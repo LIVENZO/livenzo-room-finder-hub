@@ -15,12 +15,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { addFavorite, removeFavorite, checkIsFavorite } from "@/services/FavoriteService";
 import { toast } from "sonner";
+import { logPropertyClick } from "@/services/SearchAnalyticsService";
 
 interface RoomCardProps {
   room: Room;
+  searchContext?: { searchQuery?: string; selectedCategory?: string };
 }
 
-const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
+const RoomCard: React.FC<RoomCardProps> = ({ room, searchContext }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -71,7 +73,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
   return (
     <Card
       className="overflow-hidden cursor-pointer transition-all hover:shadow-lg"
-      onClick={() => navigate(`/room/${room.id}`)}>
+      onClick={() => {
+        logPropertyClick(room.id, searchContext?.searchQuery, searchContext?.selectedCategory);
+        navigate(`/room/${room.id}`);
+      }}>
       <AspectRatio ratio={16 / 9} className="relative">
         <img src={room.images[0]} alt={room.title} className="w-full h-full object-cover" loading="lazy" />
         {/* Action buttons - top left */}

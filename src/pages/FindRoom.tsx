@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
+import { logSearch } from '@/services/SearchAnalyticsService';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -46,6 +47,13 @@ const FindRoom: React.FC = () => {
   const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
     setPropertyTypeFilter(value);
     setFilters({ ...filters, propertyType: value });
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: value,
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters: { ...filters, propertyType: value },
+    });
   };
 
   useEffect(() => {
@@ -58,10 +66,50 @@ const FindRoom: React.FC = () => {
     setTempFilters(filters);
   }, [filters]);
 
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    logSearch({
+      searchQuery: text,
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters,
+    });
+  };
+
+  const handleNearMeActivate = () => {
+    activateNearMe();
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: true,
+      hotspotUsed: activeHotspot?.name,
+      filters,
+    });
+  };
+
+  const handleHotspotSelect = (hotspot: any) => {
+    selectHotspot(hotspot);
+    logSearch({
+      searchQuery: '',
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: false,
+      hotspotUsed: hotspot.name,
+      filters,
+    });
+  };
+
   const applyFilters = () => {
     setFilters(tempFilters);
     setPropertyTypeFilter(tempFilters.propertyType || 'all');
     setShowMobileFilters(false);
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: tempFilters.propertyType || 'all',
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters: tempFilters,
+    });
   };
 
   const resetFilters = () => {
@@ -130,14 +178,14 @@ const FindRoom: React.FC = () => {
           <div className="flex gap-2">
             <SearchBar
               searchText={searchText}
-              onSearchChange={setSearchText}
+              onSearchChange={handleSearchChange}
               nearMeActive={nearMeActive}
               nearMeLoading={nearMeLoading}
-              onNearMeClick={activateNearMe}
+              onNearMeClick={handleNearMeActivate}
               onNearMeDeactivate={deactivateNearMe}
               hotspotSuggestions={hotspotSuggestions}
               onHotspotQueryChange={updateHotspotSuggestions}
-              onHotspotSelect={selectHotspot}
+              onHotspotSelect={handleHotspotSelect}
               activeHotspot={activeHotspot}
               onHotspotClear={clearHotspot}
               allHotspots={allHotspots} />
@@ -173,14 +221,14 @@ const FindRoom: React.FC = () => {
         <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
             searchText={searchText}
-            onSearchChange={setSearchText}
+            onSearchChange={handleSearchChange}
             nearMeActive={nearMeActive}
             nearMeLoading={nearMeLoading}
-            onNearMeClick={activateNearMe}
+            onNearMeClick={handleNearMeActivate}
             onNearMeDeactivate={deactivateNearMe}
             hotspotSuggestions={hotspotSuggestions}
             onHotspotQueryChange={updateHotspotSuggestions}
-            onHotspotSelect={selectHotspot}
+            onHotspotSelect={handleHotspotSelect}
             activeHotspot={activeHotspot}
             onHotspotClear={clearHotspot}
             allHotspots={allHotspots} />
@@ -275,7 +323,8 @@ const FindRoom: React.FC = () => {
               isLoading={isLoading}
               filteredRooms={filteredRooms}
               clearFilters={handleClearFilters}
-              searchText={searchText} />
+              searchText={searchText}
+              searchContext={{ searchQuery: searchText, selectedCategory: propertyTypeFilter }} />
             
           </div>
         </div>

@@ -9,13 +9,15 @@ interface RoomResultsProps {
   filteredRooms: Room[];
   clearFilters: () => void;
   searchText: string;
+  searchContext?: { searchQuery?: string; selectedCategory?: string };
 }
 
 const RoomResults: React.FC<RoomResultsProps> = ({
   isLoading,
   filteredRooms,
   clearFilters,
-  searchText
+  searchText,
+  searchContext
 }) => {
   if (isLoading) {
     return <div className="text-center py-12">Loading rooms...</div>;
@@ -38,7 +40,7 @@ const RoomResults: React.FC<RoomResultsProps> = ({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) =>
-        <RoomCard key={room.id} room={room} />
+        <RoomCard key={room.id} room={room} searchContext={searchContext} />
         )}
       </div>
     </>);
