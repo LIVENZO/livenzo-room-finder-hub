@@ -47,6 +47,13 @@ const FindRoom: React.FC = () => {
   const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
     setPropertyTypeFilter(value);
     setFilters({ ...filters, propertyType: value });
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: value,
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters: { ...filters, propertyType: value },
+    });
   };
 
   useEffect(() => {
