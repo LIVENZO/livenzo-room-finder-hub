@@ -96,6 +96,25 @@ const OfferBannerLucky = ({ remaining }: { remaining: number }) => (
   </div>
 );
 
+const RefundGuaranteeBanner = () => (
+  <div className="relative overflow-hidden rounded-xl p-4" style={{ background: "linear-gradient(135deg, #4CAF50, #2196F3)" }}>
+    <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
+    <div className="absolute -bottom-3 -left-3 w-14 h-14 rounded-full bg-white/10" />
+    <div className="relative flex items-center gap-3">
+      <div className="shrink-0 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+        <ShieldCheck className="h-5 w-5 text-white" />
+      </div>
+      <div className="space-y-0.5 min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-white">🛡️ 2× Refund Guarantee</h3>
+        <p className="text-[11px] text-white/80 leading-snug">
+          Find the same room with same facilities nearby at a lower price? Get double your money back!
+        </p>
+      </div>
+      <span className="absolute bottom-0 right-0 text-[8px] text-white/50">T&C apply</span>
+    </div>
+  </div>
+);
+
 const FreeDropBanner = () => (
   <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-cyan-500 p-4">
     <div className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-white/10" />
