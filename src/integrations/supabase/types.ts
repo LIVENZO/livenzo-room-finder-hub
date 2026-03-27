@@ -832,6 +832,36 @@ export type Database = {
         }
         Relationships: []
       }
+      property_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          search_query: string | null
+          selected_category: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          search_query?: string | null
+          selected_category?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          search_query?: string | null
+          selected_category?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       referral_events: {
         Row: {
           created_at: string
@@ -1247,6 +1277,39 @@ export type Database = {
           title?: string
           updated_at?: string | null
           videos?: string[] | null
+        }
+        Relationships: []
+      }
+      search_logs: {
+        Row: {
+          created_at: string
+          filters: Json | null
+          hotspot_used: string | null
+          id: string
+          near_me_used: boolean | null
+          search_query: string
+          selected_category: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json | null
+          hotspot_used?: string | null
+          id?: string
+          near_me_used?: boolean | null
+          search_query?: string
+          selected_category?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          filters?: Json | null
+          hotspot_used?: string | null
+          id?: string
+          near_me_used?: boolean | null
+          search_query?: string
+          selected_category?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
