@@ -9,13 +9,15 @@ interface RoomResultsProps {
   filteredRooms: Room[];
   clearFilters: () => void;
   searchText: string;
+  searchContext?: { searchQuery?: string; selectedCategory?: string };
 }
 
 const RoomResults: React.FC<RoomResultsProps> = ({
   isLoading,
   filteredRooms,
   clearFilters,
-  searchText
+  searchText,
+  searchContext
 }) => {
   if (isLoading) {
     return <div className="text-center py-12">Loading rooms...</div>;
