@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Clock, Sparkles, AlertTriangle, MapPin, Car } from "lucide-react";
+import { Clock, Sparkles, AlertTriangle, MapPin, Car, ShieldCheck } from "lucide-react";
 import { useOfferStatus, OfferStatus } from "@/hooks/useOfferStatus";
 import { cn } from "@/lib/utils";
 
