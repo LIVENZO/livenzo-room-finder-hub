@@ -11,7 +11,7 @@ interface SearchLogData {
   selectedCategory?: string;
   nearMeUsed?: boolean;
   hotspotUsed?: string | null;
-  filters?: Record<string, unknown>;
+  filters?: object;
 }
 
 /**
