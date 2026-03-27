@@ -221,14 +221,14 @@ const FindRoom: React.FC = () => {
         <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
             searchText={searchText}
-            onSearchChange={setSearchText}
+            onSearchChange={handleSearchChange}
             nearMeActive={nearMeActive}
             nearMeLoading={nearMeLoading}
-            onNearMeClick={activateNearMe}
+            onNearMeClick={handleNearMeActivate}
             onNearMeDeactivate={deactivateNearMe}
             hotspotSuggestions={hotspotSuggestions}
             onHotspotQueryChange={updateHotspotSuggestions}
-            onHotspotSelect={selectHotspot}
+            onHotspotSelect={handleHotspotSelect}
             activeHotspot={activeHotspot}
             onHotspotClear={clearHotspot}
             allHotspots={allHotspots} />
