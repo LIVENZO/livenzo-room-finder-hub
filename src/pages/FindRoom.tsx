@@ -66,10 +66,50 @@ const FindRoom: React.FC = () => {
     setTempFilters(filters);
   }, [filters]);
 
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    logSearch({
+      searchQuery: text,
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters,
+    });
+  };
+
+  const handleNearMeActivate = () => {
+    activateNearMe();
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: true,
+      hotspotUsed: activeHotspot?.name,
+      filters,
+    });
+  };
+
+  const handleHotspotSelect = (hotspot: any) => {
+    selectHotspot(hotspot);
+    logSearch({
+      searchQuery: '',
+      selectedCategory: propertyTypeFilter,
+      nearMeUsed: false,
+      hotspotUsed: hotspot.name,
+      filters,
+    });
+  };
+
   const applyFilters = () => {
     setFilters(tempFilters);
     setPropertyTypeFilter(tempFilters.propertyType || 'all');
     setShowMobileFilters(false);
+    logSearch({
+      searchQuery: searchText,
+      selectedCategory: tempFilters.propertyType || 'all',
+      nearMeUsed: nearMeActive,
+      hotspotUsed: activeHotspot?.name,
+      filters: tempFilters,
+    });
   };
 
   const resetFilters = () => {
