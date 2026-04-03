@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Clock, Sparkles, AlertTriangle, MapPin, Car, ShieldCheck } from "lucide-react";
+import { Clock, Sparkles, AlertTriangle, Car, ShieldCheck } from "lucide-react";
 import { useOfferStatus, OfferStatus } from "@/hooks/useOfferStatus";
 import { cn } from "@/lib/utils";
 
@@ -97,21 +97,52 @@ const OfferBannerLucky = ({ remaining }: { remaining: number }) => (
 );
 
 const RefundGuaranteeBanner = () => (
-  <div className="relative overflow-hidden rounded-xl p-4" style={{ background: "linear-gradient(135deg, #4CAF50, #2196F3)" }}>
-    <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
-    <div className="absolute -bottom-3 -left-3 w-14 h-14 rounded-full bg-white/10" />
-    <div className="relative flex items-center gap-3">
-      <div className="shrink-0 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-        <ShieldCheck className="h-5 w-5 text-white" />
+  <div
+    className="relative overflow-hidden rounded-xl py-5 px-4 shadow-lg"
+    style={{ background: "linear-gradient(135deg, #1E3A8A 0%, #2563EB 50%, #4F46E5 100%)" }}
+  >
+    {/* Decorative glow elements */}
+    <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/[0.07]" />
+    <div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full bg-white/[0.05]" />
+    <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-40 h-16 rounded-full bg-white/[0.04] blur-2xl" />
+
+    {/* Shimmer animation */}
+    <div
+      className="absolute inset-0 opacity-20"
+      style={{
+        background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+        backgroundSize: "200% 100%",
+        animation: "shimmer 3s ease-in-out infinite",
+      }}
+    />
+
+    <div className="relative flex items-center gap-3.5">
+      {/* Shield icon */}
+      <div className="shrink-0 w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-inner">
+        <ShieldCheck className="h-6 w-6 text-white drop-shadow-sm" />
       </div>
-      <div className="space-y-0.5 min-w-0 flex-1">
-        <h3 className="text-sm font-bold text-white">🛡️ 2× Refund Guarantee</h3>
-        <p className="text-[11px] text-white/80 leading-snug">
-          Find the same room with same facilities nearby at a lower price? Get double your money back!
+
+      <div className="space-y-1.5 min-w-0 flex-1">
+        {/* Title with highlighted 2× */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="text-base font-extrabold text-white tracking-tight leading-none">
+            <span className="text-lg">2×</span> Refund Guarantee
+          </h3>
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-[8px] font-semibold text-white/90 uppercase tracking-wider">
+            <Sparkles className="h-2.5 w-2.5" />
+            Verified
+          </span>
+        </div>
+
+        {/* Subtitle */}
+        <p className="text-[11px] text-white/80 leading-snug pr-4">
+          Same room, same facilities, lower price nearby?{" "}
+          <span className="font-bold text-white">Get DOUBLE your money back!</span>
         </p>
       </div>
-      <span className="absolute bottom-0 right-0 text-[8px] text-white/50">T&C apply</span>
     </div>
+
+    <span className="absolute bottom-1.5 right-3 text-[7px] text-white/40 tracking-wide">T&C apply</span>
   </div>
 );
 
