@@ -1092,11 +1092,13 @@ export type Database = {
           due_date: string | null
           end_date: string | null
           id: string
+          maintenance_amount: number | null
           monthly_rent: number
           next_due_date: string | null
           owner_id: string
           property_id: string
           renter_id: string
+          security_deposit: number | null
           start_date: string | null
           status: string
           updated_at: string | null
@@ -1106,11 +1108,13 @@ export type Database = {
           due_date?: string | null
           end_date?: string | null
           id?: string
+          maintenance_amount?: number | null
           monthly_rent: number
           next_due_date?: string | null
           owner_id: string
           property_id: string
           renter_id: string
+          security_deposit?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
@@ -1120,11 +1124,13 @@ export type Database = {
           due_date?: string | null
           end_date?: string | null
           id?: string
+          maintenance_amount?: number | null
           monthly_rent?: number
           next_due_date?: string | null
           owner_id?: string
           property_id?: string
           renter_id?: string
+          security_deposit?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
