@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, IndianRupee, Shield, Wrench } from 'lucide-react';
@@ -29,13 +26,77 @@ interface SetRentModalProps {
   onSuccess: (renterId: string, newRent: number) => void;
 }
 
+interface NumericInputProps {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  step?: string;
+  inputRef?: React.RefObject<HTMLInputElement>;
+  onNext?: () => void;
+  isLast?: boolean;
+  autoFocus?: boolean;
+}
+
+const NumericInput: React.FC<NumericInputProps> = ({
+  id, label, icon, value, onChange, placeholder, step = "100",
+  inputRef, onNext, isLast = false, autoFocus = false,
+}) => {
+  const [focused, setFocused] = useState(false);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (onNext) onNext();
+      else (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="text-sm font-medium text-foreground">
+        {label}
+      </label>
+      <div
+        className={cn(
+          "relative flex items-center rounded-xl border bg-background shadow-sm transition-all duration-200",
+          focused
+            ? "border-primary ring-2 ring-primary/20 shadow-md"
+            : "border-input hover:border-muted-foreground/30"
+        )}
+      >
+        <div className="pl-3 text-muted-foreground">{icon}</div>
+        <input
+          ref={inputRef}
+          id={id}
+          type="number"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          enterKeyHint={isLast ? "done" : "next"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={handleKeyDown}
+          min="0"
+          step={step}
+          autoFocus={autoFocus}
+          className="flex-1 h-12 bg-transparent px-3 text-base text-foreground placeholder:text-muted-foreground outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+      </div>
+    </div>
+  );
+};
+
 const SetRentModal: React.FC<SetRentModalProps> = ({
   isOpen,
   onClose,
   renter,
   onSuccess
 }) => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [rentAmount, setRentAmount] = useState('');
   const [securityDeposit, setSecurityDeposit] = useState('');
@@ -46,44 +107,50 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   const [ownerUpiId, setOwnerUpiId] = useState('');
   const [ownerName, setOwnerName] = useState('');
 
+  const rentRef = useRef<HTMLInputElement>(null);
+  const depositRef = useRef<HTMLInputElement>(null);
+  const maintenanceRef = useRef<HTMLInputElement>(null);
+
+  const focusDeposit = useCallback(() => depositRef.current?.focus(), []);
+  const focusMaintenance = useCallback(() => maintenanceRef.current?.focus(), []);
+  const blurMaintenance = useCallback(() => maintenanceRef.current?.blur(), []);
+
+  const totalAmount =
+    (Number(rentAmount) || 0) +
+    (Number(securityDeposit) || 0) +
+    (Number(maintenanceAmount) || 0);
+
   const handleSubmit = async () => {
     if (!renter) return;
-    
-    if (!rentAmount || isNaN(Number(rentAmount))) {
+
+    if (!rentAmount || Number(rentAmount) <= 0) {
       toast.error('Please enter a valid rent amount');
       return;
     }
-
     if (!dueDate) {
       toast.error('Please select a due date');
       return;
     }
 
     setSaving(true);
-    
     try {
-      const { data, error } = await supabase.rpc('set_renter_monthly_rent', {
+      const { error } = await supabase.rpc('set_renter_monthly_rent', {
         p_renter_id: renter.id,
         p_monthly_rent: Number(rentAmount),
         p_next_due_date: format(dueDate, 'yyyy-MM-dd')
       });
 
       if (error) {
-        console.error('Error setting rent:', error);
         toast.error(error.message || 'Failed to set payment details');
         return;
       }
 
-      // Save security deposit and maintenance to rental_agreements
       if (user?.id) {
-        const depositVal = Number(securityDeposit) || 0;
-        const maintenanceVal = Number(maintenanceAmount) || 0;
-
         await supabase
           .from('rental_agreements')
           .update({
-            security_deposit: depositVal,
-            maintenance_amount: maintenanceVal,
+            security_deposit: Number(securityDeposit) || 0,
+            maintenance_amount: Number(maintenanceAmount) || 0,
           })
           .eq('owner_id', user.id)
           .eq('renter_id', renter.id)
@@ -93,7 +160,6 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
       toast.success(`✅ Payment details saved for ${renter.full_name}!`);
       onSuccess(renter.id, Number(rentAmount));
 
-      // Fetch owner UPI details for QR
       if (user?.id) {
         const [upiRes, profileRes] = await Promise.all([
           supabase
@@ -116,8 +182,7 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
 
       onClose();
       setShowQR(true);
-    } catch (error) {
-      console.error('Error setting rent:', error);
+    } catch {
       toast.error('Failed to set payment details');
     } finally {
       setSaving(false);
@@ -135,10 +200,8 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   React.useEffect(() => {
     if (isOpen && renter) {
       setRentAmount(renter.current_rent?.toString() || '');
-      if (!dueDate) {
-        setDueDate(new Date());
-      }
-      // Load existing deposit/maintenance
+      if (!dueDate) setDueDate(new Date());
+
       if (user?.id && renter.id) {
         supabase
           .from('rental_agreements')
@@ -159,93 +222,74 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
 
   if (!renter) return null;
 
+  const isValid = rentAmount && Number(rentAmount) > 0 && dueDate;
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
-          <DialogHeader className="text-center pb-2">
-            <DialogTitle className="text-2xl font-bold text-foreground">
-              Set Payment Details
-            </DialogTitle>
-            <p className="text-muted-foreground text-sm">
-              for {renter.full_name}
-              {renter.room_number && ` • Room ${renter.room_number}`}
-            </p>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[440px] w-[calc(100%-32px)] mx-auto rounded-2xl p-0 gap-0 max-h-[90dvh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="px-5 pt-5 pb-3">
+            <DialogHeader className="text-center space-y-1">
+              <DialogTitle className="text-xl font-bold text-foreground">
+                Set Payment Details
+              </DialogTitle>
+              <p className="text-muted-foreground text-sm">
+                for {renter.full_name}
+                {renter.room_number && ` • Room ${renter.room_number}`}
+              </p>
+            </DialogHeader>
+          </div>
 
-          <div className="space-y-4">
-            {/* Monthly Rent */}
-            <div className="space-y-1.5">
-              <Label htmlFor="rentAmount" className="text-sm font-medium text-foreground">
-                Monthly Rent Amount
-              </Label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="rentAmount"
-                  type="number"
-                  placeholder="e.g. 5000"
-                  value={rentAmount}
-                  onChange={(e) => setRentAmount(e.target.value)}
-                  min="0"
-                  step="100"
-                  className="pl-10 h-11 rounded-xl shadow-sm"
-                  autoFocus
-                />
-              </div>
-            </div>
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5 space-y-4">
+            <NumericInput
+              id="rentAmount"
+              label="Monthly Rent Amount"
+              icon={<IndianRupee className="h-4 w-4" />}
+              value={rentAmount}
+              onChange={setRentAmount}
+              placeholder="e.g. 5000"
+              inputRef={rentRef}
+              onNext={focusDeposit}
+              autoFocus
+            />
 
-            {/* Security Deposit */}
-            <div className="space-y-1.5">
-              <Label htmlFor="securityDeposit" className="text-sm font-medium text-foreground">
-                Security Deposit Amount
-              </Label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="securityDeposit"
-                  type="number"
-                  placeholder="e.g. 10000"
-                  value={securityDeposit}
-                  onChange={(e) => setSecurityDeposit(e.target.value)}
-                  min="0"
-                  step="500"
-                  className="pl-10 h-11 rounded-xl shadow-sm"
-                />
-              </div>
-            </div>
+            <NumericInput
+              id="securityDeposit"
+              label="Security Deposit Amount"
+              icon={<Shield className="h-4 w-4" />}
+              value={securityDeposit}
+              onChange={setSecurityDeposit}
+              placeholder="e.g. 10000"
+              step="500"
+              inputRef={depositRef}
+              onNext={focusMaintenance}
+            />
 
-            {/* Maintenance */}
-            <div className="space-y-1.5">
-              <Label htmlFor="maintenanceAmount" className="text-sm font-medium text-foreground">
-                Monthly Maintenance Amount
-              </Label>
-              <div className="relative">
-                <Wrench className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="maintenanceAmount"
-                  type="number"
-                  placeholder="e.g. 500"
-                  value={maintenanceAmount}
-                  onChange={(e) => setMaintenanceAmount(e.target.value)}
-                  min="0"
-                  step="100"
-                  className="pl-10 h-11 rounded-xl shadow-sm"
-                />
-              </div>
-            </div>
+            <NumericInput
+              id="maintenanceAmount"
+              label="Monthly Maintenance Amount"
+              icon={<Wrench className="h-4 w-4" />}
+              value={maintenanceAmount}
+              onChange={setMaintenanceAmount}
+              placeholder="e.g. 500"
+              inputRef={maintenanceRef}
+              onNext={blurMaintenance}
+              isLast
+            />
 
             {/* Due Date */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-foreground">
+              <label className="text-sm font-medium text-foreground">
                 Monthly Due Date
-              </Label>
+              </label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full h-11 justify-start text-left font-normal rounded-xl shadow-sm",
+                      "w-full h-12 justify-start text-left font-normal rounded-xl shadow-sm border-input hover:border-muted-foreground/30",
                       !dueDate && "text-muted-foreground"
                     )}
                   >
@@ -264,41 +308,37 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
 
-          {/* Total preview */}
-          {(Number(rentAmount) > 0) && (
-            <div className="bg-muted/50 rounded-xl px-4 py-3 mt-2">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Total (First Payment)</span>
-                <span className="font-bold text-foreground text-base">
-                  ₹{(
-                    (Number(rentAmount) || 0) +
-                    (Number(securityDeposit) || 0) +
-                    (Number(maintenanceAmount) || 0)
-                  ).toLocaleString()}
-                </span>
+            {/* Total preview */}
+            {totalAmount > 0 && (
+              <div className="bg-muted/50 rounded-xl px-4 py-3">
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <span>Total (First Payment)</span>
+                  <span className="font-bold text-foreground text-base">
+                    ₹{totalAmount.toLocaleString()}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              disabled={saving}
-              className="flex-1 h-11 rounded-xl"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={saving || !rentAmount || isNaN(Number(rentAmount)) || !dueDate}
-              className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 font-semibold"
-            >
-              {saving ? 'Saving...' : 'Save Details'}
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-1 pb-[env(safe-area-inset-bottom)]">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={saving}
+                className="flex-1 h-12 rounded-xl text-sm font-medium"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={saving || !isValid}
+                className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold text-sm"
+              >
+                {saving ? 'Saving...' : 'Save Details'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
