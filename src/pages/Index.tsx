@@ -133,15 +133,6 @@ const Index: React.FC = () => {
   return (
     <Layout hideNav>
       <div className="w-full h-full min-h-screen flex flex-col bg-gradient-to-br from-primary/10 to-secondary/10">
-        {/* Maintenance Banner */}
-        <div className="w-full px-4 pt-4">
-          <div className="w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-center">
-            <p className="text-sm font-medium text-amber-800">⚠️ Login services are temporarily experiencing high traffic. OTP delivery may be delayed. Please try again after a few minutes. For immediate Room inquiries, feel free to contact us on WhatsApp: 7488698970
-
-            </p>
-          </div>
-        </div>
-
         <div className="w-full flex-1 flex flex-col justify-center p-6 space-y-8">
           <div className="space-y-3 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-primary">Livenzo</h1>
@@ -157,7 +148,6 @@ const Index: React.FC = () => {
               handleGoogleLogin={handleGoogleLogin}
               handleFacebookLogin={handleFacebookLogin}
               handleOTPAuth={handleOTPAuth} />
-
           </div>
           
           <div className="w-full">
@@ -165,8 +155,8 @@ const Index: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>);
-
+    </Layout>
+  );
 };
 
 export default Index;
