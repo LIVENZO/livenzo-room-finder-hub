@@ -144,9 +144,6 @@ const PromoBannerSlider: React.FC = () => {
   // Build slides based on offer status
   const slides: React.ReactNode[] = [];
 
-  // Refund Guarantee banner always first
-  slides.push(<RefundGuaranteeBanner key="refund" />);
-
   if (offerStatus === "active_7_day") {
     slides.push(<OfferBanner7Day key="7day" remaining={remaining} />);
   } else if (offerStatus === "expired") {
@@ -154,6 +151,9 @@ const PromoBannerSlider: React.FC = () => {
   } else if (offerStatus === "lucky_24h") {
     slides.push(<OfferBannerLucky key="lucky" remaining={remaining} />);
   }
+
+  // Refund Guarantee banner as second slide
+  slides.push(<RefundGuaranteeBanner key="refund" />);
 
   // Always show Free Drop banner
   slides.push(<FreeDropBanner key="freedrop" />);
