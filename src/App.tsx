@@ -27,6 +27,7 @@ import MyListings from "./pages/MyListings";
 import Notices from "./pages/Notices";
 import Payments from "./pages/Payments";
 import ActiveRenters from "./pages/ActiveRenters";
+import PendingRenters from "./pages/PendingRenters";
 import FirebaseTest from "./pages/FirebaseTest";
 import NotificationTest from "./pages/NotificationTest";
 
@@ -76,6 +77,7 @@ const App = () => {
               <Route path="/notice" element={<Notices />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/active-renters" element={<ActiveRenters />} />
+              <Route path="/pending-renters" element={<PendingRenters />} />
               <Route path="/set-location" element={<SetLocation />} />
               <Route path="/firebase-test" element={<FirebaseTest />} />
               <Route path="/notification-test" element={<NotificationTest />} />
