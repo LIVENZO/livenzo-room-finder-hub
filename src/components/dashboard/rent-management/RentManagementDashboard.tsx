@@ -112,6 +112,8 @@ const RentManagementDashboard: React.FC = () => {
   const handleCardClick = (type: 'total' | 'month' | 'pending' | 'renters' | 'setrent') => {
     if (type === 'renters') {
       navigate('/active-renters');
+    } else if (type === 'pending') {
+      navigate('/pending-renters');
     } else if (type === 'setrent') {
       setShowSetRentPage(true);
     }
