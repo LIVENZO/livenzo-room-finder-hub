@@ -55,6 +55,7 @@ const App = () => {
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
+          <OwnerPropertyProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
