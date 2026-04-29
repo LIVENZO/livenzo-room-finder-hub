@@ -17,6 +17,7 @@ import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFiel
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
 import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { fetchUserProfile } from '@/services/UserProfileService';
+import { useOwnerProperty } from '@/context/OwnerPropertyContext';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
