@@ -80,6 +80,7 @@ export type Database = {
           drop_date: string | null
           drop_time: string | null
           id: string
+          property_id: string | null
           room_id: string
           status: string
           stay_duration: number | null
@@ -96,6 +97,7 @@ export type Database = {
           drop_date?: string | null
           drop_time?: string | null
           id?: string
+          property_id?: string | null
           room_id: string
           status?: string
           stay_duration?: number | null
@@ -112,6 +114,7 @@ export type Database = {
           drop_date?: string | null
           drop_time?: string | null
           id?: string
+          property_id?: string | null
           room_id?: string
           status?: string
           stay_duration?: number | null
@@ -568,6 +571,7 @@ export type Database = {
           id: string
           message: string
           owner_id: string
+          property_id: string | null
           renter_id: string
           title: string | null
         }
@@ -577,6 +581,7 @@ export type Database = {
           id?: string
           message: string
           owner_id: string
+          property_id?: string | null
           renter_id: string
           title?: string | null
         }
@@ -586,6 +591,7 @@ export type Database = {
           id?: string
           message?: string
           owner_id?: string
+          property_id?: string | null
           renter_id?: string
           title?: string | null
         }
@@ -657,6 +663,69 @@ export type Database = {
           id?: string
           restarted_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      owner_properties: {
+        Row: {
+          accommodation_type: string | null
+          created_at: string
+          hostel_pg_name: string
+          house_number: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string
+          property_location: string | null
+          property_name: string | null
+          razorpay_merchant_id: string | null
+          resident_type: string | null
+          total_rental_rooms: number | null
+          updated_at: string
+          upi_id: string | null
+          upi_phone_number: string | null
+        }
+        Insert: {
+          accommodation_type?: string | null
+          created_at?: string
+          hostel_pg_name: string
+          house_number?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id: string
+          property_location?: string | null
+          property_name?: string | null
+          razorpay_merchant_id?: string | null
+          resident_type?: string | null
+          total_rental_rooms?: number | null
+          updated_at?: string
+          upi_id?: string | null
+          upi_phone_number?: string | null
+        }
+        Update: {
+          accommodation_type?: string | null
+          created_at?: string
+          hostel_pg_name?: string
+          house_number?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          location_latitude?: number | null
+          location_longitude?: number | null
+          owner_id?: string
+          property_location?: string | null
+          property_name?: string | null
+          razorpay_merchant_id?: string | null
+          resident_type?: string | null
+          total_rental_rooms?: number | null
+          updated_at?: string
+          upi_id?: string | null
+          upi_phone_number?: string | null
         }
         Relationships: []
       }
@@ -938,6 +1007,7 @@ export type Database = {
           created_at: string
           id: string
           owner_id: string
+          property_id: string | null
           renter_id: string
           status: string
           updated_at: string
@@ -948,6 +1018,7 @@ export type Database = {
           created_at?: string
           id?: string
           owner_id: string
+          property_id?: string | null
           renter_id: string
           status?: string
           updated_at?: string
@@ -958,6 +1029,7 @@ export type Database = {
           created_at?: string
           id?: string
           owner_id?: string
+          property_id?: string | null
           renter_id?: string
           status?: string
           updated_at?: string
@@ -1096,6 +1168,7 @@ export type Database = {
           monthly_rent: number
           next_due_date: string | null
           owner_id: string
+          owner_property_id: string | null
           property_id: string
           renter_id: string
           security_deposit: number | null
@@ -1112,6 +1185,7 @@ export type Database = {
           monthly_rent: number
           next_due_date?: string | null
           owner_id: string
+          owner_property_id?: string | null
           property_id: string
           renter_id: string
           security_deposit?: number | null
@@ -1128,6 +1202,7 @@ export type Database = {
           monthly_rent?: number
           next_due_date?: string | null
           owner_id?: string
+          owner_property_id?: string | null
           property_id?: string
           renter_id?: string
           security_deposit?: number | null
@@ -1222,6 +1297,7 @@ export type Database = {
           owner_phone: string
           pg_rent: number | null
           price: number
+          property_id: string | null
           property_type: string | null
           room_number: string | null
           title: string
@@ -1250,6 +1326,7 @@ export type Database = {
           owner_phone: string
           pg_rent?: number | null
           price: number
+          property_id?: string | null
           property_type?: string | null
           room_number?: string | null
           title: string
@@ -1278,6 +1355,7 @@ export type Database = {
           owner_phone?: string
           pg_rent?: number | null
           price?: number
+          property_id?: string | null
           property_type?: string | null
           room_number?: string | null
           title?: string
@@ -1605,6 +1683,48 @@ export type Database = {
       }
     }
     Functions: {
+      add_owner_property: {
+        Args: {
+          p_accommodation_type?: string
+          p_hostel_pg_name: string
+          p_house_number?: string
+          p_location_latitude?: number
+          p_location_longitude?: number
+          p_property_location?: string
+          p_property_name?: string
+          p_razorpay_merchant_id?: string
+          p_resident_type?: string
+          p_total_rental_rooms?: number
+          p_upi_id?: string
+          p_upi_phone_number?: string
+        }
+        Returns: {
+          accommodation_type: string | null
+          created_at: string
+          hostel_pg_name: string
+          house_number: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string
+          property_location: string | null
+          property_name: string | null
+          razorpay_merchant_id: string | null
+          resident_type: string | null
+          total_rental_rooms: number | null
+          updated_at: string
+          upi_id: string | null
+          upi_phone_number: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "owner_properties"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       apply_referral_code: {
         Args: { p_referral_code: string }
         Returns: boolean
@@ -1676,6 +1796,7 @@ export type Database = {
           id: string
           message: string
           owner_id: string
+          property_id: string | null
           renter_id: string
           title: string | null
         }
@@ -1711,6 +1832,35 @@ export type Database = {
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_my_owner_properties: {
+        Args: never
+        Returns: {
+          accommodation_type: string | null
+          created_at: string
+          hostel_pg_name: string
+          house_number: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string
+          property_location: string | null
+          property_name: string | null
+          razorpay_merchant_id: string | null
+          resident_type: string | null
+          total_rental_rooms: number | null
+          updated_at: string
+          upi_id: string | null
+          upi_phone_number: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "owner_properties"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_or_create_referral_code: {
         Args: never
         Returns: {
