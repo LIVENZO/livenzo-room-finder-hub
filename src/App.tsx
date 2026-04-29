@@ -84,9 +84,11 @@ const App = () => {
               <Route path="/set-location" element={<SetLocation />} />
               <Route path="/firebase-test" element={<FirebaseTest />} />
               <Route path="/notification-test" element={<NotificationTest />} />
+              <Route path="/add-property" element={<AddProperty />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          </OwnerPropertyProvider>
         </RoomProvider>
       </AuthProvider>
     </TooltipProvider>
