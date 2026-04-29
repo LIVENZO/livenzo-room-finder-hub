@@ -31,6 +31,7 @@ import ActiveRenters from "./pages/ActiveRenters";
 import PendingRenters from "./pages/PendingRenters";
 import FirebaseTest from "./pages/FirebaseTest";
 import NotificationTest from "./pages/NotificationTest";
+import AddProperty from "./pages/AddProperty";
 
 const FCMWrapper = () => {
   useFCMRegistration();
