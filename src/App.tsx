@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
+import { OwnerPropertyProvider } from "./context/OwnerPropertyContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
