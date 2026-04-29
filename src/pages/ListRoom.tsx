@@ -259,6 +259,7 @@ const ListRoom: React.FC = () => {
         owner_phone: values.owner_phone,
         images: imageUrls,
         videos: videoUrls,
+        property_id: activeProperty?.id ?? null,
       };
       
       console.log('Inserting room data:', roomData);
