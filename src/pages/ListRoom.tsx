@@ -17,10 +17,12 @@ import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFiel
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
 import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { fetchUserProfile } from '@/services/UserProfileService';
+import { useOwnerProperty } from '@/context/OwnerPropertyContext';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const { activeProperty } = useOwnerProperty();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -257,6 +259,7 @@ const ListRoom: React.FC = () => {
         owner_phone: values.owner_phone,
         images: imageUrls,
         videos: videoUrls,
+        property_id: activeProperty?.id ?? null,
       };
       
       console.log('Inserting room data:', roomData);

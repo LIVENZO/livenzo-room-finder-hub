@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
+import { OwnerPropertyProvider } from "./context/OwnerPropertyContext";
 import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
@@ -30,6 +31,7 @@ import ActiveRenters from "./pages/ActiveRenters";
 import PendingRenters from "./pages/PendingRenters";
 import FirebaseTest from "./pages/FirebaseTest";
 import NotificationTest from "./pages/NotificationTest";
+import AddProperty from "./pages/AddProperty";
 
 const FCMWrapper = () => {
   useFCMRegistration();
@@ -53,6 +55,7 @@ const App = () => {
     <TooltipProvider>
       <AuthProvider>
         <RoomProvider>
+          <OwnerPropertyProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -81,9 +84,11 @@ const App = () => {
               <Route path="/set-location" element={<SetLocation />} />
               <Route path="/firebase-test" element={<FirebaseTest />} />
               <Route path="/notification-test" element={<NotificationTest />} />
+              <Route path="/add-property" element={<AddProperty />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          </OwnerPropertyProvider>
         </RoomProvider>
       </AuthProvider>
     </TooltipProvider>
