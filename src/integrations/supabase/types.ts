@@ -680,6 +680,7 @@ export type Database = {
           owner_id: string
           property_location: string | null
           property_name: string | null
+          public_id: string | null
           razorpay_merchant_id: string | null
           resident_type: string | null
           total_rental_rooms: number | null
@@ -700,6 +701,7 @@ export type Database = {
           owner_id: string
           property_location?: string | null
           property_name?: string | null
+          public_id?: string | null
           razorpay_merchant_id?: string | null
           resident_type?: string | null
           total_rental_rooms?: number | null
@@ -720,6 +722,7 @@ export type Database = {
           owner_id?: string
           property_location?: string | null
           property_name?: string | null
+          public_id?: string | null
           razorpay_merchant_id?: string | null
           resident_type?: string | null
           total_rental_rooms?: number | null
@@ -1711,6 +1714,7 @@ export type Database = {
           owner_id: string
           property_location: string | null
           property_name: string | null
+          public_id: string | null
           razorpay_merchant_id: string | null
           resident_type: string | null
           total_rental_rooms: number | null
@@ -1847,6 +1851,7 @@ export type Database = {
           owner_id: string
           property_location: string | null
           property_name: string | null
+          public_id: string | null
           razorpay_merchant_id: string | null
           resident_type: string | null
           total_rental_rooms: number | null
@@ -1959,6 +1964,18 @@ export type Database = {
       save_fcm_token: {
         Args: { p_device_id?: string; p_token: string }
         Returns: undefined
+      }
+      search_property_by_public_id: {
+        Args: { search_public_id: string }
+        Returns: {
+          avatar_url: string
+          hostel_pg_name: string
+          house_number: string
+          owner_id: string
+          property_id: string
+          property_location: string
+          public_id: string
+        }[]
       }
       search_user_by_public_id: {
         Args: { search_public_id: string }
