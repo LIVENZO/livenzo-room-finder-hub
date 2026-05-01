@@ -9,10 +9,12 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import RoomList from '@/components/dashboard/RoomList';
 import { parseFacilities } from '@/utils/roomUtils';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 const MyListings: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const { propertyId, isPrimary } = usePropertyScope();
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +35,7 @@ const MyListings: React.FC = () => {
 
     // Load owner's listings
     loadMyRooms();
-  }, [user, userRole, navigate]);
+  }, [user, userRole, navigate, propertyId, isPrimary]);
 
   const loadMyRooms = async () => {
     if (!user) return;
@@ -41,11 +43,16 @@ const MyListings: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const { data, error } = await supabase.
+      let q = supabase.
       from('rooms').
       select('*').
-      eq('owner_id', user.id).
-      order('created_at', { ascending: false });
+      eq('owner_id', user.id);
+
+      if (propertyId) {
+        q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq('property_id', propertyId);
+      }
+
+      const { data, error } = await q.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error loading rooms:', error);
