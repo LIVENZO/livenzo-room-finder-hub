@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import ActiveRentersList, { MeterPhoto } from '@/components/dashboard/rent-management/ActiveRentersList';
 import AddPaymentModal from '@/components/dashboard/rent-management/AddPaymentModal';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 interface RenterPaymentInfo {
   id: string;
@@ -35,6 +36,7 @@ const PendingRenters: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { propertyId, isPrimary } = usePropertyScope();
 
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,19 +48,25 @@ const PendingRenters: React.FC = () => {
     if (user) {
       fetchPendingRenters();
     }
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
   const fetchPendingRenters = async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
-      const { data: relationships, error } = await supabase
+      let q = supabase
         .from('relationships')
         .select(`id, renter_id`)
         .eq('owner_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
+
+      if (propertyId) {
+        q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq('property_id', propertyId);
+      }
+
+      const { data: relationships, error } = await q;
 
       if (error) throw error;
 

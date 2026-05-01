@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SetRentModal from './SetRentModal';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 interface Renter {
   id: string;
@@ -22,6 +23,7 @@ interface SetRentListPageProps {
 
 const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   const { user } = useAuth();
+  const { propertyId, isPrimary } = usePropertyScope();
   const [renters, setRenters] = useState<Renter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     if (user?.id) {
       fetchActiveRenters();
     }
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
   const fetchActiveRenters = async () => {
     if (!user?.id) return;
@@ -41,13 +43,21 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       setLoading(true);
       setError(null);
       
-      // Get all active relationships for this owner
-      const { data: relationships, error: relationshipsError } = await supabase
+      // Get all active relationships for this owner, scoped to active property
+      let relQuery = supabase
         .from('relationships')
         .select('renter_id')
         .eq('owner_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
+
+      if (propertyId) {
+        relQuery = isPrimary
+          ? relQuery.or(`property_id.eq.${propertyId},property_id.is.null`)
+          : relQuery.eq('property_id', propertyId);
+      }
+
+      const { data: relationships, error: relationshipsError } = await relQuery;
 
       if (relationshipsError) {
         console.error('Error fetching relationships:', relationshipsError);

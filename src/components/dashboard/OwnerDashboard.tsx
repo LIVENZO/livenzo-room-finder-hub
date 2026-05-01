@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import WelcomeHeader from "./components/WelcomeHeader";
 import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
+import { usePropertyScope } from "@/hooks/usePropertyScope";
 
 const ownerHeroImages = [
   "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
@@ -23,6 +24,7 @@ const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
+  const { propertyId, isPrimary } = usePropertyScope();
 
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +67,11 @@ const OwnerDashboard: React.FC = () => {
 
     const fetchListingsCount = async () => {
       try {
-        const { count, error } = await supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+        let q = supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+        if (propertyId) {
+          q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq("property_id", propertyId);
+        }
+        const { count, error } = await q;
 
         if (error) {
           console.error("Error fetching listings count:", error);
@@ -83,10 +89,10 @@ const OwnerDashboard: React.FC = () => {
     const fetchConnectionRequests = async () => {
       setLoadingConnections(true);
       try {
-        const relationships = await fetchOwnerRelationships(user.id);
+        const relationships = await fetchOwnerRelationships(user.id, propertyId, isPrimary);
         const pending = relationships.filter((r) => r.status === "pending").length;
         setPendingConnections(pending);
-        console.log(`Found ${pending} pending connection requests`);
+        console.log(`Found ${pending} pending connection requests for property ${propertyId ?? "all"}`);
       } catch (error) {
         console.error("Error fetching connection requests:", error);
       } finally {
@@ -96,7 +102,7 @@ const OwnerDashboard: React.FC = () => {
 
     fetchListingsCount();
     fetchConnectionRequests();
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
   const handleListRoomClick = async () => {
     if (!user) return;

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import RentSummaryCards from './RentSummaryCards';
 import SetRentListPage from './SetRentListPage';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 interface RentStats {
   totalReceived: number;
@@ -18,6 +19,7 @@ interface RentStats {
 const RentManagementDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { propertyId, isPrimary } = usePropertyScope();
   
   const [stats, setStats] = useState<RentStats>({
     totalReceived: 0,
@@ -33,7 +35,7 @@ const RentManagementDashboard: React.FC = () => {
     if (user) {
       fetchStats();
     }
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
 
   const fetchStats = async () => {
@@ -66,13 +68,21 @@ const RentManagementDashboard: React.FC = () => {
 
       if (rentError) throw rentError;
 
-      // Get active renters count
-      const { data: relationships, error: relationshipsError } = await supabase
+      // Get active renters count, scoped to active property
+      let relQuery = supabase
         .from('relationships')
         .select('id')
         .eq('owner_id', user?.id)
         .eq('status', 'accepted')
         .eq('archived', false);
+
+      if (propertyId) {
+        relQuery = isPrimary
+          ? relQuery.or(`property_id.eq.${propertyId},property_id.is.null`)
+          : relQuery.eq('property_id', propertyId);
+      }
+
+      const { data: relationships, error: relationshipsError } = await relQuery;
 
       if (relationshipsError) throw relationshipsError;
 

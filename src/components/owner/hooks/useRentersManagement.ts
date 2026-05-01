@@ -10,6 +10,7 @@ import {
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { isProfileComplete } from '@/utils/profileUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 export const useRentersManagement = (
   currentUserId: string,
@@ -31,6 +32,7 @@ export const useRentersManagement = (
   }
 ) => {
   const navigate = useNavigate();
+  const { propertyId, isPrimary } = usePropertyScope();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
@@ -43,7 +45,7 @@ export const useRentersManagement = (
   const fetchRelationships = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchOwnerRelationships(currentUserId);
+      const data = await fetchOwnerRelationships(currentUserId, propertyId, isPrimary);
       setRelationships(data);
     } catch (error) {
       console.error('Error fetching relationships:', error);
@@ -51,7 +53,7 @@ export const useRentersManagement = (
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, propertyId, isPrimary]);
 
   useEffect(() => {
     fetchRelationships();

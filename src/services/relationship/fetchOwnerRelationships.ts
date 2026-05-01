@@ -2,23 +2,45 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Relationship } from "@/types/relationship";
 
-// Fetch relationships where current user is owner
-export const fetchOwnerRelationships = async (userId: string): Promise<Relationship[]> => {
+// Fetch relationships where current user is owner.
+// When `propertyId` is provided, results are scoped to that single property
+// (each property in multi-property accounts behaves like an independent dashboard).
+// `propertyId` semantics:
+//   - undefined → no scoping (legacy behaviour, all properties)
+//   - string    → only relationships explicitly linked to that property
+//                 PLUS legacy rows with NULL property_id (so the primary
+//                 property continues to "own" rows that pre-date scoping).
+export const fetchOwnerRelationships = async (
+  userId: string,
+  propertyId?: string,
+  isPrimaryProperty: boolean = false,
+): Promise<Relationship[]> => {
   try {
-    console.log("Fetching owner relationships for userId:", userId);
+    console.log("Fetching owner relationships for userId:", userId, "property:", propertyId, "primary:", isPrimaryProperty);
     
-    // First, fetch the relationships
-    const { data: relationshipsData, error: relationshipsError } = await supabase
+    // Build the query
+    let query = supabase
       .from("relationships")
       .select("*")
       .eq("owner_id", userId);
+
+    if (propertyId) {
+      // Primary property absorbs legacy NULL rows; secondary properties only see their own
+      if (isPrimaryProperty) {
+        query = query.or(`property_id.eq.${propertyId},property_id.is.null`);
+      } else {
+        query = query.eq("property_id", propertyId);
+      }
+    }
+
+    const { data: relationshipsData, error: relationshipsError } = await query;
     
     if (relationshipsError) {
       console.error("Error fetching owner relationships:", relationshipsError);
       return [];
     }
     
-    console.log("Owner relationships fetched:", relationshipsData?.length || 0, relationshipsData);
+    console.log("Owner relationships fetched:", relationshipsData?.length || 0);
     
     // Then fetch the profiles separately and join them manually
     const relationships = relationshipsData as Relationship[];

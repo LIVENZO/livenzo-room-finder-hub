@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import ActiveRentersList, { MeterPhoto } from '@/components/dashboard/rent-management/ActiveRentersList';
 import AddPaymentModal from '@/components/dashboard/rent-management/AddPaymentModal';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 interface RenterPaymentInfo {
   id: string;

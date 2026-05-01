@@ -4,12 +4,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { sendNoticeToAllRenters } from '@/services/NoticeService';
 import { Loader2 } from 'lucide-react';
+import { usePropertyScope } from '@/hooks/usePropertyScope';
 interface SendNoticeFormProps {
   ownerId: string;
 }
 const SendNoticeForm: React.FC<SendNoticeFormProps> = ({
   ownerId
 }) => {
+  const { propertyId, isPrimary } = usePropertyScope();
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const handleSendNotice = async () => {
@@ -18,7 +20,7 @@ const SendNoticeForm: React.FC<SendNoticeFormProps> = ({
     }
     setIsSending(true);
     try {
-      await sendNoticeToAllRenters(ownerId, message);
+      await sendNoticeToAllRenters(ownerId, message, propertyId, isPrimary);
       setMessage(''); // Clear the form after attempt
     } finally {
       setIsSending(false);

@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { User, CheckCircle, AlertCircle, MapPin, Home, Building } from 'lucide-react';
-import { UserProfile } from '@/types/relationship';
+import type { FoundConnectionTarget } from '@/services/relationship/userService';
 
 interface UserSearchResultsProps {
-  foundUser: UserProfile;
+  foundUser: FoundConnectionTarget;
   requestSent: boolean;
   requestError: string | null;
   onConnect: () => void;
@@ -60,16 +60,21 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
           <div className="flex-1 space-y-3">
             <div>
               <h3 className="font-semibold text-lg text-gray-900">
-                {foundUser.full_name || 'Property Owner'}
+                {foundUser.property_name || foundUser.full_name || 'Property Owner'}
               </h3>
-              <p className="text-sm text-gray-500 font-mono">Owner ID: {foundUser.public_id || foundUser.id.substring(0, 8)}</p>
+              <p className="text-sm text-gray-500 font-mono">
+                {foundUser.property_id ? 'Property ID' : 'Owner ID'}: {foundUser.public_id || foundUser.id.substring(0, 8)}
+              </p>
+              {foundUser.property_id && foundUser.house_number && (
+                <p className="text-xs text-gray-500 mt-0.5">House #{foundUser.house_number}</p>
+              )}
             </div>
             
             {/* Property Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <Building className="h-4 w-4 text-blue-500" />
-                <span>PG/Hostel Property</span>
+                <span>{foundUser.property_name ? foundUser.property_name : 'PG/Hostel Property'}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm text-gray-700">
@@ -79,7 +84,7 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
               
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <MapPin className="h-4 w-4 text-orange-500" />
-                <span>Property Location</span>
+                <span className="truncate">{foundUser.property_location || 'Property Location'}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">

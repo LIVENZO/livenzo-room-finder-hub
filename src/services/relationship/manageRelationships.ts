@@ -6,10 +6,11 @@ import { v4 as uuidv4 } from "uuid";
 import { isProfileComplete } from "@/utils/profileUtils";
 import { fetchUserProfile } from "@/services/UserProfileService";
 
-// Create a new relationship request (renter to owner)
+// Create a new relationship request (renter to owner, optionally scoped to a specific property)
 export const createRelationshipRequest = async (
   ownerId: string,
-  renterId: string
+  renterId: string,
+  propertyId?: string | null
 ): Promise<Relationship | null> => {
   try {
     // First, check if renter profile is complete
@@ -77,7 +78,8 @@ export const createRelationshipRequest = async (
           .from("relationships")
           .update({ 
             status: "pending",
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            property_id: propertyId ?? latestRelationship.property_id ?? null,
           })
           .eq("id", latestRelationship.id)
           .select()
@@ -107,7 +109,8 @@ export const createRelationshipRequest = async (
         renter_id: renterId,
         status: "pending",
         chat_room_id: chatRoomId,
-        archived: false
+        archived: false,
+        property_id: propertyId ?? null,
       })
       .select()
       .single();
