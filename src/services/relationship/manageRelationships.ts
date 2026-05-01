@@ -6,10 +6,11 @@ import { v4 as uuidv4 } from "uuid";
 import { isProfileComplete } from "@/utils/profileUtils";
 import { fetchUserProfile } from "@/services/UserProfileService";
 
-// Create a new relationship request (renter to owner)
+// Create a new relationship request (renter to owner, optionally scoped to a specific property)
 export const createRelationshipRequest = async (
   ownerId: string,
-  renterId: string
+  renterId: string,
+  propertyId?: string | null
 ): Promise<Relationship | null> => {
   try {
     // First, check if renter profile is complete

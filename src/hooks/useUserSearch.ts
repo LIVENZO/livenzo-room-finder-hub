@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
 import { findUserById, createRelationshipRequest } from '@/services/relationship';
+import type { FoundConnectionTarget } from '@/services/relationship/userService';
 import { toast } from 'sonner';
-import { UserProfile } from '@/types/relationship';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 
 export const useUserSearch = (currentUserId: string) => {
   const [searchId, setSearchId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [foundUser, setFoundUser] = useState<UserProfile | null>(null);
+  const [foundUser, setFoundUser] = useState<FoundConnectionTarget | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const { requireComplete } = useProfileCompletion();
@@ -66,8 +66,8 @@ export const useUserSearch = (currentUserId: string) => {
     }
     
     try {
-      console.log("Sending connection request from", currentUserId, "to", foundUser.id);
-      const response = await createRelationshipRequest(foundUser.id, currentUserId);
+      console.log("Sending connection request from", currentUserId, "to", foundUser.id, "property:", foundUser.property_id);
+      const response = await createRelationshipRequest(foundUser.id, currentUserId, foundUser.property_id ?? null);
       
       if (response) {
         setRequestSent(true);
