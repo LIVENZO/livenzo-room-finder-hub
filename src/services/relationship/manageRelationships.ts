@@ -108,7 +108,8 @@ export const createRelationshipRequest = async (
         renter_id: renterId,
         status: "pending",
         chat_room_id: chatRoomId,
-        archived: false
+        archived: false,
+        property_id: propertyId ?? null,
       })
       .select()
       .single();
