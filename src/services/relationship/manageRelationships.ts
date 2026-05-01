@@ -78,7 +78,8 @@ export const createRelationshipRequest = async (
           .from("relationships")
           .update({ 
             status: "pending",
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            property_id: propertyId ?? latestRelationship.property_id ?? null,
           })
           .eq("id", latestRelationship.id)
           .select()
