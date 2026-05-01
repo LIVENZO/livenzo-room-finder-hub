@@ -67,7 +67,11 @@ const OwnerDashboard: React.FC = () => {
 
     const fetchListingsCount = async () => {
       try {
-        const { count, error } = await supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+        let q = supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+        if (propertyId) {
+          q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq("property_id", propertyId);
+        }
+        const { count, error } = await q;
 
         if (error) {
           console.error("Error fetching listings count:", error);
@@ -85,10 +89,10 @@ const OwnerDashboard: React.FC = () => {
     const fetchConnectionRequests = async () => {
       setLoadingConnections(true);
       try {
-        const relationships = await fetchOwnerRelationships(user.id);
+        const relationships = await fetchOwnerRelationships(user.id, propertyId, isPrimary);
         const pending = relationships.filter((r) => r.status === "pending").length;
         setPendingConnections(pending);
-        console.log(`Found ${pending} pending connection requests`);
+        console.log(`Found ${pending} pending connection requests for property ${propertyId ?? "all"}`);
       } catch (error) {
         console.error("Error fetching connection requests:", error);
       } finally {
@@ -98,7 +102,7 @@ const OwnerDashboard: React.FC = () => {
 
     fetchListingsCount();
     fetchConnectionRequests();
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
   const handleListRoomClick = async () => {
     if (!user) return;
