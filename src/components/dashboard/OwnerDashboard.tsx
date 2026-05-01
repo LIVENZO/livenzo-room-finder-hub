@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import WelcomeHeader from "./components/WelcomeHeader";
 import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
+import { usePropertyScope } from "@/hooks/usePropertyScope";
 
 const ownerHeroImages = [
   "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
@@ -23,6 +24,7 @@ const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
+  const { propertyId, isPrimary } = usePropertyScope();
 
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
