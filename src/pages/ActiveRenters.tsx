@@ -36,6 +36,7 @@ const ActiveRenters: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { propertyId, isPrimary } = usePropertyScope();
   
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,22 +48,27 @@ const ActiveRenters: React.FC = () => {
     if (user) {
       fetchActiveRenters();
     }
-  }, [user]);
+  }, [user, propertyId, isPrimary]);
 
   const fetchActiveRenters = async () => {
     if (!user?.id) return;
     
     setLoading(true);
     try {
-      const { data: relationships, error } = await supabase
+      let relQuery = supabase
         .from('relationships')
-        .select(`
-          id,
-          renter_id
-        `)
+        .select(`id, renter_id`)
         .eq('owner_id', user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
+
+      if (propertyId) {
+        relQuery = isPrimary
+          ? relQuery.or(`property_id.eq.${propertyId},property_id.is.null`)
+          : relQuery.eq('property_id', propertyId);
+      }
+
+      const { data: relationships, error } = await relQuery;
 
       if (error) throw error;
 
@@ -80,11 +86,11 @@ const ActiveRenters: React.FC = () => {
             .eq('id', rel.renter_id)
             .single();
 
-          // Check for recent payments
+          // Check for recent payments scoped to this relationship (per-property)
           const { data: recentPayment } = await supabase
             .from('payments')
             .select('payment_date, amount')
-            .eq('renter_id', rel.renter_id)
+            .eq('relationship_id', rel.id)
             .eq('status', 'paid')
             .order('payment_date', { ascending: false })
             .limit(1);
