@@ -19,6 +19,7 @@ export interface OwnerProperty {
   razorpay_merchant_id: string | null;
   is_primary: boolean;
   is_active: boolean;
+  public_id?: string | null;
 }
 
 interface OwnerPropertyContextValue {

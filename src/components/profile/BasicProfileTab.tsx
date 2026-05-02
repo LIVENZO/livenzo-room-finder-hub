@@ -5,6 +5,7 @@ import ProfileForm from './ProfileForm';
 import UserIdDisplay from './UserIdDisplay';
 import { UserProfile } from '@/services/UserProfileService';
 import { User } from '@supabase/supabase-js';
+import { useOwnerProperty } from '@/context/OwnerPropertyContext';
 
 interface BasicProfileTabProps {
   profile: UserProfile | null;
@@ -30,6 +31,16 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
   onImageUpload,
   isOwner = false
 }) => {
+  const { activeProperty } = useOwnerProperty();
+  // For owners, show the active property's public_id so switching property
+  // instantly updates the visible Owner ID. Renters keep their profile public_id.
+  const displayPublicId = isOwner
+    ? (activeProperty?.public_id || profile?.public_id)
+    : profile?.public_id;
+  const propertyLabel = isOwner && activeProperty
+    ? `${activeProperty.hostel_pg_name}${activeProperty.house_number ? ` · House ${activeProperty.house_number}` : ''}`
+    : null;
+
   return (
     <div className="space-y-10">
       {/* Profile Avatar Section */}
@@ -52,11 +63,16 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
         />
       </div>
 
-      {/* Owner ID Section */}
-      {profile?.public_id && (
+      {/* Owner ID Section — per-property for owners */}
+      {displayPublicId && (
         <div className="w-full">
-          <div className="bg-muted/30 rounded-lg p-6 border">
-            <UserIdDisplay publicId={profile.public_id} />
+          <div className="bg-muted/30 rounded-lg p-6 border space-y-2">
+            {propertyLabel && (
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                {propertyLabel}
+              </p>
+            )}
+            <UserIdDisplay publicId={displayPublicId} />
           </div>
         </div>
       )}
