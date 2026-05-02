@@ -41,34 +41,8 @@ const RentManagementDashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      
-      // Get all payments for this owner
-      const { data: payments, error: paymentsError } = await supabase
-        .from('payments')
-        .select(`
-          amount,
-          payment_date,
-          status,
-          relationships!inner(owner_id)
-        `)
-        .eq('relationships.owner_id', user?.id);
 
-      if (paymentsError) throw paymentsError;
-
-      // Get rent statuses for pending amounts
-      const { data: rentStatuses, error: rentError } = await supabase
-        .from('rent_status')
-        .select(`
-          current_amount,
-          status,
-          relationships!inner(owner_id)
-        `)
-        .eq('relationships.owner_id', user?.id)
-        .neq('status', 'paid');
-
-      if (rentError) throw rentError;
-
-      // Get active renters count, scoped to active property
+      // Get active relationships scoped to active property first
       let relQuery = supabase
         .from('relationships')
         .select('id')
@@ -83,8 +57,30 @@ const RentManagementDashboard: React.FC = () => {
       }
 
       const { data: relationships, error: relationshipsError } = await relQuery;
-
       if (relationshipsError) throw relationshipsError;
+
+      const relationshipIds = (relationships || []).map((r: any) => r.id);
+
+      // Scope payments by relationship_id (per-property)
+      let payments: any[] = [];
+      let rentStatuses: any[] = [];
+
+      if (relationshipIds.length > 0) {
+        const { data: pays, error: paymentsError } = await supabase
+          .from('payments')
+          .select('amount, payment_date, status, relationship_id')
+          .in('relationship_id', relationshipIds);
+        if (paymentsError) throw paymentsError;
+        payments = pays || [];
+
+        const { data: rs, error: rentError } = await supabase
+          .from('rent_status')
+          .select('current_amount, status, relationship_id')
+          .in('relationship_id', relationshipIds)
+          .neq('status', 'paid');
+        if (rentError) throw rentError;
+        rentStatuses = rs || [];
+      }
 
       // Calculate stats
       const totalReceived = payments
