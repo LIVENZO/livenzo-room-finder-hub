@@ -87,7 +87,7 @@ const PendingRenters: React.FC = () => {
           const { data: recentPayment } = await supabase
             .from('payments')
             .select('payment_date, amount')
-            .eq('renter_id', rel.renter_id)
+            .eq('relationship_id', rel.id)
             .eq('status', 'paid')
             .order('payment_date', { ascending: false })
             .limit(1);
