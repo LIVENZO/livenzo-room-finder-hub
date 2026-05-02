@@ -48,12 +48,15 @@ const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      const query = supabase
         .from('payments')
         .select('id, billing_month, status, amount, payment_date, payment_method')
-        .eq('renter_id', renterId)
-        .eq('owner_id', ownerId)
         .order('billing_month', { ascending: false });
+
+      // Prefer relationship_id (per-property) when available, fallback to renter+owner
+      const { data, error } = relationshipId
+        ? await query.eq('relationship_id', relationshipId)
+        : await query.eq('renter_id', renterId).eq('owner_id', ownerId);
 
       if (error) {
         console.error('Error fetching payment history:', error);
