@@ -1965,6 +1965,36 @@ export type Database = {
         Args: { p_device_id?: string; p_token: string }
         Returns: undefined
       }
+      save_property_location: {
+        Args: { p_latitude: number; p_longitude: number; p_property_id: string }
+        Returns: {
+          accommodation_type: string | null
+          created_at: string
+          hostel_pg_name: string
+          house_number: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          location_latitude: number | null
+          location_longitude: number | null
+          owner_id: string
+          property_location: string | null
+          property_name: string | null
+          public_id: string | null
+          razorpay_merchant_id: string | null
+          resident_type: string | null
+          total_rental_rooms: number | null
+          updated_at: string
+          upi_id: string | null
+          upi_phone_number: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "owner_properties"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_property_by_public_id: {
         Args: { search_public_id: string }
         Returns: {
