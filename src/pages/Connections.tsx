@@ -4,6 +4,10 @@ import { useAuth } from '@/context/auth';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
 import RentersPage from '@/components/owner/RentersPage';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CollaborationCenter from '@/components/collaboration/CollaborationCenter';
+import UserSearch from '@/components/relationship/UserSearch';
+
 const Connections = () => {
   const {
     user,
@@ -28,33 +32,32 @@ const Connections = () => {
   const [defaultTab, setDefaultTab] = React.useState<string | undefined>(
     notificationState?.defaultTab || queryTab
   );
-  
-  // Build data for opening a specific renter's detail page
+
   const specificRenterData = relationshipId ? {
     relationshipId,
     documentId: notificationState?.documentId || (showDocumentsParam ? queryDocumentId : undefined),
     complaintId: notificationState?.complaintId || (showComplaintsParam ? queryComplaintId : undefined),
     openRenterDetail: true
   } : undefined;
-  
-  // Extract document notification data (fallback to query params)
+
   const documentNotification = (notificationState?.showDocuments || showDocumentsParam) ? {
     showDocuments: true,
     documentId: notificationState?.documentId || queryDocumentId,
     renterId: notificationState?.renterId || queryRenterId
   } : undefined;
 
-  // Extract complaint notification data (fallback to query params)
   const complaintNotification = (notificationState?.showComplaints || showComplaintsParam) ? {
     showComplaints: true,
     complaintId: notificationState?.complaintId || queryComplaintId,
     renterId: notificationState?.renterId || queryRenterId
   } : undefined;
+
   useEffect(() => {
     if (!isLoading && !user?.id) {
       navigate('/');
     }
   }, [user?.id, isLoading, navigate]);
+
   if (isLoading) {
     return <Layout>
         <div className="w-full h-full p-6">
@@ -73,27 +76,35 @@ const Connections = () => {
         </div>
       </Layout>;
   }
-  const getPageTitle = () => {
-    return isOwner ? 'Renters' : 'Find Your Owner';
-  };
-  const getPageDescription = () => {
-    return isOwner ? 'Manage connection requests and connected renters' : 'Connect with your property owner to manage your rental relationship';
-  };
+
+  const getPageTitle = () => isOwner ? 'Connections' : 'Find Your Owner';
+
   return <Layout>
       <div className="w-full h-full">
-        <div className="mb-6 px-4">
+        <div className="mb-4 px-4">
           <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
-          
         </div>
-        
+
         {isOwner ? (
-          <RentersPage 
-            currentUserId={user.id} 
-            defaultTab={defaultTab}
-            documentNotification={documentNotification}
-            complaintNotification={complaintNotification}
-            specificRenterData={specificRenterData}
-          />
+          <Tabs defaultValue="renters" className="w-full px-4">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="renters">Renters</TabsTrigger>
+              <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
+            </TabsList>
+            <TabsContent value="renters" className="mt-0 -mx-4">
+              <RentersPage
+                currentUserId={user.id}
+                defaultTab={defaultTab}
+                documentNotification={documentNotification}
+                complaintNotification={complaintNotification}
+                specificRenterData={specificRenterData}
+              />
+            </TabsContent>
+            <TabsContent value="collaborators" className="mt-0 space-y-6">
+              <UserSearch currentUserId={user.id} />
+              <CollaborationCenter />
+            </TabsContent>
+          </Tabs>
         ) : (
           <ConnectWithOwner currentUserId={user.id} />
         )}
