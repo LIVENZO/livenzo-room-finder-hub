@@ -934,6 +934,42 @@ export type Database = {
         }
         Relationships: []
       }
+      property_collaborators: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          invited_by: string
+          owner_id: string
+          property_id: string
+          role: Database["public"]["Enums"]["collaborator_role"] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          id?: string
+          invited_by: string
+          owner_id: string
+          property_id: string
+          role?: Database["public"]["Enums"]["collaborator_role"] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string
+          owner_id?: string
+          property_id?: string
+          role?: Database["public"]["Enums"]["collaborator_role"] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referral_events: {
         Row: {
           created_at: string
@@ -1836,6 +1872,26 @@ export type Database = {
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_my_collaborations: {
+        Args: never
+        Returns: {
+          collaborator_avatar: string
+          collaborator_id: string
+          collaborator_name: string
+          created_at: string
+          i_am: string
+          id: string
+          owner_avatar: string
+          owner_id: string
+          owner_name: string
+          property_id: string
+          property_name: string
+          property_public_id: string
+          role: Database["public"]["Enums"]["collaborator_role"]
+          status: string
+          updated_at: string
+        }[]
+      }
       get_my_owner_properties: {
         Args: never
         Returns: {
@@ -1872,6 +1928,10 @@ export type Database = {
           referral_code: string
           referral_id: string
         }[]
+      }
+      get_property_role: {
+        Args: { p_property_id: string; p_user_id: string }
+        Returns: string
       }
       get_referrer_from_code: {
         Args: { p_referral_code: string }
@@ -1961,6 +2021,34 @@ export type Database = {
         }
         Returns: undefined
       }
+      respond_collaboration_request: {
+        Args: {
+          p_action: string
+          p_request_id: string
+          p_role?: Database["public"]["Enums"]["collaborator_role"]
+        }
+        Returns: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          invited_by: string
+          owner_id: string
+          property_id: string
+          role: Database["public"]["Enums"]["collaborator_role"] | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "property_collaborators"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      revoke_collaborator: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       save_fcm_token: {
         Args: { p_device_id?: string; p_token: string }
         Returns: undefined
@@ -2016,6 +2104,26 @@ export type Database = {
           public_id: string
         }[]
       }
+      send_collaboration_request: {
+        Args: { p_property_public_id: string }
+        Returns: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          invited_by: string
+          owner_id: string
+          property_id: string
+          role: Database["public"]["Enums"]["collaborator_role"] | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "property_collaborators"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_renter_monthly_rent: {
         Args: {
           p_monthly_rent: number
@@ -2068,6 +2176,7 @@ export type Database = {
       }
     }
     Enums: {
+      collaborator_role: "manager" | "viewer"
       document_type:
         | "id_proof"
         | "rental_agreement"
@@ -2205,6 +2314,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      collaborator_role: ["manager", "viewer"],
       document_type: [
         "id_proof",
         "rental_agreement",
