@@ -102,6 +102,11 @@ const Profile = () => {
               {isOwner && profile && isOwnerProfileComplete(profile) && <div className="border-t pt-8">
                   <OwnerPropertyDisplay profile={profile} />
                 </div>}
+
+              {/* Owner-to-Owner Collaboration */}
+              {isOwner && <div className="border-t pt-8">
+                  <ConnectAnotherProperty />
+                </div>}
             </CardContent>
             
             <CardFooter className="pt-8 pb-8 bg-muted/20">
