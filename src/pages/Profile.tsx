@@ -9,6 +9,7 @@ import ProfileForm from '@/components/profile/ProfileForm';
 import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
+import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
 import UserIdDisplay from '@/components/profile/UserIdDisplay';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
@@ -100,6 +101,11 @@ const Profile = () => {
               {/* Property Information for Complete Owner Profiles */}
               {isOwner && profile && isOwnerProfileComplete(profile) && <div className="border-t pt-8">
                   <OwnerPropertyDisplay profile={profile} />
+                </div>}
+
+              {/* Owner-to-Owner Collaboration */}
+              {isOwner && <div className="border-t pt-8">
+                  <ConnectAnotherProperty />
                 </div>}
             </CardContent>
             
