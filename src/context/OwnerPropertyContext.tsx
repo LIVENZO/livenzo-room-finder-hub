@@ -20,6 +20,7 @@ export interface OwnerProperty {
   is_primary: boolean;
   is_active: boolean;
   public_id?: string | null;
+  my_role?: 'owner' | 'manager' | 'viewer' | null;
 }
 
 interface OwnerPropertyContextValue {
@@ -76,6 +77,22 @@ export const OwnerPropertyProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
+
+  // Refresh when collaboration acceptances change (shared properties appear/disappear)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('owner_property_collab_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'property_collaborators' },
+        () => fetchProperties(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchProperties]);
 
   // Persist active id
   useEffect(() => {

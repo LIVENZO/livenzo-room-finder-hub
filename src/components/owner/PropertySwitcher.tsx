@@ -97,6 +97,7 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
         <div className="space-y-0.5">
           {properties.map((p) => {
             const isActive = p.id === activeProperty.id;
+            const isShared = p.my_role && p.my_role !== 'owner';
             return (
               <DropdownMenuItem
                 key={p.id}
@@ -115,7 +116,14 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
                   <Building2 className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{p.hostel_pg_name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold truncate">{p.hostel_pg_name}</p>
+                    {isShared && (
+                      <span className="text-[10px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary flex-shrink-0">
+                        {p.my_role}
+                      </span>
+                    )}
+                  </div>
                   {p.house_number && (
                     <p className="text-xs text-muted-foreground truncate">
                       House {p.house_number}
