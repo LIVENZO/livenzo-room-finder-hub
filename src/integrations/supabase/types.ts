@@ -1895,32 +1895,27 @@ export type Database = {
       get_my_owner_properties: {
         Args: never
         Returns: {
-          accommodation_type: string | null
+          accommodation_type: string
           created_at: string
           hostel_pg_name: string
-          house_number: string | null
+          house_number: string
           id: string
           is_active: boolean
           is_primary: boolean
-          location_latitude: number | null
-          location_longitude: number | null
+          location_latitude: number
+          location_longitude: number
+          my_role: string
           owner_id: string
-          property_location: string | null
-          property_name: string | null
-          public_id: string | null
-          razorpay_merchant_id: string | null
-          resident_type: string | null
-          total_rental_rooms: number | null
+          property_location: string
+          property_name: string
+          public_id: string
+          razorpay_merchant_id: string
+          resident_type: string
+          total_rental_rooms: number
           updated_at: string
-          upi_id: string | null
-          upi_phone_number: string | null
+          upi_id: string
+          upi_phone_number: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "owner_properties"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       get_or_create_referral_code: {
         Args: never

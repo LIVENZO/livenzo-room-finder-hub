@@ -20,6 +20,7 @@ export interface OwnerProperty {
   is_primary: boolean;
   is_active: boolean;
   public_id?: string | null;
+  my_role?: 'owner' | 'manager' | 'viewer' | null;
 }
 
 interface OwnerPropertyContextValue {
