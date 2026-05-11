@@ -78,6 +78,22 @@ export const OwnerPropertyProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchProperties();
   }, [fetchProperties]);
 
+  // Refresh when collaboration acceptances change (shared properties appear/disappear)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('owner_property_collab_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'property_collaborators' },
+        () => fetchProperties(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchProperties]);
+
   // Persist active id
   useEffect(() => {
     try {
