@@ -36,7 +36,7 @@ const PendingRenters: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
 
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,17 +48,18 @@ const PendingRenters: React.FC = () => {
     if (user) {
       fetchPendingRenters();
     }
-  }, [user, propertyId, isPrimary]);
+  }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
   const fetchPendingRenters = async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
+      const ownerForQuery = effectiveOwnerId ?? user.id;
       let q = supabase
         .from('relationships')
         .select(`id, renter_id`)
-        .eq('owner_id', user.id)
+        .eq('owner_id', ownerForQuery)
         .eq('status', 'accepted')
         .eq('archived', false);
 
@@ -70,7 +71,7 @@ const PendingRenters: React.FC = () => {
 
       if (error) throw error;
 
-      const ownerMeterPhotos = await getOwnerMeterPhotos(user.id);
+      const ownerMeterPhotos = await getOwnerMeterPhotos(ownerForQuery);
       setMeterPhotos(ownerMeterPhotos);
 
       const today = new Date();
@@ -96,7 +97,7 @@ const PendingRenters: React.FC = () => {
             .from('rental_agreements')
             .select('monthly_rent, due_date, status')
             .eq('renter_id', rel.renter_id)
-            .eq('owner_id', user?.id)
+            .eq('owner_id', ownerForQuery)
             .eq('status', 'active')
             .order('updated_at', { ascending: false })
             .limit(1)
@@ -208,7 +209,7 @@ const PendingRenters: React.FC = () => {
             loading={loading}
             onAddPayment={handleAddPayment}
             onRefresh={fetchPendingRenters}
-            ownerId={user?.id || ''}
+            ownerId={effectiveOwnerId ?? user?.id ?? ''}
             meterPhotos={meterPhotos}
           />
         </div>
@@ -222,7 +223,7 @@ const PendingRenters: React.FC = () => {
             }}
             renterName={selectedRenter.name}
             renterId={selectedRenter.id}
-            ownerId={user?.id || ''}
+            ownerId={effectiveOwnerId ?? user?.id ?? ''}
             onPaymentSaved={handlePaymentSaved}
           />
         )}
