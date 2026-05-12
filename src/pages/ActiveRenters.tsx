@@ -207,7 +207,7 @@ const ActiveRenters: React.FC = () => {
             loading={loading}
             onAddPayment={handleAddPayment}
             onRefresh={fetchActiveRenters}
-            ownerId={user?.id || ''}
+            ownerId={effectiveOwnerId ?? user?.id ?? ''}
             meterPhotos={meterPhotos}
           />
         </div>
@@ -222,7 +222,7 @@ const ActiveRenters: React.FC = () => {
             }}
             renterName={selectedRenter.name}
             renterId={selectedRenter.id}
-            ownerId={user?.id || ''}
+            ownerId={effectiveOwnerId ?? user?.id ?? ''}
             onPaymentSaved={handlePaymentSaved}
           />
         )}
