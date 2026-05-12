@@ -9,7 +9,7 @@ import { usePropertyScope } from '@/hooks/usePropertyScope';
  */
 export const usePropertyRelationshipIds = () => {
   const { user } = useAuth();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   const [ids, setIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -22,7 +22,7 @@ export const usePropertyRelationshipIds = () => {
       let q = supabase
         .from('relationships')
         .select('id')
-        .eq('owner_id', user.id)
+        .eq('owner_id', effectiveOwnerId ?? user.id)
         .eq('status', 'accepted')
         .eq('archived', false);
       if (propertyId) {
@@ -37,7 +37,7 @@ export const usePropertyRelationshipIds = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, propertyId, isPrimary, refreshKey]);
+  }, [user?.id, propertyId, isPrimary, effectiveOwnerId, refreshKey]);
 
   return { relationshipIds: ids, loading, refresh: () => setRefreshKey((k) => k + 1) };
 };

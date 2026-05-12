@@ -23,7 +23,7 @@ interface SetRentListPageProps {
 
 const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   const { user } = useAuth();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   const [renters, setRenters] = useState<Renter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,20 +34,21 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     if (user?.id) {
       fetchActiveRenters();
     }
-  }, [user, propertyId, isPrimary]);
+  }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
   const fetchActiveRenters = async () => {
     if (!user?.id) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
+      const ownerForQuery = effectiveOwnerId ?? user.id;
       // Get all active relationships for this owner, scoped to active property
       let relQuery = supabase
         .from('relationships')
         .select('renter_id')
-        .eq('owner_id', user.id)
+        .eq('owner_id', ownerForQuery)
         .eq('status', 'accepted')
         .eq('archived', false);
 
@@ -88,7 +89,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       const { data: rentAgreements, error: rentError } = await supabase
         .from('rental_agreements')
         .select('renter_id, monthly_rent')
-        .eq('owner_id', user.id)
+        .eq('owner_id', ownerForQuery)
         .in('renter_id', renterIds)
         .eq('status', 'active');
 
