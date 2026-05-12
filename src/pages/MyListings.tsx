@@ -14,7 +14,7 @@ import { usePropertyScope } from '@/hooks/usePropertyScope';
 const MyListings: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +35,7 @@ const MyListings: React.FC = () => {
 
     // Load owner's listings
     loadMyRooms();
-  }, [user, userRole, navigate, propertyId, isPrimary]);
+  }, [user, userRole, navigate, propertyId, isPrimary, effectiveOwnerId]);
 
   const loadMyRooms = async () => {
     if (!user) return;
@@ -46,7 +46,7 @@ const MyListings: React.FC = () => {
       let q = supabase.
       from('rooms').
       select('*').
-      eq('owner_id', user.id);
+      eq('owner_id', effectiveOwnerId ?? user.id);
 
       if (propertyId) {
         q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq('property_id', propertyId);

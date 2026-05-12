@@ -36,7 +36,7 @@ const ActiveRenters: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   
   const [renters, setRenters] = useState<RenterPaymentInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,17 +48,18 @@ const ActiveRenters: React.FC = () => {
     if (user) {
       fetchActiveRenters();
     }
-  }, [user, propertyId, isPrimary]);
+  }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
   const fetchActiveRenters = async () => {
     if (!user?.id) return;
-    
+
     setLoading(true);
     try {
+      const ownerForQuery = effectiveOwnerId ?? user.id;
       let relQuery = supabase
         .from('relationships')
         .select(`id, renter_id`)
-        .eq('owner_id', user.id)
+        .eq('owner_id', ownerForQuery)
         .eq('status', 'accepted')
         .eq('archived', false);
 
@@ -72,8 +73,8 @@ const ActiveRenters: React.FC = () => {
 
       if (error) throw error;
 
-      // Fetch meter photos for this owner
-      const ownerMeterPhotos = await getOwnerMeterPhotos(user.id);
+      // Fetch meter photos for the actual property owner
+      const ownerMeterPhotos = await getOwnerMeterPhotos(ownerForQuery);
       setMeterPhotos(ownerMeterPhotos);
 
       // For each renter, get their current rent status
@@ -100,7 +101,7 @@ const ActiveRenters: React.FC = () => {
             .from('rental_agreements')
             .select('monthly_rent, due_date, status')
             .eq('renter_id', rel.renter_id)
-            .eq('owner_id', user?.id)
+            .eq('owner_id', ownerForQuery)
             .eq('status', 'active')
             .order('updated_at', { ascending: false })
             .limit(1)
