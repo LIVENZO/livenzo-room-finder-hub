@@ -32,7 +32,7 @@ export const useRentersManagement = (
   }
 ) => {
   const navigate = useNavigate();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<string[]>([]);
@@ -45,7 +45,7 @@ export const useRentersManagement = (
   const fetchRelationships = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchOwnerRelationships(currentUserId, propertyId, isPrimary);
+      const data = await fetchOwnerRelationships(effectiveOwnerId ?? currentUserId, propertyId, isPrimary);
       setRelationships(data);
     } catch (error) {
       console.error('Error fetching relationships:', error);
@@ -53,7 +53,7 @@ export const useRentersManagement = (
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, propertyId, isPrimary]);
+  }, [currentUserId, propertyId, isPrimary, effectiveOwnerId]);
 
   useEffect(() => {
     fetchRelationships();

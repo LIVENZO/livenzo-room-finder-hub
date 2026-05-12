@@ -24,7 +24,7 @@ const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
 
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +67,7 @@ const OwnerDashboard: React.FC = () => {
 
     const fetchListingsCount = async () => {
       try {
-        let q = supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", user.id);
+        let q = supabase.from("rooms").select("id", { count: "exact" }).eq("owner_id", effectiveOwnerId ?? user.id);
         if (propertyId) {
           q = isPrimary ? q.or(`property_id.eq.${propertyId},property_id.is.null`) : q.eq("property_id", propertyId);
         }
@@ -89,7 +89,7 @@ const OwnerDashboard: React.FC = () => {
     const fetchConnectionRequests = async () => {
       setLoadingConnections(true);
       try {
-        const relationships = await fetchOwnerRelationships(user.id, propertyId, isPrimary);
+        const relationships = await fetchOwnerRelationships(effectiveOwnerId ?? user.id, propertyId, isPrimary);
         const pending = relationships.filter((r) => r.status === "pending").length;
         setPendingConnections(pending);
         console.log(`Found ${pending} pending connection requests for property ${propertyId ?? "all"}`);
@@ -102,7 +102,7 @@ const OwnerDashboard: React.FC = () => {
 
     fetchListingsCount();
     fetchConnectionRequests();
-  }, [user, propertyId, isPrimary]);
+  }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
   const handleListRoomClick = async () => {
     if (!user) return;

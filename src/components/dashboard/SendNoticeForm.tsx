@@ -11,7 +11,7 @@ interface SendNoticeFormProps {
 const SendNoticeForm: React.FC<SendNoticeFormProps> = ({
   ownerId
 }) => {
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const handleSendNotice = async () => {
@@ -20,7 +20,7 @@ const SendNoticeForm: React.FC<SendNoticeFormProps> = ({
     }
     setIsSending(true);
     try {
-      await sendNoticeToAllRenters(ownerId, message, propertyId, isPrimary);
+      await sendNoticeToAllRenters(effectiveOwnerId ?? ownerId, message, propertyId, isPrimary);
       setMessage(''); // Clear the form after attempt
     } finally {
       setIsSending(false);

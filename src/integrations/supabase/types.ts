@@ -2001,6 +2001,14 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { user_uuid: string }; Returns: string }
+      has_property_access: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_property_edit_access: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_profile_access_attempt: {
         Args: { access_granted: boolean; target_user_id: string }
         Returns: undefined
@@ -2160,6 +2168,10 @@ export type Database = {
       update_room_availability_for_owner: {
         Args: { is_available: boolean; room_id: string }
         Returns: undefined
+      }
+      user_accessible_property_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
       }
       validate_relationship_access: {
         Args: { relationship_uuid: string; user_uuid: string }

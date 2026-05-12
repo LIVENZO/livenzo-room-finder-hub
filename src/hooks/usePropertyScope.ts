@@ -17,6 +17,10 @@ export const usePropertyScope = () => {
     () => ({
       propertyId: activeProperty?.id,
       isPrimary: !!activeProperty?.is_primary,
+      // The actual owner of the active property — use this for owner_id filters
+      // so shared collaborators see the same data as the real owner.
+      effectiveOwnerId: activeProperty?.owner_id,
+      isShared: !!activeProperty && activeProperty.my_role && activeProperty.my_role !== 'owner',
       activeProperty,
     }),
     [activeProperty],

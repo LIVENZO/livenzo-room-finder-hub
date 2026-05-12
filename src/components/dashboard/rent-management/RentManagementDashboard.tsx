@@ -19,7 +19,7 @@ interface RentStats {
 const RentManagementDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { propertyId, isPrimary } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
   
   const [stats, setStats] = useState<RentStats>({
     totalReceived: 0,
@@ -35,7 +35,7 @@ const RentManagementDashboard: React.FC = () => {
     if (user) {
       fetchStats();
     }
-  }, [user, propertyId, isPrimary]);
+  }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
 
   const fetchStats = async () => {
@@ -46,7 +46,7 @@ const RentManagementDashboard: React.FC = () => {
       let relQuery = supabase
         .from('relationships')
         .select('id')
-        .eq('owner_id', user?.id)
+        .eq('owner_id', effectiveOwnerId ?? user?.id)
         .eq('status', 'accepted')
         .eq('archived', false);
 
