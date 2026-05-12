@@ -34,20 +34,19 @@ export const fetchRenterNotices = async (): Promise<Notice[]> => {
   }
 };
 
-// Fetch all active connections for an owner, optionally scoped to a property
+// Fetch all active connections for an owner, optionally scoped to a property.
+// `ownerId` should be the property's actual owner (effectiveOwnerId), so that
+// shared collaborators see the same renter list as the real owner.
 export const fetchOwnerConnections = async (
   ownerId: string,
   propertyId?: string,
   isPrimaryProperty: boolean = false,
 ): Promise<string[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const targetOwnerId = user?.id ?? ownerId;
-
     let q = supabase
       .from("relationships")
       .select("renter_id")
-      .eq("owner_id", targetOwnerId)
+      .eq("owner_id", ownerId)
       .eq("status", "accepted");
 
     if (propertyId) {
@@ -70,7 +69,8 @@ export const fetchOwnerConnections = async (
   }
 };
 
-// Send a notice to all connected renters (optionally scoped to a property)
+// Send a notice to all connected renters (optionally scoped to a property).
+// `ownerId` should be the property's actual owner (effectiveOwnerId).
 export const sendNoticeToAllRenters = async (
   ownerId: string,
   message: string,
@@ -84,17 +84,19 @@ export const sendNoticeToAllRenters = async (
       return false;
     }
 
-    // Get connected renters for the active property only
-    const renterIds = await fetchOwnerConnections(user.id, propertyId, isPrimaryProperty);
-    
+    // Get connected renters for the active property only (using actual owner)
+    const renterIds = await fetchOwnerConnections(ownerId, propertyId, isPrimaryProperty);
+
     if (renterIds.length === 0) {
       toast.error("No connected renters found for this property");
       return false;
     }
 
-    // Create notice records for each renter, tagged with the property
+    // Create notice records for each renter, tagged with the property.
+    // owner_id is the property's actual owner so RLS allows both real owners
+    // (existing policy) and managers on shared properties (new policy).
     const notices = renterIds.map((renterId: string) => ({
-      owner_id: user.id,
+      owner_id: ownerId,
       renter_id: renterId,
       message,
       property_id: propertyId ?? null,
