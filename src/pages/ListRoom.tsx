@@ -91,13 +91,23 @@ const ListRoom: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     const checkLocation = async () => {
-      const profile = await fetchUserProfile(user.id);
-      // Check both latitude and longitude presence and ensure they're not null/0/undefined
-      const hasValidLocation =
-        !!profile?.location_latitude &&
-        !!profile?.location_longitude &&
-        typeof profile.location_latitude === "number" &&
-        typeof profile.location_longitude === "number";
+      // Prefer the active property's location (shared across owner/managers/viewers).
+      const propLat = activeProperty?.location_latitude;
+      const propLng = activeProperty?.location_longitude;
+      const propertyHasLocation =
+        propLat !== null && propLat !== undefined &&
+        propLng !== null && propLng !== undefined &&
+        Number(propLat) !== 0 && Number(propLng) !== 0;
+
+      let hasValidLocation = propertyHasLocation;
+      if (!hasValidLocation) {
+        const profile = await fetchUserProfile(user.id);
+        hasValidLocation =
+          !!profile?.location_latitude &&
+          !!profile?.location_longitude &&
+          typeof profile.location_latitude === "number" &&
+          typeof profile.location_longitude === "number";
+      }
       if (!hasValidLocation) {
         // Save current form data before redirecting
         const currentValues = form.getValues();
