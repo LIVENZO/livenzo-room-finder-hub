@@ -4,6 +4,7 @@ import { Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth";
 import { fetchOwnerRelationships } from "@/services/relationship";
+import { fetchMyCollaborations } from "@/services/collaborationService";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { fetchUserProfile } from "@/services/UserProfileService";
 import { toast } from "sonner";
