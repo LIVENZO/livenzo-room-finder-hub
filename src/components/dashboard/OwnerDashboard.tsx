@@ -24,7 +24,7 @@ const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
-  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId, activeProperty } = usePropertyScope();
 
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
