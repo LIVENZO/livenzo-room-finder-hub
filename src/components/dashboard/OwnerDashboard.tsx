@@ -111,6 +111,16 @@ const OwnerDashboard: React.FC = () => {
 
     fetchListingsCount();
     fetchConnectionRequests();
+
+    // Realtime: refresh counts on collaborator or relationship changes
+    const channel = supabase
+      .channel(`owner_dashboard_${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "property_collaborators" }, () => fetchConnectionRequests())
+      .on("postgres_changes", { event: "*", schema: "public", table: "relationships" }, () => fetchConnectionRequests())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, propertyId, isPrimary, effectiveOwnerId]);
 
   const handleListRoomClick = async () => {
