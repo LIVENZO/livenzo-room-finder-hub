@@ -90,10 +90,18 @@ const OwnerDashboard: React.FC = () => {
     const fetchConnectionRequests = async () => {
       setLoadingConnections(true);
       try {
-        const relationships = await fetchOwnerRelationships(effectiveOwnerId ?? user.id, propertyId, isPrimary);
-        const pending = relationships.filter((r) => r.status === "pending").length;
-        setPendingConnections(pending);
-        console.log(`Found ${pending} pending connection requests for property ${propertyId ?? "all"}`);
+        const [relationships, collaborations] = await Promise.all([
+          fetchOwnerRelationships(effectiveOwnerId ?? user.id, propertyId, isPrimary),
+          fetchMyCollaborations().catch(() => []),
+        ]);
+        const pendingRenters = relationships.filter((r) => r.status === "pending").length;
+        // Count collaboration requests received (current user is owner of the property, status pending)
+        const pendingCollabs = (collaborations || []).filter(
+          (c) => c.status === "pending" && c.i_am === "owner",
+        ).length;
+        const total = pendingRenters + pendingCollabs;
+        setPendingConnections(total);
+        console.log(`Pending: ${pendingRenters} renters + ${pendingCollabs} collaborators = ${total}`);
       } catch (error) {
         console.error("Error fetching connection requests:", error);
       } finally {
