@@ -108,13 +108,23 @@ const OwnerDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      // Only check if location is set - no need for complete property details to list a room
-      const profile = await fetchUserProfile(user.id);
-      const hasValidLocation =
-        !!profile?.location_latitude &&
-        !!profile?.location_longitude &&
-        typeof profile.location_latitude === "number" &&
-        typeof profile.location_longitude === "number";
+      // Prefer active property's location (shared across owner/managers/viewers).
+      const propLat = activeProperty?.location_latitude;
+      const propLng = activeProperty?.location_longitude;
+      const propertyHasLocation =
+        propLat !== null && propLat !== undefined &&
+        propLng !== null && propLng !== undefined &&
+        Number(propLat) !== 0 && Number(propLng) !== 0;
+
+      let hasValidLocation = propertyHasLocation;
+      if (!hasValidLocation) {
+        const profile = await fetchUserProfile(user.id);
+        hasValidLocation =
+          !!profile?.location_latitude &&
+          !!profile?.location_longitude &&
+          typeof profile.location_latitude === "number" &&
+          typeof profile.location_longitude === "number";
+      }
 
       if (!hasValidLocation) {
         toast.info("Set your property location before listing a room.");
