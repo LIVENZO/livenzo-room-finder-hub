@@ -123,7 +123,7 @@ const ListRoom: React.FC = () => {
       }
     };
     checkLocation();
-  }, [user, navigate, form, imageFiles]);
+  }, [user, navigate, form, imageFiles, activeProperty?.location_latitude, activeProperty?.location_longitude]);
   
   // Only render the page after checking the location
   if (!user || !profileChecked) return null;
