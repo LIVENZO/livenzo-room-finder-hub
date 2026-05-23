@@ -50,6 +50,45 @@ const AddProperty: React.FC = () => {
   const { refresh, setActivePropertyId } = useOwnerProperty();
   const [form, setForm] = useState<FormState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [liveCoords, setLiveCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+
+  const handleSetLiveLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this device');
+      return;
+    }
+    setFetchingLocation(true);
+    try {
+      if (navigator.permissions && (navigator.permissions as any).query) {
+        try {
+          const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          if (status.state === 'denied') {
+            toast.error('Location permission denied. Please enable it in your settings.');
+            setFetchingLocation(false);
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        });
+      });
+      setLiveCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      toast.success('Live location captured');
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === 1) toast.error('Permission denied. Please allow location access.');
+      else if (code === 2) toast.error('Location unavailable. Turn on GPS and try again.');
+      else if (code === 3) toast.error('Location request timed out. Please try again.');
+      else toast.error(err?.message || 'Unable to get location.');
+    } finally {
+      setFetchingLocation(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!user) {
