@@ -146,7 +146,7 @@ const AddProperty: React.FC = () => {
         p_resident_type: form.resident_type || null,
         p_upi_id: form.upi_id.trim() || null,
         p_upi_phone_number: form.upi_phone_number.trim() || null,
-        p_razorpay_merchant_id: form.razorpay_merchant_id.trim() || null,
+        p_razorpay_merchant_id: null,
       });
 
       if (error) {
@@ -155,11 +155,25 @@ const AddProperty: React.FC = () => {
         return;
       }
 
+      const newRow = (data as any) as { id?: string } | null;
+
+      // Save live property location if captured
+      if (newRow?.id && liveCoords) {
+        const { error: locErr } = await supabase.rpc('save_property_location', {
+          p_property_id: newRow.id,
+          p_latitude: liveCoords.latitude,
+          p_longitude: liveCoords.longitude,
+        });
+        if (locErr) {
+          console.error('save_property_location failed:', locErr);
+          toast.error('Property added but location could not be saved.');
+        }
+      }
+
       toast.success('Property added successfully');
       await refresh();
 
       // Switch to the new property
-      const newRow = (data as any) as { id?: string } | null;
       if (newRow?.id) {
         setActivePropertyId(newRow.id);
       }
