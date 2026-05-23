@@ -345,16 +345,54 @@ const AddProperty: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="razorpay_merchant_id">Razorpay Merchant ID (optional)</Label>
-                  <Input
-                    id="razorpay_merchant_id"
-                    name="razorpay_merchant_id"
-                    value={form.razorpay_merchant_id}
-                    onChange={handleChange}
-                    placeholder="From Razorpay dashboard"
-                    className="h-11 rounded-xl"
-                  />
+                {/* Set Live Property Location */}
+                <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-5 shadow-sm">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md shrink-0">
+                      <MapPin className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold leading-tight">Set Live Property Location</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Saved separately for each property. Helps renters find you accurately.
+                      </p>
+                    </div>
+                  </div>
+
+                  {liveCoords ? (
+                    <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-4 py-3 mb-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-green-700">Live location added successfully</p>
+                        <p className="text-[11px] text-green-600/80 truncate">
+                          {liveCoords.latitude.toFixed(5)}, {liveCoords.longitude.toFixed(5)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <Button
+                    type="button"
+                    onClick={handleSetLiveLocation}
+                    disabled={fetchingLocation}
+                    className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:opacity-95 text-white shadow-lg shadow-primary/25 border-0"
+                  >
+                    {fetchingLocation ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Getting Location...
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="mr-2 h-4 w-4" />
+                        {liveCoords ? 'Update Live Location' : 'Set Live Location'}
+                      </>
+                    )}
+                  </Button>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground mt-3">
+                    Location can only be set when you are physically present at your property. This helps renters discover accurate nearby PGs and builds trust.
+                  </p>
                 </div>
 
                 <Button
