@@ -30,7 +30,6 @@ interface FormState {
   resident_type: string;
   upi_phone_number: string;
   upi_id: string;
-  razorpay_merchant_id: string;
 }
 
 const initialState: FormState = {
@@ -43,7 +42,6 @@ const initialState: FormState = {
   resident_type: '',
   upi_phone_number: '',
   upi_id: '',
-  razorpay_merchant_id: '',
 };
 
 const AddProperty: React.FC = () => {
