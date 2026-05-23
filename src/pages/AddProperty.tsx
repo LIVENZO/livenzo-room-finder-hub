@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapPin, Navigation, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,7 +30,6 @@ interface FormState {
   resident_type: string;
   upi_phone_number: string;
   upi_id: string;
-  razorpay_merchant_id: string;
 }
 
 const initialState: FormState = {
@@ -42,7 +42,6 @@ const initialState: FormState = {
   resident_type: '',
   upi_phone_number: '',
   upi_id: '',
-  razorpay_merchant_id: '',
 };
 
 const AddProperty: React.FC = () => {
@@ -51,6 +50,45 @@ const AddProperty: React.FC = () => {
   const { refresh, setActivePropertyId } = useOwnerProperty();
   const [form, setForm] = useState<FormState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [liveCoords, setLiveCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+
+  const handleSetLiveLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this device');
+      return;
+    }
+    setFetchingLocation(true);
+    try {
+      if (navigator.permissions && (navigator.permissions as any).query) {
+        try {
+          const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          if (status.state === 'denied') {
+            toast.error('Location permission denied. Please enable it in your settings.');
+            setFetchingLocation(false);
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        });
+      });
+      setLiveCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      toast.success('Live location captured');
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === 1) toast.error('Permission denied. Please allow location access.');
+      else if (code === 2) toast.error('Location unavailable. Turn on GPS and try again.');
+      else if (code === 3) toast.error('Location request timed out. Please try again.');
+      else toast.error(err?.message || 'Unable to get location.');
+    } finally {
+      setFetchingLocation(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!user) {
@@ -108,7 +146,7 @@ const AddProperty: React.FC = () => {
         p_resident_type: form.resident_type || null,
         p_upi_id: form.upi_id.trim() || null,
         p_upi_phone_number: form.upi_phone_number.trim() || null,
-        p_razorpay_merchant_id: form.razorpay_merchant_id.trim() || null,
+        p_razorpay_merchant_id: null,
       });
 
       if (error) {
@@ -117,11 +155,25 @@ const AddProperty: React.FC = () => {
         return;
       }
 
+      const newRow = (data as any) as { id?: string } | null;
+
+      // Save live property location if captured
+      if (newRow?.id && liveCoords) {
+        const { error: locErr } = await supabase.rpc('save_property_location', {
+          p_property_id: newRow.id,
+          p_latitude: liveCoords.latitude,
+          p_longitude: liveCoords.longitude,
+        });
+        if (locErr) {
+          console.error('save_property_location failed:', locErr);
+          toast.error('Property added but location could not be saved.');
+        }
+      }
+
       toast.success('Property added successfully');
       await refresh();
 
       // Switch to the new property
-      const newRow = (data as any) as { id?: string } | null;
       if (newRow?.id) {
         setActivePropertyId(newRow.id);
       }
@@ -293,16 +345,54 @@ const AddProperty: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="razorpay_merchant_id">Razorpay Merchant ID (optional)</Label>
-                  <Input
-                    id="razorpay_merchant_id"
-                    name="razorpay_merchant_id"
-                    value={form.razorpay_merchant_id}
-                    onChange={handleChange}
-                    placeholder="From Razorpay dashboard"
-                    className="h-11 rounded-xl"
-                  />
+                {/* Set Live Property Location */}
+                <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-5 shadow-sm">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md shrink-0">
+                      <MapPin className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold leading-tight">Set Live Property Location</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Saved separately for each property. Helps renters find you accurately.
+                      </p>
+                    </div>
+                  </div>
+
+                  {liveCoords ? (
+                    <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-4 py-3 mb-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-green-700">Live location added successfully</p>
+                        <p className="text-[11px] text-green-600/80 truncate">
+                          {liveCoords.latitude.toFixed(5)}, {liveCoords.longitude.toFixed(5)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <Button
+                    type="button"
+                    onClick={handleSetLiveLocation}
+                    disabled={fetchingLocation}
+                    className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-primary to-purple-600 hover:opacity-95 text-white shadow-lg shadow-primary/25 border-0"
+                  >
+                    {fetchingLocation ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Getting Location...
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="mr-2 h-4 w-4" />
+                        {liveCoords ? 'Update Live Location' : 'Set Live Location'}
+                      </>
+                    )}
+                  </Button>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground mt-3">
+                    Location can only be set when you are physically present at your property. This helps renters discover accurate nearby PGs and builds trust.
+                  </p>
                 </div>
 
                 <Button
