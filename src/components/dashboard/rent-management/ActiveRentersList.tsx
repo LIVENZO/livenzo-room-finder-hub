@@ -43,6 +43,8 @@ interface RenterPaymentInfo {
   };
   relationshipId?: string;
   meterPhotos?: MeterPhoto[];
+  securityDeposit?: number;
+  maintenanceAmount?: number;
 }
 
 interface ActiveRentersListProps {
