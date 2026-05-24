@@ -3,7 +3,7 @@ import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Clock, Camera, Download, User, History } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Camera, Download, User, History, Shield, Wrench, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeterPhoto } from './ActiveRentersList';
 import { MeterPhotoViewModal } from '@/components/owner/MeterPhotoViewModal';
