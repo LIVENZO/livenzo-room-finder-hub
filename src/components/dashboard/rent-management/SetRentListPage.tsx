@@ -90,7 +90,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       // Get current rent amounts from rental agreements
       const { data: rentAgreements, error: rentError } = await supabase
         .from('rental_agreements')
-        .select('renter_id, monthly_rent')
+        .select('renter_id, monthly_rent, security_deposit, maintenance_amount')
         .eq('owner_id', ownerForQuery)
         .in('renter_id', renterIds)
         .eq('status', 'active');
