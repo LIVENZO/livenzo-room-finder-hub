@@ -87,11 +87,18 @@ const ListRoom: React.FC = () => {
     }
   }, [user, userRole, navigate]);
   
-  // Owner location check: Must have location set before listing
+  // Owner property + location check: Must have a property and location set before listing
   useEffect(() => {
-    if (!user) return;
-    const checkLocation = async () => {
-      // Prefer the active property's location (shared across owner/managers/viewers).
+    if (!user || propertiesLoading) return;
+    const checkPrerequisites = async () => {
+      // Step 1: Check if user has any properties
+      if (properties.length === 0) {
+        toast.info('Please add a property first.');
+        navigate('/add-property', { replace: true });
+        return;
+      }
+
+      // Step 2: Check if the active property has a live location set
       const propLat = activeProperty?.location_latitude;
       const propLng = activeProperty?.location_longitude;
       const propertyHasLocation =
@@ -105,8 +112,8 @@ const ListRoom: React.FC = () => {
         hasValidLocation =
           !!profile?.location_latitude &&
           !!profile?.location_longitude &&
-          typeof profile.location_latitude === "number" &&
-          typeof profile.location_longitude === "number";
+          typeof profile.location_latitude === 'number' &&
+          typeof profile.location_longitude === 'number';
       }
       if (!hasValidLocation) {
         // Save current form data before redirecting
@@ -116,14 +123,14 @@ const ListRoom: React.FC = () => {
           imageFiles: imageFiles.length, // Store count for reference
         }));
         
-        toast.info('Please set your location before publishing your room.');
+        toast.info('Please set your property location before listing rooms.');
         navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
       } else {
         setProfileChecked(true);
       }
     };
-    checkLocation();
-  }, [user, navigate, form, imageFiles, activeProperty?.location_latitude, activeProperty?.location_longitude]);
+    checkPrerequisites();
+  }, [user, navigate, form, imageFiles, activeProperty?.location_latitude, activeProperty?.location_longitude, properties, propertiesLoading]);
   
   // Only render the page after checking the location
   if (!user || !profileChecked) return null;
