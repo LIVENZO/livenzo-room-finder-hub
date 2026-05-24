@@ -30,6 +30,8 @@ interface RenterPaymentInfo {
     payment_date: string;
     status: string;
   };
+  securityDeposit?: number;
+  maintenanceAmount?: number;
 }
 
 const ActiveRenters: React.FC = () => {
