@@ -15,6 +15,8 @@ interface Renter {
   avatar_url?: string;
   room_number?: string;
   current_rent?: number;
+  security_deposit?: number;
+  maintenance_amount?: number;
 }
 
 interface SetRentListPageProps {
