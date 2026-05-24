@@ -22,7 +22,7 @@ import { useOwnerProperty } from '@/context/OwnerPropertyContext';
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
-  const { activeProperty } = useOwnerProperty();
+  const { activeProperty, properties, isLoading: propertiesLoading } = useOwnerProperty();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
