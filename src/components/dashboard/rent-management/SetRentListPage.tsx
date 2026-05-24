@@ -110,7 +110,9 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             full_name: profile.full_name,
             avatar_url: profile.avatar_url || '',
             room_number: profile.room_number || '',
-            current_rent: rentAgreement?.monthly_rent || 0
+            current_rent: rentAgreement?.monthly_rent || 0,
+            security_deposit: (rentAgreement as any)?.security_deposit || 0,
+            maintenance_amount: (rentAgreement as any)?.maintenance_amount || 0
           };
         }) || [];
 
