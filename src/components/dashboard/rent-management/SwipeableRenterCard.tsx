@@ -25,6 +25,8 @@ interface RenterPaymentInfo {
   lastPaymentDate?: string;
   relationshipId?: string;
   meterPhotos?: MeterPhoto[];
+  securityDeposit?: number;
+  maintenanceAmount?: number;
 }
 
 interface SwipeableRenterCardProps {
