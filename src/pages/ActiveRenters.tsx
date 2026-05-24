@@ -30,6 +30,8 @@ interface RenterPaymentInfo {
     payment_date: string;
     status: string;
   };
+  securityDeposit?: number;
+  maintenanceAmount?: number;
 }
 
 const ActiveRenters: React.FC = () => {
@@ -96,10 +98,10 @@ const ActiveRenters: React.FC = () => {
             .order('payment_date', { ascending: false })
             .limit(1);
 
-          // Check rental agreement for amount and due date
+          // Check rental agreement for amount, due date, security deposit, and maintenance
           const { data: rentalAgreement, error: agreementError } = await supabase
             .from('rental_agreements')
-            .select('monthly_rent, due_date, status')
+            .select('monthly_rent, due_date, status, security_deposit, maintenance_amount')
             .eq('renter_id', rel.renter_id)
             .eq('owner_id', ownerForQuery)
             .eq('status', 'active')
@@ -144,7 +146,9 @@ const ActiveRenters: React.FC = () => {
               amount: Number(recentPayment[0].amount),
               payment_date: recentPayment[0].payment_date,
               status: 'paid'
-            } : undefined
+            } : undefined,
+            securityDeposit: (agreementData as any)?.security_deposit || 0,
+            maintenanceAmount: (agreementData as any)?.maintenance_amount || 0
           };
         })
       );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Users, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Users, IndianRupee, Shield, Wrench, Home } from 'lucide-react';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,6 +15,8 @@ interface Renter {
   avatar_url?: string;
   room_number?: string;
   current_rent?: number;
+  security_deposit?: number;
+  maintenance_amount?: number;
 }
 
 interface SetRentListPageProps {
@@ -88,7 +90,7 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       // Get current rent amounts from rental agreements
       const { data: rentAgreements, error: rentError } = await supabase
         .from('rental_agreements')
-        .select('renter_id, monthly_rent')
+        .select('renter_id, monthly_rent, security_deposit, maintenance_amount')
         .eq('owner_id', ownerForQuery)
         .in('renter_id', renterIds)
         .eq('status', 'active');
@@ -108,7 +110,9 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             full_name: profile.full_name,
             avatar_url: profile.avatar_url || '',
             room_number: profile.room_number || '',
-            current_rent: rentAgreement?.monthly_rent || 0
+            current_rent: rentAgreement?.monthly_rent || 0,
+            security_deposit: (rentAgreement as any)?.security_deposit || 0,
+            maintenance_amount: (rentAgreement as any)?.maintenance_amount || 0
           };
         }) || [];
 
@@ -277,16 +281,37 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
                       <span>Room No: {renter.room_number}</span>
                     </p>
                   )}
-                  {renter.current_rent && renter.current_rent > 0 ? (
-                    <div className="flex items-center gap-1 mt-1">
-                      <IndianRupee className="h-4 w-4 text-green-600" />
-                      <p className="text-sm text-green-600 font-medium">
-                        Current Rent: ₹{renter.current_rent.toLocaleString()}
-                      </p>
+                  
+                  {/* Financial Details — clean mini cards */}
+                  <div className="mt-2 grid grid-cols-3 gap-2 max-w-[260px]">
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                      <div className="flex items-center gap-1">
+                        <Home className="h-3 w-3 text-primary/80" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">
+                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                      </span>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-1">No rent set</p>
-                  )}
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                      <div className="flex items-center gap-1">
+                        <Shield className="h-3 w-3 text-emerald-600/80" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">
+                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                      <div className="flex items-center gap-1">
+                        <Wrench className="h-3 w-3 text-amber-600/80" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">
+                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex flex-col items-end gap-2">
