@@ -146,7 +146,9 @@ const ActiveRenters: React.FC = () => {
               amount: Number(recentPayment[0].amount),
               payment_date: recentPayment[0].payment_date,
               status: 'paid'
-            } : undefined
+            } : undefined,
+            securityDeposit: (agreementData as any)?.security_deposit || 0,
+            maintenanceAmount: (agreementData as any)?.maintenance_amount || 0
           };
         })
       );
