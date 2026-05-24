@@ -305,9 +305,45 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
               </motion.div>
             </div>
             
+            {/* Financial Details — clean mini cards */}
+            <div className="mt-2 pt-2 border-t border-border/40">
+              <div className="grid grid-cols-3 gap-2">
+                {/* Monthly Rent */}
+                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                  <div className="flex items-center gap-1">
+                    <Home className="h-3 w-3 text-primary/80" />
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">₹{renter.amount.toLocaleString()}</span>
+                </div>
+                
+                {/* Security Deposit */}
+                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                  <div className="flex items-center gap-1">
+                    <Shield className="h-3 w-3 text-emerald-600/80" />
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">
+                    {renter.securityDeposit && renter.securityDeposit > 0 ? `₹${renter.securityDeposit.toLocaleString()}` : '—'}
+                  </span>
+                </div>
+                
+                {/* Maintenance */}
+                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                  <div className="flex items-center gap-1">
+                    <Wrench className="h-3 w-3 text-amber-600/80" />
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">
+                    {renter.maintenanceAmount && renter.maintenanceAmount > 0 ? `₹${renter.maintenanceAmount.toLocaleString()}` : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
             {/* Due Date Display */}
             {renter.dueDate && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-2">
                 Due: {new Date(renter.dueDate).toLocaleDateString('en-US', { 
                   month: 'short', 
                   day: 'numeric' 
