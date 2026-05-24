@@ -126,8 +126,15 @@ const OwnerDashboard: React.FC = () => {
   const handleListRoomClick = async () => {
     if (!user) return;
 
+    // Step 1: Check if user has any property
+    if (!activeProperty) {
+      toast.info("Please add a property first.");
+      navigate("/add-property");
+      return;
+    }
+
     try {
-      // Prefer active property's location (shared across owner/managers/viewers).
+      // Step 2: Check if the active property has a live location set
       const propLat = activeProperty?.location_latitude;
       const propLng = activeProperty?.location_longitude;
       const propertyHasLocation =
@@ -146,16 +153,16 @@ const OwnerDashboard: React.FC = () => {
       }
 
       if (!hasValidLocation) {
-        toast.info("Set your property location before listing a room.");
+        toast.info("Please set your property location before listing rooms.");
         navigate("/set-location", { replace: true, state: { backTo: "/list-room" } });
         return;
       }
 
-      // Location is set, proceed to listing
+      // Step 3: Property and location are both set — proceed to listing
       navigate("/list-room");
     } catch (error) {
-      console.error("Error checking location:", error);
-      toast.error("Failed to check location. Please try again.");
+      console.error("Error checking prerequisites:", error);
+      toast.error("Failed to check prerequisites. Please try again.");
     }
   };
 
