@@ -211,8 +211,8 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       </div>
     );
   }
-  }
 
+  return (
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
