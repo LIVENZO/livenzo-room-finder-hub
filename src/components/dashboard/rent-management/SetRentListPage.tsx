@@ -46,7 +46,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       setError(null);
 
       const ownerForQuery = effectiveOwnerId ?? user.id;
-      // Get all active relationships for this owner, scoped to active property
       let relQuery = supabase
         .from('relationships')
         .select('renter_id')
@@ -74,7 +73,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         return;
       }
 
-      // Get renter profiles
       const renterIds = relationships.map(r => r.renter_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
@@ -87,7 +85,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         return;
       }
 
-      // Get current rent amounts from rental agreements
       const { data: rentAgreements, error: rentError } = await supabase
         .from('rental_agreements')
         .select('renter_id, monthly_rent, security_deposit, maintenance_amount')
@@ -97,14 +94,12 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
 
       if (rentError) {
         console.error('Error fetching rent agreements:', rentError);
-        // Don't show error for rent agreements as it's not critical
       }
 
       const renterData: Renter[] = profiles
         ?.filter(profile => profile.full_name && profile.full_name !== 'Unknown Renter')
         .map(profile => {
           const rentAgreement = rentAgreements?.find(ra => ra.renter_id === profile.id);
-          
           return {
             id: profile.id,
             full_name: profile.full_name,
@@ -118,7 +113,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
 
       setRenters(renterData);
       setError(null);
-
     } catch (error) {
       console.error('Error fetching active renters:', error);
       setError('Unable to load renters. Please check your connection or try again.');
@@ -138,9 +132,8 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   };
 
   const handleRentSuccess = (renterId: string, newRent: number) => {
-    // Update the renter's current rent in state
-    setRenters(prev => prev.map(r => 
-      r.id === renterId 
+    setRenters(prev => prev.map(r =>
+      r.id === renterId
         ? { ...r, current_rent: newRent }
         : r
     ));
@@ -158,7 +151,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             <p className="text-muted-foreground">Loading renters...</p>
           </div>
         </div>
-        
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -172,7 +164,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
     );
   }
 
-  // Show error state if there's an error
   if (error) {
     return (
       <div className="space-y-6">
@@ -185,7 +176,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             <p className="text-muted-foreground">Manage rent amounts for your renters</p>
           </div>
         </div>
-        
         <Card className="text-center py-16 border-destructive/20">
           <CardContent className="space-y-6">
             <div className="h-20 w-20 bg-destructive/10 rounded-full mx-auto flex items-center justify-center">
@@ -193,19 +183,11 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             </div>
             <div className="space-y-3">
               <h3 className="text-xl font-semibold text-foreground">Unable to Load Renters</h3>
-              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                {error}
-              </p>
+              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{error}</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                onClick={fetchActiveRenters}
-                className="min-w-[120px]"
-                disabled={loading}
-              >
-                {loading ? 'Loading...' : 'Try Again'}
-              </Button>
-            </div>
+            <Button onClick={fetchActiveRenters} className="min-w-[120px]" disabled={loading}>
+              {loading ? 'Loading...' : 'Try Again'}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -224,7 +206,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             <p className="text-muted-foreground">Manage rent amounts for your renters</p>
           </div>
         </div>
-        
         <Card className="text-center py-16">
           <CardContent className="space-y-6">
             <Users className="h-20 w-20 text-muted-foreground mx-auto opacity-50" />
@@ -234,16 +215,9 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
                 No renters connected yet. Please connect renters to manage rent.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                onClick={fetchActiveRenters}
-                variant="outline"
-                className="min-w-[120px]"
-                disabled={loading}
-              >
-                {loading ? 'Loading...' : 'Refresh'}
-              </Button>
-            </div>
+            <Button onClick={fetchActiveRenters} variant="outline" className="min-w-[120px]" disabled={loading}>
+              {loading ? 'Loading...' : 'Refresh'}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -265,63 +239,65 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       <div className="space-y-4">
         {renters.map((renter) => (
           <Card key={renter.id} className="transition-all duration-200 hover:shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
+            <CardContent className="p-4 sm:p-6">
+              {/* Top row: avatar + info + action button */}
+              <div className="flex items-start gap-3 sm:gap-4">
+                <Avatar className="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                   <AvatarImage src={renter.avatar_url} alt={renter.full_name} />
-                  <AvatarFallback className="text-lg font-semibold">
+                  <AvatarFallback className="text-base sm:text-lg font-semibold">
                     {renter.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-foreground">{renter.full_name}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground">{renter.full_name}</h3>
                   {renter.room_number && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <span>Room No: {renter.room_number}</span>
-                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Room No: {renter.room_number}</p>
                   )}
-                  
-                  {/* Financial Details — clean mini cards */}
-                  <div className="mt-2 grid grid-cols-3 gap-2 max-w-[260px]">
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Home className="h-3 w-3 text-primary/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-3 w-3 text-emerald-600/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Wrench className="h-3 w-3 text-amber-600/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                  </div>
                 </div>
-                
-                <div className="flex flex-col items-end gap-2">
-                  <Button
-                    onClick={() => handleSetRent(renter)}
-                    className="min-w-[100px] bg-primary hover:bg-primary/90"
-                  >
-                    <IndianRupee className="h-4 w-4 mr-2" />
-                    Set Rent
-                  </Button>
+
+                <Button
+                  onClick={() => handleSetRent(renter)}
+                  className="min-w-[90px] sm:min-w-[100px] bg-primary hover:bg-primary/90 text-xs sm:text-sm flex-shrink-0"
+                >
+                  <IndianRupee className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                  Set Rent
+                </Button>
+              </div>
+
+              {/* Financial Details — full width, clean mini cards */}
+              <div className="mt-3 pt-3 border-t border-border/40">
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Monthly Rent */}
+                  <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                    <div className="flex items-center justify-center gap-1">
+                      <Home className="h-3.5 w-3.5 text-primary/80 flex-shrink-0" />
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-full">
+                      {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                    </span>
+                  </div>
+                  {/* Security Deposit */}
+                  <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                    <div className="flex items-center justify-center gap-1">
+                      <Shield className="h-3.5 w-3.5 text-emerald-600/80 flex-shrink-0" />
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-full">
+                      {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                    </span>
+                  </div>
+                  {/* Maintenance */}
+                  <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                    <div className="flex items-center justify-center gap-1">
+                      <Wrench className="h-3.5 w-3.5 text-amber-600/80 flex-shrink-0" />
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-full">
+                      {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -329,7 +305,6 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         ))}
       </div>
 
-      {/* Set Rent Modal */}
       <SetRentModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
