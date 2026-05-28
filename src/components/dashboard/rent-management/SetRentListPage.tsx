@@ -262,31 +262,41 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {renters.map((renter) => (
-          <Card key={renter.id} className="transition-all duration-200 hover:shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={renter.avatar_url} alt={renter.full_name} />
-                  <AvatarFallback className="text-lg font-semibold">
-                    {renter.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-foreground">{renter.full_name}</h3>
-                  {renter.room_number && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <span>Room No: {renter.room_number}</span>
-                    </p>
-                  )}
-                  
-                  {/* Financial Details — clean mini cards */}
-                  <div className="mt-2 grid grid-cols-3 gap-2 max-w-[260px]">
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Home className="h-3 w-3 text-primary/80" />
+                {/* Financial Details — clean mini cards */}
+                <div className="mt-3 pt-3 border-t border-border/40">
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Monthly Rent */}
+                    <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                      <div className="flex items-center justify-center gap-1">
+                        <Home className="h-3.5 w-3.5 text-primary/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                      </div>
+                      <span className="text-sm font-bold text-foreground truncate max-w-full">
+                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                    {/* Security Deposit */}
+                    <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                      <div className="flex items-center justify-center gap-1">
+                        <Shield className="h-3.5 w-3.5 text-emerald-600/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                      </div>
+                      <span className="text-sm font-bold text-foreground truncate max-w-full">
+                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                    {/* Maintenance */}
+                    <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+                      <div className="flex items-center justify-center gap-1">
+                        <Wrench className="h-3.5 w-3.5 text-amber-600/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                      </div>
+                      <span className="text-sm font-bold text-foreground truncate max-w-full">
+                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
                         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
                       </div>
                       <span className="text-xs font-semibold text-foreground">
