@@ -210,43 +210,43 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         </Card>
       </div>
     );
-  }
-
-  if (renters.length === 0 && !loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack} className="p-2">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Set Monthly Rent</h1>
-            <p className="text-muted-foreground">Manage rent amounts for your renters</p>
-          </div>
-        </div>
-        
-        <Card className="text-center py-16">
-          <CardContent className="space-y-6">
-            <Users className="h-20 w-20 text-muted-foreground mx-auto opacity-50" />
-            <div className="space-y-3">
-              <h3 className="text-xl font-semibold text-foreground">No Renters Connected</h3>
-              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                No renters connected yet. Please connect renters to manage rent.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                onClick={fetchActiveRenters}
-                variant="outline"
-                className="min-w-[120px]"
-                disabled={loading}
-              >
-                {loading ? 'Loading...' : 'Refresh'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                {/* Financial Details — clean mini cards (matches Active Renters layout) */}
+                <div className="mt-2 pt-2 border-t border-border/40">
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Monthly Rent */}
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <Home className="h-3 w-3 text-primary/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                    
+                    {/* Security Deposit */}
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <Shield className="h-3 w-3 text-emerald-600/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                    
+                    {/* Maintenance */}
+                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <Wrench className="h-3 w-3 text-amber-600/80 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
     );
   }
 
