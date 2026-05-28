@@ -269,28 +269,28 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-3">
           {/* Left: Avatar */}
-          <Avatar className="h-14 w-14 ring-2 ring-border/20 flex-shrink-0">
+          <Avatar className="h-12 w-12 ring-2 ring-border/20 flex-shrink-0 mt-0.5">
             <AvatarImage src={renter.renter.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
               {renter.renter.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'R'}
             </AvatarFallback>
           </Avatar>
           
           {/* Center: Renter Info */}
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-bold text-base text-foreground leading-tight">
+          <div className="flex-1 min-w-0 space-y-0.5">
+            <h3 className="font-bold text-sm text-foreground leading-tight">
               {renter.renter.full_name || 'Unknown Renter'}
             </h3>
             
             {renter.renter.room_number && (
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground">
                 Room {renter.renter.room_number}
               </p>
             )}
             
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2 pt-0.5">
               <span className="text-sm font-semibold text-foreground">
                 ₹{renter.amount.toLocaleString()}
               </span>
@@ -304,43 +304,64 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
                 {getStatusBadge(statusOverride || renter.paymentStatus)}
               </motion.div>
             </div>
-            
-            {/* Financial Details — clean mini cards */}
-            <div className="mt-2 pt-2 border-t border-border/40">
-              <div className="grid grid-cols-3 gap-2">
-                {/* Monthly Rent */}
-                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                  <div className="flex items-center gap-1">
-                    <Home className="h-3 w-3 text-primary/80" />
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">₹{renter.amount.toLocaleString()}</span>
-                </div>
-                
-                {/* Security Deposit */}
-                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                  <div className="flex items-center gap-1">
-                    <Shield className="h-3 w-3 text-emerald-600/80" />
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">
-                    {renter.securityDeposit && renter.securityDeposit > 0 ? `₹${renter.securityDeposit.toLocaleString()}` : '—'}
-                  </span>
-                </div>
-                
-                {/* Maintenance */}
-                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                  <div className="flex items-center gap-1">
-                    <Wrench className="h-3 w-3 text-amber-600/80" />
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">
-                    {renter.maintenanceAmount && renter.maintenanceAmount > 0 ? `₹${renter.maintenanceAmount.toLocaleString()}` : '—'}
-                  </span>
-                </div>
+          </div>
+          
+          {/* Right: Status Icon */}
+          <div className="flex-shrink-0 flex items-center mt-1">
+            <motion.div
+              animate={{ 
+                scale: statusOverride ? [1, 1.2, 1] : 1,
+                rotateY: statusOverride ? [0, 180, 360] : 0
+              }}
+              transition={{ duration: 0.6 }}
+            >
+              {getStatusIcon(statusOverride || renter.paymentStatus)}
+            </motion.div>
+            {isProcessing && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
+                animate={{ scale: [0, 1, 0] }}
+                transition={{ repeat: Infinity, duration: 1 }}
+              />
+            )}
+          </div>
+        </div>
+        
+        {/* Financial Details — full width below main row */}
+        <div className="mt-3 pt-3 border-t border-border/40">
+          <div className="grid grid-cols-3 gap-2">
+            {/* Monthly Rent */}
+            <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+              <div className="flex items-center justify-center gap-1">
+                <Home className="h-3.5 w-3.5 text-primary/80 flex-shrink-0" />
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
               </div>
+              <span className="text-sm font-bold text-foreground truncate max-w-full">₹{renter.amount.toLocaleString()}</span>
             </div>
             
+            {/* Security Deposit */}
+            <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+              <div className="flex items-center justify-center gap-1">
+                <Shield className="h-3.5 w-3.5 text-emerald-600/80 flex-shrink-0" />
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+              </div>
+              <span className="text-sm font-bold text-foreground truncate max-w-full">
+                {renter.securityDeposit && renter.securityDeposit > 0 ? `₹${renter.securityDeposit.toLocaleString()}` : '—'}
+              </span>
+            </div>
+            
+            {/* Maintenance */}
+            <div className="flex flex-col items-center gap-1 bg-muted/40 rounded-xl px-1.5 py-2 min-w-0">
+              <div className="flex items-center justify-center gap-1">
+                <Wrench className="h-3.5 w-3.5 text-amber-600/80 flex-shrink-0" />
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+              </div>
+              <span className="text-sm font-bold text-foreground truncate max-w-full">
+                {renter.maintenanceAmount && renter.maintenanceAmount > 0 ? `₹${renter.maintenanceAmount.toLocaleString()}` : '—'}
+              </span>
+            </div>
+          </div>
+        </div>
             {/* Due Date Display */}
             {renter.dueDate && (
               <p className="text-xs text-muted-foreground mt-2">
