@@ -210,44 +210,10 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         </Card>
       </div>
     );
-                {/* Financial Details — clean mini cards (matches Active Renters layout) */}
-                <div className="mt-2 pt-2 border-t border-border/40">
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Monthly Rent */}
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <Home className="h-3 w-3 text-primary/80 flex-shrink-0" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
-                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    
-                    {/* Security Deposit */}
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-3 w-3 text-emerald-600/80 flex-shrink-0" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
-                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    
-                    {/* Maintenance */}
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <Wrench className="h-3 w-3 text-amber-600/80 flex-shrink-0" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground truncate w-full text-center">
-                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
     );
+  }
+
+  return (
   }
 
   return (
@@ -282,34 +248,41 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
                     </p>
                   )}
                   
-                  {/* Financial Details — clean mini cards */}
-                  <div className="mt-2 grid grid-cols-3 gap-2 max-w-[260px]">
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Home className="h-3 w-3 text-primary/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                  {/* Financial Details — clean mini cards (matches Active Renters layout) */}
+                  <div className="mt-2 pt-2 border-t border-border/40">
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Monthly Rent */}
+                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                        <div className="flex items-center gap-1">
+                          <Home className="h-3 w-3 text-primary/80 flex-shrink-0" />
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                        </div>
+                        <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                          {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-3 w-3 text-emerald-600/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                      
+                      {/* Security Deposit */}
+                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                        <div className="flex items-center gap-1">
+                          <Shield className="h-3 w-3 text-emerald-600/80 flex-shrink-0" />
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                        </div>
+                        <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                          {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <Wrench className="h-3 w-3 text-amber-600/80" />
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                      
+                      {/* Maintenance */}
+                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5 min-w-0">
+                        <div className="flex items-center gap-1">
+                          <Wrench className="h-3 w-3 text-amber-600/80 flex-shrink-0" />
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                        </div>
+                        <span className="text-xs font-semibold text-foreground truncate w-full text-center">
+                          {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-foreground">
-                        {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
-                      </span>
                     </div>
                   </div>
                 </div>
