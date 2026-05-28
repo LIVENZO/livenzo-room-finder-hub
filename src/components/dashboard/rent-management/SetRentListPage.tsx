@@ -208,12 +208,9 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
             </div>
           </CardContent>
         </Card>
+        </Card>
       </div>
     );
-    );
-  }
-
-  return (
   }
 
   return (
