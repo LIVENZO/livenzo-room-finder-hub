@@ -211,9 +211,47 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       </div>
     );
   }
+
+  if (renters.length === 0 && !loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={onBack} className="p-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Set Monthly Rent</h1>
+            <p className="text-muted-foreground">Manage rent amounts for your renters</p>
+          </div>
+        </div>
+        
+        <Card className="text-center py-16">
+          <CardContent className="space-y-6">
+            <Users className="h-20 w-20 text-muted-foreground mx-auto opacity-50" />
+            <div className="space-y-3">
+              <h3 className="text-xl font-semibold text-foreground">No Renters Connected</h3>
+              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                No renters connected yet. Please connect renters to manage rent.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={fetchActiveRenters}
+                variant="outline"
+                className="min-w-[120px]"
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={onBack} className="p-2">
           <ArrowLeft className="h-5 w-5" />
