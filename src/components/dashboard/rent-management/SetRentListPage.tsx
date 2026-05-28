@@ -211,10 +211,9 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
       </div>
     );
   }
+  }
 
   return (
-  return (
-    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={onBack} className="p-2">
           <ArrowLeft className="h-5 w-5" />
