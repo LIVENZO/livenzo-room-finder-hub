@@ -122,7 +122,7 @@ export const RentPaymentCard = ({
 
 {status !== 'paid' && (
   <PayRentButton 
-    amount={amount}
+    amount={totalAmount}
     relationshipId={relationshipId}
     className="w-full"
   />
