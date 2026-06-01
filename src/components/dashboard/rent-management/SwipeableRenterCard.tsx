@@ -39,6 +39,7 @@ interface SwipeableRenterCardProps {
   onAddPayment: (renterId: string, renterName: string) => void;
   isDemo?: boolean;
   ownerId: string;
+  onRefresh?: () => void;
 }
 
 const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
@@ -48,8 +49,10 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   meterPhotos = {},
   onAddPayment,
   isDemo = false,
-  ownerId
+  ownerId,
+  onRefresh,
 }) => {
+  const [showElectricityModal, setShowElectricityModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showMeterPhotoModal, setShowMeterPhotoModal] = useState(false);
