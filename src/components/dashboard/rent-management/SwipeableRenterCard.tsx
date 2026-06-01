@@ -347,8 +347,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
                 </button>
               </div>
             </div>
-              </div>
-            </div>
+
             
             {/* Due Date Display */}
             {renter.dueDate && (
