@@ -477,6 +477,20 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
           currentAmount={renter.amount}
         />
       )}
+
+      {/* Electricity Bill Modal (owner) */}
+      {renter.relationshipId && (
+        <SetElectricityBillModal
+          isOpen={showElectricityModal}
+          onClose={() => setShowElectricityModal(false)}
+          renterId={renter.renter.id}
+          ownerId={ownerId}
+          relationshipId={renter.relationshipId}
+          renterName={renter.renter.full_name || 'Renter'}
+          currentAmount={renter.electricityBillAmount ?? null}
+          onSaved={onRefresh}
+        />
+      )}
     </div>
   );
 };
