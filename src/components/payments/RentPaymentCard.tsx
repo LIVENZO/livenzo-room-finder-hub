@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, CreditCard, AlertCircle } from "lucide-react";
+import { CalendarDays, CreditCard, AlertCircle, Home, Zap } from "lucide-react";
 import { PayRentButton } from "./PayRentButton";
 import { format } from "date-fns";
 
 interface RentPaymentCardProps {
   relationshipId?: string;
   amount: number;
+  electricityBill?: number | null;
   dueDate?: string;
   status?: string;
   ownerName?: string;
@@ -16,11 +17,14 @@ interface RentPaymentCardProps {
 export const RentPaymentCard = ({
   relationshipId,
   amount,
+  electricityBill,
   dueDate,
   status = 'pending',
   ownerName,
   propertyName
 }: RentPaymentCardProps) => {
+  const hasElectricity = electricityBill != null && electricityBill > 0;
+  const totalAmount = (amount || 0) + (hasElectricity ? Number(electricityBill) : 0);
   const isOverdue = dueDate && new Date(dueDate) < new Date() && status !== 'paid';
   const isDueSoon = dueDate && new Date(dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && status !== 'paid';
 
