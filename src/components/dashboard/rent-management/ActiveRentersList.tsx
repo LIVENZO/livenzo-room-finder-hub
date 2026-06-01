@@ -320,6 +320,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             meterPhotos={meterPhotos}
             onAddPayment={onAddPayment}
             ownerId={ownerId}
+            onRefresh={onRefresh}
           />
         ))}
       </div>
