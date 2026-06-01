@@ -283,6 +283,7 @@ export const PayRentSection = () => {
             <RentPaymentCard
               relationshipId={activeRelationship?.id || rentalAgreement?.id || 'fallback'}
               amount={rentalAgreement?.monthly_rent || rentStatus?.current_amount}
+              electricityBill={electricityBill}
               ownerName={ownerInfo?.full_name || 'Property Owner'}
               propertyName={ownerInfo?.property_name || 'Rental Property'}
               dueDate={rentalAgreement?.due_date || rentStatus?.due_date || new Date().toISOString().split('T')[0]}
