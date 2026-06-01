@@ -32,6 +32,7 @@ export const PayRentSection = () => {
   const [rentStatus, setRentStatus] = useState<RentStatus | null>(null);
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
   const [rentalAgreement, setRentalAgreement] = useState<any>(null);
+  const [electricityBill, setElectricityBill] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [ownerUpiConfigured, setOwnerUpiConfigured] = useState(true);
   const { user } = useAuth();
