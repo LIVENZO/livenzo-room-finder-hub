@@ -70,6 +70,17 @@ export const PayRentSection = () => {
           fetchActiveRelationship();
         }
       )
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'electricity_bills',
+          filter: `renter_id=eq.${user.id}`,
+        },
+        () => {
+          fetchActiveRelationship();
+        }
+      )
       .subscribe();
 
     return () => {
