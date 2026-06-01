@@ -45,6 +45,7 @@ interface RenterPaymentInfo {
   meterPhotos?: MeterPhoto[];
   securityDeposit?: number;
   maintenanceAmount?: number;
+  electricityBillAmount?: number | null;
 }
 
 interface ActiveRentersListProps {
