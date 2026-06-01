@@ -168,7 +168,20 @@ export const PayRentSection = () => {
         }
 
         setRentStatus(rentStatusData);
-        console.log('Rent status data:', rentStatusData);
+
+        // Fetch current electricity bill (active within last 25 days)
+        const cutoff = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        const { data: ebill } = await supabase
+          .from('electricity_bills')
+          .select('amount, cycle_start_date')
+          .eq('relationship_id', effectiveRelationship.id)
+          .gte('cycle_start_date', cutoff)
+          .order('cycle_start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setElectricityBill(ebill ? Number(ebill.amount) : null);
       } else if (agreementData) {
         // Get owner info from rental agreement
         const { data: ownerProfile, error: ownerError } = await supabase
