@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, CreditCard, AlertCircle } from "lucide-react";
+import { CalendarDays, CreditCard, AlertCircle, Home, Zap } from "lucide-react";
 import { PayRentButton } from "./PayRentButton";
 import { format } from "date-fns";
 
 interface RentPaymentCardProps {
   relationshipId?: string;
   amount: number;
+  electricityBill?: number | null;
   dueDate?: string;
   status?: string;
   ownerName?: string;
@@ -16,11 +17,14 @@ interface RentPaymentCardProps {
 export const RentPaymentCard = ({
   relationshipId,
   amount,
+  electricityBill,
   dueDate,
   status = 'pending',
   ownerName,
   propertyName
 }: RentPaymentCardProps) => {
+  const hasElectricity = electricityBill != null && electricityBill > 0;
+  const totalAmount = (amount || 0) + (hasElectricity ? Number(electricityBill) : 0);
   const isOverdue = dueDate && new Date(dueDate) < new Date() && status !== 'paid';
   const isDueSoon = dueDate && new Date(dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && status !== 'paid';
 
@@ -66,24 +70,41 @@ export const RentPaymentCard = ({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Amount Due</p>
-            <p className="text-2xl font-bold">₹{amount.toLocaleString()}</p>
-          </div>
-          
-          {dueDate && (
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <CalendarDays className="h-4 w-4" />
-                Due Date
-              </p>
-              <p className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : ''}`}>
-                {format(new Date(dueDate), 'MMM dd, yyyy')}
-              </p>
+        {/* Payment Breakdown */}
+        <div className="rounded-xl border bg-card divide-y">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Home className="h-4 w-4 text-primary/80" />
+              Monthly Rent
             </div>
-          )}
+            <p className="font-semibold">₹{(amount || 0).toLocaleString()}</p>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Zap className="h-4 w-4 text-amber-500" />
+              Electricity Bill
+            </div>
+            <p className="font-semibold">
+              {hasElectricity ? `₹${Number(electricityBill).toLocaleString()}` : '—'}
+            </p>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 bg-primary/5 rounded-b-xl">
+            <p className="text-sm font-medium">Total Amount</p>
+            <p className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</p>
+          </div>
         </div>
+
+        {dueDate && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <CalendarDays className="h-4 w-4" />
+              Due Date
+            </span>
+            <span className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : ''}`}>
+              {format(new Date(dueDate), 'MMM dd, yyyy')}
+            </span>
+          </div>
+        )}
 
         {isOverdue && (
           <div className="flex items-center gap-2 p-3 bg-red-100 rounded-lg">
@@ -101,7 +122,7 @@ export const RentPaymentCard = ({
 
 {status !== 'paid' && (
   <PayRentButton 
-    amount={amount}
+    amount={totalAmount}
     relationshipId={relationshipId}
     className="w-full"
   />

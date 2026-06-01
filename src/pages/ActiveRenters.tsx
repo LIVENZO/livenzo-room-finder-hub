@@ -32,6 +32,7 @@ interface RenterPaymentInfo {
   };
   securityDeposit?: number;
   maintenanceAmount?: number;
+  electricityBillAmount?: number | null;
 }
 
 const ActiveRenters: React.FC = () => {
@@ -120,6 +121,19 @@ const ActiveRenters: React.FC = () => {
             .eq('billing_month', currentMonth)
             .maybeSingle();
 
+          // Fetch current electricity bill (within last 25 days)
+          const cutoff = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 10);
+          const { data: ebill } = await supabase
+            .from('electricity_bills')
+            .select('amount, cycle_start_date')
+            .eq('relationship_id', rel.id)
+            .gte('cycle_start_date', cutoff)
+            .order('cycle_start_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
           // Safely extract data, handling potential errors
           const agreementData = !agreementError && rentalAgreement ? rentalAgreement : null;
           
@@ -140,6 +154,7 @@ const ActiveRenters: React.FC = () => {
             paymentStatus,
             status: paymentStatus, // Add status field for consistency
             amount: rentAmount,
+            electricityBillAmount: ebill ? Number(ebill.amount) : null,
             dueDate: dueDate,
             lastPaymentDate: recentPayment?.[0]?.payment_date,
             latestPayment: recentPayment?.[0] ? {

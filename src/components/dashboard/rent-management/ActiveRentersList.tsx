@@ -45,6 +45,7 @@ interface RenterPaymentInfo {
   meterPhotos?: MeterPhoto[];
   securityDeposit?: number;
   maintenanceAmount?: number;
+  electricityBillAmount?: number | null;
 }
 
 interface ActiveRentersListProps {
@@ -319,6 +320,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             meterPhotos={meterPhotos}
             onAddPayment={onAddPayment}
             ownerId={ownerId}
+            onRefresh={onRefresh}
           />
         ))}
       </div>

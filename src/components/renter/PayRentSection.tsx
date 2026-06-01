@@ -32,6 +32,7 @@ export const PayRentSection = () => {
   const [rentStatus, setRentStatus] = useState<RentStatus | null>(null);
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
   const [rentalAgreement, setRentalAgreement] = useState<any>(null);
+  const [electricityBill, setElectricityBill] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [ownerUpiConfigured, setOwnerUpiConfigured] = useState(true);
   const { user } = useAuth();
@@ -64,6 +65,17 @@ export const PayRentSection = () => {
           event: '*',
           schema: 'public',
           table: 'rent_status'
+        },
+        () => {
+          fetchActiveRelationship();
+        }
+      )
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'electricity_bills',
+          filter: `renter_id=eq.${user.id}`,
         },
         () => {
           fetchActiveRelationship();
@@ -167,7 +179,20 @@ export const PayRentSection = () => {
         }
 
         setRentStatus(rentStatusData);
-        console.log('Rent status data:', rentStatusData);
+
+        // Fetch current electricity bill (active within last 25 days)
+        const cutoff = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        const { data: ebill } = await supabase
+          .from('electricity_bills')
+          .select('amount, cycle_start_date')
+          .eq('relationship_id', effectiveRelationship.id)
+          .gte('cycle_start_date', cutoff)
+          .order('cycle_start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setElectricityBill(ebill ? Number(ebill.amount) : null);
       } else if (agreementData) {
         // Get owner info from rental agreement
         const { data: ownerProfile, error: ownerError } = await supabase
@@ -258,6 +283,7 @@ export const PayRentSection = () => {
             <RentPaymentCard
               relationshipId={activeRelationship?.id || rentalAgreement?.id || 'fallback'}
               amount={rentalAgreement?.monthly_rent || rentStatus?.current_amount}
+              electricityBill={electricityBill}
               ownerName={ownerInfo?.full_name || 'Property Owner'}
               propertyName={ownerInfo?.property_name || 'Rental Property'}
               dueDate={rentalAgreement?.due_date || rentStatus?.due_date || new Date().toISOString().split('T')[0]}
