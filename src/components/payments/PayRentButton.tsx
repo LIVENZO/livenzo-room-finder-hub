@@ -11,6 +11,7 @@ import { useAuth } from "@/context/auth";
 
 interface PayRentButtonProps {
   amount: number;
+  ownerElectricityBill?: number | null;
   relationshipId?: string;
   disabled?: boolean;
   className?: string;
@@ -18,6 +19,7 @@ interface PayRentButtonProps {
 
 export const PayRentButton = ({ 
   amount, 
+  ownerElectricityBill = null,
   relationshipId, 
   disabled = false,
   className = ""
@@ -81,7 +83,15 @@ export const PayRentButton = ({
   const handleMeterPhotoComplete = () => {
     if (advancingRef.current) return;
     advancingRef.current = true;
-    setFlowStep('bill');
+    if (ownerElectricityBill != null && ownerElectricityBill > 0) {
+      // Owner already added electricity bill — skip popup, go straight to payment
+      setFinalAmount(amount + Number(ownerElectricityBill));
+      setElectricBillAmount(Number(ownerElectricityBill));
+      setFlowStep('upi');
+      advancingRef.current = false;
+    } else {
+      setFlowStep('bill');
+    }
   };
 
   const handleElectricityBillComplete = (totalAmount: number, electricBillAmount: number) => {

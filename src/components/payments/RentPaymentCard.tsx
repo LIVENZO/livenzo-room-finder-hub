@@ -122,7 +122,8 @@ export const RentPaymentCard = ({
 
 {status !== 'paid' && (
   <PayRentButton 
-    amount={totalAmount}
+    amount={amount || 0}
+    ownerElectricityBill={hasElectricity ? Number(electricityBill) : null}
     relationshipId={relationshipId}
     className="w-full"
   />
