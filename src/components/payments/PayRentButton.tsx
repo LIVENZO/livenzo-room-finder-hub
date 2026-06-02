@@ -11,6 +11,7 @@ import { useAuth } from "@/context/auth";
 
 interface PayRentButtonProps {
   amount: number;
+  ownerElectricityBill?: number | null;
   relationshipId?: string;
   disabled?: boolean;
   className?: string;
@@ -18,6 +19,7 @@ interface PayRentButtonProps {
 
 export const PayRentButton = ({ 
   amount, 
+  ownerElectricityBill = null,
   relationshipId, 
   disabled = false,
   className = ""
