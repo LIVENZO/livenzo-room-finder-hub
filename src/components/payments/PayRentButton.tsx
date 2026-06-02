@@ -71,7 +71,13 @@ export const PayRentButton = ({
         }
       }
       
-      setFlowStep('meter');
+      if (ownerElectricityBill != null && ownerElectricityBill > 0) {
+        setFinalAmount(amount + Number(ownerElectricityBill));
+        setElectricBillAmount(Number(ownerElectricityBill));
+        setFlowStep('upi');
+      } else {
+        setFlowStep('bill');
+      }
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load payment information');
@@ -130,13 +136,6 @@ export const PayRentButton = ({
         )}
       </Button>
 
-      <MeterPhotoUploadModal
-        isOpen={flowStep === 'meter'}
-        onClose={() => { if (!advancingRef.current) setFlowStep('idle'); }}
-        onContinue={handleMeterPhotoComplete}
-        relationshipId={relationshipId || ""}
-        ownerId={ownerId}
-      />
 
       <ElectricityBillModal
         isOpen={flowStep === 'bill'}
