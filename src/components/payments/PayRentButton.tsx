@@ -71,7 +71,13 @@ export const PayRentButton = ({
         }
       }
       
-      setFlowStep('meter');
+      if (ownerElectricityBill != null && ownerElectricityBill > 0) {
+        setFinalAmount(amount + Number(ownerElectricityBill));
+        setElectricBillAmount(Number(ownerElectricityBill));
+        setFlowStep('upi');
+      } else {
+        setFlowStep('bill');
+      }
     } catch (error) {
       console.error('Error fetching relationship:', error);
       toast.error('Failed to load payment information');
