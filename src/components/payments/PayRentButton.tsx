@@ -136,13 +136,6 @@ export const PayRentButton = ({
         )}
       </Button>
 
-      <MeterPhotoUploadModal
-        isOpen={flowStep === 'meter'}
-        onClose={() => { if (!advancingRef.current) setFlowStep('idle'); }}
-        onContinue={handleMeterPhotoComplete}
-        relationshipId={relationshipId || ""}
-        ownerId={ownerId}
-      />
 
       <ElectricityBillModal
         isOpen={flowStep === 'bill'}
