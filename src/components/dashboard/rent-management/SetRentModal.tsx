@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, IndianRupee, Shield, Wrench } from 'lucide-react';
+import { CalendarIcon, IndianRupee, Shield, Wrench, User, DoorOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,19 +55,19 @@ const NumericInput: React.FC<NumericInputProps> = ({
   };
 
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-foreground">
+    <div className="space-y-2">
+      <label htmlFor={id} className="text-sm font-semibold text-foreground tracking-wide">
         {label}
       </label>
       <div
         className={cn(
-          "relative flex items-center rounded-xl border bg-background shadow-sm transition-all duration-200",
+          "relative flex items-center rounded-2xl border bg-background shadow-sm transition-all duration-200",
           focused
             ? "border-primary ring-2 ring-primary/20 shadow-md"
-            : "border-input hover:border-muted-foreground/30"
+            : "border-input hover:border-muted-foreground/40"
         )}
       >
-        <div className="pl-3 text-muted-foreground">{icon}</div>
+        <div className="pl-4 text-muted-foreground">{icon}</div>
         <input
           ref={inputRef}
           id={id}
@@ -84,7 +84,7 @@ const NumericInput: React.FC<NumericInputProps> = ({
           min="0"
           step={step}
           autoFocus={autoFocus}
-          className="flex-1 h-12 bg-transparent px-3 text-base text-foreground placeholder:text-muted-foreground outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="flex-1 h-14 bg-transparent px-3 text-base text-foreground placeholder:text-muted-foreground outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
       </div>
     </div>
@@ -227,94 +227,119 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[440px] w-[calc(100%-32px)] mx-auto rounded-2xl p-0 gap-0 max-h-[90dvh] overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="px-5 pt-5 pb-3">
+        <DialogContent className="sm:max-w-[440px] w-[calc(100%-1.5rem)] mx-auto rounded-3xl p-0 gap-0 max-h-[92dvh] overflow-hidden flex flex-col border-0 shadow-2xl">
+          {/* Header Title */}
+          <div className="px-5 pt-5 pb-2 shrink-0">
             <DialogHeader className="text-center space-y-1">
-              <DialogTitle className="text-xl font-bold text-foreground">
+              <DialogTitle className="text-lg font-bold text-foreground tracking-tight">
                 Set Payment Details
               </DialogTitle>
-              <p className="text-muted-foreground text-sm">
-                for {renter.full_name}
-                {renter.room_number && ` • Room ${renter.room_number}`}
-              </p>
             </DialogHeader>
           </div>
 
           {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5 space-y-4">
-            <NumericInput
-              id="rentAmount"
-              label="Monthly Rent Amount"
-              icon={<IndianRupee className="h-4 w-4" />}
-              value={rentAmount}
-              onChange={setRentAmount}
-              placeholder="e.g. 5000"
-              inputRef={rentRef}
-              onNext={focusDeposit}
-              autoFocus
-            />
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5 space-y-5">
+            {/* Renter Info Card */}
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/10 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground font-medium">Renter Name</p>
+                  <p className="text-base font-bold text-foreground truncate">{renter.full_name}</p>
+                </div>
+              </div>
+              {renter.room_number && (
+                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-primary/10">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                    <DoorOpen className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-muted-foreground font-medium">Room Number</p>
+                    <p className="text-base font-bold text-foreground">{renter.room_number}</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
-            <NumericInput
-              id="securityDeposit"
-              label="Security Deposit Amount"
-              icon={<Shield className="h-4 w-4" />}
-              value={securityDeposit}
-              onChange={setSecurityDeposit}
-              placeholder="e.g. 10000"
-              step="500"
-              inputRef={depositRef}
-              onNext={focusMaintenance}
-            />
+            {/* Form Fields */}
+            <div className="space-y-5">
+              <NumericInput
+                id="rentAmount"
+                label="Monthly Rent Amount"
+                icon={<IndianRupee className="h-5 w-5" />}
+                value={rentAmount}
+                onChange={setRentAmount}
+                placeholder="e.g. 5000"
+                inputRef={rentRef}
+                onNext={focusDeposit}
+                autoFocus
+              />
 
-            <NumericInput
-              id="maintenanceAmount"
-              label="Monthly Maintenance Amount"
-              icon={<Wrench className="h-4 w-4" />}
-              value={maintenanceAmount}
-              onChange={setMaintenanceAmount}
-              placeholder="e.g. 500"
-              inputRef={maintenanceRef}
-              onNext={blurMaintenance}
-              isLast
-            />
+              <NumericInput
+                id="securityDeposit"
+                label="Security Deposit Amount"
+                icon={<Shield className="h-5 w-5" />}
+                value={securityDeposit}
+                onChange={setSecurityDeposit}
+                placeholder="e.g. 10000"
+                step="500"
+                inputRef={depositRef}
+                onNext={focusMaintenance}
+              />
 
-            {/* Due Date */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                Monthly Due Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal rounded-xl shadow-sm border-input hover:border-muted-foreground/30",
-                      !dueDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-3 h-4 w-4" />
-                    {dueDate ? format(dueDate, "PPP") : "Select due date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+              <NumericInput
+                id="maintenanceAmount"
+                label="Monthly Maintenance Amount"
+                icon={<Wrench className="h-5 w-5" />}
+                value={maintenanceAmount}
+                onChange={setMaintenanceAmount}
+                placeholder="e.g. 500"
+                inputRef={maintenanceRef}
+                onNext={blurMaintenance}
+                isLast
+              />
+
+              {/* Due Date */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground tracking-wide">
+                  Monthly Due Date
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-14 justify-start text-left font-normal rounded-2xl shadow-sm border-input hover:border-muted-foreground/40 transition-all",
+                        !dueDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-3 h-5 w-5 text-muted-foreground" />
+                      <span className="text-base">
+                        {dueDate ? format(dueDate, "PPP") : "Select due date"}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={setDueDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             {/* Total preview */}
             {totalAmount > 0 && (
-              <div className="bg-muted/50 rounded-xl px-4 py-3">
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Total (First Payment)</span>
-                  <span className="font-bold text-foreground text-base">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl px-5 py-4 border border-primary/10">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Total (First Payment)</span>
+                  <span className="font-extrabold text-foreground text-lg tracking-tight">
                     ₹{totalAmount.toLocaleString()}
                   </span>
                 </div>
@@ -327,14 +352,14 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
                 variant="outline"
                 onClick={handleClose}
                 disabled={saving}
-                className="flex-1 h-12 rounded-xl text-sm font-medium"
+                className="flex-1 h-14 rounded-2xl text-sm font-semibold border-2 hover:bg-muted/50 transition-colors"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={saving || !isValid}
-                className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold text-sm"
+                className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
               >
                 {saving ? 'Saving...' : 'Save Details'}
               </Button>
