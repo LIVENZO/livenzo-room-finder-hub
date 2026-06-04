@@ -41,9 +41,9 @@ const PaymentBreakdownQRModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm mx-4 rounded-2xl p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-sm mx-auto rounded-2xl p-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col gap-0">
         {/* Success header */}
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 pt-6 pb-4 text-center">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 pt-6 pb-4 text-center shrink-0">
           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
             <CheckCircle2 className="h-7 w-7 text-white" />
           </div>
@@ -53,7 +53,7 @@ const PaymentBreakdownQRModal = ({
           <p className="text-emerald-100 text-sm mt-1">for {renterName}</p>
         </div>
 
-        <div className="px-6 pb-6 space-y-4">
+        <div className="px-5 sm:px-6 py-4 sm:pb-6 space-y-4 overflow-y-auto flex-1">
           {/* Breakdown */}
           <div className="bg-muted/50 rounded-xl p-4 space-y-2.5">
             <div className="flex justify-between text-sm">
