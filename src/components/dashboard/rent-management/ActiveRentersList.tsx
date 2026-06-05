@@ -328,18 +328,54 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
   return (
     <>
       <div className="bg-background">
-        {renters.map((renter, index) => (
-          <SwipeableRenterCard
-            key={renter.id}
-            renter={renter}
-            index={index}
-            onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
-            meterPhotos={meterPhotos}
-            onAddPayment={onAddPayment}
-            ownerId={ownerId}
-            onRefresh={onRefresh}
-          />
-        ))}
+        {/* Search Bar */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+            <Input
+              type="text"
+              placeholder="Search by room number or renter name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 h-12 rounded-2xl border-border/60 bg-card text-base shadow-sm focus-visible:ring-primary/30"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+                type="button"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredRenters.length === 0 ? (
+          <div className="px-4 py-16 text-center">
+            <div className="mx-auto w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+              <Search className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No renter found</h3>
+            <p className="text-muted-foreground">
+              No match for "{searchQuery}". Try a different search.
+            </p>
+          </div>
+        ) : (
+          filteredRenters.map((renter, index) => (
+            <SwipeableRenterCard
+              key={renter.id}
+              renter={renter}
+              index={index}
+              onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
+              meterPhotos={meterPhotos}
+              onAddPayment={onAddPayment}
+              ownerId={ownerId}
+              onRefresh={onRefresh}
+            />
+          ))
+        )}
       </div>
 
       {/* Tutorial Modal */}
