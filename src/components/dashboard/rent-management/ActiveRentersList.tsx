@@ -86,6 +86,22 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
     setShowTutorial(false);
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredRenters = useMemo(() => {
+    if (!searchQuery.trim()) return renters;
+    const q = searchQuery.toLowerCase().trim();
+    return renters.filter((r) => {
+      const nameMatch = r.renter.full_name?.toLowerCase().includes(q);
+      const roomNumber = r.renter.room_number?.toLowerCase() || '';
+      const roomMatch = roomNumber.includes(q);
+      // Support "Room 4" style search — strip "room" prefix and match number
+      const roomSearch = q.replace(/^room\s*/, '').trim();
+      const roomNumberMatch = roomSearch && roomSearch !== q ? roomNumber.includes(roomSearch) : false;
+      return nameMatch || roomMatch || roomNumberMatch;
+    });
+  }, [renters, searchQuery]);
+
   const handleSwipeAction = async (renterId: string, action: 'paid' | 'unpaid', renterInfo: RenterPaymentInfo) => {
     try {
       console.log('🔄 Updating payment status:', { renterId, action, renterInfo });
