@@ -278,74 +278,112 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {renters.map((renter) => (
-          <Card key={renter.id} className="transition-all duration-200 hover:shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Avatar className="h-16 w-16 flex-shrink-0">
-                  <AvatarImage src={renter.avatar_url} alt={renter.full_name} />
-                  <AvatarFallback className="text-lg font-semibold">
-                    {renter.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-foreground">{renter.full_name}</h3>
-                  {renter.room_number && (
-                    <p className="text-sm text-muted-foreground">
-                      Room No: {renter.room_number}
-                    </p>
-                  )}
-                  
-                  {/* Financial Details — clean mini cards */}
-                  <div className="mt-2 pt-2 border-t border-border/40">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                        <div className="flex items-center gap-1">
-                          <Home className="h-3 w-3 text-primary/80" />
-                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
-                        </div>
-                        <span className="text-xs font-semibold text-foreground">
-                          {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                        <div className="flex items-center gap-1">
-                          <Shield className="h-3 w-3 text-emerald-600/80" />
-                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
-                        </div>
-                        <span className="text-xs font-semibold text-foreground">
-                          {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                        <div className="flex items-center gap-1">
-                          <Wrench className="h-3 w-3 text-amber-600/80" />
-                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
-                        </div>
-                        <span className="text-xs font-semibold text-foreground">
-                          {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+        <Input
+          type="text"
+          placeholder="Search by room number or renter name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 pr-10 h-12 rounded-2xl border-border/60 bg-card text-base shadow-sm focus-visible:ring-primary/30"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+            type="button"
+            aria-label="Clear search"
+          >
+            <X className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </div>
 
-                  {/* Set Rent Button */}
-                  <div className="mt-3 flex justify-end">
-                    <Button
-                      onClick={() => handleSetRent(renter)}
-                      className="min-w-[100px] bg-primary hover:bg-primary/90"
-                    >
-                      <IndianRupee className="h-4 w-4 mr-2" />
-                      Set Rent
-                    </Button>
-                  </div>
-                </div>
+      <div className="space-y-4">
+        {filteredRenters.length === 0 ? (
+          <Card className="text-center py-16">
+            <CardContent className="space-y-6">
+              <div className="mx-auto w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center">
+                <Search className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold text-foreground">No renter found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  No match for "{searchQuery}". Try a different search.
+                </p>
               </div>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          filteredRenters.map((renter) => (
+            <Card key={renter.id} className="transition-all duration-200 hover:shadow-md">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-16 w-16 flex-shrink-0">
+                    <AvatarImage src={renter.avatar_url} alt={renter.full_name} />
+                    <AvatarFallback className="text-lg font-semibold">
+                      {renter.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-foreground">{renter.full_name}</h3>
+                    {renter.room_number && (
+                      <p className="text-sm text-muted-foreground">
+                        Room No: {renter.room_number}
+                      </p>
+                    )}
+                    
+                    {/* Financial Details — clean mini cards */}
+                    <div className="mt-2 pt-2 border-t border-border/40">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                          <div className="flex items-center gap-1">
+                            <Home className="h-3 w-3 text-primary/80" />
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">
+                            {renter.current_rent && renter.current_rent > 0 ? `₹${renter.current_rent.toLocaleString()}` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                          <div className="flex items-center gap-1">
+                            <Shield className="h-3 w-3 text-emerald-600/80" />
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Deposit</span>
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">
+                            {renter.security_deposit && renter.security_deposit > 0 ? `₹${renter.security_deposit.toLocaleString()}` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
+                          <div className="flex items-center gap-1">
+                            <Wrench className="h-3 w-3 text-amber-600/80" />
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Maint.</span>
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">
+                            {renter.maintenance_amount && renter.maintenance_amount > 0 ? `₹${renter.maintenance_amount.toLocaleString()}` : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Set Rent Button */}
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        onClick={() => handleSetRent(renter)}
+                        className="min-w-[100px] bg-primary hover:bg-primary/90"
+                      >
+                        <IndianRupee className="h-4 w-4 mr-2" />
+                        Set Rent
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Set Rent Modal */}
