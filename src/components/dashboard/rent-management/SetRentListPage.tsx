@@ -32,6 +32,21 @@ const SetRentListPage: React.FC<SetRentListPageProps> = ({ onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedRenter, setSelectedRenter] = useState<Renter | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredRenters = useMemo(() => {
+    if (!searchQuery.trim()) return renters;
+    const q = searchQuery.toLowerCase().trim();
+    return renters.filter((r) => {
+      const nameMatch = r.full_name?.toLowerCase().includes(q);
+      const roomNumber = r.room_number?.toLowerCase() || '';
+      const roomMatch = roomNumber.includes(q);
+      // Support "Room 4" style search — strip "room" prefix and match number
+      const roomSearch = q.replace(/^room\s*/, '').trim();
+      const roomNumberMatch = roomSearch && roomSearch !== q ? roomNumber.includes(roomSearch) : false;
+      return nameMatch || roomMatch || roomNumberMatch;
+    });
+  }, [renters, searchQuery]);
 
   useEffect(() => {
     if (user?.id) {
