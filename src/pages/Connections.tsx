@@ -98,7 +98,12 @@ const Connections = () => {
           <Tabs defaultValue="renters" className="w-full px-4">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="renters">Renters</TabsTrigger>
-              <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
+              <TabsTrigger value="collaborators" className="flex items-center gap-2">
+                Collaborators
+                {pendingCollaboratorCount > 0 && (
+                  <Badge variant="destructive">{pendingCollaboratorCount}</Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="renters" className="mt-0 -mx-4">
               <RentersPage
