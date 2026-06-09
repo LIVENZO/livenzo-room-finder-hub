@@ -22,6 +22,13 @@ const Connections = () => {
   const isOwner = userRole === 'owner';
   const notificationState = location.state as any;
 
+  // Fetch collaborations for pending badge on Collaborators tab
+  const { collaborations } = useCollaborations();
+  const pendingCollaboratorCount = useMemo(
+    () => collaborations.filter(c => c.i_am === 'owner' && c.status === 'pending').length,
+    [collaborations]
+  );
+
   // Parse query params to support direct deep links without history state
   const searchParams = new URLSearchParams(location.search);
   const queryTab = searchParams.get('tab') || undefined;
