@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
 import RentersPage from '@/components/owner/RentersPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import CollaborationCenter from '@/components/collaboration/CollaborationCenter';
 import UserSearch from '@/components/relationship/UserSearch';
+import { useCollaborations } from '@/hooks/useCollaborations';
 
 const Connections = () => {
   const {
