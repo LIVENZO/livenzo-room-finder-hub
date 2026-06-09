@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import ConnectWithOwner from '@/components/renter/ConnectWithOwner';
 import RentersPage from '@/components/owner/RentersPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import CollaborationCenter from '@/components/collaboration/CollaborationCenter';
 import UserSearch from '@/components/relationship/UserSearch';
+import { useCollaborations } from '@/hooks/useCollaborations';
 
 const Connections = () => {
   const {
@@ -19,6 +21,13 @@ const Connections = () => {
   const { relationshipId } = useParams<{ relationshipId: string }>();
   const isOwner = userRole === 'owner';
   const notificationState = location.state as any;
+
+  // Fetch collaborations for pending badge on Collaborators tab
+  const { collaborations } = useCollaborations();
+  const pendingCollaboratorCount = useMemo(
+    () => collaborations.filter(c => c.i_am === 'owner' && c.status === 'pending').length,
+    [collaborations]
+  );
 
   // Parse query params to support direct deep links without history state
   const searchParams = new URLSearchParams(location.search);
@@ -89,7 +98,12 @@ const Connections = () => {
           <Tabs defaultValue="renters" className="w-full px-4">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="renters">Renters</TabsTrigger>
-              <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
+              <TabsTrigger value="collaborators" className="flex items-center gap-2">
+                Collaborators
+                {pendingCollaboratorCount > 0 && (
+                  <Badge variant="destructive">{pendingCollaboratorCount}</Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="renters" className="mt-0 -mx-4">
               <RentersPage
