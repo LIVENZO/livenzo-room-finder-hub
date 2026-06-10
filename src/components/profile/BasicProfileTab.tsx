@@ -1,11 +1,14 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileForm from './ProfileForm';
 import UserIdDisplay from './UserIdDisplay';
 import { UserProfile } from '@/services/UserProfileService';
 import { User } from '@supabase/supabase-js';
 import { useOwnerProperty } from '@/context/OwnerPropertyContext';
+import { Button } from '@/components/ui/button';
+import { Building, Info } from 'lucide-react';
 
 interface BasicProfileTabProps {
   profile: UserProfile | null;
@@ -31,7 +34,10 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
   onImageUpload,
   isOwner = false
 }) => {
-  const { activeProperty } = useOwnerProperty();
+  const navigate = useNavigate();
+  const { activeProperty, properties } = useOwnerProperty();
+  const hasProperty = properties.length > 0;
+
   // For owners, show the active property's public_id so switching property
   // instantly updates the visible Owner ID. Renters keep their profile public_id.
   const displayPublicId = isOwner
@@ -63,15 +69,49 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
         />
       </div>
 
-      {/* Owner ID Section — per-property for owners */}
-      {displayPublicId && (
+      {/* Owner ID Section — only show if owner has at least one property */}
+      {isOwner && (
+        <div className="w-full">
+          {hasProperty ? (
+            <div className="bg-muted/30 rounded-lg p-6 border space-y-2">
+              {propertyLabel && (
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  {propertyLabel}
+                </p>
+              )}
+              <UserIdDisplay publicId={displayPublicId || ''} />
+            </div>
+          ) : (
+            <div className="bg-muted/30 rounded-lg p-6 border space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">
+                  <Info className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Owner ID Not Available
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Please add your property first to get your Owner ID. Renters will use this ID to find and connect with you.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/add-property')}
+                className="w-full h-12 rounded-xl bg-primary text-white font-semibold shadow-sm active:scale-[0.98] transition-transform"
+              >
+                <Building className="h-4 w-4 mr-2" />
+                Add Property
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Renter ID Section */}
+      {!isOwner && displayPublicId && (
         <div className="w-full">
           <div className="bg-muted/30 rounded-lg p-6 border space-y-2">
-            {propertyLabel && (
-              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                {propertyLabel}
-              </p>
-            )}
             <UserIdDisplay publicId={displayPublicId} />
           </div>
         </div>
