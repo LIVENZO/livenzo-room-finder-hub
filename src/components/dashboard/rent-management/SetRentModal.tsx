@@ -134,7 +134,7 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
 
     setSaving(true);
     try {
-      const { error } = await supabase.rpc('set_renter_monthly_rent', {
+      const { data: rpcData, error } = await supabase.rpc('set_renter_monthly_rent', {
         p_renter_id: renter.id,
         p_monthly_rent: Number(rentAmount),
         p_next_due_date: format(dueDate, 'yyyy-MM-dd')
@@ -145,16 +145,15 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
         return;
       }
 
-      if (user?.id) {
+      const agreementId = (rpcData as any)?.agreement_id as string | undefined;
+      if (agreementId) {
         await supabase
           .from('rental_agreements')
           .update({
             security_deposit: Number(securityDeposit) || 0,
             maintenance_amount: Number(maintenanceAmount) || 0,
           })
-          .eq('owner_id', user.id)
-          .eq('renter_id', renter.id)
-          .eq('status', 'active');
+          .eq('id', agreementId);
       }
 
       toast.success(`✅ Payment details saved for ${renter.full_name}!`);
