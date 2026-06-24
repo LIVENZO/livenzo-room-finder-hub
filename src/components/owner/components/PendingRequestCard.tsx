@@ -39,9 +39,15 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
               <h3 className="font-semibold text-lg">
                 {relationship.renter?.full_name || 'Renter'}
               </h3>
-              <p className="text-sm text-gray-500 mb-2">
-                Renter ID: {relationship.renter_id}
-              </p>
+              {relationship.renter?.room_number ? (
+                <p className="text-sm text-foreground/80 mb-2">
+                  Room No: <span className="font-semibold">{relationship.renter.room_number}</span>
+                </p>
+              ) : (
+                <p className="text-sm text-destructive font-medium mb-2">
+                  Room Number Required
+                </p>
+              )}
               <p className="text-sm text-gray-600">
                 Requested on: {new Date(relationship.created_at).toLocaleDateString()}
               </p>
