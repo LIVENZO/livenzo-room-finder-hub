@@ -19,6 +19,11 @@ export const createRelationshipRequest = async (
       toast.error("Please complete your profile before sending a connection request");
       return null;
     }
+    // Room Number is mandatory for renters when sending a connection request
+    if (!renterProfile?.room_number || !renterProfile.room_number.trim()) {
+      toast.error("Please enter your Room Number");
+      return null;
+    }
     
     // Check if renter already has an active (accepted) connection with any owner
     const { data: activeConnections, error: activeCheckError } = await supabase

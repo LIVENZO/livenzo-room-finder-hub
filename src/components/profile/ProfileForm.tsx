@@ -101,7 +101,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
       {/* House/Room No. Field */}
       <div className="space-y-3">
         <Label htmlFor="roomNumber" className="text-base font-semibold text-foreground">
-          {isOwner ? 'House No.' : 'Room No.'}
+          {isOwner ? 'House No.' : 'Room No.'}{!isOwner && <span className="text-destructive"> *</span>}
         </Label>
         <Input
           id="roomNumber"
@@ -109,12 +109,22 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ formValues, profile, onInputC
           value={formValues.roomNumber}
           onChange={handleSecureInputChange}
           placeholder="e.g., 202, A-101, 15B"
-          className="h-12 text-base"
+          className={`h-12 text-base ${!isOwner && !formValues.roomNumber ? "border-destructive/50 focus-visible:ring-destructive/20" : ""}`}
+          required={!isOwner}
         />
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Optional: Specify your {isOwner ? 'house' : 'room'} number for easier identification
-        </p>
+        {!isOwner && !formValues.roomNumber ? (
+          <p className="text-sm text-destructive font-medium">
+            Please enter your Room Number
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {isOwner
+              ? 'Optional: Specify your house number for easier identification'
+              : 'Required so your owner can identify your room'}
+          </p>
+        )}
       </div>
+
       
       {/* Bio Field */}
       <div className="space-y-3">
