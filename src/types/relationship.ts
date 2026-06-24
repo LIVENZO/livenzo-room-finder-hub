@@ -16,6 +16,7 @@ export interface Relationship {
   renter?: {
     full_name: string;
     avatar_url: string;
+    room_number?: string | null;
   };
 }
 
