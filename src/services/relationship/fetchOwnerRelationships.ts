@@ -50,7 +50,7 @@ export const fetchOwnerRelationships = async (
           // Fetch renter profile
           const { data: renterProfile } = await supabase
             .from("user_profiles")
-            .select("full_name, avatar_url")
+            .select("full_name, avatar_url, room_number")
             .eq("id", relationship.renter_id)
             .single();
             
@@ -59,6 +59,7 @@ export const fetchOwnerRelationships = async (
             renter: {
               full_name: renterProfile?.full_name || 'Unknown User',
               avatar_url: renterProfile?.avatar_url || '',
+              room_number: renterProfile?.room_number || null,
             }
           };
         } catch (err) {
@@ -68,6 +69,7 @@ export const fetchOwnerRelationships = async (
             renter: {
               full_name: 'Unknown User',
               avatar_url: '',
+              room_number: null,
             }
           };
         }
