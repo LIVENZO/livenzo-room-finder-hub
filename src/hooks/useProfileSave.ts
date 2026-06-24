@@ -35,7 +35,13 @@ export const useProfileSave = (
 
   const handleSave = async () => {
     if (!user || !profile) return;
-    
+
+    // Renters must provide a Room Number
+    if (!isOwner && (!formValues.roomNumber || !formValues.roomNumber.trim())) {
+      toast.error("Please enter your Room Number");
+      return;
+    }
+
     setSaving(true);
     
     const updatedProfile: Partial<UserProfile> & { id: string } = {
