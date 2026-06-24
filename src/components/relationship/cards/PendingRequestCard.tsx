@@ -34,6 +34,17 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
         </Avatar>
         <div>
           <p className="font-medium">{displayUser?.full_name || (isOwner ? 'Unknown Renter' : 'Unknown Owner')}</p>
+          {isOwner && (
+            relationship.renter?.room_number ? (
+              <p className="text-xs text-foreground/80 mt-0.5">
+                Room No: <span className="font-semibold">{relationship.renter.room_number}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-destructive font-medium mt-0.5">
+                Room Number Required
+              </p>
+            )
+          )}
           <Badge variant="outline" className="mt-1">{isOwner ? 'Renter' : 'Owner'}</Badge>
         </div>
       </div>
