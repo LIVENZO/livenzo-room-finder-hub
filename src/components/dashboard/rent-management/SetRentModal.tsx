@@ -106,6 +106,7 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   const [showQR, setShowQR] = useState(false);
   const [ownerUpiId, setOwnerUpiId] = useState('');
   const [ownerName, setOwnerName] = useState('');
+  const [roomNumber, setRoomNumber] = useState<string>('');
 
   const rentRef = useRef<HTMLInputElement>(null);
   const depositRef = useRef<HTMLInputElement>(null);
