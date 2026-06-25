@@ -236,7 +236,8 @@ export const useRentersManagement = (
       if (acceptedRelationship?.renter) {
         setRenterForRent({
           id: acceptedRelationship.renter_id,
-          full_name: acceptedRelationship.renter.full_name
+          full_name: acceptedRelationship.renter.full_name,
+          room_number: (acceptedRelationship.renter as any).room_number || undefined,
         });
         setShowSetRentModal(true);
       }
