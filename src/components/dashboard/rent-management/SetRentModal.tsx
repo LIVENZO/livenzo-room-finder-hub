@@ -200,7 +200,18 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   React.useEffect(() => {
     if (isOpen && renter) {
       setRentAmount(renter.current_rent?.toString() || '');
+      setRoomNumber(renter.room_number || '');
       if (!dueDate) setDueDate(new Date());
+
+      // Always fetch the latest room number from the renter's profile
+      supabase
+        .from('user_profiles')
+        .select('room_number')
+        .eq('id', renter.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.room_number) setRoomNumber(data.room_number);
+        });
 
       if (user?.id && renter.id) {
         supabase
