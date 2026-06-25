@@ -106,6 +106,7 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   const [showQR, setShowQR] = useState(false);
   const [ownerUpiId, setOwnerUpiId] = useState('');
   const [ownerName, setOwnerName] = useState('');
+  const [roomNumber, setRoomNumber] = useState<string>('');
 
   const rentRef = useRef<HTMLInputElement>(null);
   const depositRef = useRef<HTMLInputElement>(null);
@@ -199,7 +200,18 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
   React.useEffect(() => {
     if (isOpen && renter) {
       setRentAmount(renter.current_rent?.toString() || '');
+      setRoomNumber(renter.room_number || '');
       if (!dueDate) setDueDate(new Date());
+
+      // Always fetch the latest room number from the renter's profile
+      supabase
+        .from('user_profiles')
+        .select('room_number')
+        .eq('id', renter.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.room_number) setRoomNumber(data.room_number);
+        });
 
       if (user?.id && renter.id) {
         supabase
@@ -249,14 +261,14 @@ const SetRentModal: React.FC<SetRentModalProps> = ({
                   <p className="text-base font-bold text-foreground truncate">{renter.full_name}</p>
                 </div>
               </div>
-              {renter.room_number && (
+              {roomNumber && (
                 <div className="flex items-center gap-3 mt-3 pt-3 border-t border-primary/10">
                   <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
                     <DoorOpen className="h-6 w-6 text-amber-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-muted-foreground font-medium">Room Number</p>
-                    <p className="text-base font-bold text-foreground">{renter.room_number}</p>
+                    <p className="text-base font-bold text-foreground">🏠 Room No: {roomNumber}</p>
                   </div>
                 </div>
               )}

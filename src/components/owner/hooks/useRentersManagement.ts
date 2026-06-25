@@ -40,7 +40,7 @@ export const useRentersManagement = (
   const [selectedTab, setSelectedTab] = useState<string>('overview');
   const [viewMode, setViewMode] = useState<'full' | 'documents' | 'complaints'>('full');
   const [showSetRentModal, setShowSetRentModal] = useState(false);
-  const [renterForRent, setRenterForRent] = useState<{ id: string; full_name: string } | null>(null);
+  const [renterForRent, setRenterForRent] = useState<{ id: string; full_name: string; room_number?: string } | null>(null);
 
   const fetchRelationships = useCallback(async () => {
     try {
@@ -236,7 +236,8 @@ export const useRentersManagement = (
       if (acceptedRelationship?.renter) {
         setRenterForRent({
           id: acceptedRelationship.renter_id,
-          full_name: acceptedRelationship.renter.full_name
+          full_name: acceptedRelationship.renter.full_name,
+          room_number: (acceptedRelationship.renter as any).room_number || undefined,
         });
         setShowSetRentModal(true);
       }
