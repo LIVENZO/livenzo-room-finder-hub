@@ -102,12 +102,35 @@ export const sendNoticeToAllRenters = async (
       property_id: propertyId ?? null,
     }));
 
-    const { error } = await supabase.from("notices").insert(notices);
+    const { data: insertedNotices, error } = await supabase
+      .from("notices")
+      .insert(notices)
+      .select();
 
     if (error) {
       console.error("Error sending notices:", error);
       toast.error("Failed to send notices");
       return false;
+    }
+
+    // Send push notifications to each renter (don't block on failures)
+    try {
+      await Promise.all(
+        (insertedNotices || []).map((notice: any) =>
+          supabase.functions
+            .invoke('send-push-notification', {
+              body: { type: 'notice', record: notice },
+            })
+            .then(({ error: pushErr }) => {
+              if (pushErr) {
+                console.warn('⚠️ Push notification failed for notice', notice.id, pushErr);
+              }
+            })
+            .catch((e) => console.warn('⚠️ Push invoke exception:', e)),
+        ),
+      );
+    } catch (e) {
+      console.warn('⚠️ Notice push notifications batch failed:', e);
     }
 
     toast.success(`Notice sent to ${renterIds.length} renter${renterIds.length === 1 ? '' : 's'}`);
