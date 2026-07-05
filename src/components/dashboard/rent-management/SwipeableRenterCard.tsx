@@ -3,7 +3,7 @@ import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Clock, Camera, Download, User, History, Zap, Home, Plus } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Camera, Download, User, History, Zap, Home, Plus, CalendarDays, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeterPhoto } from './ActiveRentersList';
 import { MeterPhotoViewModal } from '@/components/owner/MeterPhotoViewModal';
@@ -200,16 +200,32 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
     switch (status) {
       case 'paid':
         return (
-          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 font-medium text-xs">
-            Paid
-          </Badge>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="text-xs font-bold text-emerald-700">Paid</span>
+          </div>
         );
       case 'unpaid':
-        return <Badge variant="destructive" className="font-medium text-xs">Unpaid</Badge>;
+        return (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200">
+            <XCircle className="h-3.5 w-3.5 text-rose-600" />
+            <span className="text-xs font-bold text-rose-700">Overdue</span>
+          </div>
+        );
       case 'pending':
-        return <Badge variant="secondary" className="font-medium text-xs">Pending</Badge>;
+        return (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
+            <Clock className="h-3.5 w-3.5 text-amber-600" />
+            <span className="text-xs font-bold text-amber-700">Pending</span>
+          </div>
+        );
       default:
-        return <Badge variant="outline" className="text-xs">Unknown</Badge>;
+        return (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-bold text-muted-foreground">Unknown</span>
+          </div>
+        );
     }
   };
 
@@ -249,9 +265,9 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
       {/* Main Card Content */}
       <motion.div
         className={cn(
-          "relative z-10 bg-card px-4 py-6 cursor-grab transition-colors",
+          "relative z-10 bg-card cursor-grab transition-colors",
           isDragging && "cursor-grabbing",
-          !isDemo && "hover:bg-muted/30 active:bg-muted/50"
+          !isDemo && "hover:bg-muted/20 active:bg-muted/40"
         )}
         drag="x"
         dragConstraints={constraintsRef}
@@ -272,157 +288,139 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <div className="flex items-center gap-4">
-          {/* Left: Avatar */}
-          <Avatar className="h-14 w-14 ring-2 ring-border/20 flex-shrink-0">
-            <AvatarImage src={renter.renter.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
-              {renter.renter.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'R'}
-            </AvatarFallback>
-          </Avatar>
-          
-          {/* Center: Renter Info */}
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-bold text-base text-foreground leading-tight">
-              {renter.renter.full_name || 'Unknown Renter'}
-            </h3>
+        <div className="p-5">
+          {/* Header: Avatar + Identity + Status */}
+          <div className="flex items-start gap-3.5">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/10 flex-shrink-0">
+              <AvatarImage src={renter.renter.avatar_url || ''} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                {renter.renter.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'R'}
+              </AvatarFallback>
+            </Avatar>
             
-            {renter.renter.room_number && (
-              <p className="text-sm font-medium text-muted-foreground">
-                Room {renter.renter.room_number}
-              </p>
-            )}
-            
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-sm font-semibold text-foreground">
-                ₹{renter.amount.toLocaleString()}
-              </span>
-              <motion.div
-                animate={{ 
-                  scale: statusOverride ? [1, 1.1, 1] : 1,
-                  rotateZ: statusOverride ? [0, 5, -5, 0] : 0
-                }}
-                transition={{ duration: 0.5 }}
-              >
-                {getStatusBadge(statusOverride || renter.paymentStatus)}
-              </motion.div>
-            </div>
-            
-            {/* Financial Details — Rent + Electricity Bill */}
-            <div className="mt-2 pt-2 border-t border-border/40">
-              <div className="grid grid-cols-2 gap-2">
-                {/* Monthly Rent */}
-                <div className="flex flex-col items-center gap-0.5 bg-muted/40 rounded-lg px-2 py-1.5">
-                  <div className="flex items-center gap-1">
-                    <Home className="h-3 w-3 text-primary/80" />
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rent</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">₹{renter.amount.toLocaleString()}</span>
-                </div>
-
-                {/* Electricity Bill */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowElectricityModal(true);
-                  }}
-                  className="flex flex-col items-center gap-0.5 bg-muted/40 hover:bg-muted/70 transition-colors rounded-lg px-2 py-1.5 text-left"
-                >
-                  <div className="flex items-center gap-1">
-                    <Zap className="h-3 w-3 text-amber-500" />
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Electricity</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                    {renter.electricityBillAmount && renter.electricityBillAmount > 0
-                      ? `₹${renter.electricityBillAmount.toLocaleString()}`
-                      : (
-                        <>
-                          <Plus className="h-3 w-3" /> Add
-                        </>
-                      )}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            
-            {/* Due Date Display */}
-            {renter.dueDate && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Due: {new Date(renter.dueDate).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </p>
-            )}
-
-            {/* Meter Photos Display */}
-            {renter.relationshipId && meterPhotos[renter.relationshipId] && meterPhotos[renter.relationshipId].length > 0 && (
-              <div className="pt-2">
-                <div className="flex items-center gap-1 text-xs text-green-600 font-medium mb-1">
-                  <Camera className="h-3 w-3" />
-                  Meter Photo Uploaded
-                </div>
-                <div className="flex gap-2">
-                  {meterPhotos[renter.relationshipId].slice(0, 2).map((photo) => (
-                    <div key={photo.id} className="relative group">
-                      <img
-                        src={photo.photo_url}
-                        alt="Meter reading"
-                        className="w-12 h-12 object-cover rounded border cursor-pointer"
-                        onClick={() => window.open(photo.photo_url, '_blank')}
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                        <Download className="h-3 w-3 text-white" />
-                      </div>
-                    </div>
-                  ))}
-                  {meterPhotos[renter.relationshipId].length > 2 && (
-                    <div className="w-12 h-12 bg-muted rounded border flex items-center justify-center text-xs font-medium text-muted-foreground">
-                      +{meterPhotos[renter.relationshipId].length - 2}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-base leading-snug truncate">
+                    {renter.renter.full_name || 'Unknown Renter'}
+                  </h3>
+                  {renter.renter.room_number && (
+                    <div className="flex items-center gap-1 mt-0.5 text-sm text-muted-foreground">
+                      <Home className="h-3.5 w-3.5 text-primary/60" />
+                      <span>Room {renter.renter.room_number}</span>
                     </div>
                   )}
                 </div>
+                <motion.div
+                  animate={{ 
+                    scale: statusOverride ? [1, 1.1, 1] : 1,
+                    rotateZ: statusOverride ? [0, 5, -5, 0] : 0
+                  }}
+                  transition={{ duration: 0.5 }}
+                  className="flex-shrink-0"
+                >
+                  {getStatusBadge(statusOverride || renter.paymentStatus)}
+                </motion.div>
               </div>
-            )}
-
-            {/* Payment History Button */}
-            <div className="pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowPaymentHistory(true);
-                }}
-                className="w-full text-xs"
-              >
-                <History className="h-3 w-3 mr-1" />
-                View Payment History
-              </Button>
             </div>
           </div>
-          
-          {/* Right: Status Icon */}
-          <div className="flex-shrink-0 flex items-center">
-            <motion.div
-              animate={{ 
-                scale: statusOverride ? [1, 1.2, 1] : 1,
-                rotateY: statusOverride ? [0, 180, 360] : 0
+
+          {/* Divider */}
+          <div className="my-4 border-t border-border/30" />
+
+          {/* Financial Details Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Monthly Rent */}
+            <div className="flex flex-col gap-1.5 bg-muted/40 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <Home className="h-3.5 w-3.5 text-primary/70" />
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Rent</span>
+              </div>
+              <span className="text-lg font-bold text-foreground tracking-tight">₹{renter.amount.toLocaleString()}</span>
+            </div>
+
+            {/* Electricity Bill */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowElectricityModal(true);
               }}
-              transition={{ duration: 0.6 }}
+              className="flex flex-col gap-1.5 bg-muted/40 hover:bg-muted/70 active:bg-muted/90 transition-colors rounded-xl px-4 py-3 text-left"
             >
-              {getStatusIcon(statusOverride || renter.paymentStatus)}
-            </motion.div>
-            {isProcessing && (
-              <motion.div
-                className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
-                animate={{ scale: [0, 1, 0] }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              />
-            )}
+              <div className="flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Electricity</span>
+              </div>
+              <span className="text-lg font-bold text-foreground tracking-tight flex items-center gap-1">
+                {renter.electricityBillAmount && renter.electricityBillAmount > 0
+                  ? `₹${renter.electricityBillAmount.toLocaleString()}`
+                  : (
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Plus className="h-3.5 w-3.5" />
+                      Add
+                    </span>
+                  )
+                }
+              </span>
+            </button>
           </div>
+
+          {/* Due Date */}
+          {renter.dueDate && (
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarDays className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>Due <span className="font-semibold text-foreground">{new Date(renter.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span></span>
+            </div>
+          )}
+
+          {/* Payment History Button */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPaymentHistory(true);
+              }}
+              className="w-full flex items-center justify-between gap-2 py-3 px-4 rounded-xl bg-primary/[0.06] hover:bg-primary/[0.10] active:bg-primary/[0.14] text-primary font-semibold text-sm transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                View Payment History
+              </div>
+              <ChevronRight className="h-4 w-4 opacity-40" />
+            </button>
+          </div>
+
+          {/* Meter Photos Display */}
+          {renter.relationshipId && meterPhotos[renter.relationshipId] && meterPhotos[renter.relationshipId].length > 0 && (
+            <div className="mt-4 pt-3 border-t border-border/30">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold mb-2">
+                <Camera className="h-3 w-3" />
+                Meter Photo Uploaded
+              </div>
+              <div className="flex gap-2">
+                {meterPhotos[renter.relationshipId].slice(0, 2).map((photo) => (
+                  <div key={photo.id} className="relative group">
+                    <img
+                      src={photo.photo_url}
+                      alt="Meter reading"
+                      className="w-12 h-12 object-cover rounded-lg border border-border/40 cursor-pointer"
+                      onClick={() => window.open(photo.photo_url, '_blank')}
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Download className="h-3 w-3 text-white" />
+                    </div>
+                  </div>
+                ))}
+                {meterPhotos[renter.relationshipId].length > 2 && (
+                  <div className="w-12 h-12 bg-muted rounded-lg border border-border/40 flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                    +{meterPhotos[renter.relationshipId].length - 2}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -430,12 +428,12 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
       {isDragging && swipeDirection && (
         <motion.div
           className={cn(
-            "absolute top-2 z-20 px-3 py-1 rounded-full text-white text-sm font-semibold",
-            swipeDirection === 'left' ? "left-2 bg-red-500" : "right-2 bg-green-500"
+            "absolute top-3 z-20 px-3 py-1 rounded-full text-white text-sm font-bold shadow-lg",
+            swipeDirection === 'left' ? "left-3 bg-red-500" : "right-3 bg-emerald-500"
           )}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0 }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
         >
           {swipeDirection === 'left' ? 'Unpaid' : 'Paid'}
         </motion.div>

@@ -295,15 +295,27 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
   if (loading) {
     return (
       <div className="px-4">
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse flex items-center gap-4 p-6 bg-card border-b border-border/50">
-              <div className="h-14 w-14 bg-muted rounded-full"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
+            <div key={i} className="animate-pulse rounded-2xl shadow-soft border border-border/30 bg-card p-5">
+              <div className="flex items-start gap-3.5">
+                <div className="h-12 w-12 bg-muted rounded-full flex-shrink-0"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/3"></div>
+                    </div>
+                    <div className="h-7 w-20 bg-muted rounded-full"></div>
+                  </div>
+                  <div className="pt-2 border-t border-border/30"></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-16 bg-muted rounded-xl"></div>
+                    <div className="h-16 bg-muted rounded-xl"></div>
+                  </div>
+                  <div className="h-10 bg-muted rounded-xl"></div>
+                </div>
               </div>
-              <div className="h-11 w-28 bg-muted rounded"></div>
             </div>
           ))}
         </div>
@@ -363,7 +375,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             </p>
           </div>
         ) : (
-          <div className="px-4 py-2 space-y-3">
+          <div className="px-4 py-2 space-y-4">
             {filteredRenters.map((renter, index) => (
               <SwipeableRenterCard
                 key={renter.id}
