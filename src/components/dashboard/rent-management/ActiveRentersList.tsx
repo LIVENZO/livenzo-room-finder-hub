@@ -375,7 +375,7 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             </p>
           </div>
         ) : (
-        <div className="px-4 py-2 space-y-4">
+          <div className="px-4 py-2 space-y-4">
             {filteredRenters.map((renter, index) => (
               <SwipeableRenterCard
                 key={renter.id}
