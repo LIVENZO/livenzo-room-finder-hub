@@ -216,9 +216,7 @@ const SwipeableRenterCard: React.FC<SwipeableRenterCardProps> = ({
   return (
     <div 
       ref={constraintsRef}
-      className={`relative overflow-hidden bg-card border-b border-border/50 ${
-        index === 0 ? 'border-t border-border/50' : ''
-      }`}
+      className="relative overflow-hidden rounded-2xl shadow-soft border border-border/30 bg-card"
     >
       {/* Background Actions */}
       <motion.div

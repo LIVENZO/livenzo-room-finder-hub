@@ -363,18 +363,20 @@ const ActiveRentersList: React.FC<ActiveRentersListProps> = ({
             </p>
           </div>
         ) : (
-          filteredRenters.map((renter, index) => (
-            <SwipeableRenterCard
-              key={renter.id}
-              renter={renter}
-              index={index}
-              onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
-              meterPhotos={meterPhotos}
-              onAddPayment={onAddPayment}
-              ownerId={ownerId}
-              onRefresh={onRefresh}
-            />
-          ))
+          <div className="px-4 py-2 space-y-3">
+            {filteredRenters.map((renter, index) => (
+              <SwipeableRenterCard
+                key={renter.id}
+                renter={renter}
+                index={index}
+                onSwipeAction={(renterId, action) => handleSwipeAction(renterId, action, renter)}
+                meterPhotos={meterPhotos}
+                onAddPayment={onAddPayment}
+                ownerId={ownerId}
+                onRefresh={onRefresh}
+              />
+            ))}
+          </div>
         )}
       </div>
 
