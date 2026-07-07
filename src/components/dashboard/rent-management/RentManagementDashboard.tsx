@@ -4,7 +4,6 @@ import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import RentSummaryCards from './RentSummaryCards';
-import SetRentListPage from './SetRentListPage';
 import { usePropertyScope } from '@/hooks/usePropertyScope';
 
 interface RentStats {
@@ -27,9 +26,8 @@ const RentManagementDashboard: React.FC = () => {
     pendingAmount: 0,
     activeRenters: 0
   });
-  
+
   const [loading, setLoading] = useState(true);
-  const [showSetRentPage, setShowSetRentPage] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -121,19 +119,10 @@ const RentManagementDashboard: React.FC = () => {
     } else if (type === 'pending') {
       navigate('/pending-renters');
     } else if (type === 'setrent') {
-      setShowSetRentPage(true);
+      navigate('/set-monthly-rent');
     }
     // Add more actions for other cards if needed
   };
-
-  const handleBackFromSetRent = () => {
-    setShowSetRentPage(false);
-    fetchStats();
-  };
-
-  if (showSetRentPage) {
-    return <SetRentListPage onBack={handleBackFromSetRent} />;
-  }
 
   return (
     <div className="space-y-6">

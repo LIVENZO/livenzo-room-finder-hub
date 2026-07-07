@@ -10,6 +10,7 @@ import ProfileCompletionCheck from "./components/ProfileCompletionCheck";
 import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
 import SetLocation from "./pages/SetLocation";
+import SetMonthlyRent from "./pages/SetMonthlyRent";
 import { useState } from "react";
 
 import Index from "./pages/Index";
@@ -81,7 +82,7 @@ const App = () => {
               <Route path="/payments" element={<Payments />} />
               <Route path="/active-renters" element={<ActiveRenters />} />
               <Route path="/pending-renters" element={<PendingRenters />} />
-              <Route path="/set-location" element={<SetLocation />} />
+              <Route path="/set-monthly-rent" element={<SetMonthlyRent />} />
               <Route path="/firebase-test" element={<FirebaseTest />} />
               <Route path="/notification-test" element={<NotificationTest />} />
               <Route path="/add-property" element={<AddProperty />} />
