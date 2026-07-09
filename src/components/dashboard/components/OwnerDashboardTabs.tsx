@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, DollarSign } from 'lucide-react';
@@ -31,8 +32,22 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
   onManageConnectionsClick,
   userId
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam === 'rent' || tabParam === 'notices' ? tabParam : 'dashboard';
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === 'dashboard') {
+      next.delete('tab');
+    } else {
+      next.set('tab', value);
+    }
+    setSearchParams(next, { replace: false });
+  };
+
   return (
-    <Tabs defaultValue="dashboard" className="space-y-6">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
       {/* Mobile-optimized sticky tabs with horizontal scroll */}
       <div className="sticky top-0 z-10 bg-gradient-radial/95 backdrop-blur-sm pb-2">
         <div className="w-full overflow-x-auto scrollbar-hide">
