@@ -703,6 +703,7 @@ export type Database = {
         Row: {
           accommodation_type: string | null
           created_at: string
+          hero_images: string[]
           hostel_pg_name: string
           house_number: string | null
           id: string
@@ -724,6 +725,7 @@ export type Database = {
         Insert: {
           accommodation_type?: string | null
           created_at?: string
+          hero_images?: string[]
           hostel_pg_name: string
           house_number?: string | null
           id?: string
@@ -745,6 +747,7 @@ export type Database = {
         Update: {
           accommodation_type?: string | null
           created_at?: string
+          hero_images?: string[]
           hostel_pg_name?: string
           house_number?: string | null
           id?: string
@@ -1773,6 +1776,7 @@ export type Database = {
         Returns: {
           accommodation_type: string | null
           created_at: string
+          hero_images: string[]
           hostel_pg_name: string
           house_number: string | null
           id: string
@@ -2094,6 +2098,7 @@ export type Database = {
         Returns: {
           accommodation_type: string | null
           created_at: string
+          hero_images: string[]
           hostel_pg_name: string
           house_number: string | null
           id: string
