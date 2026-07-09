@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,18 +8,10 @@ import { fetchMyCollaborations } from "@/services/collaborationService";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { fetchUserProfile } from "@/services/UserProfileService";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import WelcomeHeader from "./components/WelcomeHeader";
 import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
+import OwnerHeroCarousel from "./OwnerHeroCarousel";
 import { usePropertyScope } from "@/hooks/usePropertyScope";
-
-const ownerHeroImages = [
-  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549274905_4gl3bp8nx9i.jpg",
-  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770549670438_r9uhoctwnhi.jpg",
-  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/e02288a5-2628-4a59-9f90-ac99151177f9/1768481622588_ba4c1lww6ke.jpg",
-  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1767528319032_j7mjrqzq9ol.jpg",
-  "https://naoqigivttgpkfwpzcgg.supabase.co/storage/v1/object/public/rooms/267fcf84-88d8-4ca9-b414-9976f3981a50/1770624046569_pmhxhc6obc.jpg",
-];
 
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -31,37 +23,6 @@ const OwnerDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pendingConnections, setPendingConnections] = useState(0);
   const [loadingConnections, setLoadingConnections] = useState(true);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-
-  const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % ownerHeroImages.length);
-  }, []);
-
-  const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + ownerHeroImages.length) % ownerHeroImages.length);
-  }, []);
-
-  // Auto-slide every 3.5 seconds
-  useEffect(() => {
-    const interval = setInterval(nextSlide, 3500);
-    return () => clearInterval(interval);
-  }, [nextSlide]);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) nextSlide();
-      else prevSlide();
-    }
-    setTouchStart(null);
-  };
 
   useEffect(() => {
     if (!user) return;
