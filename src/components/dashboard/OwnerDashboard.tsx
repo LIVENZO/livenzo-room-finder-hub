@@ -147,42 +147,9 @@ const OwnerDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Hero Carousel Section - identical to Renter Dashboard */}
-      <div
-        className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-medium"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        {ownerHeroImages.map((image, index) => (
-          <div
-            key={index}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-700",
-              index === currentSlide ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <img src={image} alt={`Room ${index + 1}`} className="w-full h-full object-cover" />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl shadow-lg animate-float">
-            <Home className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5">
-          {ownerHeroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all duration-300",
-                index === currentSlide ? "bg-white w-4" : "bg-white/50 hover:bg-white/70",
-              )}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Hero Carousel - per-property, owner can long-press Home icon to edit */}
+      <OwnerHeroCarousel />
+
 
       <OwnerDashboardTabs
         listingsCount={listingsCount}
