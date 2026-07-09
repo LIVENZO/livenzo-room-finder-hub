@@ -1,0 +1,1 @@
+ALTER TABLE public.owner_properties ADD COLUMN IF NOT EXISTS hero_images text[] NOT NULL DEFAULT '{}';
