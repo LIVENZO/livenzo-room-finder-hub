@@ -43,7 +43,7 @@ const OwnerDashboardTabs: React.FC<OwnerDashboardTabsProps> = ({
     } else {
       next.set('tab', value);
     }
-    setSearchParams(next, { replace: false });
+    setSearchParams(next, { replace: true });
   };
 
   return (
