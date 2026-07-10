@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import { Copy, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
+import OwnerQRModal from '@/components/relationship/OwnerQRModal';
 
 interface UserIdDisplayProps {
   publicId: string;
 }
 
 const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
+  const [qrOpen, setQrOpen] = useState(false);
+
   const copyPublicIdToClipboard = () => {
     navigator.clipboard.writeText(publicId);
     toast.success("Owner ID copied to clipboard");
@@ -20,8 +23,8 @@ const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
       <Label htmlFor="publicId" className="text-base font-semibold text-primary">
         Your Owner ID (for renters to find you)
       </Label>
-      <div className="flex gap-3">
-        <Input 
+      <div className="flex gap-2">
+        <Input
           id="publicId"
           value={publicId || 'Generating...'}
           readOnly
@@ -38,7 +41,19 @@ const UserIdDisplay: React.FC<UserIdDisplayProps> = ({ publicId }) => {
         >
           <Copy className="h-5 w-5" />
         </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={() => setQrOpen(true)}
+          disabled={!publicId}
+          title="Show QR code"
+          className="h-12 px-4 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+        >
+          <QrCode className="h-5 w-5" />
+        </Button>
       </div>
+
+      <OwnerQRModal open={qrOpen} onOpenChange={setQrOpen} publicId={publicId} />
     </div>
   );
 };
