@@ -15,29 +15,24 @@ export const useUserSearch = (currentUserId: string) => {
   const { requireComplete } = useProfileCompletion();
   const { isOwner } = useAuth();
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!searchId.trim()) {
+  const runSearch = async (rawId: string) => {
+    if (!rawId.trim()) {
       toast.error("Please enter a valid Owner ID");
       return;
     }
-    
-    const trimmedId = searchId.trim();
-    const normalizedId = trimmedId.toLowerCase();
+    const normalizedId = rawId.trim().toLowerCase();
     if (normalizedId.length < 3) {
       toast.error("Owner ID must be at least 3 characters");
       return;
     }
-    
     if (normalizedId.length > 10) {
       toast.error("Owner ID cannot be more than 10 characters");
       return;
     }
-    
+
     setIsSearching(true);
     setRequestError(null);
-    
+
     try {
       const user = await findUserById(normalizedId);
       if (user) {
@@ -60,6 +55,16 @@ export const useUserSearch = (currentUserId: string) => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await runSearch(searchId);
+  };
+
+  const searchByOwnerId = async (id: string) => {
+    setSearchId(id);
+    await runSearch(id);
   };
 
   const handleConnect = async () => {
