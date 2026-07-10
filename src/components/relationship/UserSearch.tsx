@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import UserSearchForm from './user-search/UserSearchForm';
 import SearchHelperText from './user-search/SearchHelperText';
 import UserSearchResults from './user-search/UserSearchResults';
 import SearchErrorMessage from './user-search/SearchErrorMessage';
+import QRScannerModal from './QRScannerModal';
 
 interface UserSearchProps {
   currentUserId: string;
@@ -19,14 +20,16 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
     requestSent,
     requestError,
     handleSearch,
+    searchByOwnerId,
     handleConnect,
     clearSearch,
     searchAnother
   } = useUserSearch(currentUserId);
 
+  const [scannerOpen, setScannerOpen] = useState(false);
+
   return (
     <div className="space-y-6">
-      {/* Search Form */}
       <UserSearchForm
         searchId={searchId}
         setSearchId={setSearchId}
@@ -34,17 +37,15 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
         requestSent={requestSent}
         onSubmit={handleSearch}
         onClear={clearSearch}
+        onScanClick={() => setScannerOpen(true)}
       />
 
-      {/* Helper Text */}
       <SearchHelperText />
 
-      {/* Error Message */}
       {requestError && !foundUser && (
         <SearchErrorMessage error={requestError} />
       )}
 
-      {/* Search Results */}
       {foundUser && (
         <UserSearchResults
           foundUser={foundUser}
@@ -54,6 +55,14 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
           onSearchAnother={searchAnother}
         />
       )}
+
+      <QRScannerModal
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScan={(id) => {
+          searchByOwnerId(id);
+        }}
+      />
     </div>
   );
 };
