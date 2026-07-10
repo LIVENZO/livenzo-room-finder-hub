@@ -122,6 +122,7 @@ export const useUserSearch = (currentUserId: string) => {
     requestSent,
     requestError,
     handleSearch,
+    searchByOwnerId,
     handleConnect,
     clearSearch,
     searchAnother
