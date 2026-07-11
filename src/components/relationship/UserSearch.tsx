@@ -32,14 +32,11 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId, autoOpenScanner 
 
   useEffect(() => {
     if (autoOpenScanner && !autoOpenedRef.current) {
-      const key = `livenzo:auto-scan:${currentUserId}`;
-      if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
-        autoOpenedRef.current = true;
-        sessionStorage.setItem(key, '1');
-        setScannerOpen(true);
-      }
+      autoOpenedRef.current = true;
+      setScannerOpen(true);
     }
-  }, [autoOpenScanner, currentUserId]);
+  }, [autoOpenScanner]);
+
 
   return (
     <div className="space-y-6">
