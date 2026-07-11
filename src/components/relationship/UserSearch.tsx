@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import UserSearchForm from './user-search/UserSearchForm';
 import SearchHelperText from './user-search/SearchHelperText';
@@ -9,9 +9,10 @@ import QRScannerModal from './QRScannerModal';
 
 interface UserSearchProps {
   currentUserId: string;
+  autoOpenScanner?: boolean;
 }
 
-const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
+const UserSearch: React.FC<UserSearchProps> = ({ currentUserId, autoOpenScanner = false }) => {
   const {
     searchId,
     setSearchId,
@@ -27,6 +28,18 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId }) => {
   } = useUserSearch(currentUserId);
 
   const [scannerOpen, setScannerOpen] = useState(false);
+  const autoOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoOpenScanner && !autoOpenedRef.current) {
+      const key = `livenzo:auto-scan:${currentUserId}`;
+      if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
+        autoOpenedRef.current = true;
+        sessionStorage.setItem(key, '1');
+        setScannerOpen(true);
+      }
+    }
+  }, [autoOpenScanner, currentUserId]);
 
   return (
     <div className="space-y-6">

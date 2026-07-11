@@ -12,6 +12,7 @@ interface ConnectionOverviewProps {
   onRelationshipSelect: (relationship: Relationship) => void;
   onStatusChange: () => void;
   isLoading: boolean;
+  autoOpenScanner?: boolean;
 }
 
 const ConnectionOverview: React.FC<ConnectionOverviewProps> = ({
@@ -22,12 +23,13 @@ const ConnectionOverview: React.FC<ConnectionOverviewProps> = ({
   onRelationshipSelect,
   onStatusChange,
   isLoading,
+  autoOpenScanner = false,
 }) => {
   return (
     <>
       {!isOwner && (
         <div className="mb-6">
-          <UserSearch currentUserId={currentUserId} />
+          <UserSearch currentUserId={currentUserId} autoOpenScanner={autoOpenScanner} />
         </div>
       )}
       
