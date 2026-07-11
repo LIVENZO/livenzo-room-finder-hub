@@ -2,7 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, X, QrCode } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import ScanQrIcon from '@/components/icons/ScanQrIcon';
+
 
 interface UserSearchFormProps {
   searchId: string;
