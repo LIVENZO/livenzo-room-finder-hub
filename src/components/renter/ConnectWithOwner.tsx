@@ -84,6 +84,7 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
         onRelationshipSelect={handleOwnerProfileView}
         onStatusChange={refreshRelationships}
         isLoading={loading}
+        autoOpenScanner={!loading && !activeRelationship}
       />
       
       {/* Previous Connections Section */}
