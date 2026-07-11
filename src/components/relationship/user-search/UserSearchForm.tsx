@@ -56,7 +56,7 @@ const UserSearchForm: React.FC<UserSearchFormProps> = ({
               aria-label="Scan Owner QR"
               title="Scan Owner QR"
             >
-              <QrCode className="h-5 w-5" />
+              <ScanQrIcon size={20} />
             </button>
           )}
         </div>
