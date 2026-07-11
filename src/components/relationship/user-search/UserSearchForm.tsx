@@ -2,7 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, X, QrCode } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import ScanQrIcon from '@/components/icons/ScanQrIcon';
+
 
 interface UserSearchFormProps {
   searchId: string;
@@ -54,7 +56,7 @@ const UserSearchForm: React.FC<UserSearchFormProps> = ({
               aria-label="Scan Owner QR"
               title="Scan Owner QR"
             >
-              <QrCode className="h-5 w-5" />
+              <ScanQrIcon size={20} />
             </button>
           )}
         </div>
