@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
@@ -10,7 +9,7 @@ import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
-import UserIdDisplay from '@/components/profile/UserIdDisplay';
+
 import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
@@ -83,64 +82,85 @@ const Profile = () => {
         </div>
       </Layout>;
   }
-  return <Layout>
-      <div className="w-full h-full min-h-screen">
-        <div className="w-full space-y-6">
+  return (
+    <Layout>
+      <div className="w-full min-h-screen bg-muted/20">
+        <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-5 pb-32">
           {/* Profile Completion Banner */}
           <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
-          
-          
-          {/* Main Profile Card */}
-          <Card className="shadow-none border-0 bg-transparent w-full">
-            
-            
-            <CardContent className="space-y-10">
-              {isOwner ? <OwnerProfileTabs profile={profile} user={user} formValues={formValues} ownerFormValues={ownerFormValues} uploadingImage={uploadingImage} onInputChange={handleInputChange} onOwnerInputChange={handleOwnerInputChange} onOwnerSelectChange={handleOwnerSelectChange} onImageUpload={handleImageUpload} onLocationSaved={handleLocationSaved} defaultTab={searchParams.get('tab') || 'basic'} /> : <div className="space-y-8">
-                  {/* Profile Avatar Section */}
-                  <div className="flex justify-center">
-                    <ProfileAvatar profile={profile} userEmail={user?.email} uploadingImage={uploadingImage} onImageUpload={handleImageUpload} />
+
+          {isOwner ? (
+            <OwnerProfileTabs
+              profile={profile}
+              user={user}
+              formValues={formValues}
+              ownerFormValues={ownerFormValues}
+              uploadingImage={uploadingImage}
+              onInputChange={handleInputChange}
+              onOwnerInputChange={handleOwnerInputChange}
+              onOwnerSelectChange={handleOwnerSelectChange}
+              onImageUpload={handleImageUpload}
+              onLocationSaved={handleLocationSaved}
+              defaultTab={searchParams.get('tab') || 'basic'}
+            />
+          ) : (
+            <div className="space-y-5">
+              {/* Renter Header */}
+              <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm">
+                <div className="relative p-6 flex flex-col items-center text-center gap-4">
+                  <ProfileAvatar
+                    profile={profile}
+                    userEmail={user?.email}
+                    uploadingImage={uploadingImage}
+                    onImageUpload={handleImageUpload}
+                  />
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-bold text-foreground leading-tight">
+                      {formValues.fullName || 'Your Profile'}
+                    </h2>
+                    {user?.email && (
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    )}
                   </div>
-                  
-                  {/* Profile Form Section */}
-                  <div className="w-full">
-                    <ProfileForm formValues={formValues} profile={profile} onInputChange={handleInputChange} isOwner={isOwner} />
-                  </div>
+                </div>
+              </section>
 
-                  {/* Room Number Display */}
-                  {!isOwner && formValues.roomNumber && <div className="w-full">
-                      <Card className="bg-secondary/30 border-secondary shadow-sm">
-                        <CardContent className="p-6">
-                          <div className="text-sm font-semibold text-secondary-foreground mb-2 uppercase tracking-wide">
-                            Room Number
-                          </div>
-                          <div className="text-lg font-medium text-foreground">
-                            {formValues.roomNumber}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>}
-                </div>}
+              <ProfileForm
+                formValues={formValues}
+                profile={profile}
+                onInputChange={handleInputChange}
+                isOwner={isOwner}
+              />
+            </div>
+          )}
 
-              {/* Property Information for Complete Owner Profiles */}
-              {isOwner && profile && isOwnerProfileComplete(profile) && <div className="border-t pt-8">
-                  <OwnerPropertyDisplay profile={profile} />
-                </div>}
+          {/* Property Information for Complete Owner Profiles */}
+          {isOwner && profile && isOwnerProfileComplete(profile) && (
+            <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6">
+              <OwnerPropertyDisplay profile={profile} />
+            </section>
+          )}
 
-              {/* Owner-to-Owner Collaboration */}
-              {isOwner && <div className="border-t pt-8">
-                  <ConnectAnotherProperty />
-                </div>}
-            </CardContent>
-            
-            <CardFooter className="pt-8 pb-8 bg-muted/20">
-              <div className="w-full">
-                <ProfileActions profile={profile} saving={saving} onSave={handleSave} isOwner={isOwner} />
-              </div>
-            </CardFooter>
-          </Card>
+          {/* Owner-to-Owner Collaboration */}
+          {isOwner && (
+            <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6">
+              <ConnectAnotherProperty />
+            </section>
+          )}
+
+          {/* Save Action */}
+          <div className="pt-2">
+            <ProfileActions
+              profile={profile}
+              saving={saving}
+              onSave={handleSave}
+              isOwner={isOwner}
+            />
+          </div>
         </div>
         <StickySaveBar dirty={dirty} saving={saving} onSave={handleSave} />
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
 export default Profile;

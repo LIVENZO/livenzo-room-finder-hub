@@ -19,18 +19,22 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
   const ownerComplete = isOwner ? isOwnerProfileComplete(profile) : true;
   // Actions enablement depends on basic profile only
   const fullyComplete = basicComplete;
-  return <div className="w-full space-y-6">
-      {/* Status Message */}
-      {!fullyComplete}
-      
-      {/* Save Button */}
-      <div className="flex justify-center md:justify-end">
-        <Button onClick={onSave} disabled={saving} size="lg" className="w-full md:w-auto px-8 py-3 h-auto text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-          {saving ? <>
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Saving Changes...
-            </> : 'Save Changes'}
-        </Button>
-      </div>
-    </div>;
+  return (
+    <div className="w-full">
+      <Button
+        onClick={onSave}
+        disabled={saving}
+        className="w-full h-14 rounded-2xl text-base font-semibold shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+      >
+        {saving ? (
+          <>
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Saving Changes...
+          </>
+        ) : (
+          'Save Changes'
+        )}
+      </Button>
+    </div>
+  );
 };
 export default ProfileActions;
