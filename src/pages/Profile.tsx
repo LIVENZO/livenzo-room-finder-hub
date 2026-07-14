@@ -9,7 +9,7 @@ import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
-import UserIdDisplay from '@/components/profile/UserIdDisplay';
+
 import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
