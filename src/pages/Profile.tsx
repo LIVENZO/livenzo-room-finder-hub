@@ -139,6 +139,7 @@ const Profile = () => {
             </CardFooter>
           </Card>
         </div>
+        <StickySaveBar dirty={dirty} saving={saving} onSave={handleSave} />
       </div>
     </Layout>;
 };
