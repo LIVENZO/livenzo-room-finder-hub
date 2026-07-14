@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
 import UserIdDisplay from '@/components/profile/UserIdDisplay';
+import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isOwnerProfileComplete } from '@/utils/profileUtils';
 import { toast } from 'sonner';
@@ -33,6 +34,28 @@ const Profile = () => {
     user,
     isOwner
   } = useProfileManagement();
+
+  // Detect unsaved changes by comparing form values to the saved profile
+  const dirty = useMemo(() => {
+    if (!profile) return false;
+    const baseName = isOwner ? (profile.hostel_pg_name || '') : (profile.full_name || '');
+    if (formValues.fullName !== baseName) return true;
+    if (formValues.phone !== (profile.phone || '')) return true;
+    if (formValues.bio !== (profile.bio || '')) return true;
+    if (formValues.roomNumber !== (profile.room_number || '')) return true;
+    if (isOwner) {
+      if (ownerFormValues.accommodationType !== (profile.accommodation_type || '')) return true;
+      if (ownerFormValues.propertyName !== (profile.property_name || '')) return true;
+      if (ownerFormValues.houseNumber !== (profile.house_number || '')) return true;
+      if (ownerFormValues.totalRentalRooms !== (profile.total_rental_rooms?.toString() || '')) return true;
+      if (ownerFormValues.residentType !== (profile.resident_type || '')) return true;
+      if (ownerFormValues.propertyLocation !== (profile.property_location || '')) return true;
+      if (ownerFormValues.upiId !== (profile.upi_id || '')) return true;
+      if (ownerFormValues.upiPhoneNumber !== (profile.upi_phone_number || '')) return true;
+      if (ownerFormValues.razorpayMerchantId !== (profile.razorpay_merchant_id || '')) return true;
+    }
+    return false;
+  }, [profile, formValues, ownerFormValues, isOwner]);
 
   // Handle return navigation after profile completion
   useEffect(() => {
@@ -116,6 +139,7 @@ const Profile = () => {
             </CardFooter>
           </Card>
         </div>
+        <StickySaveBar dirty={dirty} saving={saving} onSave={handleSave} />
       </div>
     </Layout>;
 };
