@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
