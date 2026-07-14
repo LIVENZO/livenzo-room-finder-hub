@@ -35,6 +35,28 @@ const Profile = () => {
     isOwner
   } = useProfileManagement();
 
+  // Detect unsaved changes by comparing form values to the saved profile
+  const dirty = useMemo(() => {
+    if (!profile) return false;
+    const baseName = isOwner ? (profile.hostel_pg_name || '') : (profile.full_name || '');
+    if (formValues.fullName !== baseName) return true;
+    if (formValues.phone !== (profile.phone || '')) return true;
+    if (formValues.bio !== (profile.bio || '')) return true;
+    if (formValues.roomNumber !== (profile.room_number || '')) return true;
+    if (isOwner) {
+      if (ownerFormValues.accommodationType !== (profile.accommodation_type || '')) return true;
+      if (ownerFormValues.propertyName !== (profile.property_name || '')) return true;
+      if (ownerFormValues.houseNumber !== (profile.house_number || '')) return true;
+      if (ownerFormValues.totalRentalRooms !== (profile.total_rental_rooms?.toString() || '')) return true;
+      if (ownerFormValues.residentType !== (profile.resident_type || '')) return true;
+      if (ownerFormValues.propertyLocation !== (profile.property_location || '')) return true;
+      if (ownerFormValues.upiId !== (profile.upi_id || '')) return true;
+      if (ownerFormValues.upiPhoneNumber !== (profile.upi_phone_number || '')) return true;
+      if (ownerFormValues.razorpayMerchantId !== (profile.razorpay_merchant_id || '')) return true;
+    }
+    return false;
+  }, [profile, formValues, ownerFormValues, isOwner]);
+
   // Handle return navigation after profile completion
   useEffect(() => {
     const returnTo = searchParams.get('returnTo');
