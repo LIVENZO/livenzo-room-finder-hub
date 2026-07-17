@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRelationships } from '@/hooks/useRelationships';
 import ConnectionOverview from '@/components/relationship/ConnectionOverview';
 import PostConnectionInterface from '@/components/renter/PostConnectionInterface';
@@ -12,6 +12,8 @@ interface ConnectWithOwnerProps {
 
 const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) => {
   const [viewMode, setViewMode] = useState<'overview' | 'profile' | 'interface'>('overview');
+  const fetchStartedRef = useRef(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
   const {
     renterRelationships,
@@ -27,6 +29,16 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
 
   // Find the active (accepted) relationship
   const activeRelationship = renterRelationships.find(rel => rel.status === 'accepted');
+
+  // Track when the initial relationship fetch has truly completed so we only
+  // auto-open the scanner after confirming the renter is not connected.
+  useEffect(() => {
+    if (loading) {
+      fetchStartedRef.current = true;
+    } else if (fetchStartedRef.current) {
+      setInitialLoadComplete(true);
+    }
+  }, [loading]);
 
   // Auto-redirect to interface if there's an active connection
   useEffect(() => {
@@ -74,6 +86,10 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
   }
 
   // Default overview mode (only shown if no active connection)
+  // Only auto-open the scanner after the initial relationship check confirms
+  // the renter is not already connected.
+  const shouldAutoOpenScanner = initialLoadComplete && !activeRelationship;
+
   return (
     <div className="space-y-6">
       <ConnectionOverview
@@ -84,7 +100,7 @@ const ConnectWithOwner: React.FC<ConnectWithOwnerProps> = ({ currentUserId }) =>
         onRelationshipSelect={handleOwnerProfileView}
         onStatusChange={refreshRelationships}
         isLoading={loading}
-        autoOpenScanner={!loading && !activeRelationship}
+        autoOpenScanner={shouldAutoOpenScanner}
       />
       
       {/* Previous Connections Section */}
