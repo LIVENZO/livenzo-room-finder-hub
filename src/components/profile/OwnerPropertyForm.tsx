@@ -44,6 +44,7 @@ const OwnerPropertyForm: React.FC<OwnerPropertyFormProps> = ({
           <SelectContent>
             <SelectItem value="PG">PG</SelectItem>
             <SelectItem value="Hostel">Hostel</SelectItem>
+            <SelectItem value="BHK">BHK</SelectItem>
           </SelectContent>
         </Select>
         {!formValues.accommodationType && (
