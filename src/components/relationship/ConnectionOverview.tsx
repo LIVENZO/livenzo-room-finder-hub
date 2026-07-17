@@ -29,7 +29,11 @@ const ConnectionOverview: React.FC<ConnectionOverviewProps> = ({
     <>
       {!isOwner && (
         <div className="mb-6">
-          <UserSearch currentUserId={currentUserId} autoOpenScanner={autoOpenScanner} />
+          <UserSearch 
+            currentUserId={currentUserId} 
+            autoOpenScanner={autoOpenScanner} 
+            renterRelationships={renterRelationships}
+          />
         </div>
       )}
       
