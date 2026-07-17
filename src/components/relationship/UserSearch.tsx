@@ -6,13 +6,19 @@ import SearchHelperText from './user-search/SearchHelperText';
 import UserSearchResults from './user-search/UserSearchResults';
 import SearchErrorMessage from './user-search/SearchErrorMessage';
 import QRScannerModal from './QRScannerModal';
+import { Relationship } from '@/types/relationship';
 
 interface UserSearchProps {
   currentUserId: string;
   autoOpenScanner?: boolean;
+  renterRelationships?: Relationship[];
 }
 
-const UserSearch: React.FC<UserSearchProps> = ({ currentUserId, autoOpenScanner = false }) => {
+const UserSearch: React.FC<UserSearchProps> = ({ 
+  currentUserId, 
+  autoOpenScanner = false,
+  renterRelationships = []
+}) => {
   const {
     searchId,
     setSearchId,
@@ -30,12 +36,16 @@ const UserSearch: React.FC<UserSearchProps> = ({ currentUserId, autoOpenScanner 
   const [scannerOpen, setScannerOpen] = useState(false);
   const autoOpenedRef = useRef(false);
 
+  const isConnected = renterRelationships.some(rel => rel.status === 'accepted');
+
   useEffect(() => {
-    if (autoOpenScanner && !autoOpenedRef.current) {
+    // Guard: never auto-open the scanner if the renter is already connected.
+    // The parent must set autoOpenScanner only after confirming no active relationship.
+    if (autoOpenScanner && !isConnected && !autoOpenedRef.current) {
       autoOpenedRef.current = true;
       setScannerOpen(true);
     }
-  }, [autoOpenScanner]);
+  }, [autoOpenScanner, isConnected]);
 
 
   return (
