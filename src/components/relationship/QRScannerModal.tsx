@@ -31,8 +31,15 @@ const parseOwnerId = (raw: string): string | null => {
 
 const QRScannerModal: React.FC<QRScannerModalProps> = ({ open, onOpenChange, onScan }) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const onScanRef = useRef(onScan);
+  const onOpenChangeRef = useRef(onOpenChange);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onScanRef.current = onScan;
+    onOpenChangeRef.current = onOpenChange;
+  }, [onScan, onOpenChange]);
 
   useEffect(() => {
     if (!open) return;
@@ -42,13 +49,33 @@ const QRScannerModal: React.FC<QRScannerModalProps> = ({ open, onOpenChange, onS
 
     const start = async () => {
       try {
-        // wait for DOM
-        await new Promise((r) => setTimeout(r, 50));
+        // wait for DOM (dialog animation)
+        await new Promise((r) => setTimeout(r, 150));
         if (cancelled) return;
+        const el = document.getElementById(SCANNER_ID);
+        if (!el) {
+          throw new Error('Scanner container not found');
+        }
         const scanner = new Html5Qrcode(SCANNER_ID, { verbose: false });
         scannerRef.current = scanner;
+
+        // Prefer explicit back camera when available (more reliable on Android)
+        let cameraConfig: MediaTrackConstraints | { facingMode: string } = {
+          facingMode: { ideal: 'environment' } as any,
+        };
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length) {
+            const back = devices.find((d) => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
+            cameraConfig = { deviceId: { exact: back.id } } as any;
+          }
+        } catch {
+          // fall back to facingMode
+        }
+
+        if (cancelled) return;
         await scanner.start(
-          { facingMode: 'environment' },
+          cameraConfig as any,
           { fps: 10, qrbox: { width: 240, height: 240 } },
           (decodedText) => {
             const id = parseOwnerId(decodedText);
@@ -56,21 +83,29 @@ const QRScannerModal: React.FC<QRScannerModalProps> = ({ open, onOpenChange, onS
               toast.error('Invalid QR code');
               return;
             }
-            // stop before firing to avoid double-fire
             scanner.stop().catch(() => {}).finally(() => {
-              onScan(id);
-              onOpenChange(false);
+              onScanRef.current(id);
+              onOpenChangeRef.current(false);
             });
           },
           () => {}
         );
+        if (cancelled) {
+          scanner.stop().catch(() => {});
+          return;
+        }
         setStarting(false);
       } catch (err: any) {
-        console.error(err);
+        console.error('QR scanner start failed:', err);
+        const msg = String(err?.message || err?.name || '');
         setError(
-          err?.message?.includes('Permission')
-            ? 'Camera permission denied. Enable camera access to scan.'
-            : 'Unable to access camera'
+          /Permission|NotAllowed/i.test(msg)
+            ? 'Camera permission denied. Enable camera access in your browser/app settings.'
+            : /NotFound|Devices/i.test(msg)
+            ? 'No camera found on this device.'
+            : /NotReadable|TrackStart|in use/i.test(msg)
+            ? 'Camera is being used by another app. Close it and try again.'
+            : 'Unable to start camera. Please try again.'
         );
         setStarting(false);
       }
@@ -81,13 +116,25 @@ const QRScannerModal: React.FC<QRScannerModalProps> = ({ open, onOpenChange, onS
       cancelled = true;
       const s = scannerRef.current;
       if (s) {
-        s.stop().catch(() => {}).finally(() => {
-          s.clear();
-        });
+        // Only stop if actually scanning; ignore errors
+        try {
+          const state = (s as any).getState?.();
+          // 2 = SCANNING in html5-qrcode
+          if (state === 2) {
+            s.stop().catch(() => {}).finally(() => {
+              try { s.clear(); } catch {}
+            });
+          } else {
+            try { s.clear(); } catch {}
+          }
+        } catch {
+          s.stop().catch(() => {});
+        }
         scannerRef.current = null;
       }
     };
-  }, [open, onScan, onOpenChange]);
+  }, [open]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
