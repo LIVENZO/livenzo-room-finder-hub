@@ -247,6 +247,7 @@ const AddProperty: React.FC = () => {
                     <SelectContent>
                       <SelectItem value="PG">PG</SelectItem>
                       <SelectItem value="Hostel">Hostel</SelectItem>
+                      <SelectItem value="BHK">BHK</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
