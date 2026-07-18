@@ -163,6 +163,7 @@ export default {
 				'scale-in': 'scale-in 0.2s ease-out',
 				'pulse-scale-owner': 'pulse-scale-owner 4s ease-in-out infinite',
 				'pulse-scale-renter': 'pulse-scale-renter 4s ease-in-out infinite',
+				'attention-pulse': 'attention-pulse 2.5s ease-in-out infinite',
 			}
 		}
 	},
