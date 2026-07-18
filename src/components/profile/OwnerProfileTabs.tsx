@@ -31,6 +31,8 @@ interface OwnerProfileTabsProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLocationSaved: () => void;
   defaultTab?: string;
+  isEditing?: boolean;
+  onToggleEdit?: (editing: boolean) => void;
 }
 
 const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
@@ -44,26 +46,28 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
   onOwnerSelectChange,
   onImageUpload,
   onLocationSaved,
-  defaultTab = 'basic'
+  defaultTab = 'basic',
+  isEditing = false,
+  onToggleEdit,
 }) => {
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50 rounded-lg p-1">
-        <TabsTrigger 
-          value="basic" 
+        <TabsTrigger
+          value="basic"
           className="text-base font-semibold h-10 data-[state=active]:bg-background data-[state=active]:shadow-sm"
         >
-          Basic Information
+          Profile
         </TabsTrigger>
-        <TabsTrigger 
-          value="location" 
+        <TabsTrigger
+          value="location"
           className="text-base font-semibold h-10 data-[state=active]:bg-background data-[state=active]:shadow-sm"
         >
           Location
         </TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="basic" className="mt-8">
+
+      <TabsContent value="basic" className="mt-6">
         <BasicProfileTab
           profile={profile}
           user={user}
@@ -72,10 +76,12 @@ const OwnerProfileTabs: React.FC<OwnerProfileTabsProps> = ({
           onInputChange={onInputChange}
           onImageUpload={onImageUpload}
           isOwner={true}
+          isEditing={isEditing}
+          onToggleEdit={onToggleEdit}
         />
       </TabsContent>
 
-      <TabsContent value="location" className="mt-8">
+      <TabsContent value="location" className="mt-6">
         {user && (
           <LocationTab
             userId={user.id}
