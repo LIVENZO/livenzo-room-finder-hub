@@ -220,7 +220,7 @@ const AddProperty: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-2">
                   <Label htmlFor="hostel_pg_name">
-                    Hostel/PG Name <span className="text-red-500">*</span>
+                    Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="hostel_pg_name"
