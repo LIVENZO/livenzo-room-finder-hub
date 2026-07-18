@@ -124,9 +124,9 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
               </div>
               <Button
                 onClick={() => navigate('/add-property')}
-                className="w-full h-12 rounded-xl font-semibold shadow-sm active:scale-[0.98] transition-transform"
+                className="w-full h-14 rounded-xl font-semibold text-base shadow-medium animate-attention-pulse active:scale-[0.98] transition-transform"
               >
-                <Building className="h-4 w-4 mr-2" />
+                <Building className="h-5 w-5 mr-2" />
                 Add Property
               </Button>
             </section>
