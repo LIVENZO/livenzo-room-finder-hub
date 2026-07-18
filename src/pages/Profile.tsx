@@ -12,7 +12,7 @@ import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty'
 
 import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
-import { isOwnerProfileComplete } from '@/utils/profileUtils';
+import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
 import { toast } from 'sonner';
 const Profile = () => {
   const [searchParams] = useSearchParams();
@@ -60,15 +60,13 @@ const Profile = () => {
   useEffect(() => {
     const returnTo = searchParams.get('returnTo');
     if (returnTo && profile) {
-      // Check if profile is now complete for the required action
-      const isBasicComplete = profile.full_name && profile.phone;
-      if (isBasicComplete) {
+      // Owners save their name in hostel_pg_name, while renters use full_name.
+      // Use the shared completion check so either role returns after a successful save.
+      if (isProfileComplete(profile)) {
         toast.success('Profile completed! Redirecting back...');
-        setTimeout(() => {
-          navigate(returnTo, {
-            replace: true
-          });
-        }, 1000);
+        navigate(returnTo, {
+          replace: true
+        });
       }
     }
   }, [profile, searchParams, navigate]);
