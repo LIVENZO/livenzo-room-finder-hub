@@ -216,7 +216,8 @@ export const useRentersManagement = (
       const profile = await fetchUserProfile(currentUserId);
       if (!isProfileComplete(profile)) {
         toast.info('Please complete your basic profile information before accepting a renter\'s request.');
-        navigate('/profile?tab=basic&returnTo=/connections');
+        const returnTo = window.location.pathname + window.location.search;
+        navigate(`/profile?tab=basic&returnTo=${encodeURIComponent(returnTo)}`);
         return;
       }
     } catch (error) {
