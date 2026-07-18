@@ -32,15 +32,16 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
       <button
         onClick={() => navigate('/add-property')}
         className={cn(
-          'flex items-center gap-1.5 text-primary font-bold text-base truncate',
+          'inline-flex items-center gap-1.5 text-primary-foreground bg-primary font-bold text-sm truncate rounded-full px-3 py-1.5 shadow-medium animate-attention-pulse',
           className,
         )}
       >
-        <Building2 className="h-4 w-4 flex-shrink-0" />
+        <Plus className="h-4 w-4 flex-shrink-0" strokeWidth={3} />
         <span className="truncate">Add property</span>
       </button>
     );
   }
+
 
   const label = formatLabel(activeProperty.hostel_pg_name, activeProperty.house_number);
   const hasMultiple = properties.length > 1;
