@@ -34,6 +34,15 @@ const Profile = () => {
     isOwner
   } = useProfileManagement();
 
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleSaveAndExit = async () => {
+    await handleSave();
+    setIsEditing(false);
+  };
+
+
+
   // Detect unsaved changes by comparing form values to the saved profile
   const dirty = useMemo(() => {
     if (!profile) return false;
@@ -102,6 +111,8 @@ const Profile = () => {
               onImageUpload={handleImageUpload}
               onLocationSaved={handleLocationSaved}
               defaultTab={searchParams.get('tab') || 'basic'}
+              isEditing={isEditing}
+              onToggleEdit={setIsEditing}
             />
           ) : (
             <div className="space-y-5">
@@ -134,31 +145,33 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Property Information for Complete Owner Profiles */}
-          {isOwner && profile && isOwnerProfileComplete(profile) && (
+          {/* Property Information — only in edit mode for owners (view mode shows the premium hero) */}
+          {isOwner && isEditing && profile && isOwnerProfileComplete(profile) && (
             <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6">
               <OwnerPropertyDisplay profile={profile} />
             </section>
           )}
 
-          {/* Owner-to-Owner Collaboration */}
-          {isOwner && (
+          {/* Owner-to-Owner Collaboration — only when not editing */}
+          {isOwner && !isEditing && (
             <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6">
               <ConnectAnotherProperty />
             </section>
           )}
 
-          {/* Save Action */}
-          <div className="pt-2">
-            <ProfileActions
-              profile={profile}
-              saving={saving}
-              onSave={handleSave}
-              isOwner={isOwner}
-            />
-          </div>
+          {/* Save Action — hidden in owner view mode */}
+          {(!isOwner || isEditing) && (
+            <div className="pt-2">
+              <ProfileActions
+                profile={profile}
+                saving={saving}
+                onSave={handleSaveAndExit}
+                isOwner={isOwner}
+              />
+            </div>
+          )}
         </div>
-        <StickySaveBar dirty={dirty} saving={saving} onSave={handleSave} />
+        <StickySaveBar dirty={dirty && (!isOwner || isEditing)} saving={saving} onSave={handleSaveAndExit} />
       </div>
     </Layout>
   );
