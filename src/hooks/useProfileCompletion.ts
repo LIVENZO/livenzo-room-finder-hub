@@ -37,7 +37,8 @@ export const useProfileCompletion = () => {
     
     if (!isComplete) {
       toast.error("Please complete your profile before continuing");
-      navigate("/profile");
+      const returnTo = window.location.pathname + window.location.search;
+      navigate(`/profile?returnTo=${encodeURIComponent(returnTo)}`);
       return false;
     }
 
