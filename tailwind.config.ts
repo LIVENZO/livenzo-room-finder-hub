@@ -150,6 +150,10 @@ export default {
 					'60%': { opacity: '1', transform: 'translateX(0) scale(1.08)' },
 					'80%': { opacity: '1', transform: 'translateX(0) scale(0.97)' },
 					'100%': { opacity: '1', transform: 'translateX(0) scale(1)' }
+				},
+				'attention-pulse': {
+					'0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(91, 60, 196, 0.25)' },
+					'50%': { transform: 'scale(1.035)', boxShadow: '0 0 0 10px rgba(91, 60, 196, 0)' }
 				}
 			},
 			animation: {
