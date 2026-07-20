@@ -46,6 +46,32 @@ const SectionCard: React.FC<{
   </section>
 );
 
+const MergedOwnerCard: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => (
+  <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6 space-y-1">
+    <div className="flex items-start gap-3 pb-5">
+      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <User className="h-5 w-5 text-primary" />
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-foreground leading-tight">Profile Details</h3>
+        <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+          Your identity and contact information on Livenzo
+        </p>
+      </div>
+    </div>
+    <div className="divide-y divide-border/60">{children}</div>
+  </section>
+);
+
+const FieldRow: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => (
+  <div className={`py-5 first:pt-1 last:pb-1 ${className}`}>{children}</div>
+);
+
 const ProfileForm: React.FC<ProfileFormProps> = ({
   formValues,
   profile,
@@ -84,13 +110,85 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     onInputChange(e);
   };
 
+  if (isOwner) {
+    return (
+      <div className="w-full space-y-5">
+        <MergedOwnerCard>
+          {/* Name */}
+          <FieldRow>
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="fullName"
+                name="fullName"
+                value={formValues.fullName}
+                onChange={handleSecureInputChange}
+                placeholder="Your name"
+                className={`${inputClasses} ${!formValues.fullName ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
+                required
+              />
+              {!formValues.fullName && (
+                <p className="text-xs text-destructive">Name is required</p>
+              )}
+            </div>
+          </FieldRow>
+
+          {/* Phone */}
+          <FieldRow>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium text-foreground">
+                Phone Number <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formValues.phone}
+                  onChange={handleSecureInputChange}
+                  placeholder="Your phone number"
+                  className={`${inputClasses} pl-10 ${!formValues.phone ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
+                  required
+                />
+              </div>
+              {!formValues.phone && (
+                <p className="text-xs text-destructive">Phone number is required</p>
+              )}
+            </div>
+          </FieldRow>
+
+          {/* Bio */}
+          <FieldRow>
+            <div className="space-y-2">
+              <Label htmlFor="bio" className="text-sm font-medium text-foreground">
+                About You
+              </Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                value={formValues.bio}
+                onChange={handleSecureInputChange}
+                placeholder="Tell others a bit about yourself"
+                rows={4}
+                className="text-base leading-relaxed resize-none rounded-xl bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
+              />
+            </div>
+          </FieldRow>
+        </MergedOwnerCard>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full space-y-5">
       {/* Basic Information */}
       <SectionCard
         icon={<User className="h-5 w-5 text-primary" />}
         title="Basic Information"
-        subtitle={isOwner ? 'Your identity on Livenzo' : 'Tell us who you are'}
+        subtitle="Tell us who you are"
       >
         <div className="space-y-2">
           <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
@@ -101,7 +199,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             name="fullName"
             value={formValues.fullName}
             onChange={handleSecureInputChange}
-            placeholder={isOwner ? 'Your name' : 'Your full name'}
+            placeholder="Your full name"
             className={`${inputClasses} ${!formValues.fullName ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
             required
           />
@@ -110,32 +208,30 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           )}
         </div>
 
-        {!isOwner && (
-          <div className="space-y-2">
-            <Label htmlFor="roomNumber" className="text-sm font-medium text-foreground">
-              Room No.<span className="text-destructive"> *</span>
-            </Label>
-            <div className="relative">
-              <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <Input
-                id="roomNumber"
-                name="roomNumber"
-                value={formValues.roomNumber}
-                onChange={handleSecureInputChange}
-                placeholder="e.g., 202, A-101, 15B"
-                className={`${inputClasses} pl-10 ${!formValues.roomNumber ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
-                required
-              />
-            </div>
-            {!formValues.roomNumber ? (
-              <p className="text-xs text-destructive">Please enter your Room Number</p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Required so your owner can identify your room
-              </p>
-            )}
+        <div className="space-y-2">
+          <Label htmlFor="roomNumber" className="text-sm font-medium text-foreground">
+            Room No.<span className="text-destructive"> *</span>
+          </Label>
+          <div className="relative">
+            <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="roomNumber"
+              name="roomNumber"
+              value={formValues.roomNumber}
+              onChange={handleSecureInputChange}
+              placeholder="e.g., 202, A-101, 15B"
+              className={`${inputClasses} pl-10 ${!formValues.roomNumber ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
+              required
+            />
           </div>
-        )}
+          {!formValues.roomNumber ? (
+            <p className="text-xs text-destructive">Please enter your Room Number</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Required so your owner can identify your room
+            </p>
+          )}
+        </div>
       </SectionCard>
 
       {/* Contact */}
