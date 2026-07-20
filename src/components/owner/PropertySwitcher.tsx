@@ -29,16 +29,24 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
   // No properties yet — show a CTA instead of the brand
   if (!activeProperty) {
     return (
-      <button
-        onClick={() => navigate('/add-property')}
-        className={cn(
-          'inline-flex items-center gap-1.5 text-primary-foreground bg-primary font-bold text-sm truncate rounded-full px-3 py-1.5 shadow-medium animate-attention-pulse',
-          className,
-        )}
-      >
-        <Plus className="h-4 w-4 flex-shrink-0" strokeWidth={3} />
-        <span className="truncate">Add property</span>
-      </button>
+      <div className={cn('relative inline-flex items-center', className)}>
+        {/* Soft purple glow halo */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -m-1 rounded-full bg-primary/40 blur-lg animate-attention-glow"
+        />
+        <button
+          onClick={() => navigate('/add-property')}
+          className={cn(
+            'relative inline-flex items-center gap-1.5 text-primary-foreground bg-gradient-to-r from-primary to-primary-600',
+            'font-bold text-sm truncate rounded-full px-4 py-2 shadow-large ring-2 ring-primary/40',
+            'animate-attention-pulse transition-transform active:scale-95',
+          )}
+        >
+          <Plus className="h-4 w-4 flex-shrink-0" strokeWidth={3} />
+          <span className="truncate">Add property</span>
+        </button>
+      </div>
     );
   }
 
