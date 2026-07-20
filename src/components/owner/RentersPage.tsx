@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import RenterDetailPanel from './RenterDetailPanel';
 import RenterCard from './components/RenterCard';
 import PendingRequestCard from './components/PendingRequestCard';
@@ -11,7 +9,7 @@ import SetRentModal from '@/components/dashboard/rent-management/SetRentModal';
 
 interface RentersPageProps {
   currentUserId: string;
-  defaultTab?: string;
+  section: 'requests' | 'connected';
   documentNotification?: {
     showDocuments: boolean;
     documentId?: string;
@@ -30,12 +28,12 @@ interface RentersPageProps {
   };
 }
 
-const RentersPage: React.FC<RentersPageProps> = ({ 
-  currentUserId, 
-  defaultTab, 
-  documentNotification, 
+const RentersPage: React.FC<RentersPageProps> = ({
+  currentUserId,
+  section,
+  documentNotification,
   complaintNotification,
-  specificRenterData 
+  specificRenterData,
 }) => {
   const {
     relationships,
@@ -58,14 +56,8 @@ const RentersPage: React.FC<RentersPageProps> = ({
 
   const handleModeChange = (mode: 'full' | 'documents' | 'complaints') => {
     setViewMode(mode);
-    if (mode === 'documents') {
-      // Set active tab to documents when switching to documents mode
-    } else if (mode === 'complaints') {
-      // Set active tab to complaints when switching to complaints mode
-    }
   };
 
-  // If a renter is selected, show the detail panel with the specific mode
   if (selectedRelationship) {
     return (
       <RenterDetailPanel
@@ -79,80 +71,62 @@ const RentersPage: React.FC<RentersPageProps> = ({
     );
   }
 
-  const pendingRequests = relationships.filter(r => r.status === 'pending');
-  const connectedRenters = relationships.filter(r => r.status === 'accepted');
-
   if (loading) {
     return (
-      <div className="w-full h-full p-6">
-        <div className="text-center">
-          <p className="text-lg">Loading renters...</p>
-        </div>
+      <div className="space-y-3 p-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted/60" />
+        ))}
+      </div>
+    );
+  }
+
+  const pendingRequests = relationships.filter((r) => r.status === 'pending');
+  const connectedRenters = relationships.filter((r) => r.status === 'accepted');
+
+  if (section === 'requests') {
+    return (
+      <div className="animate-fade-in space-y-3">
+        {pendingRequests.length === 0 ? (
+          <EmptyState type="requests" />
+        ) : (
+          pendingRequests.map((relationship) => (
+            <PendingRequestCard
+              key={relationship.id}
+              relationship={relationship}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
+              isProcessing={processingIds.includes(relationship.id)}
+            />
+          ))
+        )}
+
+        <SetRentModal
+          isOpen={showSetRentModal}
+          onClose={() => setShowSetRentModal(false)}
+          renter={renterForRent}
+          onSuccess={() => setShowSetRentModal(false)}
+        />
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full space-y-6 p-4">
-      <Tabs defaultValue={defaultTab || "requests"} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            Requests
-            {pendingRequests.length > 0 && (
-              <Badge variant="destructive">{pendingRequests.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="connected" className="flex items-center gap-2">
-            Connected
-            {connectedRenters.length > 0 && (
-              <Badge variant="secondary">{connectedRenters.length}</Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Pending Requests Tab */}
-        <TabsContent value="requests" className="space-y-4">
-          {pendingRequests.length === 0 ? (
-            <EmptyState type="requests" />
-          ) : (
-            pendingRequests.map((relationship) => (
-              <PendingRequestCard
-                key={relationship.id}
-                relationship={relationship}
-                onAccept={handleAccept}
-                onDecline={handleDecline}
-                isProcessing={processingIds.includes(relationship.id)}
-              />
-            ))
-          )}
-        </TabsContent>
-
-        {/* Connected Renters Tab */}
-        <TabsContent value="connected" className="space-y-4">
-          {connectedRenters.length === 0 ? (
-            <EmptyState type="connected" />
-          ) : (
-            connectedRenters.map((relationship) => (
-              <RenterCard
-                key={relationship.id}
-                relationship={relationship}
-                onDocuments={handleDocuments}
-                onComplaints={handleComplaints}
-                onDisconnect={handleDisconnect}
-                isProcessing={processingIds.includes(relationship.id)}
-              />
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Set Rent Modal */}
-      <SetRentModal
-        isOpen={showSetRentModal}
-        onClose={() => setShowSetRentModal(false)}
-        renter={renterForRent}
-        onSuccess={() => setShowSetRentModal(false)}
-      />
+    <div className="animate-fade-in space-y-3">
+      {connectedRenters.length === 0 ? (
+        <EmptyState type="connected" />
+      ) : (
+        connectedRenters.map((relationship) => (
+          <RenterCard
+            key={relationship.id}
+            relationship={relationship}
+            onDocuments={handleDocuments}
+            onComplaints={handleComplaints}
+            onDisconnect={handleDisconnect}
+            isProcessing={processingIds.includes(relationship.id)}
+          />
+        ))
+      )}
     </div>
   );
 };
