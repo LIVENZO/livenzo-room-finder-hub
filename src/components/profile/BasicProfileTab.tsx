@@ -68,16 +68,12 @@ const BasicProfileTab: React.FC<BasicProfileTabProps> = ({
                 <BadgeCheck className="h-5 w-5 text-primary" />
               )}
             </h2>
-            {isOwner ? (
+            {isOwner && (
               <p className="text-sm text-muted-foreground">
                 {propertyLabel || 'Property Owner'}
               </p>
-            ) : (
-              user?.email && (
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              )
             )}
-            {formValues.phone && (
+            {isOwner && formValues.phone && (
               <p className="text-xs text-muted-foreground/80 pt-1">
                 {formValues.phone}
               </p>
