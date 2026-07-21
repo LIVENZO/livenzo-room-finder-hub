@@ -43,9 +43,9 @@ const FCMWrapper = () => {
 const RenterLaunchRedirect = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const didRun = React.useRef(false);
+  const didRun = useRef(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (didRun.current) return;
     didRun.current = true;
 
