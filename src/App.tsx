@@ -40,6 +40,43 @@ const FCMWrapper = () => {
   return null;
 };
 
+const RenterLaunchRedirect = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const didRun = React.useRef(false);
+
+  React.useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
+
+    const role = localStorage.getItem('userRole');
+    if (role !== 'renter') return;
+
+    const path = location.pathname;
+    // Skip on landing (Index handles its own redirect), auth callbacks, and when already on find-room
+    const skip =
+      path === '/' ||
+      path === '/find-room' ||
+      path.startsWith('/room/') ||
+      path.startsWith('/auth') ||
+      path.startsWith('/chats') ||
+      path.startsWith('/connections') ||
+      path.startsWith('/anonymous-chat') ||
+      path.startsWith('/favorites') ||
+      path.startsWith('/profile') ||
+      path.startsWith('/notices') ||
+      path.startsWith('/payments');
+
+    if (!skip) {
+      navigate('/find-room', { replace: true });
+    } else if (path !== '/' && path !== '/find-room') {
+      // For allowed deep links (chat, room detail, notifications) keep them.
+    }
+  }, [navigate, location.pathname]);
+
+  return null;
+};
+
 const App = () => {
   // Create QueryClient inside component to avoid SSR/hydration issues
   const [queryClient] = useState(() => new QueryClient({
