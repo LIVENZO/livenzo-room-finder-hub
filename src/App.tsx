@@ -11,7 +11,7 @@ import { useFCMRegistration } from "./hooks/useFCMRegistration";
 import { useNotificationNavigation } from "./hooks/useNotificationNavigation";
 import SetLocation from "./pages/SetLocation";
 import SetMonthlyRent from "./pages/SetMonthlyRent";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
