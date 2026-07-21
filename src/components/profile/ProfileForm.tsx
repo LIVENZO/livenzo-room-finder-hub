@@ -234,31 +234,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </div>
       </SectionCard>
 
-      {/* Contact */}
-      <SectionCard
-        icon={<Phone className="h-5 w-5 text-primary" />}
-        title="Contact"
-        subtitle="How people can reach you"
-      >
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-sm font-medium text-foreground">
-            Phone Number <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            value={formValues.phone}
-            onChange={handleSecureInputChange}
-            placeholder="Your phone number"
-            className={`${inputClasses} ${!formValues.phone ? 'border-destructive/50 focus-visible:ring-destructive/20' : ''}`}
-            required
-          />
-          {!formValues.phone && (
-            <p className="text-xs text-destructive">Phone number is required</p>
-          )}
-        </div>
-      </SectionCard>
 
       {/* About */}
       <SectionCard
