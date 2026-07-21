@@ -98,6 +98,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <FCMWrapper />
+            <RenterLaunchRedirect />
             <ProfileCompletionCheck />
             <Routes>
               <Route path="/" element={<Index />} />
