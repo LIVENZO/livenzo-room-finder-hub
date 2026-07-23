@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, Plus, Building2 } from 'lucide-react';
+import { Check, ChevronDown, Plus, Building2, Trash2, LogOut, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useOwnerProperty } from '@/context/OwnerPropertyContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useOwnerProperty, type OwnerProperty } from '@/context/OwnerPropertyContext';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchMyCollaborations, revokeCollaborator } from '@/services/collaborationService';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface PropertySwitcherProps {
