@@ -71,7 +71,6 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
       setIsRemoving(false);
     }
   };
-  const [open, setOpen] = useState(false);
 
   // No properties yet — show a CTA instead of the brand
   if (!activeProperty) {
