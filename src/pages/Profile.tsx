@@ -116,9 +116,6 @@ const Profile = () => {
                     <h2 className="text-xl font-bold text-foreground leading-tight">
                       {formValues.fullName || 'Your Profile'}
                     </h2>
-                    {user?.email && (
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    )}
                   </div>
                 </div>
               </section>
