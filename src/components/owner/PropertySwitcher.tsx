@@ -98,7 +98,7 @@ const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
 
 
   const label = formatLabel(activeProperty.hostel_pg_name, activeProperty.house_number);
-  const activeIsShared = isShared(activeProperty);
+  
 
   return (
     <>
