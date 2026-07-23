@@ -36,7 +36,41 @@ const formatLabel = (name: string, house?: string | null) => {
 
 const PropertySwitcher: React.FC<PropertySwitcherProps> = ({ className }) => {
   const navigate = useNavigate();
-  const { properties, activeProperty, setActivePropertyId } = useOwnerProperty();
+  const { properties, activeProperty, setActivePropertyId, refresh } = useOwnerProperty();
+  const [open, setOpen] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<OwnerProperty | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  const isShared = (p: OwnerProperty) => !!(p.my_role && p.my_role !== 'owner');
+
+  const handleConfirmRemove = async () => {
+    if (!pendingRemoval) return;
+    setIsRemoving(true);
+    try {
+      if (isShared(pendingRemoval)) {
+        const collabs = await fetchMyCollaborations();
+        const mine = collabs.find(
+          (c) => c.property_id === pendingRemoval.id && c.i_am === 'collaborator' && c.status === 'accepted',
+        );
+        if (!mine) throw new Error('Collaboration not found');
+        await revokeCollaborator(mine.id);
+        toast.success('You have left this property');
+      } else {
+        const { error } = await supabase
+          .from('owner_properties')
+          .delete()
+          .eq('id', pendingRemoval.id);
+        if (error) throw error;
+        toast.success('Property deleted');
+      }
+      setPendingRemoval(null);
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || 'Something went wrong');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
   const [open, setOpen] = useState(false);
 
   // No properties yet — show a CTA instead of the brand
