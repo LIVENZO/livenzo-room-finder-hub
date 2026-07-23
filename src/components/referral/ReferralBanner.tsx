@@ -26,7 +26,7 @@ const ReferralBanner: React.FC = () => {
             <p className="text-sm sm:text-base font-medium text-primary-foreground">
               <span className="font-semibold">Refer a Friend</span>
               <span className="hidden sm:inline"> – </span>
-              <span className="block sm:inline text-xs sm:text-sm opacity-90">Earn ₹400 when they complete their first booking</span>
+              <span className="block sm:inline text-xs sm:text-sm opacity-90">Earn up to ₹5000 when they complete their first booking</span>
             </p>
           </div>
           
