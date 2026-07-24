@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -12,8 +11,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Unlink } from 'lucide-react';
-import { disconnectFromOwner } from '@/services/relationship/manageRelationships';
+import { Clock, Unlink } from 'lucide-react';
+import { requestDisconnectFromOwner } from '@/services/relationship/manageRelationships';
 import { Relationship } from '@/types/relationship';
 
 interface RenterDisconnectButtonProps {
@@ -22,68 +21,99 @@ interface RenterDisconnectButtonProps {
   className?: string;
 }
 
+const formatDate = (iso?: string | null) => {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return '';
+  }
+};
+
 const RenterDisconnectButton: React.FC<RenterDisconnectButtonProps> = ({
   relationship,
   onDisconnect,
-  className = ""
+  className = '',
 }) => {
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleDisconnect = async () => {
-    setIsDisconnecting(true);
+  const pending = !!relationship.disconnect_requested_at;
+  const autoApproveOn = formatDate(relationship.disconnect_auto_approve_at);
+
+  const handleRequest = async () => {
+    setIsSubmitting(true);
     try {
-      const success = await disconnectFromOwner(relationship.id, relationship.renter_id);
-      if (success) {
-        onDisconnect();
-      }
-    } catch (error) {
-      console.error('Error disconnecting:', error);
+      const ok = await requestDisconnectFromOwner(relationship.id, relationship.renter_id);
+      if (ok) onDisconnect();
     } finally {
-      setIsDisconnecting(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (pending) {
+    return (
+      <div
+        className={`flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 ${className}`}
+      >
+        <Clock className="h-4 w-4 shrink-0" />
+        <span>
+          Disconnect requested — awaiting owner approval
+          {autoApproveOn ? ` (auto-approves on ${autoApproveOn})` : ''}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button 
-          variant="destructive" 
+        <Button
+          variant="destructive"
           className={`flex items-center gap-2 ${className}`}
-          disabled={isDisconnecting}
+          disabled={isSubmitting}
         >
           <Unlink className="h-4 w-4" />
-          {isDisconnecting ? 'Disconnecting...' : 'Disconnect from Owner'}
+          {isSubmitting ? 'Sending…' : 'Disconnect from Owner'}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Disconnect from Property Owner</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              Are you sure you want to disconnect from{' '}
-              <span className="font-semibold">{relationship.owner?.full_name || 'this owner'}</span>?
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This will end your current rental connection. You can reconnect with the same owner later if needed.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mt-3">
-              <p className="text-sm text-amber-800">
-                <strong>Note:</strong> Your chat history, documents, and notices will be moved to "Previous Connections" 
-                if you connect with a new owner.
+          <AlertDialogTitle>Request to disconnect?</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3 text-sm">
+              <p>
+                This sends a disconnect request to{' '}
+                <span className="font-semibold">
+                  {relationship.owner?.full_name || 'your owner'}
+                </span>
+                . You will stay connected until the owner approves it.
               </p>
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                <p className="font-medium">How it works</p>
+                <ul className="mt-1 list-disc space-y-1 pl-4">
+                  <li>The owner must approve your request to end the connection.</li>
+                  <li>
+                    If the owner doesn't respond within{' '}
+                    <span className="font-semibold">7 days</span>, the request is
+                    automatically approved and you're disconnected.
+                  </li>
+                </ul>
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDisconnecting}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleDisconnect}
-            disabled={isDisconnecting}
+            onClick={handleRequest}
+            disabled={isSubmitting}
             className="bg-red-600 hover:bg-red-700"
           >
-            {isDisconnecting ? 'Disconnecting...' : 'Confirm Disconnect'}
+            {isSubmitting ? 'Sending…' : 'Request Disconnect'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
