@@ -208,15 +208,14 @@ export const archivePreviousConnections = async (
   }
 };
 
-// Function specifically for renter disconnection
-export const disconnectFromOwner = async (
+// Renter requests to disconnect. This does NOT end the connection immediately;
+// it creates a disconnect request that the owner must approve/reject.
+// If the owner doesn't respond within 7 days, it auto-approves via a scheduled DB job.
+export const requestDisconnectFromOwner = async (
   relationshipId: string,
   renterId: string
 ): Promise<boolean> => {
   try {
-    console.log("Renter disconnecting from relationship:", relationshipId, "renter:", renterId);
-    
-    // First verify the relationship exists and belongs to this renter
     const { data: relationship, error: fetchError } = await supabase
       .from("relationships")
       .select("*")
@@ -225,34 +224,102 @@ export const disconnectFromOwner = async (
       .single();
 
     if (fetchError || !relationship) {
-      console.error("Error fetching relationship for disconnect:", fetchError);
       toast.error("Relationship not found or unauthorized");
       return false;
     }
 
-    // Update the relationship status to declined
-    const { data, error } = await supabase
+    if (relationship.disconnect_requested_at) {
+      toast.info("A disconnect request is already awaiting owner approval");
+      return true;
+    }
+
+    const now = new Date();
+    const autoApproveAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const { error } = await supabase
       .from("relationships")
-      .update({ 
-        status: "declined",
-        updated_at: new Date().toISOString()
+      .update({
+        disconnect_requested_at: now.toISOString(),
+        disconnect_auto_approve_at: autoApproveAt.toISOString(),
+        disconnect_requested_by: renterId,
+        updated_at: now.toISOString(),
       })
-      .eq("id", relationshipId)
-      .select()
-      .single();
+      .eq("id", relationshipId);
 
     if (error) {
-      console.error("Error disconnecting from owner:", error);
-      toast.error("Failed to disconnect from owner");
+      console.error("Error requesting disconnect:", error);
+      toast.error("Failed to send disconnect request");
       return false;
     }
 
-    console.log("Successfully disconnected from owner:", data);
-    toast.success("Successfully disconnected from your property owner");
+    toast.success("Disconnect request sent. Owner has 7 days to approve.");
     return true;
   } catch (error) {
-    console.error("Exception disconnecting from owner:", error);
-    toast.error("Failed to disconnect from owner");
+    console.error("Exception requesting disconnect:", error);
+    toast.error("Failed to send disconnect request");
     return false;
   }
+};
+
+// Owner approves a renter's disconnect request → actually disconnect now
+export const approveDisconnectRequest = async (relationshipId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("relationships")
+      .update({
+        status: "declined",
+        disconnect_requested_at: null,
+        disconnect_auto_approve_at: null,
+        disconnect_requested_by: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", relationshipId);
+
+    if (error) {
+      console.error("Error approving disconnect:", error);
+      toast.error("Failed to approve disconnect");
+      return false;
+    }
+    toast.success("Renter disconnected");
+    return true;
+  } catch (e) {
+    console.error("Exception approving disconnect:", e);
+    toast.error("Failed to approve disconnect");
+    return false;
+  }
+};
+
+// Owner rejects a renter's disconnect request → keep connection active
+export const rejectDisconnectRequest = async (relationshipId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("relationships")
+      .update({
+        disconnect_requested_at: null,
+        disconnect_auto_approve_at: null,
+        disconnect_requested_by: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", relationshipId);
+
+    if (error) {
+      console.error("Error rejecting disconnect:", error);
+      toast.error("Failed to reject disconnect request");
+      return false;
+    }
+    toast.success("Disconnect request rejected");
+    return true;
+  } catch (e) {
+    console.error("Exception rejecting disconnect:", e);
+    toast.error("Failed to reject disconnect request");
+    return false;
+  }
+};
+
+// Legacy alias: kept for any lingering callers, now routes through the request flow.
+export const disconnectFromOwner = async (
+  relationshipId: string,
+  renterId: string
+): Promise<boolean> => {
+  return requestDisconnectFromOwner(relationshipId, renterId);
 };

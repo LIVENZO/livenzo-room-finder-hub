@@ -3,6 +3,7 @@ import React from 'react';
 import RenterDetailPanel from './RenterDetailPanel';
 import RenterCard from './components/RenterCard';
 import PendingRequestCard from './components/PendingRequestCard';
+import DisconnectRequestCard from './components/DisconnectRequestCard';
 import EmptyState from './components/EmptyState';
 import { useRentersManagement } from './hooks/useRentersManagement';
 import SetRentModal from '@/components/dashboard/rent-management/SetRentModal';
@@ -45,6 +46,8 @@ const RentersPage: React.FC<RentersPageProps> = ({
     handleAccept,
     handleDecline,
     handleDisconnect,
+    handleApproveDisconnect,
+    handleRejectDisconnect,
     handleDocuments,
     handleComplaints,
     handleBackToList,
@@ -82,23 +85,40 @@ const RentersPage: React.FC<RentersPageProps> = ({
   }
 
   const pendingRequests = relationships.filter((r) => r.status === 'pending');
-  const connectedRenters = relationships.filter((r) => r.status === 'accepted');
+  const disconnectRequests = relationships.filter(
+    (r) => r.status === 'accepted' && !!r.disconnect_requested_at,
+  );
+  const connectedRenters = relationships.filter(
+    (r) => r.status === 'accepted' && !r.disconnect_requested_at,
+  );
 
   if (section === 'requests') {
+    const isEmpty = pendingRequests.length === 0 && disconnectRequests.length === 0;
     return (
       <div className="animate-fade-in space-y-3">
-        {pendingRequests.length === 0 ? (
+        {isEmpty ? (
           <EmptyState type="requests" />
         ) : (
-          pendingRequests.map((relationship) => (
-            <PendingRequestCard
-              key={relationship.id}
-              relationship={relationship}
-              onAccept={handleAccept}
-              onDecline={handleDecline}
-              isProcessing={processingIds.includes(relationship.id)}
-            />
-          ))
+          <>
+            {disconnectRequests.map((relationship) => (
+              <DisconnectRequestCard
+                key={`disc-${relationship.id}`}
+                relationship={relationship}
+                onApprove={handleApproveDisconnect}
+                onReject={handleRejectDisconnect}
+                isProcessing={processingIds.includes(relationship.id)}
+              />
+            ))}
+            {pendingRequests.map((relationship) => (
+              <PendingRequestCard
+                key={relationship.id}
+                relationship={relationship}
+                onAccept={handleAccept}
+                onDecline={handleDecline}
+                isProcessing={processingIds.includes(relationship.id)}
+              />
+            ))}
+          </>
         )}
 
         <SetRentModal

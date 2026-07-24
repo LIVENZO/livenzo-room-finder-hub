@@ -7,6 +7,10 @@ import {
   updateRelationshipStatus,
   type Relationship 
 } from '@/services/relationship';
+import {
+  approveDisconnectRequest,
+  rejectDisconnectRequest,
+} from '@/services/relationship/manageRelationships';
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { isProfileComplete } from '@/utils/profileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -304,6 +308,26 @@ export const useRentersManagement = (
     setViewMode('full'); // Reset to full mode
   };
 
+  const handleApproveDisconnect = async (relationshipId: string) => {
+    setProcessingIds((prev) => [...prev, relationshipId]);
+    try {
+      const ok = await approveDisconnectRequest(relationshipId);
+      if (ok) await fetchRelationships();
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== relationshipId));
+    }
+  };
+
+  const handleRejectDisconnect = async (relationshipId: string) => {
+    setProcessingIds((prev) => [...prev, relationshipId]);
+    try {
+      const ok = await rejectDisconnectRequest(relationshipId);
+      if (ok) await fetchRelationships();
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== relationshipId));
+    }
+  };
+
   return {
     relationships,
     loading,
@@ -314,6 +338,8 @@ export const useRentersManagement = (
     handleAccept,
     handleDecline,
     handleDisconnect,
+    handleApproveDisconnect,
+    handleRejectDisconnect,
     handleDocuments,
     handleChat,
     handleComplaints,

@@ -28,11 +28,19 @@ const Connections = () => {
   // Lightweight fetch for header badges (Renters section owns its own data too)
   const { ownerRelationships } = useRelationships(user?.id, isOwner);
   const pendingRequestsCount = useMemo(
-    () => ownerRelationships.filter((r) => r.status === 'pending').length,
+    () =>
+      ownerRelationships.filter(
+        (r) =>
+          r.status === 'pending' ||
+          (r.status === 'accepted' && !!r.disconnect_requested_at),
+      ).length,
     [ownerRelationships]
   );
   const connectedCount = useMemo(
-    () => ownerRelationships.filter((r) => r.status === 'accepted').length,
+    () =>
+      ownerRelationships.filter(
+        (r) => r.status === 'accepted' && !r.disconnect_requested_at,
+      ).length,
     [ownerRelationships]
   );
 

@@ -9,6 +9,9 @@ export interface Relationship {
   chat_room_id: string;
   archived?: boolean;
   property_id?: string | null;
+  disconnect_requested_at?: string | null;
+  disconnect_auto_approve_at?: string | null;
+  disconnect_requested_by?: string | null;
   owner?: {
     full_name: string;
     avatar_url: string;
