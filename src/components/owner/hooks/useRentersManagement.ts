@@ -7,6 +7,10 @@ import {
   updateRelationshipStatus,
   type Relationship 
 } from '@/services/relationship';
+import {
+  approveDisconnectRequest,
+  rejectDisconnectRequest,
+} from '@/services/relationship/manageRelationships';
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { isProfileComplete } from '@/utils/profileUtils';
 import { supabase } from '@/integrations/supabase/client';
