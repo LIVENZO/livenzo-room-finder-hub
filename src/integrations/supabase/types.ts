@@ -1911,6 +1911,9 @@ export type Database = {
           archived: boolean
           chat_room_id: string
           created_at: string
+          disconnect_auto_approve_at: string
+          disconnect_requested_at: string
+          disconnect_requested_by: string
           id: string
           owner_id: string
           renter_id: string
