@@ -1080,6 +1080,9 @@ export type Database = {
           archived: boolean | null
           chat_room_id: string
           created_at: string
+          disconnect_auto_approve_at: string | null
+          disconnect_requested_at: string | null
+          disconnect_requested_by: string | null
           id: string
           owner_id: string
           property_id: string | null
@@ -1091,6 +1094,9 @@ export type Database = {
           archived?: boolean | null
           chat_room_id?: string
           created_at?: string
+          disconnect_auto_approve_at?: string | null
+          disconnect_requested_at?: string | null
+          disconnect_requested_by?: string | null
           id?: string
           owner_id: string
           property_id?: string | null
@@ -1102,6 +1108,9 @@ export type Database = {
           archived?: boolean | null
           chat_room_id?: string
           created_at?: string
+          disconnect_auto_approve_at?: string | null
+          disconnect_requested_at?: string | null
+          disconnect_requested_by?: string | null
           id?: string
           owner_id?: string
           property_id?: string | null
@@ -1810,6 +1819,7 @@ export type Database = {
         Args: { new_owner_id: string; renter_user_id: string }
         Returns: undefined
       }
+      auto_approve_disconnect_requests: { Args: never; Returns: undefined }
       can_access_owner_contact: {
         Args: { room_owner_id: string }
         Returns: boolean
