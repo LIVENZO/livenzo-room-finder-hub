@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/auth';
 import { useNavItems } from '@/hooks/use-nav-items';
+import PropertySwitcher from '@/components/owner/PropertySwitcher';
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
