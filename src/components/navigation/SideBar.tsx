@@ -40,18 +40,24 @@ const SideBar: React.FC = () => {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-6 border-b border-white/10">
-          <div 
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => navigate('/dashboard')}
-          >
-            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <Home className="h-5 w-5 text-white" />
+          {userRole === 'owner' ? (
+            <div className="bg-white/95 rounded-xl px-3 py-2.5 shadow-soft">
+              <PropertySwitcher />
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold text-white">Livenzo</h1>
-              <p className="text-xs text-white/70 capitalize">{userRole} Dashboard</p>
+          ) : (
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => navigate('/dashboard')}
+            >
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <Home className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-display font-bold text-white">Livenzo</h1>
+                <p className="text-xs text-white/70 capitalize">{userRole} Dashboard</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Navigation */}
