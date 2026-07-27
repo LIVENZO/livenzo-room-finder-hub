@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 interface QRScannerModalProps {
   open: boolean;
@@ -138,7 +139,17 @@ const QRScannerModal: React.FC<QRScannerModalProps> = ({ open, onOpenChange, onS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm rounded-3xl p-0 overflow-hidden">
+      <DialogContent className="relative w-[calc(100vw-2rem)] max-w-sm rounded-3xl p-0 overflow-hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onOpenChange(false)}
+          className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+          aria-label="Close scanner"
+        >
+          <X className="h-5 w-5" />
+        </Button>
         <div className="bg-gradient-to-br from-primary/10 via-background to-background px-6 pt-6 pb-3">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">Scan Owner QR</DialogTitle>
