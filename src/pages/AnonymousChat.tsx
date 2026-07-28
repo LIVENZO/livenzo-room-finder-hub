@@ -182,6 +182,35 @@ const AnonymousChat = () => {
     setIsWaiting(false);
     navigate('/dashboard');
   };
+
+  const handleBackButton = async () => {
+    // If in chat/waiting, end session and return to the start screen (not Home)
+    if (currentSessionId) {
+      try {
+        await endAnonymousChat(currentSessionId);
+      } catch (e) {
+        console.error('Error ending chat on back:', e);
+      }
+      setCurrentSessionId(null);
+      setSession(null);
+      setMessages([]);
+      setIsWaiting(false);
+      return;
+    }
+    handleBackToDashboard();
+  };
+
+  // Intercept hardware/browser back so it returns to the start screen first
+  useEffect(() => {
+    if (!currentSessionId) return;
+    window.history.pushState({ anonChat: true }, '');
+    const onPopState = () => {
+      handleBackButton();
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSessionId]);
   if (userRole !== 'renter') {
     return null;
   }
