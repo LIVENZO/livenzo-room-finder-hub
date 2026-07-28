@@ -400,15 +400,26 @@ const AnonymousChat = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-background border-t">
-              <div className="flex gap-3">
-                <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={session?.status === 'active' ? "Type your message..." : "Waiting to connect..."} className="flex-1 h-12 text-base rounded-xl" disabled={isSending || session?.status !== 'active'} />
-                <Button type="submit" size="icon" disabled={!newMessage.trim() || isSending || session?.status !== 'active'} className="h-12 w-12 rounded-xl">
-                  {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {/* Message Input or Partner-Left actions */}
+            {partnerLeft ? (
+              <div className="p-4 bg-background border-t flex gap-3">
+                <Button variant="outline" onClick={handleBackToStart} className="flex-1 h-12 rounded-xl">
+                  Back
+                </Button>
+                <Button onClick={async () => { handleBackToStart(); await startNewChat(); }} disabled={isConnecting} className="flex-1 h-12 rounded-xl">
+                  {isConnecting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Find New Chat'}
                 </Button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSendMessage} className="p-4 bg-background border-t">
+                <div className="flex gap-3">
+                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={session?.status === 'active' ? "Type your message..." : "Waiting to connect..."} className="flex-1 h-12 text-base rounded-xl" disabled={isSending || session?.status !== 'active'} />
+                  <Button type="submit" size="icon" disabled={!newMessage.trim() || isSending || session?.status !== 'active'} className="h-12 w-12 rounded-xl">
+                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
+                </div>
+              </form>
+            )}
           </>}
       </div>
     </div>;
