@@ -289,14 +289,20 @@ const AnonymousChat = () => {
             <div>
               <h1 className="font-semibold text-lg">Fellow Student</h1>
               <p className="text-xs text-primary-foreground/80">
-                {isWaiting ? "Looking for someone..." : session?.status === 'active' ? "Online" : "Anonymous Chat"}
+                {partnerLeft
+                  ? "Partner left"
+                  : isWaiting
+                    ? "Looking for someone..."
+                    : session?.status === 'active'
+                      ? "Online"
+                      : "Anonymous Chat"}
               </p>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          {session?.status === 'active' && <>
+          {session?.status === 'active' && !partnerLeft && <>
               <Button variant="ghost" size="icon" onClick={handleNextChat} disabled={isConnecting} className="text-primary-foreground hover:bg-primary-foreground/20">
                 <SkipForward className="h-5 w-5" />
               </Button>
