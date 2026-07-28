@@ -362,6 +362,11 @@ const AnonymousChat = () => {
                 </div>
               </div>}
 
+            {partnerLeft && <div className="bg-destructive/10 p-3 text-center border-b">
+                <span className="text-sm text-destructive font-medium">Your Fellow Kotayan has left the chat</span>
+              </div>}
+
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5">
               {messages.length === 0 ? <div className="text-center py-12">
