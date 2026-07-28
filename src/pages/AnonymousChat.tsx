@@ -218,7 +218,7 @@ const AnonymousChat = () => {
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleBackToDashboard} className="text-primary-foreground hover:bg-primary-foreground/20">
+          <Button variant="ghost" size="icon" onClick={handleBackButton} className="text-primary-foreground hover:bg-primary-foreground/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
