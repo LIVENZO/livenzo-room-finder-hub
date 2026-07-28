@@ -130,6 +130,8 @@ const AnonymousChat = () => {
     if (!user) return;
     setIsConnecting(true);
     setMessages([]);
+    setPartnerLeft(false);
+    leavingRef.current = false;
     try {
       const sessionId = await findAnonymousChat(user.id);
       if (sessionId) {
@@ -149,7 +151,6 @@ const AnonymousChat = () => {
         } else if (sessionData?.status === 'active') {
           toast.success("Connected to a Fellow Kotayan!");
           setIsWaiting(false);
-          // Load existing messages
           const existingMessages = await fetchAnonymousMessages(sessionId, user.id);
           setMessages(existingMessages);
         }
@@ -182,10 +183,15 @@ const AnonymousChat = () => {
     if (!user || !currentSessionId) return;
     setIsConnecting(true);
     setMessages([]);
+    setPartnerLeft(false);
+    // Mark that we are the one leaving so our own session-ended UPDATE doesn't
+    // trigger the "partner left" toast on this client.
+    leavingRef.current = true;
     try {
       const newSessionId = await findNextChat(user.id, currentSessionId);
       if (newSessionId) {
         setCurrentSessionId(newSessionId);
+        leavingRef.current = false;
         const sessionData = await getAnonymousSession(newSessionId);
         setSession(sessionData);
         if (sessionData?.status === 'waiting') {
@@ -193,6 +199,8 @@ const AnonymousChat = () => {
           toast.info("Looking for a new Fellow Kotayan...");
         } else {
           toast.success("Connected to a new Fellow Kotayan!");
+          const existingMessages = await fetchAnonymousMessages(newSessionId, user.id);
+          setMessages(existingMessages);
         }
       } else {
         toast.error("Unable to find next chat. Please try again.");
@@ -206,42 +214,48 @@ const AnonymousChat = () => {
   };
   const handleEndChat = async () => {
     if (!currentSessionId) return;
+    leavingRef.current = true;
     try {
       await endAnonymousChat(currentSessionId);
       toast.info("Chat ended");
-      handleBackToDashboard();
+      handleBackToStart();
     } catch (error) {
       console.error("Error ending chat:", error);
       toast.error("Unable to end chat");
     }
   };
   const handlePartnerLeft = () => {
-    // Reset chat state but stay on the chat screen
+    // Show a clear "partner left" state; user can find a new chat or go back
+    setPartnerLeft(true);
+    setIsWaiting(false);
+    setSession(prev => (prev ? { ...prev, status: 'ended' } : prev));
+  };
+  const handleBackToStart = () => {
     setCurrentSessionId(null);
     setSession(null);
     setMessages([]);
     setIsWaiting(false);
+    setPartnerLeft(false);
+    leavingRef.current = false;
   };
   const handleBackToDashboard = () => {
-    setCurrentSessionId(null);
-    setSession(null);
-    setMessages([]);
-    setIsWaiting(false);
+    handleBackToStart();
     navigate('/dashboard');
   };
 
   const handleBackButton = async () => {
-    // If in chat/waiting, end session and return to the start screen (not Home)
-    if (currentSessionId) {
-      try {
-        await endAnonymousChat(currentSessionId);
-      } catch (e) {
-        console.error('Error ending chat on back:', e);
+    // If in chat/waiting or partner-left state, end session and return to start screen
+    if (currentSessionId || partnerLeft) {
+      const sid = currentSessionId;
+      leavingRef.current = true;
+      if (sid) {
+        try {
+          await endAnonymousChat(sid);
+        } catch (e) {
+          console.error('Error ending chat on back:', e);
+        }
       }
-      setCurrentSessionId(null);
-      setSession(null);
-      setMessages([]);
-      setIsWaiting(false);
+      handleBackToStart();
       return;
     }
     handleBackToDashboard();
@@ -249,7 +263,7 @@ const AnonymousChat = () => {
 
   // Intercept hardware/browser back so it returns to the start screen first
   useEffect(() => {
-    if (!currentSessionId) return;
+    if (!currentSessionId && !partnerLeft) return;
     window.history.pushState({ anonChat: true }, '');
     const onPopState = () => {
       handleBackButton();
@@ -257,7 +271,7 @@ const AnonymousChat = () => {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSessionId]);
+  }, [currentSessionId, partnerLeft]);
   if (userRole !== 'renter') {
     return null;
   }
