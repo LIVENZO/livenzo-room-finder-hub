@@ -22,7 +22,15 @@ const AnonymousChat = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
+  const [partnerLeft, setPartnerLeft] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const leavingRef = useRef(false);
+
+  // Keep a ref of the active session for cleanup handlers
+  useEffect(() => {
+    sessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
 
   // Redirect if not renter
   useEffect(() => {
@@ -44,45 +52,86 @@ const AnonymousChat = () => {
     });
   }, [messages]);
 
-  // Real-time message subscription
+  // Real-time message + session + presence subscription
   useEffect(() => {
     if (!currentSessionId || !user) return;
-    const channel = supabase.channel(`anonymous-chat-${currentSessionId}`).on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'anonymous_chat_messages',
-      filter: `session_id=eq.${currentSessionId}`
-    }, payload => {
-      const newMsg = {
-        ...payload.new,
-        is_from_current_user: payload.new.sender_id === user.id
-      } as AnonymousMessage;
-      setMessages(prev => [...prev, newMsg]);
-    }).on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'anonymous_chat_sessions',
-      filter: `id=eq.${currentSessionId}`
-    }, payload => {
-      const updatedSession = payload.new as AnonymousChatSession;
-      setSession(updatedSession);
-      if (updatedSession.status === 'active' && isWaiting) {
-        setIsWaiting(false);
-        toast.success("Connected to a Fellow Kotayan!");
-      }
-      if (updatedSession.status === 'ended') {
+    let presenceReady = false;
+    const channel = supabase
+      .channel(`anonymous-chat-${currentSessionId}`, {
+        config: { presence: { key: user.id } },
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'anonymous_chat_messages',
+        filter: `session_id=eq.${currentSessionId}`,
+      }, payload => {
+        const newMsg = {
+          ...payload.new,
+          is_from_current_user: payload.new.sender_id === user.id,
+        } as AnonymousMessage;
+        setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'anonymous_chat_sessions',
+        filter: `id=eq.${currentSessionId}`,
+      }, payload => {
+        const updatedSession = payload.new as AnonymousChatSession;
+        setSession(updatedSession);
+        if (updatedSession.status === 'active' && isWaiting) {
+          setIsWaiting(false);
+          toast.success("Connected to a Fellow Kotayan!");
+        }
+        if (updatedSession.status === 'ended' && !leavingRef.current) {
+          toast.info("Your Fellow Kotayan has left the chat.");
+          handlePartnerLeft();
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        // Ignore self-leaves and pre-sync leaves
+        if (!presenceReady || key === user.id || leavingRef.current) return;
+        // Partner disconnected (closed app / refresh / network loss)
+        endAnonymousChat(currentSessionId).catch(() => {});
         toast.info("Your Fellow Kotayan has left the chat.");
         handlePartnerLeft();
-      }
-    }).subscribe();
+      })
+      .subscribe(async status => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ user_id: user.id, online_at: new Date().toISOString() });
+          // Small delay to avoid firing 'leave' for pre-existing presence sync
+          setTimeout(() => { presenceReady = true; }, 500);
+        }
+      });
     return () => {
       supabase.removeChannel(channel);
     };
   }, [currentSessionId, user, isWaiting]);
+
+  // Best-effort cleanup on tab close / refresh
+  useEffect(() => {
+    const cleanup = () => {
+      const sid = sessionIdRef.current;
+      if (!sid) return;
+      // Fire-and-forget; presence 'leave' on the other side is the reliable signal
+      try { endAnonymousChat(sid); } catch {}
+    };
+    window.addEventListener('beforeunload', cleanup);
+    window.addEventListener('pagehide', cleanup);
+    return () => {
+      window.removeEventListener('beforeunload', cleanup);
+      window.removeEventListener('pagehide', cleanup);
+      // Component unmount: end active session
+      cleanup();
+    };
+  }, []);
   const startNewChat = async () => {
     if (!user) return;
     setIsConnecting(true);
     setMessages([]);
+    setPartnerLeft(false);
+    leavingRef.current = false;
     try {
       const sessionId = await findAnonymousChat(user.id);
       if (sessionId) {
@@ -102,7 +151,6 @@ const AnonymousChat = () => {
         } else if (sessionData?.status === 'active') {
           toast.success("Connected to a Fellow Kotayan!");
           setIsWaiting(false);
-          // Load existing messages
           const existingMessages = await fetchAnonymousMessages(sessionId, user.id);
           setMessages(existingMessages);
         }
@@ -135,10 +183,15 @@ const AnonymousChat = () => {
     if (!user || !currentSessionId) return;
     setIsConnecting(true);
     setMessages([]);
+    setPartnerLeft(false);
+    // Mark that we are the one leaving so our own session-ended UPDATE doesn't
+    // trigger the "partner left" toast on this client.
+    leavingRef.current = true;
     try {
       const newSessionId = await findNextChat(user.id, currentSessionId);
       if (newSessionId) {
         setCurrentSessionId(newSessionId);
+        leavingRef.current = false;
         const sessionData = await getAnonymousSession(newSessionId);
         setSession(sessionData);
         if (sessionData?.status === 'waiting') {
@@ -146,6 +199,8 @@ const AnonymousChat = () => {
           toast.info("Looking for a new Fellow Kotayan...");
         } else {
           toast.success("Connected to a new Fellow Kotayan!");
+          const existingMessages = await fetchAnonymousMessages(newSessionId, user.id);
+          setMessages(existingMessages);
         }
       } else {
         toast.error("Unable to find next chat. Please try again.");
@@ -159,42 +214,48 @@ const AnonymousChat = () => {
   };
   const handleEndChat = async () => {
     if (!currentSessionId) return;
+    leavingRef.current = true;
     try {
       await endAnonymousChat(currentSessionId);
       toast.info("Chat ended");
-      handleBackToDashboard();
+      handleBackToStart();
     } catch (error) {
       console.error("Error ending chat:", error);
       toast.error("Unable to end chat");
     }
   };
   const handlePartnerLeft = () => {
-    // Reset chat state but stay on the chat screen
+    // Show a clear "partner left" state; user can find a new chat or go back
+    setPartnerLeft(true);
+    setIsWaiting(false);
+    setSession(prev => (prev ? { ...prev, status: 'ended' } : prev));
+  };
+  const handleBackToStart = () => {
     setCurrentSessionId(null);
     setSession(null);
     setMessages([]);
     setIsWaiting(false);
+    setPartnerLeft(false);
+    leavingRef.current = false;
   };
   const handleBackToDashboard = () => {
-    setCurrentSessionId(null);
-    setSession(null);
-    setMessages([]);
-    setIsWaiting(false);
+    handleBackToStart();
     navigate('/dashboard');
   };
 
   const handleBackButton = async () => {
-    // If in chat/waiting, end session and return to the start screen (not Home)
-    if (currentSessionId) {
-      try {
-        await endAnonymousChat(currentSessionId);
-      } catch (e) {
-        console.error('Error ending chat on back:', e);
+    // If in chat/waiting or partner-left state, end session and return to start screen
+    if (currentSessionId || partnerLeft) {
+      const sid = currentSessionId;
+      leavingRef.current = true;
+      if (sid) {
+        try {
+          await endAnonymousChat(sid);
+        } catch (e) {
+          console.error('Error ending chat on back:', e);
+        }
       }
-      setCurrentSessionId(null);
-      setSession(null);
-      setMessages([]);
-      setIsWaiting(false);
+      handleBackToStart();
       return;
     }
     handleBackToDashboard();
@@ -202,7 +263,7 @@ const AnonymousChat = () => {
 
   // Intercept hardware/browser back so it returns to the start screen first
   useEffect(() => {
-    if (!currentSessionId) return;
+    if (!currentSessionId && !partnerLeft) return;
     window.history.pushState({ anonChat: true }, '');
     const onPopState = () => {
       handleBackButton();
@@ -210,7 +271,7 @@ const AnonymousChat = () => {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSessionId]);
+  }, [currentSessionId, partnerLeft]);
   if (userRole !== 'renter') {
     return null;
   }
@@ -228,14 +289,20 @@ const AnonymousChat = () => {
             <div>
               <h1 className="font-semibold text-lg">Fellow Student</h1>
               <p className="text-xs text-primary-foreground/80">
-                {isWaiting ? "Looking for someone..." : session?.status === 'active' ? "Online" : "Anonymous Chat"}
+                {partnerLeft
+                  ? "Partner left"
+                  : isWaiting
+                    ? "Looking for someone..."
+                    : session?.status === 'active'
+                      ? "Online"
+                      : "Anonymous Chat"}
               </p>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          {session?.status === 'active' && <>
+          {session?.status === 'active' && !partnerLeft && <>
               <Button variant="ghost" size="icon" onClick={handleNextChat} disabled={isConnecting} className="text-primary-foreground hover:bg-primary-foreground/20">
                 <SkipForward className="h-5 w-5" />
               </Button>
@@ -248,7 +315,7 @@ const AnonymousChat = () => {
 
       {/* Chat Content */}
       <div className="flex-1 flex flex-col">
-        {!currentSessionId ?
+        {!currentSessionId && !partnerLeft ?
       // Start Chat Screen
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background to-muted/20">
             <div className="text-center space-y-6 max-w-sm">
@@ -295,6 +362,11 @@ const AnonymousChat = () => {
                 </div>
               </div>}
 
+            {partnerLeft && <div className="bg-destructive/10 p-3 text-center border-b">
+                <span className="text-sm text-destructive font-medium">Your Fellow Kotayan has left the chat</span>
+              </div>}
+
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5">
               {messages.length === 0 ? <div className="text-center py-12">
@@ -328,15 +400,26 @@ const AnonymousChat = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-background border-t">
-              <div className="flex gap-3">
-                <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={session?.status === 'active' ? "Type your message..." : "Waiting to connect..."} className="flex-1 h-12 text-base rounded-xl" disabled={isSending || session?.status !== 'active'} />
-                <Button type="submit" size="icon" disabled={!newMessage.trim() || isSending || session?.status !== 'active'} className="h-12 w-12 rounded-xl">
-                  {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {/* Message Input or Partner-Left actions */}
+            {partnerLeft ? (
+              <div className="p-4 bg-background border-t flex gap-3">
+                <Button variant="outline" onClick={handleBackToStart} className="flex-1 h-12 rounded-xl">
+                  Back
+                </Button>
+                <Button onClick={async () => { handleBackToStart(); await startNewChat(); }} disabled={isConnecting} className="flex-1 h-12 rounded-xl">
+                  {isConnecting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Find New Chat'}
                 </Button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSendMessage} className="p-4 bg-background border-t">
+                <div className="flex gap-3">
+                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={session?.status === 'active' ? "Type your message..." : "Waiting to connect..."} className="flex-1 h-12 text-base rounded-xl" disabled={isSending || session?.status !== 'active'} />
+                  <Button type="submit" size="icon" disabled={!newMessage.trim() || isSending || session?.status !== 'active'} className="h-12 w-12 rounded-xl">
+                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
+                </div>
+              </form>
+            )}
           </>}
       </div>
     </div>;
