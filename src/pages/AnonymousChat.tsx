@@ -52,41 +52,80 @@ const AnonymousChat = () => {
     });
   }, [messages]);
 
-  // Real-time message subscription
+  // Real-time message + session + presence subscription
   useEffect(() => {
     if (!currentSessionId || !user) return;
-    const channel = supabase.channel(`anonymous-chat-${currentSessionId}`).on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'anonymous_chat_messages',
-      filter: `session_id=eq.${currentSessionId}`
-    }, payload => {
-      const newMsg = {
-        ...payload.new,
-        is_from_current_user: payload.new.sender_id === user.id
-      } as AnonymousMessage;
-      setMessages(prev => [...prev, newMsg]);
-    }).on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'anonymous_chat_sessions',
-      filter: `id=eq.${currentSessionId}`
-    }, payload => {
-      const updatedSession = payload.new as AnonymousChatSession;
-      setSession(updatedSession);
-      if (updatedSession.status === 'active' && isWaiting) {
-        setIsWaiting(false);
-        toast.success("Connected to a Fellow Kotayan!");
-      }
-      if (updatedSession.status === 'ended') {
+    let presenceReady = false;
+    const channel = supabase
+      .channel(`anonymous-chat-${currentSessionId}`, {
+        config: { presence: { key: user.id } },
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'anonymous_chat_messages',
+        filter: `session_id=eq.${currentSessionId}`,
+      }, payload => {
+        const newMsg = {
+          ...payload.new,
+          is_from_current_user: payload.new.sender_id === user.id,
+        } as AnonymousMessage;
+        setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'anonymous_chat_sessions',
+        filter: `id=eq.${currentSessionId}`,
+      }, payload => {
+        const updatedSession = payload.new as AnonymousChatSession;
+        setSession(updatedSession);
+        if (updatedSession.status === 'active' && isWaiting) {
+          setIsWaiting(false);
+          toast.success("Connected to a Fellow Kotayan!");
+        }
+        if (updatedSession.status === 'ended' && !leavingRef.current) {
+          toast.info("Your Fellow Kotayan has left the chat.");
+          handlePartnerLeft();
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        // Ignore self-leaves and pre-sync leaves
+        if (!presenceReady || key === user.id || leavingRef.current) return;
+        // Partner disconnected (closed app / refresh / network loss)
+        endAnonymousChat(currentSessionId).catch(() => {});
         toast.info("Your Fellow Kotayan has left the chat.");
         handlePartnerLeft();
-      }
-    }).subscribe();
+      })
+      .subscribe(async status => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ user_id: user.id, online_at: new Date().toISOString() });
+          // Small delay to avoid firing 'leave' for pre-existing presence sync
+          setTimeout(() => { presenceReady = true; }, 500);
+        }
+      });
     return () => {
       supabase.removeChannel(channel);
     };
   }, [currentSessionId, user, isWaiting]);
+
+  // Best-effort cleanup on tab close / refresh
+  useEffect(() => {
+    const cleanup = () => {
+      const sid = sessionIdRef.current;
+      if (!sid) return;
+      // Fire-and-forget; presence 'leave' on the other side is the reliable signal
+      try { endAnonymousChat(sid); } catch {}
+    };
+    window.addEventListener('beforeunload', cleanup);
+    window.addEventListener('pagehide', cleanup);
+    return () => {
+      window.removeEventListener('beforeunload', cleanup);
+      window.removeEventListener('pagehide', cleanup);
+      // Component unmount: end active session
+      cleanup();
+    };
+  }, []);
   const startNewChat = async () => {
     if (!user) return;
     setIsConnecting(true);
