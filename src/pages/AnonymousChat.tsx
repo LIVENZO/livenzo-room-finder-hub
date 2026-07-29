@@ -370,11 +370,13 @@ const AnonymousChat = () => {
   };
   const handleBackToStart = () => {
     setCurrentSessionId(null);
+    sessionIdRef.current = null;
     setSession(null);
     setMessages([]);
     setIsWaiting(false);
     setPartnerLeft(false);
     leavingRef.current = false;
+    partnerLeftRef.current = false;
   };
   const handleBackToDashboard = () => {
     handleBackToStart();
