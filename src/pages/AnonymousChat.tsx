@@ -234,15 +234,14 @@ const AnonymousChat = () => {
       try { endAnonymousChat(sid); } catch {}
     };
     const onHidden = () => {
+      // App backgrounded / swiped away on mobile: untrack presence right away so
+      // the partner's watchdog frees them instead of waiting on a dropped socket.
       if (document.visibilityState === 'hidden') {
-        // App closed / swiped away on mobile — best-effort end so the partner is freed
+        try { channelRef.current?.untrack(); } catch {}
+      } else {
         const sid = sessionIdRef.current;
-        if (sid) {
-          try {
-            navigator.sendBeacon?.(
-              `https://naoqigivttgpkfwpzcgg.supabase.co/rest/v1/anonymous_chat_sessions?id=eq.${sid}`
-            );
-          } catch {}
+        if (sid && !leavingRef.current) {
+          try { channelRef.current?.track({ user_id: sessionIdRef.current, online_at: new Date().toISOString() }); } catch {}
         }
       }
     };
