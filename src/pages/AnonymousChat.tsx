@@ -360,10 +360,14 @@ const AnonymousChat = () => {
     }
   };
   const handlePartnerLeft = () => {
-    // Show a clear "partner left" state; user can find a new chat or go back
-    setPartnerLeft(true);
-    setIsWaiting(false);
+    if (leavingRef.current && !sessionIdRef.current) return;
+    // Partner closed the app / left: end the session on this side too and
+    // return the user to the matching (start) screen immediately.
+    leavingRef.current = true;
+    partnerLeftRef.current = true;
     setSession(prev => (prev ? { ...prev, status: 'ended' } : prev));
+    toast.info("Your Fellow Kotayan has left the chat.");
+    handleBackToStart();
   };
   const handleBackToStart = () => {
     setCurrentSessionId(null);
