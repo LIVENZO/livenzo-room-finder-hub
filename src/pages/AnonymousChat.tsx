@@ -26,11 +26,15 @@ const AnonymousChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
   const leavingRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
 
   // Keep a ref of the active session for cleanup handlers
   useEffect(() => {
     sessionIdRef.current = currentSessionId;
   }, [currentSessionId]);
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user?.id]);
 
   // Redirect if not renter
   useEffect(() => {
