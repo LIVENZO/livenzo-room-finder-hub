@@ -26,11 +26,15 @@ const AnonymousChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
   const leavingRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
 
   // Keep a ref of the active session for cleanup handlers
   useEffect(() => {
     sessionIdRef.current = currentSessionId;
   }, [currentSessionId]);
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user?.id]);
 
   // Redirect if not renter
   useEffect(() => {
@@ -67,7 +71,6 @@ const AnonymousChat = () => {
       toast.success("Connected to a Fellow Kotayan!");
     }
     if (updated.status === 'ended') {
-      toast.info("Your Fellow Kotayan has left the chat.");
       handlePartnerLeft();
     }
   };
@@ -89,11 +92,23 @@ const AnonymousChat = () => {
     });
   };
 
+  // Presence bookkeeping so we can detect a partner who closed the app
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const partnerSeenRef = useRef(false);
+  const partnerMissingSinceRef = useRef<number | null>(null);
+
+  const getPartnerId = (s: AnonymousChatSession | null, myId: string) => {
+    if (!s) return null;
+    return s.participant_1 === myId ? s.participant_2 : s.participant_1;
+  };
+
   // Real-time message + session + presence subscription
   useEffect(() => {
     if (!currentSessionId || !user) return;
     const sessionId = currentSessionId;
     let presenceReady = false;
+    partnerSeenRef.current = false;
+    partnerMissingSinceRef.current = null;
     const channel = supabase
       .channel(`anonymous-chat-${sessionId}`, {
         config: { presence: { key: user.id } },
@@ -118,12 +133,24 @@ const AnonymousChat = () => {
       }, payload => {
         applySessionState(payload.new as AnonymousChatSession);
       })
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState() as Record<string, unknown[]>;
+        if (Object.keys(state).some(k => k !== user.id)) {
+          partnerSeenRef.current = true;
+          partnerMissingSinceRef.current = null;
+        }
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        if (key !== user.id) {
+          partnerSeenRef.current = true;
+          partnerMissingSinceRef.current = null;
+        }
+      })
       .on('presence', { event: 'leave' }, ({ key }) => {
         // Ignore self-leaves and pre-sync leaves
         if (!presenceReady || key === user.id || leavingRef.current) return;
         // Partner disconnected (closed app / refresh / network loss)
         endAnonymousChat(sessionId).catch(() => {});
-        toast.info("Your Fellow Kotayan has left the chat.");
         handlePartnerLeft();
       })
       .subscribe(async status => {
@@ -139,7 +166,9 @@ const AnonymousChat = () => {
           }
         }
       });
+    channelRef.current = channel;
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(channel);
     };
   }, [currentSessionId, user?.id]);
@@ -158,6 +187,23 @@ const AnonymousChat = () => {
         if (cancelled) return;
         applySessionState(fresh);
         if (fresh?.status === 'active') {
+          // Presence watchdog: if the partner's presence vanished (app closed,
+          // killed, or network gone) end the session for both sides.
+          const partnerId = getPartnerId(fresh, user.id);
+          const state = (channelRef.current?.presenceState?.() ?? {}) as Record<string, unknown[]>;
+          const partnerOnline = partnerId ? Boolean(state[partnerId]) : false;
+          if (partnerSeenRef.current && !partnerOnline) {
+            if (partnerMissingSinceRef.current === null) {
+              partnerMissingSinceRef.current = Date.now();
+            } else if (Date.now() - partnerMissingSinceRef.current > 8000) {
+              await endAnonymousChat(sessionId).catch(() => {});
+              if (!cancelled) handlePartnerLeft();
+              return;
+            }
+          } else if (partnerOnline) {
+            partnerMissingSinceRef.current = null;
+          }
+
           const msgs = await fetchAnonymousMessages(sessionId, user.id);
           if (!cancelled) mergeMessages(msgs);
         }
@@ -182,7 +228,7 @@ const AnonymousChat = () => {
     };
   }, [currentSessionId, user?.id]);
 
-  // Best-effort cleanup on tab close / refresh
+  // Best-effort cleanup on tab close / refresh / app background
   useEffect(() => {
     const cleanup = () => {
       const sid = sessionIdRef.current;
@@ -190,11 +236,25 @@ const AnonymousChat = () => {
       // Fire-and-forget; presence 'leave' on the other side is the reliable signal
       try { endAnonymousChat(sid); } catch {}
     };
+    const onHidden = () => {
+      // App backgrounded / swiped away on mobile: untrack presence right away so
+      // the partner's watchdog frees them instead of waiting on a dropped socket.
+      if (document.visibilityState === 'hidden') {
+        try { channelRef.current?.untrack(); } catch {}
+      } else {
+        const uid = userIdRef.current;
+        if (sessionIdRef.current && uid && !leavingRef.current) {
+          try { channelRef.current?.track({ user_id: uid, online_at: new Date().toISOString() }); } catch {}
+        }
+      }
+    };
     window.addEventListener('beforeunload', cleanup);
     window.addEventListener('pagehide', cleanup);
+    document.addEventListener('visibilitychange', onHidden);
     return () => {
       window.removeEventListener('beforeunload', cleanup);
       window.removeEventListener('pagehide', cleanup);
+      document.removeEventListener('visibilitychange', onHidden);
       // Component unmount: end active session
       cleanup();
     };
@@ -299,18 +359,24 @@ const AnonymousChat = () => {
     }
   };
   const handlePartnerLeft = () => {
-    // Show a clear "partner left" state; user can find a new chat or go back
-    setPartnerLeft(true);
-    setIsWaiting(false);
+    if (leavingRef.current && !sessionIdRef.current) return;
+    // Partner closed the app / left: end the session on this side too and
+    // return the user to the matching (start) screen immediately.
+    leavingRef.current = true;
+    partnerLeftRef.current = true;
     setSession(prev => (prev ? { ...prev, status: 'ended' } : prev));
+    toast.info("Your Fellow Kotayan has left the chat.");
+    handleBackToStart();
   };
   const handleBackToStart = () => {
     setCurrentSessionId(null);
+    sessionIdRef.current = null;
     setSession(null);
     setMessages([]);
     setIsWaiting(false);
     setPartnerLeft(false);
     leavingRef.current = false;
+    partnerLeftRef.current = false;
   };
   const handleBackToDashboard = () => {
     handleBackToStart();
