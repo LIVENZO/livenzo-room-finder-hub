@@ -71,7 +71,6 @@ const AnonymousChat = () => {
       toast.success("Connected to a Fellow Kotayan!");
     }
     if (updated.status === 'ended') {
-      toast.info("Your Fellow Kotayan has left the chat.");
       handlePartnerLeft();
     }
   };
