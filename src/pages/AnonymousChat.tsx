@@ -52,48 +52,77 @@ const AnonymousChat = () => {
     });
   }, [messages]);
 
+  // Keep refs of latest state for use inside subscriptions/intervals
+  const isWaitingRef = useRef(false);
+  const partnerLeftRef = useRef(false);
+  useEffect(() => { isWaitingRef.current = isWaiting; }, [isWaiting]);
+  useEffect(() => { partnerLeftRef.current = partnerLeft; }, [partnerLeft]);
+
+  const applySessionState = (updated: AnonymousChatSession | null) => {
+    if (!updated || leavingRef.current || partnerLeftRef.current) return;
+    setSession(updated);
+    if (updated.status === 'active' && isWaitingRef.current) {
+      isWaitingRef.current = false;
+      setIsWaiting(false);
+      toast.success("Connected to a Fellow Kotayan!");
+    }
+    if (updated.status === 'ended') {
+      toast.info("Your Fellow Kotayan has left the chat.");
+      handlePartnerLeft();
+    }
+  };
+
+  const mergeMessages = (incoming: AnonymousMessage[]) => {
+    setMessages(prev => {
+      const byId = new Map(prev.map(m => [m.id, m]));
+      let changed = false;
+      incoming.forEach(m => {
+        if (!byId.has(m.id)) {
+          byId.set(m.id, m);
+          changed = true;
+        }
+      });
+      if (!changed) return prev;
+      return Array.from(byId.values()).sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
+  };
+
   // Real-time message + session + presence subscription
   useEffect(() => {
     if (!currentSessionId || !user) return;
+    const sessionId = currentSessionId;
     let presenceReady = false;
     const channel = supabase
-      .channel(`anonymous-chat-${currentSessionId}`, {
+      .channel(`anonymous-chat-${sessionId}`, {
         config: { presence: { key: user.id } },
       })
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'anonymous_chat_messages',
-        filter: `session_id=eq.${currentSessionId}`,
+        filter: `session_id=eq.${sessionId}`,
       }, payload => {
         const newMsg = {
           ...payload.new,
           is_from_current_user: payload.new.sender_id === user.id,
         } as AnonymousMessage;
-        setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
+        mergeMessages([newMsg]);
       })
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'anonymous_chat_sessions',
-        filter: `id=eq.${currentSessionId}`,
+        filter: `id=eq.${sessionId}`,
       }, payload => {
-        const updatedSession = payload.new as AnonymousChatSession;
-        setSession(updatedSession);
-        if (updatedSession.status === 'active' && isWaiting) {
-          setIsWaiting(false);
-          toast.success("Connected to a Fellow Kotayan!");
-        }
-        if (updatedSession.status === 'ended' && !leavingRef.current) {
-          toast.info("Your Fellow Kotayan has left the chat.");
-          handlePartnerLeft();
-        }
+        applySessionState(payload.new as AnonymousChatSession);
       })
       .on('presence', { event: 'leave' }, ({ key }) => {
         // Ignore self-leaves and pre-sync leaves
         if (!presenceReady || key === user.id || leavingRef.current) return;
         // Partner disconnected (closed app / refresh / network loss)
-        endAnonymousChat(currentSessionId).catch(() => {});
+        endAnonymousChat(sessionId).catch(() => {});
         toast.info("Your Fellow Kotayan has left the chat.");
         handlePartnerLeft();
       })
@@ -102,12 +131,56 @@ const AnonymousChat = () => {
           await channel.track({ user_id: user.id, online_at: new Date().toISOString() });
           // Small delay to avoid firing 'leave' for pre-existing presence sync
           setTimeout(() => { presenceReady = true; }, 500);
+          // Re-sync immediately after (re)connect so no update is missed
+          const fresh = await getAnonymousSession(sessionId);
+          applySessionState(fresh);
+          if (fresh?.status === 'active' && user) {
+            mergeMessages(await fetchAnonymousMessages(sessionId, user.id));
+          }
         }
       });
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentSessionId, user, isWaiting]);
+  }, [currentSessionId, user?.id]);
+
+  // Polling fallback: guarantees both sides converge on the same state even if
+  // a realtime event is dropped (backgrounded app, flaky network, reconnects).
+  useEffect(() => {
+    if (!currentSessionId || !user) return;
+    const sessionId = currentSessionId;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled || leavingRef.current || partnerLeftRef.current) return;
+      try {
+        const fresh = await getAnonymousSession(sessionId);
+        if (cancelled) return;
+        applySessionState(fresh);
+        if (fresh?.status === 'active') {
+          const msgs = await fetchAnonymousMessages(sessionId, user.id);
+          if (!cancelled) mergeMessages(msgs);
+        }
+      } catch {
+        /* ignore transient errors */
+      }
+    };
+
+    const interval = setInterval(poll, 2500);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') poll();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', poll);
+    poll();
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', poll);
+    };
+  }, [currentSessionId, user?.id]);
 
   // Best-effort cleanup on tab close / refresh
   useEffect(() => {
@@ -126,6 +199,7 @@ const AnonymousChat = () => {
       cleanup();
     };
   }, []);
+
   const startNewChat = async () => {
     if (!user) return;
     setIsConnecting(true);
