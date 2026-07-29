@@ -242,9 +242,9 @@ const AnonymousChat = () => {
       if (document.visibilityState === 'hidden') {
         try { channelRef.current?.untrack(); } catch {}
       } else {
-        const sid = sessionIdRef.current;
-        if (sid && !leavingRef.current) {
-          try { channelRef.current?.track({ user_id: sessionIdRef.current, online_at: new Date().toISOString() }); } catch {}
+        const uid = userIdRef.current;
+        if (sessionIdRef.current && uid && !leavingRef.current) {
+          try { channelRef.current?.track({ user_id: uid, online_at: new Date().toISOString() }); } catch {}
         }
       }
     };
