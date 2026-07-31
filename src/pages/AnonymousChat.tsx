@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, SkipForward, X, Loader2, Users } from 'lucide-react';
+import { ArrowLeft, Send, SkipForward, Loader2, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
@@ -346,18 +346,6 @@ const AnonymousChat = () => {
       setIsConnecting(false);
     }
   };
-  const handleEndChat = async () => {
-    if (!currentSessionId) return;
-    leavingRef.current = true;
-    try {
-      await endAnonymousChat(currentSessionId);
-      toast.info("Chat ended");
-      handleBackToStart();
-    } catch (error) {
-      console.error("Error ending chat:", error);
-      toast.error("Unable to end chat");
-    }
-  };
   const handlePartnerLeft = () => {
     if (leavingRef.current && !sessionIdRef.current) return;
     // Partner closed the app / left: end the session on this side too and
@@ -441,15 +429,19 @@ const AnonymousChat = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          {session?.status === 'active' && !partnerLeft && <>
-              <Button variant="ghost" size="icon" onClick={handleNextChat} disabled={isConnecting} className="text-primary-foreground hover:bg-primary-foreground/20">
-                <SkipForward className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleEndChat} className="text-primary-foreground hover:bg-primary-foreground/20">
-                <X className="h-5 w-5" />
-              </Button>
-            </>}
+        <div className="flex items-center">
+          {session?.status === 'active' && !partnerLeft && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNextChat}
+              disabled={isConnecting}
+              className="h-12 w-12 rounded-full text-primary-foreground hover:bg-primary-foreground/20 active:bg-primary-foreground/30"
+              aria-label="Next chat"
+            >
+              <SkipForward className="h-7 w-7" />
+            </Button>
+          )}
         </div>
       </div>
 
