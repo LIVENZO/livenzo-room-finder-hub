@@ -432,14 +432,15 @@ const AnonymousChat = () => {
         <div className="flex items-center">
           {session?.status === 'active' && !partnerLeft && (
             <Button
-              variant="ghost"
-              size="icon"
+              variant="secondary"
+              size="sm"
               onClick={handleNextChat}
               disabled={isConnecting}
-              className="h-12 w-12 rounded-full text-primary-foreground hover:bg-primary-foreground/20 active:bg-primary-foreground/30"
+              className="h-10 px-4 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 active:bg-primary-foreground/80 shadow-sm font-semibold text-sm gap-2"
               aria-label="Next chat"
             >
-              <SkipForward className="h-7 w-7" />
+              <SkipForward className="h-4 w-4" />
+              <span>Next</span>
             </Button>
           )}
         </div>
