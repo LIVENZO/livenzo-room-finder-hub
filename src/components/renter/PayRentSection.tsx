@@ -250,14 +250,14 @@ export const PayRentSection = () => {
     );
   }
 
-  // NEW: Only show "No Active Rental" if neither relationship nor rental agreement exists
-  if (!activeRelationship && !rentalAgreement) {
+  // Hide all payment UI when the renter is not connected to any owner
+  if (!activeRelationship) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <h3 className="text-lg font-semibold mb-2">No Active Rental</h3>
-          <p className="text-muted-foreground text-center">
-            You don't have any active rental agreements. Connect with an owner to start paying rent.
+        <CardContent className="flex flex-col items-center justify-center py-10 px-6 text-center">
+          <h3 className="text-lg font-semibold mb-3">No Active Connection</h3>
+          <p className="text-muted-foreground max-w-md">
+            You are not connected to any hostel owner yet. Connect with an owner to view and pay your rent.
           </p>
         </CardContent>
       </Card>
