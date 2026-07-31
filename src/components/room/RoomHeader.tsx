@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Loader2, StarIcon, MapPin, Share2 } from 'lucide-react';
+import { Heart, Loader2, StarIcon, MapPin, Share2, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Room } from '@/types/room';
@@ -66,6 +66,19 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
           </Button>
         </div>
       </div>
+      
+      {/* House Name and House Number */}
+      {(room.house_name || room.house_no) && (
+        <div className="flex items-center mt-3 text-lg font-medium text-gray-700">
+          <Home className="h-5 w-5 text-gray-500 mr-2" />
+          <span>
+            {room.house_name && room.house_no 
+              ? `${room.house_name}, ${room.house_no}`
+              : room.house_name || room.house_no
+            }
+          </span>
+        </div>
+      )}
       
       
       <div className="flex items-center mt-2">
