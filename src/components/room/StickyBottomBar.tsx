@@ -5,6 +5,15 @@ import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import { getRoomPricing } from '@/utils/pricingUtils';
 import BookingFlowSheet from './BookingFlowSheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { CalendarIcon, Clock } from 'lucide-react';
 
 interface StickyBottomBarProps {
   room: Room;
