@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/context/auth';
 import { useNavItems } from '@/hooks/use-nav-items';
 import PropertySwitcher from '@/components/owner/PropertySwitcher';
+import OwnerModeButton from '@/components/navigation/OwnerModeButton';
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
