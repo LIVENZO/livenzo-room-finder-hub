@@ -53,22 +53,23 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   }
 
   const handleBookVisit = () => {
-    const facilities = room.facilities || {};
-    const roomType = (facilities as any).roomType === 'single' ? 'Single' : (facilities as any).roomType === 'sharing' ? 'Sharing' : 'Room';
-    const gender = (facilities as any).gender === 'male' ? 'Boys' : (facilities as any).gender === 'female' ? 'Girls' : 'Any';
-    const message = `Hi Livenzo,
+    setVisitDialogOpen(true);
+  };
 
-I want to schedule an offline visit for ${room.title}
+  const handleConfirmVisit = () => {
+    if (!visitDate || !visitTime) {
+      toast.error('Please select a date and time for your visit');
+      return;
+    }
 
-₹${pricing.currentRoomPrice.toLocaleString()} | ${roomType} room | ${gender}
+    const hostelName = room.house_name || room.title || 'This property';
+    const houseNumber = room.house_no || '';
+    const propertyLine = houseNumber ? `${hostelName} - ${houseNumber}` : hostelName;
 
-${room.house_name || ''}, ${room.location}
-
-Room ID: ${room.id}
-
-Please help me schedule a visit.`;
+    const message = `Hi Livenzo,\n\nI'd like to book a visit for:\n🏠 ${propertyLine}\n\n📅 Date: ${visitDate}\n🕒 Time: ${visitTime}\n\nPlease confirm if this slot is available. Thank you!`;
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/917488698970?text=${encodedMessage}`, '_blank');
+    setVisitDialogOpen(false);
   };
 
   const handleBookNow = () => {
