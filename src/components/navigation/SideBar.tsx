@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/context/auth';
 import { useNavItems } from '@/hooks/use-nav-items';
 import PropertySwitcher from '@/components/owner/PropertySwitcher';
+import OwnerModeButton from '@/components/navigation/OwnerModeButton';
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
@@ -87,7 +88,13 @@ const SideBar: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 space-y-1">
+          {userRole !== 'owner' && (
+            <OwnerModeButton
+              className="w-full h-12 text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200"
+              label="Switch to Owner"
+            />
+          )}
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 h-12 text-white/70 hover:text-white hover:bg-red-500/20 transition-all duration-200"
@@ -98,6 +105,7 @@ const SideBar: React.FC = () => {
             <span className="font-display font-medium">Logout</span>
           </Button>
         </div>
+
 
         {/* Decorative elements */}
         <div className="absolute bottom-4 right-4 opacity-10">

@@ -274,7 +274,9 @@ export function useAuthState() {
           const selectedRole = localStorage.getItem('selectedRole') || 'renter';
           console.log("Checking role conflicts - selectedRole:", selectedRole, "user:", currentSession.user.email);
           
-          const hasConflict = await checkRoleConflict(currentSession.user, selectedRole);
+          // Role selection was removed from login: everyone signs in as a normal user,
+          // so there is no role conflict to enforce at sign-in time.
+          const hasConflict = false;
           if (hasConflict) {
             // Set role conflict flag BEFORE signing out to prevent other toasts
             setRoleConflictActive(true);
