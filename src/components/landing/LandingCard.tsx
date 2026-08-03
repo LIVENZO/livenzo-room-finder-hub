@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import RoleSelector from './RoleSelector';
 import SocialLoginButtons from './SocialLoginButtons';
 import OTPVerificationModal from './OTPVerificationModal';
 interface LandingCardProps {
