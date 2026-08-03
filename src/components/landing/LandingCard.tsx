@@ -96,7 +96,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
           {/* Title and description can be added here if needed */}
         </div>
         
-        <RoleSelector userRole={userRole} setUserRole={setUserRole} canChangeRole={canChangeRole} />
+        {/* Role selection removed — everyone signs in as a normal user */}
         
         {/* Phone Number Input Section */}
         <form onSubmit={handleSendOTP} className="space-y-4">
