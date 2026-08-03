@@ -5,6 +5,15 @@ import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import { getRoomPricing } from '@/utils/pricingUtils';
 import BookingFlowSheet from './BookingFlowSheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { CalendarIcon, Clock } from 'lucide-react';
 
 interface StickyBottomBarProps {
   room: Room;
@@ -15,6 +24,9 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const [visitDialogOpen, setVisitDialogOpen] = useState(false);
+  const [visitDate, setVisitDate] = useState('');
+  const [visitTime, setVisitTime] = useState('');
   const pricing = getRoomPricing(room);
 
   useEffect(() => {
@@ -41,22 +53,23 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   }
 
   const handleBookVisit = () => {
-    const facilities = room.facilities || {};
-    const roomType = (facilities as any).roomType === 'single' ? 'Single' : (facilities as any).roomType === 'sharing' ? 'Sharing' : 'Room';
-    const gender = (facilities as any).gender === 'male' ? 'Boys' : (facilities as any).gender === 'female' ? 'Girls' : 'Any';
-    const message = `Hi Livenzo,
+    setVisitDialogOpen(true);
+  };
 
-I want to schedule an offline visit for ${room.title}
+  const handleConfirmVisit = () => {
+    if (!visitDate || !visitTime) {
+      toast.error('Please select a date and time for your visit');
+      return;
+    }
 
-₹${pricing.currentRoomPrice.toLocaleString()} | ${roomType} room | ${gender}
+    const hostelName = room.house_name || room.title || 'This property';
+    const houseNumber = room.house_no || '';
+    const propertyLine = houseNumber ? `${hostelName} - ${houseNumber}` : hostelName;
 
-${room.house_name || ''}, ${room.location}
-
-Room ID: ${room.id}
-
-Please help me schedule a visit.`;
+    const message = `Hi Livenzo,\n\nI'd like to book a visit for:\n🏠 ${propertyLine}\n\n📅 Date: ${visitDate}\n🕒 Time: ${visitTime}\n\nPlease confirm if this slot is available. Thank you!`;
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/917488698970?text=${encodedMessage}`, '_blank');
+    setVisitDialogOpen(false);
   };
 
   const handleBookNow = () => {
@@ -110,6 +123,53 @@ Please help me schedule a visit.`;
           userEmail={user.email || ''}
         />
       )}
+
+      <Dialog open={visitDialogOpen} onOpenChange={setVisitDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Your Visit</DialogTitle>
+            <DialogDescription>
+              Pick a date and time for your visit to this property.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="visit-date" className="text-sm font-medium flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                Visit Date
+              </label>
+              <input
+                id="visit-date"
+                type="date"
+                value={visitDate}
+                onChange={(e) => setVisitDate(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="visit-time" className="text-sm font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                Visit Time
+              </label>
+              <input
+                id="visit-time"
+                type="time"
+                value={visitTime}
+                onChange={(e) => setVisitTime(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVisitDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmVisit}>
+              Confirm & Open WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
