@@ -24,6 +24,9 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const [visitDialogOpen, setVisitDialogOpen] = useState(false);
+  const [visitDate, setVisitDate] = useState('');
+  const [visitTime, setVisitTime] = useState('');
   const pricing = getRoomPricing(room);
 
   useEffect(() => {
