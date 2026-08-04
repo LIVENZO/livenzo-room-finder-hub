@@ -2044,6 +2044,13 @@ export type Database = {
           videos: string[]
         }[]
       }
+      get_top_room_images: {
+        Args: { p_limit?: number }
+        Returns: {
+          image_url: string
+          room_id: string
+        }[]
+      }
       get_user_fcm_tokens: {
         Args: { target_user_id: string }
         Returns: {
