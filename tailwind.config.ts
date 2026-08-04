@@ -164,6 +164,10 @@ export default {
 				'attention-glow': {
 					'0%, 100%': { opacity: '0.35', transform: 'scale(1)' },
 					'50%': { opacity: '0.9', transform: 'scale(1.25)' }
+				},
+				'marquee-left': {
+					'0%': { transform: 'translateX(0)' },
+					'100%': { transform: 'translateX(-50%)' }
 				}
 			},
 			animation: {
@@ -175,6 +179,7 @@ export default {
 				'pulse-scale-renter': 'pulse-scale-renter 4s ease-in-out infinite',
 				'attention-pulse': 'attention-pulse 2.4s ease-in-out infinite',
 				'attention-glow': 'attention-glow 2.4s ease-in-out infinite',
+				'marquee-left': 'marquee-left 30s linear infinite',
 			}
 		}
 	},

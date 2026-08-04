@@ -90,33 +90,33 @@ const LandingCard: React.FC<LandingCardProps> = ({
     setOtpModalOpen(false);
   };
   return <>
-      <div className="w-full bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
-        <div className="space-y-2 text-center">
-          {/* Title and description can be added here if needed */}
+      <div className="w-full rounded-3xl border border-border/60 bg-card/90 backdrop-blur-xl p-5 sm:p-7 shadow-large space-y-5">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-foreground">Log in or sign up</h2>
+          <p className="text-sm text-muted-foreground">We'll send a one-time password to verify your number.</p>
         </div>
-        
-        {/* Role selection removed — everyone signs in as a normal user */}
-        
+
         {/* Phone Number Input Section */}
-        <form onSubmit={handleSendOTP} className="space-y-4">
-          <div className="w-full">
-            <Input type="tel" placeholder="Phone Number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading} className="w-full h-12 text-base rounded-xl" maxLength={10} />
+        <form onSubmit={handleSendOTP} className="space-y-3">
+          <div className="flex items-center h-14 w-full rounded-2xl border border-input bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors overflow-hidden">
+            <span className="pl-4 pr-3 text-base font-medium text-muted-foreground select-none">+91</span>
+            <span className="h-7 w-px bg-border" />
+            <Input type="tel" inputMode="numeric" autoComplete="tel" placeholder="Phone number" value={phoneNumber} onChange={handlePhoneChange} disabled={isLoading} className="flex-1 h-14 border-0 bg-transparent text-base tracking-wide focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none" maxLength={10} />
           </div>
 
-          <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold rounded-xl" disabled={isLoading || !phoneNumber.trim()}>
+          <Button type="submit" size="lg" className="w-full h-14 text-base font-semibold rounded-2xl shadow-medium" disabled={isLoading || !phoneNumber.trim()}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Send OTP
           </Button>
         </form>
-        
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          
+
+        <p className="text-[11px] leading-relaxed text-center text-muted-foreground">
+          By continuing, you agree to Livenzo's Terms of Service and Privacy Policy.
+        </p>
+
+        <div className="hidden">
+          <SocialLoginButtons onGoogleLogin={handleGoogleLogin} onFacebookLogin={handleFacebookLogin} isLoading={isLoading} />
         </div>
-        
-        <SocialLoginButtons onGoogleLogin={handleGoogleLogin} onFacebookLogin={handleFacebookLogin} isLoading={isLoading} />
       </div>
 
       {/* OTP Verification Modal */}
