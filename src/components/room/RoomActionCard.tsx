@@ -28,7 +28,9 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   const { user } = useAuth();
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const { isDiscountActive } = useOfferStatus();
+  const { openVisitDialog, visitDialog } = useBookVisit(room);
   const pricing = getRoomPricing(room);
+
   const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   // Check if current user is the owner
