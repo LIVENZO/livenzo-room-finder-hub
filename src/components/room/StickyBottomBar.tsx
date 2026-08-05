@@ -98,52 +98,8 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
         />
       )}
 
-      <Dialog open={visitDialogOpen} onOpenChange={setVisitDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Schedule Your Visit</DialogTitle>
-            <DialogDescription>
-              Pick a date and time for your visit to this property.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="visit-date" className="text-sm font-medium flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                Visit Date
-              </label>
-              <input
-                id="visit-date"
-                type="date"
-                value={visitDate}
-                onChange={(e) => setVisitDate(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="visit-time" className="text-sm font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                Visit Time
-              </label>
-              <input
-                id="visit-time"
-                type="time"
-                value={visitTime}
-                onChange={(e) => setVisitTime(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setVisitDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmVisit}>
-              Confirm & Open WhatsApp
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {visitDialog}
+
     </>
   );
 };
