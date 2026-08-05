@@ -7,8 +7,17 @@ import room4 from '@/assets/login/room-4.jpg';
 
 const fallbackImages = [room1, room2, room3, room4];
 
+const rowConfig = [
+  { anim: 'animate-marquee-left', size: 'h-28 w-24 sm:h-36 sm:w-32' },
+  { anim: 'animate-marquee-right', size: 'h-24 w-20 sm:h-32 sm:w-28' },
+  { anim: 'animate-marquee-left-slow', size: 'h-28 w-24 sm:h-36 sm:w-32' },
+];
+
+/** Rotate an array so each row starts at a different image. */
+const rotate = <T,>(arr: T[], by: number) => arr.map((_, i) => arr[(i + by) % arr.length]);
+
 /**
- * Auto-scrolling horizontal image strip (right → left), pure CSS, no interaction.
+ * Multi-row auto-scrolling image strips (alternating directions), pure CSS, no interaction.
  * Images come from the featured (top) rooms; falls back to bundled samples.
  */
 const RoomMarquee: React.FC = () => {
@@ -19,7 +28,7 @@ const RoomMarquee: React.FC = () => {
 
     const load = async () => {
       try {
-        const { data, error } = await (supabase as any).rpc('get_top_room_images', { p_limit: 12 });
+        const { data, error } = await (supabase as any).rpc('get_top_room_images', { p_limit: 24 });
         if (cancelled || error || !data) return;
 
         const urls = (data as { image_url: string | null }[])
@@ -38,30 +47,37 @@ const RoomMarquee: React.FC = () => {
     };
   }, []);
 
-  const loop = [...images, ...images];
-
   return (
-    <div className="relative w-full overflow-hidden">
-      <div className="flex w-max gap-3 animate-marquee-left will-change-transform">
-        {loop.map((src, i) => (
-          <div
-            key={`${src}-${i}`}
-            className="h-40 w-32 sm:h-48 sm:w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-muted shadow-md"
-          >
-            <img
-              src={src}
-              alt="Hostel and room in Kota"
-              loading={i === 0 ? 'eager' : 'lazy'}
-              width={768}
-              height={768}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = fallbackImages[i % fallbackImages.length];
-              }}
-            />
+    <div className="relative w-full overflow-hidden space-y-2 sm:space-y-3">
+      {rowConfig.map((row, rowIndex) => {
+        const rowImages = rotate(images, rowIndex * 3);
+        const loop = [...rowImages, ...rowImages];
+        return (
+          <div key={rowIndex} className="w-full overflow-hidden">
+            <div className={`flex w-max gap-2 sm:gap-3 ${row.anim} will-change-transform`}>
+              {loop.map((src, i) => (
+                <div
+                  key={`${rowIndex}-${src}-${i}`}
+                  className={`${row.size} flex-shrink-0 overflow-hidden rounded-2xl bg-muted shadow-md`}
+                >
+                  <img
+                    src={src}
+                    alt="Hostel and room in Kota"
+                    loading={rowIndex === 0 && i === 0 ? 'eager' : 'lazy'}
+                    width={768}
+                    height={768}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        fallbackImages[i % fallbackImages.length];
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
       {/* Soft edge fades */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-background to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
