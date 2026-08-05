@@ -135,11 +135,11 @@ const Index: React.FC = () => {
     <Layout hideNav>
       <div className="w-full min-h-screen flex flex-col bg-gradient-to-b from-primary/10 via-background to-background">
         {/* Auto-scrolling room/hostel image carousel */}
-        <div className="pt-6 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+        <div className="pb-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
           <RoomMarquee />
         </div>
 
-        <div className="flex-1 w-full max-w-md mx-auto flex flex-col justify-center px-5 pb-10 space-y-6">
+        <div className="flex-1 w-full max-w-md mx-auto flex flex-col justify-start pt-4 px-5 pb-8 space-y-4">
           <div className="space-y-2 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">Livenzo</h1>
             <p className="text-sm sm:text-base text-muted-foreground">Find your perfect room in Kota</p>
