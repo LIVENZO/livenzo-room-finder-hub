@@ -5,15 +5,7 @@ import { Room } from '@/types/room';
 import { useAuth } from '@/context/auth';
 import { getRoomPricing } from '@/utils/pricingUtils';
 import BookingFlowSheet from './BookingFlowSheet';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { useBookVisit } from './BookVisitDialog';
 
 interface StickyBottomBarProps {
   room: Room;
@@ -24,10 +16,9 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   const { isOwner, user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
-  const [visitDialogOpen, setVisitDialogOpen] = useState(false);
-  const [visitDate, setVisitDate] = useState('');
-  const [visitTime, setVisitTime] = useState('');
+  const { openVisitDialog, visitDialog } = useBookVisit(room);
   const pricing = getRoomPricing(room);
+
 
   useEffect(() => {
     const handleScroll = () => {
