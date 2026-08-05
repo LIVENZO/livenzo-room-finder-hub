@@ -43,25 +43,8 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
     return null;
   }
 
-  const handleBookVisit = () => {
-    setVisitDialogOpen(true);
-  };
+  const handleBookVisit = openVisitDialog;
 
-  const handleConfirmVisit = () => {
-    if (!visitDate || !visitTime) {
-      toast.error('Please select a date and time for your visit');
-      return;
-    }
-
-    const hostelName = room.house_name || room.title || 'This property';
-    const houseNumber = room.house_no || '';
-    const propertyLine = houseNumber ? `${hostelName} - ${houseNumber}` : hostelName;
-
-    const message = `Hi Livenzo,\n\nI'd like to book a visit for:\n🏠 ${propertyLine}\n\n📅 Date: ${visitDate}\n🕒 Time: ${visitTime}\n\nPlease confirm if this slot is available. Thank you!`;
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/917488698970?text=${encodedMessage}`, '_blank');
-    setVisitDialogOpen(false);
-  };
 
   const handleBookNow = () => {
     if (!user) {
