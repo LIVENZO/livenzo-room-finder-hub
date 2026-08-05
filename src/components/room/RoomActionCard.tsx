@@ -11,6 +11,8 @@ import { useOfferStatus } from '@/hooks/useOfferStatus';
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
 import BookingPriceBreakdown from './BookingPriceBreakdown';
+import { useBookVisit } from './BookVisitDialog';
+
 
 interface RoomActionCardProps {
   room: Room;
@@ -26,7 +28,9 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
   const { user } = useAuth();
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const { isDiscountActive } = useOfferStatus();
+  const { openVisitDialog, visitDialog } = useBookVisit(room);
   const pricing = getRoomPricing(room);
+
   const firstMonthOffer = isDiscountActive ? pricing.firstMonthDiscount : null;
 
   // Check if current user is the owner
@@ -74,25 +78,8 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
               {/* Offline Visit Button */}
               <Button
               className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white"
-              onClick={() => {
-                const facilities = room.facilities || {};
-                const roomType = facilities.roomType === 'single' ? 'Single' : facilities.roomType === 'sharing' ? 'Sharing' : 'Room';
-                const gender = facilities.gender === 'male' ? 'Boys' : facilities.gender === 'female' ? 'Girls' : 'Any';
-                const message = `Hi Livenzo,
+              onClick={openVisitDialog}>
 
-I want to schedule an offline visit for ${room.title}
-
-₹${pricing.currentRoomPrice.toLocaleString()} | ${roomType} room | ${gender}
-
-${room.house_name || ''}, ${room.location}
-
-Room ID: ${room.id}
-
-Please help me schedule a visit.`;
-                const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://wa.me/917488698970?text=${encodedMessage}`;
-                window.open(whatsappUrl, '_blank');
-              }}>
                 🏠 Offline Visit
               </Button>
 
@@ -133,7 +120,11 @@ Please help me schedule a visit.`;
         userPhone={user.phone || user.user_metadata?.phone || ''}
         userEmail={user.email || ''} />
       }
+
+      {/* Shared Visit Scheduling Dialog */}
+      {visitDialog}
     </>);
+
 };
 
 export default RoomActionCard;
