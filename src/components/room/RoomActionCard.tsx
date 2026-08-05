@@ -120,7 +120,11 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
         userPhone={user.phone || user.user_metadata?.phone || ''}
         userEmail={user.email || ''} />
       }
+
+      {/* Shared Visit Scheduling Dialog */}
+      {visitDialog}
     </>);
+
 };
 
 export default RoomActionCard;
