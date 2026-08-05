@@ -11,6 +11,8 @@ import { useOfferStatus } from '@/hooks/useOfferStatus';
 import { toast } from 'sonner';
 import BookingFlowSheet from './BookingFlowSheet';
 import BookingPriceBreakdown from './BookingPriceBreakdown';
+import { useBookVisit } from './BookVisitDialog';
+
 
 interface RoomActionCardProps {
   room: Room;
