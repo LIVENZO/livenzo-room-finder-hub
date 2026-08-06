@@ -106,14 +106,13 @@ const LandingCard: React.FC<LandingCardProps> = ({
       <div className="w-full rounded-[2rem] border border-primary/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-20px_rgba(91,60,196,0.18),0_8px_24px_-12px_rgba(0,0,0,0.08)] space-y-5">
         {/* Brand header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/25 to-secondary/25 blur-md" />
+          <div className="flex items-center justify-center h-16 w-16 rounded-3xl bg-primary/5">
             <img
               src={livenzoIcon.url}
               alt="Livenzo"
-              width={72}
-              height={72}
-              className="relative h-[4.5rem] w-[4.5rem] object-contain rounded-3xl"
+              width={56}
+              height={56}
+              className="h-12 w-12 object-contain rounded-2xl"
             />
           </div>
           <div className="space-y-0.5">
