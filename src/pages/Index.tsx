@@ -144,7 +144,7 @@ const Index: React.FC = () => {
           <div className="space-y-3 text-center">
             <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24">
               <img
-                src={livenzoLogo}
+                src={livenzoIcon.url}
                 alt="Livenzo"
                 width={96}
                 height={96}
