@@ -8,7 +8,7 @@ import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import RoomMarquee from '@/components/landing/RoomMarquee';
-import livenzoLogo from '@/assets/livenzo-logo.png';
+import livenzoIcon from '@/assets/livenzo-icon.png.asset.json';
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 import { getRoleConflictActive, setRoleConflictActive } from '@/context/auth/hooks/useAuthState';
