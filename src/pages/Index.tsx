@@ -8,6 +8,7 @@ import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import RoomMarquee from '@/components/landing/RoomMarquee';
+import livenzoLogo from '@/assets/livenzo-logo.png';
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 import { getRoleConflictActive, setRoleConflictActive } from '@/context/auth/hooks/useAuthState';
@@ -140,8 +141,16 @@ const Index: React.FC = () => {
         </div>
 
         <div className="flex-1 w-full max-w-md mx-auto flex flex-col justify-start pt-4 px-5 pb-8 space-y-4">
-          <div className="space-y-2 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">Livenzo</h1>
+          <div className="space-y-3 text-center">
+            <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24">
+              <img
+                src={livenzoLogo}
+                alt="Livenzo"
+                width={96}
+                height={96}
+                className="h-full w-full object-contain rounded-3xl shadow-medium"
+              />
+            </div>
             <p className="text-sm sm:text-base text-muted-foreground">Find your perfect room in Kota</p>
           </div>
 
