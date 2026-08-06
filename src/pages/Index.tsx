@@ -148,7 +148,7 @@ const Index: React.FC = () => {
                 alt="Livenzo"
                 width={96}
                 height={96}
-                className="h-full w-full object-contain rounded-3xl shadow-soft"
+                className="h-full w-full object-contain rounded-3xl shadow-medium"
               />
             </div>
             <p className="text-sm sm:text-base text-muted-foreground">Find your perfect room in Kota</p>
