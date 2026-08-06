@@ -8,9 +8,9 @@ import room4 from '@/assets/login/room-4.jpg';
 const fallbackImages = [room1, room2, room3, room4];
 
 const rowConfig = [
-  { anim: 'animate-marquee-left', size: 'h-28 w-24 sm:h-36 sm:w-32' },
-  { anim: 'animate-marquee-right', size: 'h-24 w-20 sm:h-32 sm:w-28' },
-  { anim: 'animate-marquee-left-slow', size: 'h-28 w-24 sm:h-36 sm:w-32' },
+  { anim: 'animate-marquee-left', size: 'h-32 w-28 sm:h-40 sm:w-36' },
+  { anim: 'animate-marquee-right', size: 'h-28 w-24 sm:h-36 sm:w-32' },
+  { anim: 'animate-marquee-left-slow', size: 'h-32 w-28 sm:h-40 sm:w-36' },
 ];
 
 /** Rotate an array so each row starts at a different image. */
@@ -58,7 +58,7 @@ const RoomMarquee: React.FC = () => {
               {loop.map((src, i) => (
                 <div
                   key={`${rowIndex}-${src}-${i}`}
-                  className={`${row.size} flex-shrink-0 overflow-hidden rounded-2xl bg-muted shadow-md`}
+                  className={`${row.size} flex-shrink-0 overflow-hidden rounded-2xl bg-muted shadow-sm`}
                 >
                   <img
                     src={src}
@@ -79,8 +79,8 @@ const RoomMarquee: React.FC = () => {
         );
       })}
       {/* Soft edge fades */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-14 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-14 bg-gradient-to-l from-background to-transparent" />
     </div>
   );
 };

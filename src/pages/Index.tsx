@@ -8,7 +8,6 @@ import LoadingState from '@/components/landing/LoadingState';
 import LandingCard from '@/components/landing/LandingCard';
 import StatCards from '@/components/landing/StatCards';
 import RoomMarquee from '@/components/landing/RoomMarquee';
-import livenzoIcon from '@/assets/livenzo-icon.png.asset.json';
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 import { getRoleConflictActive, setRoleConflictActive } from '@/context/auth/hooks/useAuthState';
@@ -134,26 +133,19 @@ const Index: React.FC = () => {
 
   return (
     <Layout hideNav>
-      <div className="w-full min-h-screen flex flex-col bg-gradient-to-b from-primary/10 via-background to-background">
-        {/* Auto-scrolling room/hostel image carousel */}
-        <div className="pb-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
+      <div className="relative w-full min-h-screen flex flex-col bg-background overflow-hidden">
+        {/* Auto-scrolling room/hostel image carousel with smooth fade into content */}
+        <div
+          className="relative w-full shrink-0"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+        >
           <RoomMarquee />
+          {/* Gradient fade from marquee into page background */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent via-background/80 to-background" />
         </div>
 
-        <div className="flex-1 w-full max-w-md mx-auto flex flex-col justify-start pt-4 px-5 pb-8 space-y-4">
-          <div className="space-y-3 text-center">
-            <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24">
-              <img
-                src={livenzoIcon.url}
-                alt="Livenzo"
-                width={96}
-                height={96}
-                className="h-full w-full object-contain rounded-3xl shadow-medium"
-              />
-            </div>
-            <p className="text-sm sm:text-base text-muted-foreground">Find your perfect room in Kota</p>
-          </div>
-
+        {/* Login content */}
+        <div className="relative z-10 flex-1 w-full max-w-md mx-auto flex flex-col justify-start px-5 pb-6 -mt-10">
           <LandingCard
             userRole={userRole}
             setUserRole={setUserRole}
