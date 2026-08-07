@@ -183,7 +183,40 @@ const AddProperty: React.FC = () => {
         setActivePropertyId(newRow.id);
       }
 
+      // Only now (property saved) promote the user to Owner.
+      if (isSwitchingToOwner && userRole !== 'owner' && user?.id) {
+        try {
+          const { data: updated, error: updateError } = await supabase
+            .from('user_role_assignments')
+            .update({ role: 'owner' })
+            .eq('user_id', user.id)
+            .select('id');
+          if (updateError) throw updateError;
+
+          if (!updated || updated.length === 0) {
+            const { error: insertError } = await supabase
+              .from('user_role_assignments')
+              .insert({
+                user_id: user.id,
+                role: 'owner',
+                email: (user as any).email ?? null,
+                phone: (user as any).phone ?? null,
+              });
+            if (insertError) throw insertError;
+          }
+
+          localStorage.setItem('userRole', 'owner');
+          // Full reload so every consumer picks up the new role cleanly.
+          window.location.href = '/dashboard';
+          return;
+        } catch (roleErr) {
+          console.error('Failed to switch to owner mode:', roleErr);
+          toast.error('Property saved, but switching to Owner mode failed. Please try again.');
+        }
+      }
+
       navigate('/dashboard');
+
     } catch (err) {
       console.error('Error adding property:', err);
       toast.error('Something went wrong. Please try again.');
