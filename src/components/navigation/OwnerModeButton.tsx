@@ -40,19 +40,27 @@ const OwnerModeButton: React.FC<OwnerModeButtonProps> = ({ className, label = 'O
 
     setIsSwitching(true);
     try {
-      const { error: roleError } = await supabase
+      // Try to update an existing role row first, fall back to inserting one.
+      const { data: updated, error: updateError } = await supabase
         .from('user_role_assignments')
-        .upsert(
-          {
+        .update({ role: 'owner' })
+        .eq('user_id', user.id)
+        .select('id');
+
+      if (updateError) throw updateError;
+
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('user_role_assignments')
+          .insert({
             user_id: user.id,
             role: 'owner',
             email: (user as any).email ?? null,
             phone: (user as any).phone ?? null,
-          },
-          { onConflict: 'user_id' }
-        );
+          });
+        if (insertError) throw insertError;
+      }
 
-      if (roleError) throw roleError;
 
       const { data: properties } = await supabase
         .from('owner_properties')
