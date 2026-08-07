@@ -47,8 +47,11 @@ const initialState: FormState = {
 
 const AddProperty: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isSwitchingToOwner = searchParams.get('switchToOwner') === '1';
   const { user, userRole } = useAuth();
   const { refresh, setActivePropertyId } = useOwnerProperty();
+
   const [form, setForm] = useState<FormState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveCoords, setLiveCoords] = useState<{ latitude: number; longitude: number } | null>(null);
