@@ -95,11 +95,12 @@ const AddProperty: React.FC = () => {
       navigate('/');
       return;
     }
-    if (userRole !== 'owner') {
+    if (userRole !== 'owner' && !isSwitchingToOwner) {
       toast.error('Only property owners can add properties');
       navigate('/dashboard');
     }
-  }, [user, userRole, navigate]);
+  }, [user, userRole, navigate, isSwitchingToOwner]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
