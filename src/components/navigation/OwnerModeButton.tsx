@@ -4,7 +4,7 @@ import { Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+
 import { useAuth } from '@/context/auth';
 
 interface OwnerModeButtonProps {
