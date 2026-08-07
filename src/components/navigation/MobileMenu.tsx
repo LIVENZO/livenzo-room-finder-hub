@@ -63,12 +63,7 @@ const MobileMenu: React.FC = () => {
           </SheetClose>
         ))}
         <Separator className="my-2" />
-        {userRole !== 'owner' && (
-          <SheetClose asChild>
-            <OwnerModeButton className="justify-start gap-2" label="Switch to Owner" />
-          </SheetClose>
-        )}
-        <Button 
+        <Button
           variant="ghost" 
           className="justify-start gap-2" 
           onClick={() => setShowLogoutDialog(true)} 
