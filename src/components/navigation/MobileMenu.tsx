@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useNavItems } from '@/hooks/use-nav-items';
-import OwnerModeButton from '@/components/navigation/OwnerModeButton';
+
 
 const MobileMenu: React.FC = () => {
   const navigate = useNavigate();
