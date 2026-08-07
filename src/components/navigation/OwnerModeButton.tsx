@@ -4,7 +4,7 @@ import { Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+
 import { useAuth } from '@/context/auth';
 
 interface OwnerModeButtonProps {
@@ -38,47 +38,11 @@ const OwnerModeButton: React.FC<OwnerModeButtonProps> = ({ className, label = 'O
       return;
     }
 
-    setIsSwitching(true);
-    try {
-      // Try to update an existing role row first, fall back to inserting one.
-      const { data: updated, error: updateError } = await supabase
-        .from('user_role_assignments')
-        .update({ role: 'owner' })
-        .eq('user_id', user.id)
-        .select('id');
-
-      if (updateError) throw updateError;
-
-      if (!updated || updated.length === 0) {
-        const { error: insertError } = await supabase
-          .from('user_role_assignments')
-          .insert({
-            user_id: user.id,
-            role: 'owner',
-            email: (user as any).email ?? null,
-            phone: (user as any).phone ?? null,
-          });
-        if (insertError) throw insertError;
-      }
-
-
-      const { data: properties } = await supabase
-        .from('owner_properties')
-        .select('id')
-        .eq('owner_id', user.id)
-        .limit(1);
-
-      localStorage.setItem('userRole', 'owner');
-      onNavigate?.();
-
-      // Full reload so every consumer picks up the new role cleanly.
-      window.location.href = properties && properties.length > 0 ? '/dashboard' : '/add-property';
-    } catch (error) {
-      console.error('Failed to switch to owner mode:', error);
-      toast.error('Could not switch to Owner mode. Please try again.');
-      setIsSwitching(false);
-    }
+    // Do NOT switch the role yet — the user must first add and save a property.
+    onNavigate?.();
+    navigate('/add-property?switchToOwner=1');
   };
+
 
   return (
     <Button
