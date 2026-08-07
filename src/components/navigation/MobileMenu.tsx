@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useNavItems } from '@/hooks/use-nav-items';
-import OwnerModeButton from '@/components/navigation/OwnerModeButton';
+
 
 const MobileMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -63,12 +63,7 @@ const MobileMenu: React.FC = () => {
           </SheetClose>
         ))}
         <Separator className="my-2" />
-        {userRole !== 'owner' && (
-          <SheetClose asChild>
-            <OwnerModeButton className="justify-start gap-2" label="Switch to Owner" />
-          </SheetClose>
-        )}
-        <Button 
+        <Button
           variant="ghost" 
           className="justify-start gap-2" 
           onClick={() => setShowLogoutDialog(true)} 

@@ -9,6 +9,7 @@ import OwnerPropertyDisplay from '@/components/profile/OwnerPropertyDisplay';
 import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
+import OwnerModeButton from '@/components/navigation/OwnerModeButton';
 
 import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
@@ -152,6 +153,16 @@ const Profile = () => {
               isOwner={isOwner}
             />
           </div>
+
+          {/* Switch to Owner */}
+          {!isOwner && (
+            <section className="rounded-2xl bg-card border border-border/60 shadow-sm p-5 sm:p-6">
+              <OwnerModeButton
+                className="w-full h-14 justify-start gap-3 text-base font-semibold"
+                label="Switch to Owner"
+              />
+            </section>
+          )}
         </div>
         <StickySaveBar dirty={dirty} saving={saving} onSave={handleSave} />
       </div>
