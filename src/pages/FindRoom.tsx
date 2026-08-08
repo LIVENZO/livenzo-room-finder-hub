@@ -12,7 +12,8 @@ import RoomResults from '@/components/room/RoomResults';
 import PromoBannerSlider from '@/components/room/PromoBannerSlider';
 import PropertyTypeFilter from '@/components/room/PropertyTypeFilter';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { SlidersHorizontal, RotateCcw, MessageCircle } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
 import { logSearch } from '@/services/SearchAnalyticsService';
@@ -258,31 +259,35 @@ const FindRoom: React.FC = () => {
         {/* Promo Banner Slider */}
         <PromoBannerSlider />
 
-        {/* WhatsApp Support Banner - shown when no rooms found */}
+        {/* No rooms empty state */}
         {!isLoading && filteredRooms.length === 0 &&
-        <div className="mb-4">
-            <div className="bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl p-6 shadow-sm border border-border/50 animate-fade-in">
-              <div className="text-center space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">
-                  😕 No rooms available right now
-                </h4>
-                <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                  Don't worry — our team helps students find rooms personally on WhatsApp.
-                </p>
-                <button
-                onClick={() => {
-                  const phoneNumber = '917488698970';
-                  const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
-                  window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-                }}
-                className="w-full sm:w-auto px-6 py-3 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
-                style={{ backgroundColor: '#25D366' }}>
-                
+          <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col items-center text-center gap-5">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-2 max-w-sm">
+                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                    No rooms found
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Our team can help you find the right room on WhatsApp.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    const phoneNumber = '917488698970';
+                    const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
+                    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                  }}
+                  className="h-11 rounded-full px-6 bg-[#25D366] hover:bg-[#1DA851] text-white font-medium shadow-md hover:shadow-lg transition-all"
+                >
                   Chat with Room Expert
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         }
 
         {/* Near Me Status Messages */}
