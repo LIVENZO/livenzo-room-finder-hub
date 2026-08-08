@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, Calendar } from 'lucide-react';
+import { CalendarCheck, Phone } from 'lucide-react';
 import { Room } from '@/types/room';
 import { useAuth } from '@/context/AuthContext';
 import { getRoomPricing } from '@/utils/pricingUtils';
@@ -88,7 +88,7 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
               variant="outline"
               className="flex-1 border-primary/30 hover:bg-primary/5 hover:border-primary/50"
               onClick={onCallOwner}>
-                <Calendar className="h-4 w-4 mr-2" />
+                <Phone className="h-4 w-4 mr-2" />
                 Call
               </Button>
             </div>
