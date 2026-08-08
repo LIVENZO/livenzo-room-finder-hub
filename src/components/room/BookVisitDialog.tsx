@@ -81,7 +81,7 @@ export const useBookVisit = (room: Room) => {
             Cancel
           </Button>
           <Button onClick={handleConfirmVisit}>
-            Confirm & Open WhatsApp
+            Confirm
           </Button>
         </DialogFooter>
       </DialogContent>
