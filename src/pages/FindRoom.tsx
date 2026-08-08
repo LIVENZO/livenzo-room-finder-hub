@@ -278,7 +278,7 @@ const FindRoom: React.FC = () => {
                 <Button
                   onClick={() => {
                     const phoneNumber = '917488698970';
-                    const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget:\nLocation:`);
+                    const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget: ₹____\nLocation: ____\n\nType: Hostel / PG / 1 BHK / 2 BHK\nFor: Boys / Girls`);
                     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
                   }}
                   className="h-11 rounded-full px-6 bg-[#25D366] hover:bg-[#1DA851] text-white font-medium shadow-md hover:shadow-lg transition-all"
