@@ -75,12 +75,12 @@ const RoomActionCard: React.FC<RoomActionCardProps> = ({
           {/* Chat Support & Call Owner Buttons - Hidden for property owner */}
           {!isOwner &&
           <div className="flex gap-2 w-full">
-              {/* Offline Visit Button */}
+              {/* Book a Visit Button */}
               <Button
-              className="flex-1 bg-[#25D366] hover:bg-[#1da851] text-white"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={openVisitDialog}>
 
-                🏠 Offline Visit
+                🏠 Book a Visit
               </Button>
 
               {/* Call Button */}
