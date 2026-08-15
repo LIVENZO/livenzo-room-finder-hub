@@ -35,9 +35,13 @@ const RoomMarquee: React.FC = () => {
           .map((r) => r.image_url)
           .filter((u): u is string => Boolean(u && u.trim()));
 
-        if (urls.length > 0) setImages(urls);
+        if (urls.length > 0) {
+          setImages(urls);
+        } else {
+          setImages(fallbackImages);
+        }
       } catch {
-        // keep fallback images
+        setImages(fallbackImages);
       }
     };
 
