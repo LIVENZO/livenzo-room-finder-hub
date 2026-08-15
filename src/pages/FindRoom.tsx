@@ -261,35 +261,33 @@ const FindRoom: React.FC = () => {
 
         {/* No rooms empty state */}
         {!isLoading && filteredRooms.length === 0 &&
-          <div className="flex min-h-[calc(100dvh-15rem)] items-center justify-center">
-            <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
-              <CardContent className="p-6 sm:p-8">
-                <div className="flex flex-col items-center text-center gap-5">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                    <MessageCircle className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="space-y-2 max-w-sm">
-                    <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                      No rooms found
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Our team can help you find the right room on WhatsApp.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      const phoneNumber = '917488698970';
-                      const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget: ₹____\nLocation: ____\n\nType: Hostel / PG / 1 BHK / 2 BHK\nFor: Boys / Girls`);
-                      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-                    }}
-                    className="h-11 rounded-full px-6 bg-[#25D366] hover:bg-[#1DA851] text-white font-medium shadow-md hover:shadow-lg transition-all"
-                  >
-                    Chat with Room Expert
-                  </Button>
+          <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col items-center text-center gap-5">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                  <MessageCircle className="h-6 w-6 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="space-y-2 max-w-sm">
+                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                    No rooms found
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Our team can help you find the right room on WhatsApp.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    const phoneNumber = '917488698970';
+                    const message = encodeURIComponent(`Hi, I'm looking for a room.\n\nBudget: ₹____\nLocation: ____\n\nType: Hostel / PG / 1 BHK / 2 BHK\nFor: Boys / Girls`);
+                    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                  }}
+                  className="h-11 rounded-full px-6 bg-[#25D366] hover:bg-[#1DA851] text-white font-medium shadow-md hover:shadow-lg transition-all"
+                >
+                  Chat with Room Expert
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         }
 
         {/* Near Me Status Messages */}
