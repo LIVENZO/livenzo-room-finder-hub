@@ -261,19 +261,21 @@ const FindRoom: React.FC = () => {
 
         {/* No rooms empty state */}
         {!isLoading && filteredRooms.length === 0 &&
-          <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col items-center text-center gap-5">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                  <MessageCircle className="h-6 w-6 text-primary" />
-                </div>
-                <div className="space-y-2 max-w-sm">
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                    No rooms found
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Our team can help you find the right room on WhatsApp.
-                  </p>
+          <div className="flex flex-col justify-center min-h-[calc(100dvh_-_12rem)] md:min-h-0">
+            <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm flex flex-col flex-1">
+              <CardContent className="p-6 sm:p-8 flex flex-col flex-1">
+                <div className="flex-1 flex flex-col items-center justify-center text-center gap-5">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                    <MessageCircle className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="space-y-2 max-w-sm">
+                    <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                      No rooms found
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Our team can help you find the right room on WhatsApp.
+                    </p>
+                  </div>
                 </div>
                 <Button
                   onClick={() => {
@@ -285,9 +287,9 @@ const FindRoom: React.FC = () => {
                 >
                   Chat with Room Expert
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         }
 
         {/* Near Me Status Messages */}
