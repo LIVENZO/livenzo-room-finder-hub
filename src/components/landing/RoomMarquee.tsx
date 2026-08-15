@@ -21,7 +21,7 @@ const rotate = <T,>(arr: T[], by: number) => arr.map((_, i) => arr[(i + by) % ar
  * Images come from the featured (top) rooms; falls back to bundled samples.
  */
 const RoomMarquee: React.FC = () => {
-  const [images, setImages] = useState<string[]>(fallbackImages);
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
