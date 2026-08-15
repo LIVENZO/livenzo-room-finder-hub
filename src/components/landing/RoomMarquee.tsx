@@ -21,7 +21,7 @@ const rotate = <T,>(arr: T[], by: number) => arr.map((_, i) => arr[(i + by) % ar
  * Images come from the featured (top) rooms; falls back to bundled samples.
  */
 const RoomMarquee: React.FC = () => {
-  const [images, setImages] = useState<string[]>(fallbackImages);
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,9 +35,13 @@ const RoomMarquee: React.FC = () => {
           .map((r) => r.image_url)
           .filter((u): u is string => Boolean(u && u.trim()));
 
-        if (urls.length > 0) setImages(urls);
+        if (urls.length > 0) {
+          setImages(urls);
+        } else {
+          setImages(fallbackImages);
+        }
       } catch {
-        // keep fallback images
+        setImages(fallbackImages);
       }
     };
 
