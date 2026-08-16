@@ -261,13 +261,13 @@ const FindRoom: React.FC = () => {
 
         {/* No rooms empty state */}
         {!isLoading && filteredRooms.length === 0 &&
-          <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col items-center text-center gap-5">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                  <MessageCircle className="h-6 w-6 text-primary" />
+          <Card className="mb-4 sm:mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-4 sm:p-8">
+              <div className="flex flex-col items-center text-center gap-3 sm:gap-5">
+                <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary/10">
+                  <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
-                <div className="space-y-2 max-w-sm">
+                <div className="space-y-1 sm:space-y-2 max-w-sm">
                   <h3 className="text-lg font-semibold text-foreground tracking-tight">
                     No rooms found
                   </h3>
