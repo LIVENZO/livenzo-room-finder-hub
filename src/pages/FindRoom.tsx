@@ -261,7 +261,7 @@ const FindRoom: React.FC = () => {
 
         {/* No rooms empty state */}
         {!isLoading && filteredRooms.length === 0 &&
-          <div className="flex flex-col justify-center min-h-[calc(100dvh_-_12rem)] md:min-h-0">
+          <div className="flex flex-col justify-center min-h-[60vh] min-h-[calc(100dvh_-_12rem)] md:min-h-0">
             <Card className="mb-6 overflow-hidden border border-border/60 bg-card/50 backdrop-blur-sm flex flex-col flex-1">
               <CardContent className="p-6 sm:p-8 flex flex-col flex-1">
                 <div className="flex-1 flex flex-col items-center justify-center text-center gap-5">
