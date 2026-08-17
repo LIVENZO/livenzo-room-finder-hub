@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -17,35 +17,10 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
   onClose,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const pushedRef = useRef(false);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
-
-  // Android/browser back button: close only the viewer, stay on room detail
-  useEffect(() => {
-    if (!open) return;
-
-    window.history.pushState({ imageViewer: true }, '');
-    pushedRef.current = true;
-
-    const onPopState = () => {
-      pushedRef.current = false;
-      onClose();
-    };
-
-    window.addEventListener('popstate', onPopState);
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-      // Viewer closed via UI: remove the history entry we added
-      if (pushedRef.current) {
-        pushedRef.current = false;
-        window.history.back();
-      }
-    };
-  }, [open, onClose]);
-
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
