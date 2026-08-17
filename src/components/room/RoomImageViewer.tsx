@@ -17,10 +17,26 @@ const RoomImageViewer: React.FC<RoomImageViewerProps> = ({
   onClose,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
+
+  // Intercept hardware/browser back so it closes the viewer instead of navigating back
+  useEffect(() => {
+    if (!open) return;
+    window.history.pushState({ roomImageViewer: true }, '');
+    const onPopState = () => {
+      onCloseRef.current();
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [open]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
