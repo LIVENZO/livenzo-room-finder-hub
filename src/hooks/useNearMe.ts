@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room } from '@/types/room';
 import { calculateDistance } from '@/utils/roomUtils';
 
@@ -10,6 +10,12 @@ interface NearMeState {
   userLocation: { latitude: number; longitude: number } | null;
 }
 
+const GEO_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 300000, // 5 minutes cache
+};
+
 export const useNearMe = () => {
   const [state, setState] = useState<NearMeState>({
     isActive: false,
@@ -18,20 +24,28 @@ export const useNearMe = () => {
     userLocation: null,
   });
 
-  const activateNearMe = useCallback(() => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  // Keeps a reference to the permission status object so we can auto-retry
+  // as soon as the user grants access (avoids a second "Near Me" tap).
+  const permissionStatusRef = useRef<PermissionStatus | null>(null);
+  const permissionHandlerRef = useRef<(() => void) | null>(null);
+  const cancelledRef = useRef(false);
 
-    if (!navigator.geolocation) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Geolocation is not supported by your browser',
-      }));
-      return;
+  const detachPermissionListener = useCallback(() => {
+    if (permissionStatusRef.current && permissionHandlerRef.current) {
+      permissionStatusRef.current.removeEventListener('change', permissionHandlerRef.current);
     }
+    permissionStatusRef.current = null;
+    permissionHandlerRef.current = null;
+  }, []);
+
+  const requestPosition = useCallback(() => {
+    cancelledRef.current = false;
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (cancelledRef.current) return;
+        detachPermissionListener();
         setState({
           isActive: true,
           isLoading: false,
@@ -43,36 +57,71 @@ export const useNearMe = () => {
         });
       },
       (error) => {
+        if (cancelledRef.current) return;
+
         let errorMessage = 'Enable location access to find nearby rooms';
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = 'Enable location access to find nearby rooms';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
+        if (error.code === error.POSITION_UNAVAILABLE) {
           errorMessage = 'Location information is unavailable';
         } else if (error.code === error.TIMEOUT) {
           errorMessage = 'Location request timed out';
         }
+
         setState(prev => ({
           ...prev,
+          isActive: false,
           isLoading: false,
           error: errorMessage,
         }));
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minutes cache
-      }
+      GEO_OPTIONS
     );
-  }, []);
+  }, [detachPermissionListener]);
+
+  const activateNearMe = useCallback(() => {
+    if (!navigator.geolocation) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Geolocation is not supported by your browser',
+      }));
+      return;
+    }
+
+    // Watch permission state so a grant immediately triggers the search.
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' as PermissionName })
+        .then((status) => {
+          detachPermissionListener();
+          const handler = () => {
+            if (status.state === 'granted' && !cancelledRef.current) {
+              requestPosition();
+            }
+          };
+          status.addEventListener('change', handler);
+          permissionStatusRef.current = status;
+          permissionHandlerRef.current = handler;
+        })
+        .catch(() => {
+          /* permissions API unavailable — plain flow still works */
+        });
+    }
+
+    requestPosition();
+  }, [detachPermissionListener, requestPosition]);
 
   const deactivateNearMe = useCallback(() => {
+    cancelledRef.current = true;
+    detachPermissionListener();
     setState({
       isActive: false,
       isLoading: false,
       error: null,
       userLocation: null,
     });
-  }, []);
+  }, [detachPermissionListener]);
+
+  useEffect(() => detachPermissionListener, [detachPermissionListener]);
 
   const calculateRoomDistances = useCallback(
     (rooms: Room[]): Room[] => {
