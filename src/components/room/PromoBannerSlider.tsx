@@ -115,8 +115,16 @@ const RefundGuaranteeBanner = () => (
   </div>
 );
 
-const FreeDropBanner = () => (
-  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-cyan-500 p-4">
+const FreeDropBanner = ({ onClick }: { onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick();
+    }}
+    className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-cyan-500 p-4 w-full text-left"
+    aria-label="Open free drop details"
+  >
     <div className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-white/10" />
     <div className="absolute -bottom-3 -left-3 w-14 h-14 rounded-full bg-white/10" />
     <div className="relative flex items-center gap-3">
@@ -130,7 +138,7 @@ const FreeDropBanner = () => (
         </p>
       </div>
     </div>
-  </div>
+  </button>
 );
 
 /* ── Main Slider ── */
