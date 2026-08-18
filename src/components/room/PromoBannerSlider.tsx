@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Clock, Sparkles, AlertTriangle, MapPin, Car, ShieldCheck } from "lucide-react";
 import { useOfferStatus, OfferStatus } from "@/hooks/useOfferStatus";
 import { cn } from "@/lib/utils";
+import FreeDropSheet from "@/components/room/FreeDropSheet";
 
 /* ── Timer helpers ── */
 const TimeBlock = ({ value, label }: { value: number; label: string }) => (
@@ -115,8 +116,16 @@ const RefundGuaranteeBanner = () => (
   </div>
 );
 
-const FreeDropBanner = () => (
-  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-cyan-500 p-4">
+const FreeDropBanner = ({ onClick }: { onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick();
+    }}
+    className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-cyan-500 p-4 w-full text-left"
+    aria-label="Open free drop details"
+  >
     <div className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-white/10" />
     <div className="absolute -bottom-3 -left-3 w-14 h-14 rounded-full bg-white/10" />
     <div className="relative flex items-center gap-3">
@@ -130,7 +139,7 @@ const FreeDropBanner = () => (
         </p>
       </div>
     </div>
-  </div>
+  </button>
 );
 
 /* ── Main Slider ── */
@@ -138,6 +147,7 @@ const FreeDropBanner = () => (
 const PromoBannerSlider: React.FC = () => {
   const { offerStatus, remaining, unlockLuckyOffer } = useOfferStatus();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [freeDropOpen, setFreeDropOpen] = useState(false);
   const touchStartX = useRef(0);
   const autoSlideRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -156,7 +166,7 @@ const PromoBannerSlider: React.FC = () => {
   slides.push(<RefundGuaranteeBanner key="refund" />);
 
   // Always show Free Drop banner
-  slides.push(<FreeDropBanner key="freedrop" />);
+  slides.push(<FreeDropBanner key="freedrop" onClick={() => setFreeDropOpen(true)} />);
 
   const slideCount = slides.length;
 
@@ -234,6 +244,8 @@ const PromoBannerSlider: React.FC = () => {
           ))}
         </div>
       )}
+
+      <FreeDropSheet open={freeDropOpen} onOpenChange={setFreeDropOpen} />
     </div>
   );
 };
