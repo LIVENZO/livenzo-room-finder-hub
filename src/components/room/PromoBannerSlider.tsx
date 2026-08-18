@@ -147,6 +147,7 @@ const FreeDropBanner = ({ onClick }: { onClick: () => void }) => (
 const PromoBannerSlider: React.FC = () => {
   const { offerStatus, remaining, unlockLuckyOffer } = useOfferStatus();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [freeDropOpen, setFreeDropOpen] = useState(false);
   const touchStartX = useRef(0);
   const autoSlideRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -165,7 +166,7 @@ const PromoBannerSlider: React.FC = () => {
   slides.push(<RefundGuaranteeBanner key="refund" />);
 
   // Always show Free Drop banner
-  slides.push(<FreeDropBanner key="freedrop" />);
+  slides.push(<FreeDropBanner key="freedrop" onClick={() => setFreeDropOpen(true)} />);
 
   const slideCount = slides.length;
 
