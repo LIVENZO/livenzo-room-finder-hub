@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Clock, Sparkles, AlertTriangle, MapPin, Car, ShieldCheck } from "lucide-react";
 import { useOfferStatus, OfferStatus } from "@/hooks/useOfferStatus";
 import { cn } from "@/lib/utils";
+import FreeDropSheet from "@/components/room/FreeDropSheet";
 
 /* ── Timer helpers ── */
 const TimeBlock = ({ value, label }: { value: number; label: string }) => (
