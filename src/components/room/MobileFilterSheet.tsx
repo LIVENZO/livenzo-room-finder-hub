@@ -153,7 +153,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
               onValueChange={(value) => 
                 setTempFilters({ ...tempFilters, propertyType: value ? value as 'PG' | 'Hostel' | 'BHK' : undefined })
               }
-              className="flex items-center space-x-4"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-2"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="PG" id="mobile-type-pg" />
@@ -169,7 +169,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="" id="mobile-type-any" />
-                <Label htmlFor="mobile-type-any">Any</Label>
+                <Label htmlFor="mobile-type-any">All</Label>
               </div>
             </RadioGroup>
           </div>
