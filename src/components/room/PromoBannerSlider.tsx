@@ -244,6 +244,8 @@ const PromoBannerSlider: React.FC = () => {
           ))}
         </div>
       )}
+
+      <FreeDropSheet open={freeDropOpen} onOpenChange={setFreeDropOpen} />
     </div>
   );
 };
