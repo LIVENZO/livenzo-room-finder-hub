@@ -16,13 +16,13 @@ interface Props {
 
 const PropertyTypeFilter: React.FC<Props> = ({ value, onChange }) => {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+    <div className="grid grid-cols-4 gap-2 pb-1">
       {OPTIONS.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            'px-4 py-1.5 rounded-full text-sm font-medium border transition-all whitespace-nowrap',
+            'w-full px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all text-center',
             value === opt.value
               ? 'bg-primary text-primary-foreground border-primary shadow-sm'
               : 'bg-background text-foreground border-border hover:border-primary/40'
