@@ -97,8 +97,10 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AndroidBackHandler />
             <FCMWrapper />
             <RenterLaunchRedirect />
+
             <ProfileCompletionCheck />
             <Routes>
               <Route path="/" element={<Index />} />
