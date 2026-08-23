@@ -16,7 +16,7 @@ const NavBar: React.FC = () => {
   const isOwner = userRole === 'owner';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-3 px-4 safe-area-top">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 pt-5 pb-2 px-4 safe-area-top">
       <div className="flex justify-between items-center w-full gap-3">
         {isOwner ? (
           <div className="flex-1 min-w-0 mr-2">
