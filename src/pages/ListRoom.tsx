@@ -288,6 +288,8 @@ const ListRoom: React.FC = () => {
         images: imageUrls,
         videos: videoUrls,
         property_id: activeProperty?.id ?? null,
+        location_latitude: roomCoords?.lat ?? null,
+        location_longitude: roomCoords?.lng ?? null,
       };
       
       console.log('Inserting room data:', roomData);
