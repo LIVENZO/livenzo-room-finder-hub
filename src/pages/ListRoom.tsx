@@ -30,6 +30,7 @@ const ListRoom: React.FC = () => {
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [profileChecked, setProfileChecked] = useState(false);
+  const [roomCoords, setRoomCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Initialize form with react-hook-form
   const form = useForm<FormValues>({
@@ -107,6 +108,9 @@ const ListRoom: React.FC = () => {
         Number(propLat) !== 0 && Number(propLng) !== 0;
 
       let hasValidLocation = propertyHasLocation;
+      let coords: { lat: number; lng: number } | null = propertyHasLocation
+        ? { lat: Number(propLat), lng: Number(propLng) }
+        : null;
       if (!hasValidLocation) {
         const profile = await fetchUserProfile(user.id);
         hasValidLocation =
@@ -114,6 +118,12 @@ const ListRoom: React.FC = () => {
           !!profile?.location_longitude &&
           typeof profile.location_latitude === 'number' &&
           typeof profile.location_longitude === 'number';
+        if (hasValidLocation) {
+          coords = {
+            lat: Number(profile!.location_latitude),
+            lng: Number(profile!.location_longitude),
+          };
+        }
       }
       if (!hasValidLocation) {
         // Save current form data before redirecting
@@ -126,6 +136,7 @@ const ListRoom: React.FC = () => {
         toast.info('Please set your property location before listing rooms.');
         navigate('/set-location', { replace: true, state: { backTo: '/list-room' } });
       } else {
+        setRoomCoords(coords);
         setProfileChecked(true);
       }
     };
@@ -277,6 +288,8 @@ const ListRoom: React.FC = () => {
         images: imageUrls,
         videos: videoUrls,
         property_id: activeProperty?.id ?? null,
+        location_latitude: roomCoords?.lat ?? null,
+        location_longitude: roomCoords?.lng ?? null,
       };
       
       console.log('Inserting room data:', roomData);
