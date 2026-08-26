@@ -30,6 +30,7 @@ const ListRoom: React.FC = () => {
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [profileChecked, setProfileChecked] = useState(false);
+  const [roomCoords, setRoomCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Initialize form with react-hook-form
   const form = useForm<FormValues>({
