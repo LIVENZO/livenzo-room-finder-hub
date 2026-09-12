@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://livenzo-room-finder-hub.lovable.app/sitemap.xml
