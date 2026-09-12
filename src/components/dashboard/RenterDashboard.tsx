@@ -120,7 +120,7 @@ const RenterDashboard: React.FC = () => {
               index === currentSlide ? "opacity-100" : "opacity-0",
             )}
           >
-            <img src={image} alt={`Room ${index + 1}`} className="w-full h-full object-cover" />
+            <img src={image} alt={`Featured student room in Kota, photo ${index + 1}`} className="w-full h-full object-cover" />
           </div>
         ))}
 
