@@ -7,6 +7,7 @@ import LocationSetter from '@/components/profile/LocationSetter';
 import { Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const SetLocation: React.FC = () => {
   const { user } = useAuth();
@@ -54,6 +55,14 @@ const SetLocation: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Set Your Location | Livenzo"
+        description="Set your property or search location so Livenzo can show rooms nearby in Kota."
+        path="/set-location"
+        image={OG_HOME}
+        noindex
+      />
+      <h1 className="sr-only">Set your location</h1>
       <div className="max-w-xl mx-auto py-10 animate-fade-in">
         <h2 className="text-2xl font-bold mb-4">Set Your Property Location</h2>
         <p className="mb-4 text-gray-600">

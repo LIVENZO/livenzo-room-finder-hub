@@ -7,6 +7,7 @@ import { useRooms } from '@/context/RoomContext';
 import { fetchUserFavorites } from '@/services/FavoriteService';
 import RoomCard from '@/components/RoomCard';
 import { Loader2 } from 'lucide-react';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 const Favorites = () => {
   const { user } = useAuth();
@@ -37,6 +38,13 @@ const Favorites = () => {
   
   return (
     <Layout>
+      <Seo
+        title="Saved Rooms | Livenzo"
+        description="All the rooms, PGs and hostels you saved on Livenzo, ready to compare and revisit."
+        path="/favorites"
+        image={OG_ROOMS}
+        noindex
+      />
       <div className="container py-10">
         <h1 className="text-3xl font-bold mb-6">Your Favorite Rooms</h1>
         

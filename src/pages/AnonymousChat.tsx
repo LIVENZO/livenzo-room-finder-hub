@@ -404,6 +404,13 @@ const AnonymousChat = () => {
     return null;
   }
   return <div className="h-screen bg-background flex flex-col">
+      <Seo
+        title="Talk to a Fellow Student | Livenzo"
+        description="Anonymous one-to-one chat with another student in Kota about hostels, coaching and life away from home."
+        path="/anonymous-chat"
+        image={OG_HOME}
+        noindex
+      />
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">

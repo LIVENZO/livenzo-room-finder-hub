@@ -10,6 +10,7 @@ import ActiveRentersList, { MeterPhoto } from '@/components/dashboard/rent-manag
 import AddPaymentModal from '@/components/dashboard/rent-management/AddPaymentModal';
 import { getOwnerMeterPhotos } from '@/services/MeterPhotoService';
 import { usePropertyScope } from '@/hooks/usePropertyScope';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 interface RenterPaymentInfo {
   id: string;
@@ -198,6 +199,13 @@ const ActiveRenters: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Active Renters | Livenzo"
+        description="See every active renter in your property with rent, electricity bill and payment status."
+        path="/active-renters"
+        image={OG_HOME}
+        noindex
+      />
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-background border-b border-border/50 px-4 py-6 sticky top-0 z-10">

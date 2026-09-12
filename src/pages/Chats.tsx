@@ -11,6 +11,7 @@ import { Loader2, Send } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from "@/integrations/supabase/client";
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const Chats = () => {
   const { user } = useAuth();
@@ -136,6 +137,14 @@ const Chats = () => {
   
   return (
     <Layout>
+      <Seo
+        title="Messages | Livenzo"
+        description="Chat with property owners and renters about rooms, visits and rent on Livenzo."
+        path="/chats"
+        image={OG_HOME}
+        noindex
+      />
+      <h1 className="sr-only">Messages</h1>
       <div className="container py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-200px)]">
           {/* Conversations sidebar */}

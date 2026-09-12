@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import RoomList from '@/components/dashboard/RoomList';
 import { parseFacilities } from '@/utils/roomUtils';
 import { usePropertyScope } from '@/hooks/usePropertyScope';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 const MyListings: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -101,6 +102,13 @@ const MyListings: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="My Room Listings | Livenzo"
+        description="Manage the rooms, PGs and hostels you have listed on Livenzo."
+        path="/my-listings"
+        image={OG_ROOMS}
+        noindex
+      />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">My Room Listings</h1>

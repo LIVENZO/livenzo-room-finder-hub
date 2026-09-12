@@ -18,6 +18,7 @@ import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
 import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { fetchUserProfile } from '@/services/UserProfileService';
 import { useOwnerProperty } from '@/context/OwnerPropertyContext';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 const ListRoom: React.FC = () => {
   const { user, userRole } = useAuth();
@@ -325,6 +326,12 @@ const ListRoom: React.FC = () => {
   
   return (
     <Layout>
+      <Seo
+        title="List Your Room, PG or Hostel | Livenzo"
+        description="List your room, PG, hostel or BHK on Livenzo and reach students looking for a stay in Kota."
+        path="/list-room"
+        image={OG_ROOMS}
+      />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold mb-6">List Your Room</h1>
         

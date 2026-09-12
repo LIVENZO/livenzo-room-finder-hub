@@ -10,6 +10,7 @@ import CollaborationCenter from '@/components/collaboration/CollaborationCenter'
 import UserSearch from '@/components/relationship/UserSearch';
 import { useCollaborations } from '@/hooks/useCollaborations';
 import { useRelationships } from '@/hooks/useRelationships';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const Connections = () => {
   const { user, userRole, isLoading } = useAuth();
@@ -117,6 +118,13 @@ const Connections = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Connections | Livenzo"
+        description="Manage renter requests, connected renters and collaborators for your property on Livenzo."
+        path="/connections"
+        image={OG_HOME}
+        noindex
+      />
       <div className="w-full h-full pb-8">
         <header className="px-4 pt-2 pb-4">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{getPageTitle()}</h1>

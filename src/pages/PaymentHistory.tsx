@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/integrations/supabase/client";
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const PaymentHistory = () => {
   const { isOwner, user } = useAuth();
@@ -41,6 +42,14 @@ const PaymentHistory = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Payment History | Livenzo"
+        description="A complete record of your rent and electricity payments made through Livenzo."
+        path="/payment-history"
+        image={OG_HOME}
+        noindex
+      />
+      <h1 className="sr-only">Payment history</h1>
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <Card>
           <CardHeader>
