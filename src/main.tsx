@@ -1,6 +1,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
 import './index.css'
 
@@ -11,4 +12,8 @@ console.log = function(...args) {
   originalConsoleLog.apply(console, [`${timestamp} info:`, ...args]);
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>
+);
