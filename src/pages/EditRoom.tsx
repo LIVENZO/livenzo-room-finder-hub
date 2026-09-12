@@ -17,6 +17,7 @@ import RoomPreferencesFields from '@/components/room-listing/RoomPreferencesFiel
 import ImageUploadSection from '@/components/room-listing/ImageUploadSection';
 import VideoUploadSection from '@/components/room-listing/VideoUploadSection';
 import { parseFacilities } from '@/utils/roomUtils';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 const EditRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -310,6 +311,13 @@ const EditRoom: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Edit Room Listing | Livenzo"
+        description="Update photos, rent, facilities and availability for your Livenzo room listing."
+        path="/edit-room"
+        image={OG_ROOMS}
+        noindex
+      />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold mb-8">Edit Room Listing</h1>
         

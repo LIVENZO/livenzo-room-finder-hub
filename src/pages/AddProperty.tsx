@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useOwnerProperty } from '@/context/OwnerPropertyContext';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 interface FormState {
   hostel_pg_name: string;
@@ -227,6 +228,13 @@ const AddProperty: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Add a Property | Livenzo"
+        description="Add your hostel, PG or building to Livenzo to start listing rooms and managing renters."
+        path="/add-property"
+        image={OG_ROOMS}
+        noindex
+      />
       <div className="container mx-auto px-4 py-6 max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: 8 }}

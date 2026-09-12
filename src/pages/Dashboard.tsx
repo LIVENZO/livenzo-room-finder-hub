@@ -9,6 +9,7 @@ import LoadingState from '@/components/landing/LoadingState';
 import { toast } from 'sonner';
 import { AUTH_CONFIG } from '@/config/auth';
 import { getRoleConflictActive } from '@/context/auth/hooks/useAuthState';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +48,13 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Dashboard | Livenzo"
+        description="Your Livenzo dashboard: manage your stay, rent, renters and property updates in one place."
+        path="/dashboard"
+        image={OG_HOME}
+      />
+      <h1 className="sr-only">Livenzo dashboard</h1>
       <div className="w-full h-full min-h-screen bg-gradient-radial">
         <div className="w-full h-full">
           {userRole === 'owner' ? <OwnerDashboard /> : <RenterDashboard />}

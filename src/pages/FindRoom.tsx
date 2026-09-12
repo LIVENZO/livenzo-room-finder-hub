@@ -17,6 +17,7 @@ import { SlidersHorizontal, RotateCcw, MessageCircle } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
 import { logSearch } from '@/services/SearchAnalyticsService';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
@@ -152,6 +153,12 @@ const FindRoom: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Find Rooms, PGs & Hostels in Kota | Livenzo"
+        description="Search verified rooms, PGs, hostels and BHK flats in Kota near top coaching centres. Filter by rent, facilities and distance."
+        path="/find-room"
+        image={OG_ROOMS}
+      />
       {/* Sticky Smart Header */}
       <div
         className={cn(

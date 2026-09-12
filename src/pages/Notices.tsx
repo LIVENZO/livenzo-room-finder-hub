@@ -7,6 +7,7 @@ import LoadingState from '@/components/landing/LoadingState';
 import NoticesList from '@/components/notices/NoticesList';
 import { fetchRenterNotices, Notice } from '@/services/NoticeService';
 import { supabase } from '@/integrations/supabase/client';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 
 const Notices: React.FC = () => {
   const navigate = useNavigate();
@@ -102,6 +103,13 @@ const Notices: React.FC = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Notices | Livenzo"
+        description="Notices and announcements shared between property owners and renters on Livenzo."
+        path="/notices"
+        image={OG_HOME}
+        noindex
+      />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Notices</h1>

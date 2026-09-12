@@ -15,6 +15,7 @@ import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
 import { toast } from 'sonner';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 const Profile = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -83,6 +84,14 @@ const Profile = () => {
   }
   return (
     <Layout>
+      <Seo
+        title="My Profile | Livenzo"
+        description="Update your Livenzo profile details, contact information and property settings."
+        path="/profile"
+        image={OG_HOME}
+        noindex
+      />
+      <h1 className="sr-only">My Livenzo profile</h1>
       <div className="w-full min-h-screen bg-muted/20">
         <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-5 pb-32">
           {/* Profile Completion Banner */}
