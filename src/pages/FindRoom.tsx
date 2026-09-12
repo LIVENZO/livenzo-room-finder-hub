@@ -170,6 +170,7 @@ const FindRoom: React.FC = () => {
                 onClick={handleClearFilters}
                 variant="outline"
                 size="icon"
+                aria-label="Reset all filters"
                 className="shrink-0 ml-2 h-8 w-8">
                 <RotateCcw className="h-4 w-4" />
               </Button>
@@ -194,6 +195,7 @@ const FindRoom: React.FC = () => {
               <Button
                 variant="outline"
                 size="icon"
+                aria-label="Open filters"
                 onClick={() => setShowMobileFilters(true)}
                 className="shrink-0">
                 <SlidersHorizontal className="h-4 w-4" />
@@ -204,6 +206,7 @@ const FindRoom: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 className="sr-only">Find rooms, PGs and hostels for rent in Kota</h1>
         {/* Property Type Filter */}
         <div className="flex items-center justify-between mb-4">
           <PropertyTypeFilter value={propertyTypeFilter} onChange={handlePropertyTypeChange} />
@@ -212,6 +215,7 @@ const FindRoom: React.FC = () => {
               onClick={handleClearFilters}
               variant="outline"
               size="icon"
+              aria-label="Reset all filters"
               className="shrink-0 ml-2 h-8 w-8">
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -240,6 +244,7 @@ const FindRoom: React.FC = () => {
             <Button
               variant="outline"
               size="icon"
+              aria-label="Open filters"
               onClick={() => setShowMobileFilters(true)}
               className="shrink-0">
               
