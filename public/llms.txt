@@ -1,0 +1,10 @@
+# Livenzo
+
+> Livenzo helps students in Kota find verified rooms, PGs and hostels near top coaching centres, and helps property owners manage their renters and rent.
+
+Livenzo lists rooms, PGs, hostels and BHK accommodation in Kota, Rajasthan. Students can search by area or landmark, filter by rent and facilities, book a free visit, and connect with the property owner. Owners can list rooms, manage renters, and collect rent.
+
+## Pages
+
+- [Home](/): What Livenzo is and how to get started.
+- [Find a room](/find-room): Search and filter rooms, PGs, hostels and BHKs in Kota.
