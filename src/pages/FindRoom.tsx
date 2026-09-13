@@ -158,6 +158,17 @@ const FindRoom: React.FC = () => {
         description="Search verified rooms, PGs, hostels and BHK flats in Kota near top coaching centres. Filter by rent, facilities and distance."
         path="/find-room"
         image={OG_ROOMS}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Rooms, PGs and hostels for rent in Kota',
+          numberOfItems: filteredRooms.length,
+          itemListElement: filteredRooms.slice(0, 20).map((r, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: buildRoomJsonLd(r, r.minimum_price ?? r.price)
+          }))
+        }}
       />
       {/* Sticky Smart Header */}
       <div
