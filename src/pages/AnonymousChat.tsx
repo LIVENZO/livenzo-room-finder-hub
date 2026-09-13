@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { findAnonymousChat, sendAnonymousMessage, fetchAnonymousMessages, endAnonymousChat, getAnonymousSession, findNextChat, type AnonymousMessage, type AnonymousChatSession } from '@/services/AnonymousChatService';
 import { formatDistanceToNow } from 'date-fns';
+import Seo, { OG_HOME } from '@/components/seo/Seo';
 const AnonymousChat = () => {
   const {
     user,
