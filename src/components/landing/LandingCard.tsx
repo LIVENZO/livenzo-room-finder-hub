@@ -118,7 +118,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
           <div className="space-y-0.5">
             <h2 className="text-xl font-semibold tracking-tight text-foreground font-display">
               Log in or sign up
-            </h1>
+            </h2>
             <p className="text-sm text-muted-foreground">
               Find your perfect room in Kota
             </p>
