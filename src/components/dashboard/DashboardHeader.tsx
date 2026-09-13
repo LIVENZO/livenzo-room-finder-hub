@@ -13,9 +13,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ isOwner }) => {
   
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-      <h1 className="text-2xl sm:text-3xl font-bold truncate">
+      <h2 className="text-2xl sm:text-3xl font-bold truncate">
         {isOwner ? 'Your Listed Rooms' : 'Dashboard'}
-      </h1>
+      </h2>
       
       {isOwner && (
         <Button onClick={() => navigate('/list-room')} className="w-full sm:w-auto flex-shrink-0">

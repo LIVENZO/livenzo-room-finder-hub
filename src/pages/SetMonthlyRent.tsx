@@ -16,7 +16,6 @@ const SetMonthlyRent: React.FC = () => {
         image={OG_HOME}
         noindex
       />
-      <h1 className="sr-only">Set monthly rent</h1>
       <SetRentListPage onBack={() => navigate(-1)} />
     </Layout>
   );

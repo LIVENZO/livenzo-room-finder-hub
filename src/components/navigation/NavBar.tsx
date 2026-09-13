@@ -23,12 +23,12 @@ const NavBar: React.FC = () => {
             <PropertySwitcher />
           </div>
         ) : (
-          <h1
+          <span
             className="text-xl font-bold text-primary cursor-pointer truncate mr-4"
             onClick={() => navigate('/dashboard')}
           >
             Livenzo
-          </h1>
+          </span>
         )}
         <Sheet>
           <SheetTrigger asChild>

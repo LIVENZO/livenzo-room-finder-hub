@@ -11,6 +11,7 @@ import RoomMarquee from '@/components/landing/RoomMarquee';
 import { AUTH_CONFIG } from '@/config/auth';
 import { useReferral } from '@/hooks/useReferral';
 import { getRoleConflictActive, setRoleConflictActive } from '@/context/auth/hooks/useAuthState';
+import Seo, { OG_HOME, SITE_URL } from '@/components/seo/Seo';
 
 const Index: React.FC = () => {
   const { user, login, sendOTP, verifyOTP, isLoading, session, canChangeRole } = useAuth();
@@ -134,6 +135,24 @@ const Index: React.FC = () => {
   return (
     <Layout hideNav>
       <div className="relative w-full min-h-screen flex flex-col bg-background overflow-hidden">
+        <Seo
+          title="Livenzo — Rooms, PGs & Hostels for Rent in Kota"
+          description="Find verified rooms, PGs and hostels in Kota near top coaching centres. Compare rent, photos and facilities, then book a free visit with Livenzo."
+          path="/"
+          image={OG_HOME}
+          jsonLd={{
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Livenzo',
+            url: `${SITE_URL}/`,
+            description: 'Verified rooms, PGs and hostels for students in Kota, Rajasthan.',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: `${SITE_URL}/find-room?q={search_term_string}`,
+              'query-input': 'required name=search_term_string'
+            }
+          }} />
+        <h1 className="sr-only">Livenzo — rooms, PGs and hostels for rent in Kota</h1>
         {/* Auto-scrolling room/hostel image carousel with smooth fade into content */}
         <div
           className="relative w-full shrink-0"
