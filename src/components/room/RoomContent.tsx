@@ -90,8 +90,9 @@ const RoomContent: React.FC<RoomContentProps> = ({
         <TabsTrigger value="reviews">Reviews</TabsTrigger>
       </TabsList>
       <TabsContent value="description" className="py-4">
+        <h2 className="sr-only">Room description</h2>
         <p className="text-muted-foreground whitespace-pre-line">{description}</p>
-        <h3 className="font-semibold mt-6 mb-2">Room Rules</h3>
+        <h2 className="font-semibold mt-6 mb-2">Room Rules</h2>
         <ul className="list-disc list-inside space-y-1 text-muted-foreground">
           {roomRules.map((rule, index) => (
             <li key={index}>{rule}</li>
@@ -99,6 +100,7 @@ const RoomContent: React.FC<RoomContentProps> = ({
         </ul>
       </TabsContent>
       <TabsContent value="amenities" className="py-4">
+        <h2 className="sr-only">Room amenities</h2>
         <div className="rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/40">
           {amenities.map((item, idx) => (
             <div
