@@ -54,7 +54,7 @@ const SideBar: React.FC = () => {
                 <Home className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-display font-bold text-white">Livenzo</h1>
+                <span className="text-xl font-display font-bold text-white">Livenzo</span>
                 <p className="text-xs text-white/70 capitalize">{userRole} Dashboard</p>
               </div>
             </div>

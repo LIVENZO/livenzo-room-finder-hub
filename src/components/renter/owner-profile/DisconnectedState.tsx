@@ -24,7 +24,7 @@ const DisconnectedState: React.FC<DisconnectedStateProps> = ({
         >
           ← Back to Find Your Owner
         </button>
-        <h1 className="text-3xl font-bold">Connection Ended</h1>
+        <h2 className="text-3xl font-bold">Connection Ended</h2>
         <p className="text-gray-600">You have successfully disconnected from your property owner</p>
       </div>
 

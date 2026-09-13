@@ -44,7 +44,7 @@ const OwnerProfilePage: React.FC<OwnerProfilePageProps> = ({
         >
           ← Back to Find Your Owner
         </button>
-        <h1 className="text-3xl font-bold">Your Property Owner</h1>
+        <h2 className="text-3xl font-bold">Your Property Owner</h2>
         <p className="text-gray-600">Manage your rental relationship and communications</p>
       </div>
 

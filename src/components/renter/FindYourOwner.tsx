@@ -52,7 +52,7 @@ const FindYourOwner: React.FC<FindYourOwnerProps> = ({
           <Search className="h-8 w-8 text-blue-600" />
         </div>
         
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-3xl font-bold text-gray-900">
           {declinedConnections.length > 0 ? "Connect with a New Owner" : "Find Your Owner"}
         </h1>
         <p className="text-lg text-gray-600">

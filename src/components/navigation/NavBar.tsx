@@ -28,7 +28,7 @@ const NavBar: React.FC = () => {
             onClick={() => navigate('/dashboard')}
           >
             Livenzo
-          </h1>
+          </span>
         )}
         <Sheet>
           <SheetTrigger asChild>
