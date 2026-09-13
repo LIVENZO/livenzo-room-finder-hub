@@ -17,6 +17,8 @@ import ReferralBanner from '@/components/referral/ReferralBanner';
 import FreeDropOverlay from '@/components/room/FreeDropOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
+import Seo, { OG_ROOMS } from '@/components/seo/Seo';
+import { buildRoomJsonLd } from '@/utils/roomSchema';
 
 const RoomDetail = () => {
   const { id } = useParams<{id: string;}>();
