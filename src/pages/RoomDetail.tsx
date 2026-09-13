@@ -124,7 +124,14 @@ const RoomDetail = () => {
 
   return (
     <Layout>
+      <Seo
+        title={`${room.title}${room.location ? ` in ${room.location}` : ''} — ₹${room.price}/month | Livenzo`}
+        description={`${room.property_type === 'BHK' ? 'BHK flat' : room.property_type === 'Hostel' ? 'Hostel room' : room.property_type === 'PG' ? 'PG room' : 'Room'} for rent${room.location ? ` in ${room.location}, Kota` : ' in Kota'} at ₹${room.price}/month. ${room.description ? room.description.slice(0, 100) : 'See photos, facilities and book a free visit on Livenzo.'}`}
+        path={`/room/${room.id}`}
+        image={room.images?.[0] || OG_ROOMS}
+        jsonLd={buildRoomJsonLd(room, getRoomPricing(room).currentRoomPrice)} />
       <div className="container max-w-6xl py-10">
+        
         
 
 
