@@ -35,7 +35,7 @@ const RenterHeader: React.FC<RenterHeaderProps> = ({ relationship, onBack }) => 
           <div className="text-center sm:text-left w-full min-w-0">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">
               {relationship.renter?.full_name || 'Unknown Renter'}
-            </h1>
+            </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-1">
               Connected since {new Date(relationship.created_at).toLocaleDateString()}
             </p>
