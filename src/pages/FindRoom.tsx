@@ -18,6 +18,7 @@ import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
 import { logSearch } from '@/services/SearchAnalyticsService';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
+import { buildRoomJsonLd } from '@/utils/roomSchema';
 
 const FindRoom: React.FC = () => {
   const { user } = useAuth();
