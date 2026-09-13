@@ -123,6 +123,7 @@ const RoomContent: React.FC<RoomContentProps> = ({
         </div>
       </TabsContent>
       <TabsContent value="reviews" className="py-4">
+        <h2 className="sr-only">Reviews</h2>
         <RoomReviews roomId={roomId} />
       </TabsContent>
     </Tabs>
