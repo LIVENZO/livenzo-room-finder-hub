@@ -48,6 +48,7 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
             size="icon"
             className="rounded-full"
             onClick={handleShare}
+            aria-label="Share this room"
           >
             <Share2 className="h-5 w-5" />
           </Button>
@@ -57,6 +58,7 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
             className="rounded-full"
             onClick={handleFavoriteToggle}
             disabled={favoritesLoading}
+            aria-label={isFavorite ? 'Remove this room from favorites' : 'Add this room to favorites'}
           >
             {favoritesLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />

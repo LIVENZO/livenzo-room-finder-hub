@@ -32,7 +32,7 @@ const NavBar: React.FC = () => {
         )}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Button variant="ghost" size="icon" className="flex-shrink-0" aria-label="Open navigation menu">
               <Menu size={24} />
             </Button>
           </SheetTrigger>
