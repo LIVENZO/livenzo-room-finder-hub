@@ -399,7 +399,7 @@ const AddProperty: React.FC = () => {
                       <MapPin className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold leading-tight">Set Live Property Location</h3>
+                      <h2 className="text-base font-semibold leading-tight">Set Live Property Location</h2>
                       <p className="text-xs text-muted-foreground mt-1">
                         Saved separately for each property. Helps renters find you accurately.
                       </p>
