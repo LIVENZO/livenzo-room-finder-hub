@@ -213,17 +213,6 @@ const FindRoom: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="mb-5 max-w-3xl">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Find a PG, Hostel or Room for Rent in Kota
-          </h1>
-          <h2 className="mt-2 text-base font-semibold text-foreground sm:text-lg">
-            Compare verified PGs, hostels and rooms across Kota
-          </h2>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Browse current options for a PG in Kota, a hostel in Kota, or rooms for rent in Kota near major coaching centres, with rent, photos and facilities in one place.
-          </p>
-        </header>
         {/* Property Type Filter */}
         <div className="flex items-center justify-between mb-4">
           <PropertyTypeFilter value={propertyTypeFilter} onChange={handlePropertyTypeChange} />
