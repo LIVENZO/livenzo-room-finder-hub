@@ -148,6 +148,7 @@ const RoomDetail = () => {
               <FreeDropOverlay />
               <RoomImageGallery
                 images={room.images}
+                roomTitle={room.title}
                 selectedImage={selectedImage}
                 setSelectedImage={setSelectedImage}
                 onImageClick={handleImageClick}

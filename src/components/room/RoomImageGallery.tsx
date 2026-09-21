@@ -8,6 +8,7 @@ type MediaItem = { type: 'image'; src: string } | { type: 'video'; src: string }
 
 interface RoomImageGalleryProps {
   images: string[];
+  roomTitle: string;
   selectedImage: number;
   setSelectedImage: (index: number) => void;
   onImageClick: (index: number) => void;
@@ -37,6 +38,7 @@ function buildMediaList(images: string[], videos: string[]): MediaItem[] {
 
 const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
   images,
+  roomTitle,
   selectedImage,
   setSelectedImage,
   onImageClick,
@@ -77,7 +79,7 @@ const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
                   {item.type === 'image' ? (
                     <img
                       src={item.src}
-                      alt={`Room media ${idx + 1}`}
+                      alt={`${roomTitle} room photo ${idx + 1}`}
                       className="object-cover w-full h-full cursor-pointer"
                       onClick={() => onImageClick(idx)}
                     />
@@ -101,6 +103,8 @@ const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
         {canScrollPrev && (
           <button
             onClick={() => emblaApi?.scrollPrev()}
+            type="button"
+            aria-label="View previous room photo"
             className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <ChevronLeft className="h-5 w-5 text-foreground" />
@@ -109,6 +113,8 @@ const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
         {canScrollNext && (
           <button
             onClick={() => emblaApi?.scrollNext()}
+            type="button"
+            aria-label="View next room photo"
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <ChevronRight className="h-5 w-5 text-foreground" />
@@ -132,7 +138,7 @@ const RoomImageGallery: React.FC<RoomImageGalleryProps> = ({
             }`}
           >
             {item.type === 'image' ? (
-              <img src={item.src} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={item.src} alt={`${roomTitle} room photo ${idx + 1} thumbnail`} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-black relative">
                 <video src={item.src} preload="metadata" className="w-full h-full object-cover" />
