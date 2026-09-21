@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_public_room_listings() SECURITY INVOKER;
