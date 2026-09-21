@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { useAuth } from "./AuthContext";
 import { Room, RoomFilters, PropertyTypeFilter } from "@/types/room";
 import { fetchRooms as fetchRoomsService } from "@/services/roomService";
 import { useRoomFilters } from "@/hooks/useRoomFilters";
@@ -40,7 +39,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<Room[]>([]);
   const [searchScopeRooms, setSearchScopeRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { user } = useAuth();
   const fetchRequestRef = useRef(0);
 
   const {
@@ -102,15 +100,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    if (!user) {
-      setRooms([]);
-      setSearchScopeRooms([]);
-      setIsLoading(false);
-      return;
-    }
-
     void syncRooms(filters.propertyType ?? 'all');
-  }, [user?.id, filters.propertyType]);
+  }, [filters.propertyType]);
 
   const refreshRooms = async () => {
     await syncRooms(filters.propertyType ?? 'all', true);

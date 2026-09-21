@@ -1,7 +1,5 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/context/RoomContext';
 import { RoomFilters, PropertyTypeFilter as PropertyTypeFilterValue } from '@/types/room';
 import Layout from '@/components/Layout';
@@ -21,8 +19,6 @@ import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
 
 const FindRoom: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const {
     filteredRooms,
     filters,
@@ -58,12 +54,6 @@ const FindRoom: React.FC = () => {
       filters: { ...filters, propertyType: value },
     });
   };
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
 
   useEffect(() => {
     setTempFilters(filters);
@@ -149,8 +139,6 @@ const FindRoom: React.FC = () => {
   }, []);
 
   const showStickyHeader = !originalBarVisible && scrollDirection === 'up';
-
-  if (!user) return null;
 
   return (
     <Layout>

@@ -33,27 +33,7 @@ export const fetchRooms = async (propertyType: PropertyTypeFilter = 'all'): Prom
   console.log('Fetching rooms...', { propertyType });
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return [];
-    }
-
-    let query = supabase
-      .from('rooms')
-      .select(ROOM_LIST_SELECT)
-      .eq('available', true)
-      .order('created_at', { ascending: false });
-
-    if (propertyType === 'PG') {
-      query = query.or('property_type.eq.PG,property_type.eq.PG_HOSTEL');
-    } else if (propertyType === 'Hostel') {
-      query = query.or('property_type.eq.Hostel,property_type.eq.PG_HOSTEL');
-    } else if (propertyType === 'BHK') {
-      query = query.eq('property_type', 'BHK');
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc('get_public_room_listings');
 
     if (error) {
       console.error('Error fetching rooms:', error);
@@ -62,10 +42,20 @@ export const fetchRooms = async (propertyType: PropertyTypeFilter = 'all'): Prom
       return [];
     }
 
-    console.log(`Rooms fetched: ${data ? data.length : 0}`);
-    await securityAudit.logDataAccess('rooms', null, `fetch_${propertyType.toLowerCase()}`);
+    const matchingRooms = (data ?? []).filter((room) => {
+      if (propertyType === 'PG') return room.property_type === 'PG' || room.property_type === 'PG_HOSTEL';
+      if (propertyType === 'Hostel') return room.property_type === 'Hostel' || room.property_type === 'PG_HOSTEL';
+      if (propertyType === 'BHK') return room.property_type === 'BHK';
+      return true;
+    });
 
-    return data ? data.map((room) => mapDbRoomToRoom(room)) : [];
+    console.log(`Rooms fetched: ${matchingRooms.length}`);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await securityAudit.logDataAccess('rooms', null, `fetch_${propertyType.toLowerCase()}`);
+    }
+
+    return matchingRooms.map((room) => mapDbRoomToRoom(room));
   } catch (error) {
     console.error('Error in fetchRooms:', error);
     toast.error(`Failed to fetch rooms: ${error instanceof Error ? error.message : 'Unknown error'}`);
