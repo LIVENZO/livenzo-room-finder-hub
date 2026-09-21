@@ -1978,6 +1978,34 @@ export type Database = {
         Args: { p_property_id: string; p_user_id: string }
         Returns: string
       }
+      get_public_room_listings: {
+        Args: never
+        Returns: {
+          available: boolean
+          created_at: string
+          description: string
+          facilities: Json
+          hostel_rent: number
+          house_name: string
+          house_no: string
+          id: string
+          images: string[]
+          is_top_room: boolean
+          location: string
+          location_latitude: number
+          location_longitude: number
+          maximum_price: number
+          minimum_price: number
+          owner_id: string
+          owner_phone: string
+          pg_rent: number
+          price: number
+          property_type: string
+          title: string
+          updated_at: string
+          videos: string[]
+        }[]
+      }
       get_referrer_from_code: {
         Args: { p_referral_code: string }
         Returns: string
