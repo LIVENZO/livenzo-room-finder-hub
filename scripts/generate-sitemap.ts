@@ -17,6 +17,41 @@ const entries: SitemapEntry[] = [
   { path: "/find-room", changefreq: "daily", priority: "0.9" },
 ]
 
+async function getPublicRoomEntries(): Promise<SitemapEntry[]> {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+
+  if (!supabaseUrl || !publishableKey) {
+    console.warn("Supabase configuration unavailable; writing static sitemap entries only")
+    return []
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_public_room_listings`, {
+      method: "POST",
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${publishableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    })
+
+    if (!response.ok) {
+      console.warn(`Public room sitemap request failed (${response.status}); writing static entries only`)
+      return []
+    }
+
+    const rooms = (await response.json()) as { id?: string }[]
+    return rooms
+      .filter((room): room is { id: string } => typeof room.id === "string" && room.id.length > 0)
+      .map((room) => ({ path: `/room/${encodeURIComponent(room.id)}`, changefreq: "daily", priority: "0.8" }))
+  } catch (error) {
+    console.warn("Could not load public rooms for sitemap; writing static entries only", error)
+    return []
+  }
+}
+
 function generateSitemap(entries: SitemapEntry[]) {
   const urls = entries.map((e) =>
     [
@@ -39,5 +74,8 @@ function generateSitemap(entries: SitemapEntry[]) {
   ].join("\n")
 }
 
-writeFileSync(resolve("public/sitemap.xml"), generateSitemap(entries))
-console.log(`sitemap.xml written (${entries.length} entries)`)
+const roomEntries = await getPublicRoomEntries()
+const sitemapEntries = [...entries, ...roomEntries]
+
+writeFileSync(resolve("public/sitemap.xml"), generateSitemap(sitemapEntries))
+console.log(`sitemap.xml written (${sitemapEntries.length} entries)`)
