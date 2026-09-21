@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Room } from '@/types/room';
 import RoomCard from '@/components/RoomCard';
+import { Loader2 } from 'lucide-react';
 
 interface RoomResultsProps {
   isLoading: boolean;
@@ -20,7 +20,11 @@ const RoomResults: React.FC<RoomResultsProps> = ({
   searchContext
 }) => {
   if (isLoading) {
-    return <div className="text-center py-12">Loading rooms...</div>;
+    return (
+      <div className="flex justify-center py-12" role="status" aria-label="Loading rooms">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (filteredRooms.length === 0) {
