@@ -102,6 +102,7 @@ const RenterDashboard: React.FC = () => {
   ];
   return (
     <div className="space-y-8 animate-fade-in">
+      <h2 className="sr-only">Student dashboard</h2>
       {/* Booking Status Card */}
       <BookingStatusCard />
 
@@ -141,8 +142,11 @@ const RenterDashboard: React.FC = () => {
         <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5">
           {heroImages.map((_, index) => (
             <button
+              type="button"
               key={index}
               onClick={() => setCurrentSlide(index)}
+              aria-label={`Show featured room photo ${index + 1}`}
+              aria-current={index === currentSlide ? "true" : undefined}
               className={cn(
                 "w-2 h-2 rounded-full transition-all duration-300",
                 index === currentSlide ? "bg-white w-4" : "bg-white/50 hover:bg-white/70",

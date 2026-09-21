@@ -132,6 +132,7 @@ const LandingCard: React.FC<LandingCardProps> = ({
             <span className="h-6 w-px bg-border" />
             <Input
               type="tel"
+              aria-label="Phone number"
               inputMode="numeric"
               autoComplete="tel"
               placeholder="Phone number"
