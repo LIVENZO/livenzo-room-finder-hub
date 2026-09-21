@@ -292,9 +292,9 @@ const FindRoom: React.FC = () => {
                   <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div className="space-y-0 sm:space-y-2 max-w-sm">
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">
                     No rooms found
-                  </h3>
+                  </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Our team can help you find the right room on WhatsApp.
                   </p>

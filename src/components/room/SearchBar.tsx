@@ -151,13 +151,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
           }}
         />
         {showClearButton && (
-          <button
+          <Button
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+            variant="ghost"
+            size="icon"
+            aria-label="Clear room search"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 rounded-full"
             type="button"
           >
             <X className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          </Button>
         )}
 
         {/* Hotspot suggestions dropdown */}
