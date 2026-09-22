@@ -17,6 +17,7 @@ import { useState, useEffect, useRef } from "react";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import FindRoom from "./pages/FindRoom";
+import GirlsHostels from "./pages/GirlsHostels";
 import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -107,6 +108,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/find-room" element={<FindRoom />} />
+              <Route path="/girls-hostels-in-kota" element={<GirlsHostels />} />
               <Route path="/room/:id" element={<RoomDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />

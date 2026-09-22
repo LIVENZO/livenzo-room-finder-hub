@@ -15,6 +15,7 @@ interface SitemapEntry {
 const entries: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/find-room", changefreq: "daily", priority: "0.9" },
+  { path: "/girls-hostels-in-kota", changefreq: "daily", priority: "0.9" },
 ]
 
 async function getPublicRoomEntries(): Promise<SitemapEntry[]> {
