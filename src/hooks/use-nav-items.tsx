@@ -9,6 +9,7 @@ export type NavItem = {
   icon: React.ReactNode;
   ownerOnly?: boolean;
   renterOnly?: boolean;
+  ownerHidden?: boolean;
   visitorOnly?: boolean;
   hideOnMobile?: boolean;
   showNotificationBadge?: boolean;
@@ -36,7 +37,7 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       title: "Girls Hostels",
       href: "/girls-hostels-in-kota",
       icon: <Building2 className="h-4 w-4" />,
-      renterOnly: true,
+      ownerHidden: true,
       label: "Girls Hostels",
     },
     {
@@ -98,7 +99,7 @@ const useNavItems = (unreadMessageCount: number = 0) => {
   // Filter nav items based on user role
   const filteredNavItems = navItems.filter(item => {
     if (!user) return !item.ownerOnly && !item.renterOnly; // For visitors
-    if (userRole === 'owner') return !item.renterOnly && !item.visitorOnly;
+    if (userRole === 'owner') return !item.renterOnly && !item.ownerHidden && !item.visitorOnly;
     return !item.ownerOnly && !item.visitorOnly; // For renters
   });
 
