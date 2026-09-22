@@ -59,6 +59,7 @@ const RenterLaunchRedirect = () => {
     const skip =
       path === '/' ||
       path === '/find-room' ||
+      path === '/girls-hostels-in-kota' ||
       path.startsWith('/room/') ||
       path.startsWith('/auth') ||
       path.startsWith('/chats') ||
