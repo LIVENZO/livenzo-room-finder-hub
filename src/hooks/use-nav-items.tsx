@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Home, Search, User, Heart, MessageSquare, Users, Plus, List, Bell, CreditCard } from "lucide-react";
+import { Home, Search, User, Heart, MessageSquare, Users, Plus, List, Bell, CreditCard, Building2 } from "lucide-react";
 import { useAuth } from "@/context/auth";
 
 export type NavItem = {
@@ -9,6 +9,7 @@ export type NavItem = {
   icon: React.ReactNode;
   ownerOnly?: boolean;
   renterOnly?: boolean;
+  ownerHidden?: boolean;
   visitorOnly?: boolean;
   hideOnMobile?: boolean;
   showNotificationBadge?: boolean;
@@ -31,6 +32,13 @@ const useNavItems = (unreadMessageCount: number = 0) => {
       icon: <Search className="h-4 w-4" />,
       renterOnly: true,
       label: "Find Room",
+    },
+    {
+      title: "Girls Hostels",
+      href: "/girls-hostels-in-kota",
+      icon: <Building2 className="h-4 w-4" />,
+      ownerHidden: true,
+      label: "Girls Hostels",
     },
     {
       title: "List Room",
@@ -91,7 +99,7 @@ const useNavItems = (unreadMessageCount: number = 0) => {
   // Filter nav items based on user role
   const filteredNavItems = navItems.filter(item => {
     if (!user) return !item.ownerOnly && !item.renterOnly; // For visitors
-    if (userRole === 'owner') return !item.renterOnly && !item.visitorOnly;
+    if (userRole === 'owner') return !item.renterOnly && !item.ownerHidden && !item.visitorOnly;
     return !item.ownerOnly && !item.visitorOnly; // For renters
   });
 
