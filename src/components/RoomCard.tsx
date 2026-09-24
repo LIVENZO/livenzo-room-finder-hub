@@ -155,7 +155,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, searchContext }) => {
         )}
       </AspectRatio>
       <CardContent className="p-4">
-        <h3 className="text-lg font-semibold line-clamp-1">{room.title}</h3>
+        <h2 className="text-lg font-semibold line-clamp-1">{room.title}</h2>
         <RoomLocation location={room.location} />
       </CardContent>
       <CardFooter className="p-4 pt-0 flex flex-col gap-3">
