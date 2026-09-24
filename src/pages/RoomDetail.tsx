@@ -20,25 +20,6 @@ import { getRoomPricing, applyPgHostelPricing } from '@/utils/pricingUtils';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
 
-const isSearchEngineReferrer = (referrer: string) => {
-  if (!referrer) return false;
-
-  try {
-    const hostname = new URL(referrer).hostname.toLowerCase();
-    return (
-      /(^|\.)google\.[a-z.]+$/.test(hostname) ||
-      /(^|\.)bing\.com$/.test(hostname) ||
-      /(^|\.)search\.yahoo\.[a-z.]+$/.test(hostname) ||
-      /(^|\.)duckduckgo\.com$/.test(hostname) ||
-      /(^|\.)ecosia\.org$/.test(hostname) ||
-      /(^|\.)yandex\.[a-z.]+$/.test(hostname) ||
-      /(^|\.)baidu\.com$/.test(hostname)
-    );
-  } catch {
-    return false;
-  }
-};
-
 const RoomDetail = () => {
   const { id } = useParams<{id: string;}>();
   const navigate = useNavigate();
@@ -57,12 +38,6 @@ const RoomDetail = () => {
   const [deepLinkSheetOpen, setDeepLinkSheetOpen] = useState(false);
   const [deepLinkBookingId, setDeepLinkBookingId] = useState<string | null>(null);
   const [deepLinkStep, setDeepLinkStep] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isSearchEngineReferrer(document.referrer)) {
-      navigate('/find-room', { replace: true });
-    }
-  }, [navigate]);
 
   useEffect(() => {
     if (!stepParam || !user || !id) return;

@@ -143,14 +143,14 @@ const FindRoom: React.FC = () => {
   return (
     <Layout>
       <Seo
-        title="PG in Kota, Hostel in Kota & Rooms for Rent | Livenzo"
-        description="Find a verified PG in Kota, hostel in Kota, or rooms for rent in Kota. Compare rent, photos, facilities and distance from coaching centres."
+        title="Find Rooms, PGs & Hostels in Kota | Livenzo"
+        description="Search verified rooms, PGs, hostels and BHK flats in Kota near top coaching centres. Filter by rent, facilities and distance."
         path="/find-room"
         image={OG_ROOMS}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
-          name: 'PGs, hostels and rooms for rent in Kota',
+          name: 'Rooms, PGs and hostels for rent in Kota',
           numberOfItems: filteredRooms.length,
           itemListElement: filteredRooms.slice(0, 20).map((r, i) => ({
             '@type': 'ListItem',
@@ -213,6 +213,7 @@ const FindRoom: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 className="sr-only">Find rooms, PGs and hostels for rent in Kota</h1>
         {/* Property Type Filter */}
         <div className="flex items-center justify-between mb-4">
           <PropertyTypeFilter value={propertyTypeFilter} onChange={handlePropertyTypeChange} />
