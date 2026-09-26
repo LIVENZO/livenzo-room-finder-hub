@@ -14,11 +14,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SlidersHorizontal, RotateCcw, MessageCircle } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 import { logSearch } from '@/services/SearchAnalyticsService';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
 
 const FindRoom: React.FC = () => {
+  const location = useLocation();
   const {
     filteredRooms,
     filters,
@@ -42,6 +44,17 @@ const FindRoom: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
+
+  useEffect(() => {
+    const state = location.state as { bottomNavAction?: 'search' | 'near-me'; requestId?: number } | null;
+    if (state?.bottomNavAction === 'search') {
+      window.requestAnimationFrame(() => {
+        document.getElementById('room-search-input')?.focus();
+      });
+    } else if (state?.bottomNavAction === 'near-me' && !nearMeActive && !nearMeLoading) {
+      handleNearMeActivate();
+    }
+  }, [location.state]);
 
   const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
     setPropertyTypeFilter(value);
@@ -232,6 +245,7 @@ const FindRoom: React.FC = () => {
         {/* Search and Filter Bar */}
         <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
+            inputId="room-search-input"
             searchText={searchText}
             onSearchChange={handleSearchChange}
             nearMeActive={nearMeActive}

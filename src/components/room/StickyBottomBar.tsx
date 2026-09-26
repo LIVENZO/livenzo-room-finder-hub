@@ -57,7 +57,7 @@ const StickyBottomBar = ({ room, actionCardRef }: StickyBottomBarProps) => {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
+        className={`fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 transition-transform duration-300 ease-in-out md:bottom-0 ${
           isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
