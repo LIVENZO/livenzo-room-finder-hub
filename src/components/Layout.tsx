@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NavBar from "./navigation/NavBar";
 import SideBar from "./navigation/SideBar";
+import BottomNavigation from "./navigation/BottomNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,11 +23,14 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
       {/* Mobile navigation */}
       {isMobile && <NavBar />}
 
+      {/* Mobile bottom navigation */}
+      {isMobile && <BottomNavigation />}
+
       {/* Desktop sidebar */}
       {!isMobile && <SideBar />}
 
       {/* Main content */}
-      <main className={cn("flex-1 bg-gradient-radial w-full h-full", isMobile ? "pt-16 pb-20" : "ml-[280px]")}>
+      <main className={cn("flex-1 bg-gradient-radial w-full h-full", isMobile ? "pt-16 pb-[calc(5rem+env(safe-area-inset-bottom))]" : "ml-[280px]")}>
         <div className="relative w-full h-full overflow-hidden">
           {/* Subtle background pattern - hidden on mobile for performance */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none hidden md:block">

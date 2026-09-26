@@ -141,6 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         )}
 
         <Input
+          id="room-search-input"
           type="text"
           placeholder=""
           className={cn("pl-10", showClearButton && "pr-8")}
