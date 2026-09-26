@@ -245,6 +245,7 @@ const FindRoom: React.FC = () => {
         {/* Search and Filter Bar */}
         <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
+            inputId="room-search-input"
             searchText={searchText}
             onSearchChange={handleSearchChange}
             nearMeActive={nearMeActive}

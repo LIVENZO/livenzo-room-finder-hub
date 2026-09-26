@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useRooms } from '@/context/RoomContext';
 
 type NavigationAction = 'search' | 'near-me';
 
@@ -17,6 +18,7 @@ const SHARE_URL = 'https://www.livenzo.site';
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { nearMeActive } = useRooms();
   const state = location.state as NavigationState | null;
 
   const openListings = (action?: NavigationAction) => {
@@ -53,7 +55,7 @@ const BottomNavigation: React.FC = () => {
     {
       label: 'Home',
       icon: Home,
-      active: listingsActive && !searchAction,
+      active: listingsActive && !searchAction && !nearMeActive,
       onClick: () => openListings(),
     },
     {
@@ -71,7 +73,7 @@ const BottomNavigation: React.FC = () => {
     {
       label: 'Near Me',
       icon: MapPin,
-      active: searchAction === 'near-me',
+      active: searchAction === 'near-me' || (location.pathname === '/find-room' && nearMeActive),
       onClick: () => openListings('near-me'),
     },
     {

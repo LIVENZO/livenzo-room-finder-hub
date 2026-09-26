@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Hotspot } from '@/services/HotspotService';
 
 interface SearchBarProps {
+  inputId?: string;
   searchText: string;
   onSearchChange: (text: string) => void;
   nearMeActive?: boolean;
@@ -22,6 +23,7 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ 
+  inputId,
   searchText, 
   onSearchChange,
   nearMeActive = false,
@@ -141,7 +143,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         )}
 
         <Input
-          id="room-search-input"
+          id={inputId}
           type="text"
           placeholder=""
           className={cn("pl-10", showClearButton && "pr-8")}
