@@ -1331,6 +1331,36 @@ export type Database = {
           },
         ]
       }
+      restaurant_offer_redemptions: {
+        Row: {
+          bill_amount: number
+          coupon_code: string
+          device_fingerprint_hash: string
+          discount_amount: number
+          id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_amount: number
+          coupon_code: string
+          device_fingerprint_hash: string
+          discount_amount: number
+          id?: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_amount?: number
+          coupon_code?: string
+          device_fingerprint_hash?: string
+          discount_amount?: number
+          id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
