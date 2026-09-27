@@ -10,6 +10,7 @@ import ProfileActions from '@/components/profile/ProfileActions';
 import OwnerProfileTabs from '@/components/profile/OwnerProfileTabs';
 import ConnectAnotherProperty from '@/components/profile/ConnectAnotherProperty';
 import OwnerModeButton from '@/components/navigation/OwnerModeButton';
+import RestaurantOffer from '@/components/profile/RestaurantOffer';
 
 import StickySaveBar from '@/components/profile/StickySaveBar';
 import { useProfileManagement } from '@/hooks/useProfileManagement';
@@ -94,6 +95,8 @@ const Profile = () => {
       <h1 className="sr-only">My Livenzo profile</h1>
       <div className="w-full min-h-screen bg-muted/20">
         <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-5 pb-32">
+          {!isOwner && <RestaurantOffer />}
+
           {/* Profile Completion Banner */}
           <ProfileCompletionBanner profile={profile} isOwner={isOwner} />
 

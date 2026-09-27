@@ -4,6 +4,6 @@
 - [x] Verify active states and mobile layout
 
 ## Restaurant discount offer
-- [ ] Add secure one-redemption-per-device storage and redemption endpoint
-- [ ] Add renter profile banner and redemption screen
+- [x] Add secure one-redemption-per-device storage and redemption endpoint
+- [x] Add renter profile banner and redemption screen
 - [ ] Verify new and already-redeemed flows
