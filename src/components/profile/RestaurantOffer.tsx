@@ -101,7 +101,7 @@ const RestaurantOffer = () => {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 shadow-medium"
+        className="relative overflow-hidden rounded-2xl border border-secondary/60 bg-gradient-to-br from-secondary via-secondary/90 to-primary p-5 shadow-medium"
       >
         <div className="relative flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-foreground/15 text-primary-foreground">
