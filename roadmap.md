@@ -7,3 +7,8 @@
 - [x] Add secure one-redemption-per-device storage and redemption endpoint
 - [x] Add renter profile banner and redemption screen
 - [ ] Verify new and already-redeemed flows
+
+## Navigation-safe popups
+- [x] Keep all bottom sheets and drawers above mobile bottom navigation
+- [x] Constrain centered dialogs to the usable mobile viewport
+- [ ] Verify representative sheets and dialogs on mobile and desktop

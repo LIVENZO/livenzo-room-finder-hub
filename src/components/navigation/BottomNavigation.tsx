@@ -86,6 +86,7 @@ const BottomNavigation: React.FC = () => {
 
   return (
     <nav
+      data-mobile-bottom-navigation
       aria-label="Primary mobile navigation"
       className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_18px_hsl(var(--foreground)/0.08)] backdrop-blur-lg md:hidden"
     >
