@@ -130,7 +130,7 @@ const RestaurantOffer = () => {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="bottom"
-          className="bottom-[calc(4rem+env(safe-area-inset-bottom))] mx-auto max-h-[calc(90dvh-4rem-env(safe-area-inset-bottom))] max-w-2xl overflow-y-auto rounded-t-2xl pb-6 md:bottom-0 md:max-h-[90vh] md:pb-6"
+          className="mx-auto max-h-[90vh] max-w-2xl overflow-y-auto rounded-t-2xl pb-6"
         >
           <SheetHeader className="text-left">
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">

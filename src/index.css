@@ -137,6 +137,21 @@
   }
 }
 
+/* Keep portalled popups inside the usable viewport above mobile navigation. */
+@media (max-width: 767px) {
+  body:has([data-mobile-bottom-navigation]) [data-bottom-sheet],
+  body:has([data-mobile-bottom-navigation]) [data-bottom-drawer] {
+    bottom: calc(4rem + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 4rem - env(safe-area-inset-bottom));
+  }
+
+  body:has([data-mobile-bottom-navigation]) [data-modal-content] {
+    top: calc((100dvh - 4rem - env(safe-area-inset-bottom)) / 2);
+    max-height: calc(100dvh - 5rem - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
