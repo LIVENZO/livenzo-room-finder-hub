@@ -33,7 +33,7 @@ const ReferralBanner: React.FC = () => {
                 Refer a Friend
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-                Earn up to <span className="font-semibold text-primary">₹5000</span> when they complete their first booking.
+                Earn <span className="font-semibold text-primary">₹500</span> when your friend completes their first booking.
               </p>
             </div>
           </div>
