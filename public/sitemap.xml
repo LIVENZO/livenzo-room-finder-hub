@@ -11,6 +11,16 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://livenzo-room-finder-hub.lovable.app/room/e798d13e-0419-4d62-8cef-054d74d54b4e</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://livenzo-room-finder-hub.lovable.app/room/23d18cc3-8c61-49b1-a82a-5a5f98a10226</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://livenzo-room-finder-hub.lovable.app/room/9cb3c8fe-2053-4650-a923-021eb3bc4d85</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
