@@ -49,6 +49,35 @@ export const useReferral = () => {
     return `${APP_URL}/?ref=${code}`;
   };
 
+  // Share the current user's referral link with the device's native share menu
+  const shareReferral = async (): Promise<boolean> => {
+    const code = referralCode || await getOrCreateReferralCode();
+
+    if (!code) return false;
+
+    const link = getReferralLink(code);
+    const shareData = {
+      title: 'Refer a Friend to Livenzo',
+      text: 'Find your perfect PG, hostel, or room in Kota with Livenzo.',
+      url: link,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return true;
+      }
+
+      await navigator.clipboard.writeText(link);
+      toast.success('Referral link copied');
+      return true;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return false;
+      toast.error('Unable to share referral link');
+      return false;
+    }
+  };
+
   // Share on WhatsApp
   const shareOnWhatsApp = async () => {
     const code = referralCode || await getOrCreateReferralCode();
@@ -58,7 +87,7 @@ export const useReferral = () => {
     const link = getReferralLink(code);
     const message = encodeURIComponent(
       `🏠 Hey! I found this amazing room finder app - Livenzo!\n\n` +
-      `Use my referral link and get ₹100 OFF on your first booking:\n${link}\n\n` +
+      `Use my referral link and get ₹500 OFF on your first booking:\n${link}\n\n` +
       `Find your perfect PG/room today! 🎉`
     );
 
@@ -122,7 +151,7 @@ export const useReferral = () => {
 
       if (result.success) {
         console.log('Referral processed successfully for new user');
-        toast.success('Referral applied! You\'ll get ₹200 OFF on your first booking.');
+        toast.success('Referral applied! You\'ll get ₹500 OFF on your first booking.');
         return { success: true, message: 'Referral applied successfully!' };
       } else {
         console.log('Referral not applied:', result.reason, result.message);
@@ -163,7 +192,7 @@ export const useReferral = () => {
       const totalReferrals = data?.length || 0;
       const pendingRewards = data?.filter(r => r.reward_status === 'pending').length || 0;
       const completedRewards = data?.filter(r => r.reward_status === 'completed').length || 0;
-      const totalEarned = completedRewards * 200;
+      const totalEarned = completedRewards * 500;
 
       return {
         totalReferrals,
@@ -183,6 +212,7 @@ export const useReferral = () => {
     isLoading,
     getOrCreateReferralCode,
     getReferralLink,
+    shareReferral,
     shareOnWhatsApp,
     captureReferralFromURL,
     getStoredReferralCode,
