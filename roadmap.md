@@ -11,4 +11,4 @@
 ## Navigation-safe popups
 - [x] Keep all bottom sheets and drawers above mobile bottom navigation
 - [x] Constrain centered dialogs to the usable mobile viewport
-- [ ] Verify representative sheets and dialogs on mobile and desktop
+- [x] Verify representative sheets and dialogs on mobile and desktop
