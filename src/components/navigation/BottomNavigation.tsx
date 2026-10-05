@@ -24,7 +24,7 @@ const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { nearMeActive } = useRooms();
-  const { shareReferral, isLoading } = useReferral();
+  const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
   const state = location.state as NavigationState | null;
 
@@ -35,7 +35,7 @@ const BottomNavigation: React.FC = () => {
   };
 
   const handleReferralShare = async () => {
-    const shared = await shareReferral();
+    const shared = await shareOnWhatsApp();
     if (shared) setReferralOpen(false);
   };
 

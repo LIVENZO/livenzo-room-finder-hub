@@ -15,5 +15,5 @@
 
 ## Referral sharing
 - [x] Open a referral popup from the mobile Share button
-- [x] Share the signed-in user's referral link through the native share menu
+- [x] Reuse the existing WhatsApp referral link and message from the popup
 - [x] Standardize referral rewards at ₹500

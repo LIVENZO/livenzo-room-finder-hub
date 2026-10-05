@@ -49,40 +49,11 @@ export const useReferral = () => {
     return `${APP_URL}/?ref=${code}`;
   };
 
-  // Share the current user's referral link with the device's native share menu
-  const shareReferral = async (): Promise<boolean> => {
-    const code = referralCode || await getOrCreateReferralCode();
-
-    if (!code) return false;
-
-    const link = getReferralLink(code);
-    const shareData = {
-      title: 'Refer a Friend to Livenzo',
-      text: 'Find your perfect PG, hostel, or room in Kota with Livenzo.',
-      url: link,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        return true;
-      }
-
-      await navigator.clipboard.writeText(link);
-      toast.success('Referral link copied');
-      return true;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return false;
-      toast.error('Unable to share referral link');
-      return false;
-    }
-  };
-
   // Share on WhatsApp
-  const shareOnWhatsApp = async () => {
+  const shareOnWhatsApp = async (): Promise<boolean> => {
     const code = referralCode || await getOrCreateReferralCode();
     
-    if (!code) return;
+    if (!code) return false;
 
     const link = getReferralLink(code);
     const message = encodeURIComponent(
@@ -93,6 +64,7 @@ export const useReferral = () => {
 
     const whatsappUrl = `https://wa.me/?text=${message}`;
     window.open(whatsappUrl, '_blank');
+    return true;
   };
 
   // Capture referral code from URL
@@ -212,7 +184,6 @@ export const useReferral = () => {
     isLoading,
     getOrCreateReferralCode,
     getReferralLink,
-    shareReferral,
     shareOnWhatsApp,
     captureReferralFromURL,
     getStoredReferralCode,
