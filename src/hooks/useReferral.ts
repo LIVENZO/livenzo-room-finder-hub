@@ -79,10 +79,10 @@ export const useReferral = () => {
   };
 
   // Share on WhatsApp
-  const shareOnWhatsApp = async () => {
+  const shareOnWhatsApp = async (): Promise<boolean> => {
     const code = referralCode || await getOrCreateReferralCode();
     
-    if (!code) return;
+    if (!code) return false;
 
     const link = getReferralLink(code);
     const message = encodeURIComponent(
@@ -93,6 +93,7 @@ export const useReferral = () => {
 
     const whatsappUrl = `https://wa.me/?text=${message}`;
     window.open(whatsappUrl, '_blank');
+    return true;
   };
 
   // Capture referral code from URL
