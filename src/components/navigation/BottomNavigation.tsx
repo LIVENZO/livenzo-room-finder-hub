@@ -23,7 +23,7 @@ interface NavigationState {
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { nearMeActive, nearMeLoading, activateNearMe } = useRooms();
+  const { nearMeActive } = useRooms();
   const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
   const state = location.state as NavigationState | null;
@@ -33,12 +33,6 @@ const BottomNavigation: React.FC = () => {
       state: action ? { bottomNavAction: action, requestId: Date.now() } : null,
       flushSync: true,
     });
-
-    if (action === 'search') {
-      document.getElementById('room-search-input')?.focus();
-    } else if (action === 'near-me' && location.pathname === '/find-room' && !nearMeActive && !nearMeLoading) {
-      activateNearMe();
-    }
   };
 
   const handleReferralShare = async () => {
