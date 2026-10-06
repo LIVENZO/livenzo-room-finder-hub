@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRooms } from '@/context/RoomContext';
 import { RoomFilters, PropertyTypeFilter as PropertyTypeFilterValue } from '@/types/room';
 import Layout from '@/components/Layout';
@@ -45,12 +45,10 @@ const FindRoom: React.FC = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const state = location.state as { bottomNavAction?: 'search' | 'near-me'; requestId?: number } | null;
     if (state?.bottomNavAction === 'search') {
-      window.requestAnimationFrame(() => {
-        document.getElementById('room-search-input')?.focus();
-      });
+      document.getElementById('room-search-input')?.focus();
     } else if (state?.bottomNavAction === 'near-me' && !nearMeActive && !nearMeLoading) {
       handleNearMeActivate();
     }

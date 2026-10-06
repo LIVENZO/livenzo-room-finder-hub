@@ -23,7 +23,7 @@ interface NavigationState {
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { nearMeActive } = useRooms();
+  const { nearMeActive, nearMeLoading, activateNearMe } = useRooms();
   const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
   const state = location.state as NavigationState | null;
@@ -31,7 +31,14 @@ const BottomNavigation: React.FC = () => {
   const openListings = (action?: NavigationAction) => {
     navigate('/find-room', {
       state: action ? { bottomNavAction: action, requestId: Date.now() } : null,
+      flushSync: true,
     });
+
+    if (action === 'search') {
+      document.getElementById('room-search-input')?.focus();
+    } else if (action === 'near-me' && location.pathname === '/find-room' && !nearMeActive && !nearMeLoading) {
+      activateNearMe();
+    }
   };
 
   const handleReferralShare = async () => {
@@ -71,7 +78,7 @@ const BottomNavigation: React.FC = () => {
       label: 'Profile',
       icon: User,
       active: location.pathname === '/profile',
-      onClick: () => navigate('/profile'),
+      onClick: () => navigate('/profile', { flushSync: true }),
     },
   ];
 
@@ -92,7 +99,7 @@ const BottomNavigation: React.FC = () => {
               aria-current={active ? 'page' : undefined}
               onClick={onClick}
               className={cn(
-                'h-16 min-w-0 flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
+                'h-16 min-w-0 touch-manipulation flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
                 'hover:bg-primary/5 hover:text-primary',
                 active && 'bg-primary/5 text-primary'
               )}
