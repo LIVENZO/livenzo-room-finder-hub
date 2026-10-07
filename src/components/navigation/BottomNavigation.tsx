@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Home, Loader2, MapPin, Search, Share2, User, Users } from 'lucide-react';
+import { flushSync } from 'react-dom';
+import { Home, Loader2, MapPin, Search, Share2, User, Users, type LucideIcon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +16,8 @@ import { useReferral } from '@/hooks/useReferral';
 
 type NavigationAction = 'search' | 'near-me';
 type NavigationLabel = 'Home' | 'Search' | 'Share' | 'Near Me' | 'Profile';
+// Survives page-layout remounts so the click following pointer-down cannot route twice.
+let lastActivation: { label: NavigationLabel; timestamp: number } | null = null;
 
 interface NavigationState {
   bottomNavAction?: NavigationAction;
@@ -23,14 +26,12 @@ interface NavigationState {
 
 interface NavigationButtonProps {
   label: NavigationLabel;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: LucideIcon;
   active: boolean;
   onActivate: (label: NavigationLabel) => void;
 }
 
 const NavigationButton = memo(({ label, icon: Icon, active, onActivate }: NavigationButtonProps) => {
-  const pointerHandledRef = useRef(false);
-
   return (
     <Button
       type="button"
@@ -38,19 +39,12 @@ const NavigationButton = memo(({ label, icon: Icon, active, onActivate }: Naviga
       aria-label={label}
       aria-current={active ? 'page' : undefined}
       onPointerDown={(event) => {
-        if (event.button !== 0 || pointerHandledRef.current) return;
-        pointerHandledRef.current = true;
+        if (event.button !== 0 || !event.isPrimary) return;
         onActivate(label);
       }}
-      onClick={() => {
-        if (pointerHandledRef.current) {
-          pointerHandledRef.current = false;
-          return;
-        }
-        onActivate(label);
-      }}
-      onPointerCancel={() => {
-        pointerHandledRef.current = false;
+      onClick={(event) => {
+        // Keyboard and assistive clicks still activate; pointer clicks already did.
+        if (event.detail === 0) onActivate(label);
       }}
       className={cn(
         'h-16 min-w-0 touch-manipulation flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
@@ -75,7 +69,6 @@ const BottomNavigation: React.FC = () => {
   const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
   const [pendingLabel, setPendingLabel] = useState<NavigationLabel | null>(null);
-  const lastActivationRef = useRef<{ label: NavigationLabel; timestamp: number } | null>(null);
   const state = location.state as NavigationState | null;
 
   useEffect(() => {
@@ -130,15 +123,25 @@ const BottomNavigation: React.FC = () => {
     },
   ], [listingsActive, location.pathname, nearMeActive, navigate, openListings, referralOpen, searchAction]);
 
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
   const activateItem = useCallback((label: NavigationLabel) => {
     const now = performance.now();
-    const lastActivation = lastActivationRef.current;
     if (lastActivation?.label === label && now - lastActivation.timestamp < 500) return;
 
-    lastActivationRef.current = { label, timestamp: now };
-    setPendingLabel(label);
-    items.find((item) => item.label === label)?.onClick();
-  }, [items]);
+    lastActivation = { label, timestamp: now };
+    const item = itemsRef.current.find((candidate) => candidate.label === label);
+    if (!item) return;
+    if (item.active && label !== 'Search') return;
+
+    // BrowserRouter does not apply the data-router flushSync option itself.
+    // Commit both selection and destination before returning from the tap handler.
+    flushSync(() => {
+      setPendingLabel(label);
+      item.onClick();
+    });
+  }, []);
 
   return (
     <>
