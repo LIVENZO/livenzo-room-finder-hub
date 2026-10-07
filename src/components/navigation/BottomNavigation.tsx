@@ -32,8 +32,6 @@ interface NavigationButtonProps {
 }
 
 const NavigationButton = memo(({ label, icon: Icon, active, onActivate }: NavigationButtonProps) => {
-  const pointerHandledRef = useRef(false);
-
   return (
     <Button
       type="button"
@@ -41,19 +39,12 @@ const NavigationButton = memo(({ label, icon: Icon, active, onActivate }: Naviga
       aria-label={label}
       aria-current={active ? 'page' : undefined}
       onPointerDown={(event) => {
-        if (event.button !== 0 || pointerHandledRef.current) return;
-        pointerHandledRef.current = true;
+        if (event.button !== 0 || !event.isPrimary) return;
         onActivate(label);
       }}
-      onClick={() => {
-        if (pointerHandledRef.current) {
-          pointerHandledRef.current = false;
-          return;
-        }
-        onActivate(label);
-      }}
-      onPointerCancel={() => {
-        pointerHandledRef.current = false;
+      onClick={(event) => {
+        // Keyboard and assistive clicks still activate; pointer clicks already did.
+        if (event.detail === 0) onActivate(label);
       }}
       className={cn(
         'h-16 min-w-0 touch-manipulation flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
