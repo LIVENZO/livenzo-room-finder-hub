@@ -18,6 +18,7 @@ import { useLocation } from 'react-router-dom';
 import { logSearch } from '@/services/SearchAnalyticsService';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
+import { useNavigationDestinationLoading } from '@/components/navigation/NavigationFeedback';
 
 const FindRoom: React.FC = () => {
   const location = useLocation();
@@ -44,17 +45,23 @@ const FindRoom: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
+  const [handledNavigationKey, setHandledNavigationKey] = useState<string | null>(null);
+  useNavigationDestinationLoading(isLoading || nearMeLoading || handledNavigationKey !== location.key);
 
   useEffect(() => {
     const state = location.state as { bottomNavAction?: 'search' | 'near-me'; requestId?: number } | null;
     if (state?.bottomNavAction === 'search') {
-      window.requestAnimationFrame(() => {
+      const frame = window.requestAnimationFrame(() => {
         document.getElementById('room-search-input')?.focus();
+        setHandledNavigationKey(location.key);
       });
-    } else if (state?.bottomNavAction === 'near-me' && !nearMeActive && !nearMeLoading) {
+      return () => window.cancelAnimationFrame(frame);
+    }
+    if (state?.bottomNavAction === 'near-me' && !nearMeActive && !nearMeLoading) {
       handleNearMeActivate();
     }
-  }, [location.state]);
+    setHandledNavigationKey(location.key);
+  }, [location.state, location.key]);
 
   const handlePropertyTypeChange = (value: PropertyTypeFilterValue) => {
     setPropertyTypeFilter(value);
