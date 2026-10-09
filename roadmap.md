@@ -2,8 +2,6 @@
 - [x] Add five-button mobile bottom navigation
 - [x] Reuse search, near-me, share, and profile flows
 - [x] Verify active states and mobile layout
-- [x] Make all five actions respond immediately without changing their behavior
-- [x] Show the selected state on touch-down and suppress duplicate navigation taps
 
 ## Restaurant discount offer
 - [x] Add secure one-redemption-per-device storage and redemption endpoint
