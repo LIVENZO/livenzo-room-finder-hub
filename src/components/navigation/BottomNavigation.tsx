@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Home, Loader2, MapPin, Search, Share2, User, Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,14 @@ const BottomNavigation: React.FC = () => {
   const { nearMeActive } = useRooms();
   const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
+  const [tapFeedback, setTapFeedback] = useState<{ label: string } | null>(null);
   const state = location.state as NavigationState | null;
+
+  useEffect(() => {
+    if (!tapFeedback) return;
+    const timeout = window.setTimeout(() => setTapFeedback(null), 450);
+    return () => window.clearTimeout(timeout);
+  }, [tapFeedback]);
 
   const openListings = (action?: NavigationAction) => {
     navigate('/find-room', {
@@ -83,26 +90,33 @@ const BottomNavigation: React.FC = () => {
         className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_18px_hsl(var(--foreground)/0.08)] backdrop-blur-lg md:hidden"
       >
         <div className="grid h-16 grid-cols-5">
-          {items.map(({ label, icon: Icon, active, onClick }) => (
+          {items.map(({ label, icon: Icon, active, onClick }) => {
+            const highlighted = tapFeedback ? tapFeedback.label === label : active;
+            return (
             <Button
               key={label}
               type="button"
               variant="ghost"
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              onClick={onClick}
+              data-tap-feedback={tapFeedback?.label === label ? '' : undefined}
+              onClick={() => {
+                setTapFeedback({ label });
+                onClick();
+              }}
               className={cn(
                 'h-16 min-w-0 flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
-                'hover:bg-primary/5 hover:text-primary',
-                active && 'bg-primary/5 text-primary'
+                'hover:bg-primary/5 hover:text-primary active:bg-primary/10 active:text-primary',
+                highlighted && 'bg-primary/5 text-primary'
               )}
             >
-              <span className={cn('flex h-7 w-10 items-center justify-center rounded-full transition-colors', active && 'bg-primary/10')}>
-                <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.4 : 2} />
+              <span className={cn('flex h-7 w-10 items-center justify-center rounded-full transition-colors', highlighted && 'bg-primary/10')}>
+                <Icon className="h-[21px] w-[21px]" strokeWidth={highlighted ? 2.4 : 2} />
               </span>
               <span className="w-full truncate">{label}</span>
             </Button>
-          ))}
+            );
+          })}
         </div>
       </nav>
 
