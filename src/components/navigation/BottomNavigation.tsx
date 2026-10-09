@@ -54,7 +54,7 @@ const BottomNavigation: React.FC = () => {
       label: 'Home',
       icon: Home,
       active: listingsActive && !searchAction && !nearMeActive,
-      onClick: () => openListings(),
+      onClick: () => navigate('/find-room'),
     },
     {
       label: 'Search',
