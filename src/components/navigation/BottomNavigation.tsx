@@ -12,6 +12,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useRooms } from '@/context/RoomContext';
 import { useReferral } from '@/hooks/useReferral';
+import { useNavigationFeedback } from './NavigationFeedback';
+import type { BottomNavigationLabel } from './navigationFeedbackState';
 
 type NavigationAction = 'search' | 'near-me';
 
@@ -26,14 +28,12 @@ const BottomNavigation: React.FC = () => {
   const { nearMeActive } = useRooms();
   const { shareOnWhatsApp, isLoading } = useReferral();
   const [referralOpen, setReferralOpen] = useState(false);
-  const [tapFeedback, setTapFeedback] = useState<{ label: string } | null>(null);
+  const { pending, begin, finishShare } = useNavigationFeedback();
   const state = location.state as NavigationState | null;
 
   useEffect(() => {
-    if (!tapFeedback) return;
-    const timeout = window.setTimeout(() => setTapFeedback(null), 450);
-    return () => window.clearTimeout(timeout);
-  }, [tapFeedback]);
+    if (referralOpen) finishShare();
+  }, [referralOpen, finishShare]);
 
   const openListings = (action?: NavigationAction) => {
     navigate('/find-room', {
@@ -49,7 +49,7 @@ const BottomNavigation: React.FC = () => {
   const searchAction = location.pathname === '/find-room' ? state?.bottomNavAction : undefined;
   const listingsActive = location.pathname === '/find-room' || location.pathname.startsWith('/room/');
 
-  const items = [
+  const items: { label: BottomNavigationLabel; icon: typeof Home; active: boolean; onClick: () => void }[] = [
     {
       label: 'Home',
       icon: Home,
@@ -91,7 +91,8 @@ const BottomNavigation: React.FC = () => {
       >
         <div className="grid h-16 grid-cols-5">
           {items.map(({ label, icon: Icon, active, onClick }) => {
-            const highlighted = tapFeedback ? tapFeedback.label === label : active;
+            const loading = pending?.label === label;
+            const highlighted = pending ? loading : active;
             return (
             <Button
               key={label}
@@ -99,9 +100,12 @@ const BottomNavigation: React.FC = () => {
               variant="ghost"
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              data-tap-feedback={tapFeedback?.label === label ? '' : undefined}
+              data-tap-feedback={loading ? '' : undefined}
+              aria-busy={loading}
+              aria-disabled={loading}
               onClick={() => {
-                setTapFeedback({ label });
+                if (label === 'Share' && referralOpen) return;
+                if (!begin(label, label === 'Profile' ? '/profile' : label === 'Share' ? location.pathname : '/find-room')) return;
                 onClick();
               }}
               className={cn(
@@ -111,7 +115,11 @@ const BottomNavigation: React.FC = () => {
               )}
             >
               <span className={cn('flex h-7 w-10 items-center justify-center rounded-full transition-colors', highlighted && 'bg-primary/10')}>
-                <Icon className="h-[21px] w-[21px]" strokeWidth={highlighted ? 2.4 : 2} />
+                {loading ? (
+                  <Loader2 className="h-[21px] w-[21px] animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                ) : (
+                  <Icon className="h-[21px] w-[21px]" strokeWidth={highlighted ? 2.4 : 2} />
+                )}
               </span>
               <span className="w-full truncate">{label}</span>
             </Button>

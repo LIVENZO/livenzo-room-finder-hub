@@ -17,6 +17,7 @@ import { useProfileManagement } from '@/hooks/useProfileManagement';
 import { isProfileComplete, isOwnerProfileComplete } from '@/utils/profileUtils';
 import { toast } from 'sonner';
 import Seo, { OG_HOME } from '@/components/seo/Seo';
+import { useNavigationDestinationLoading } from '@/components/navigation/NavigationFeedback';
 const Profile = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const Profile = () => {
     user,
     isOwner
   } = useProfileManagement();
+  useNavigationDestinationLoading(loading);
 
   // Detect unsaved changes by comparing form values to the saved profile
   const dirty = useMemo(() => {
