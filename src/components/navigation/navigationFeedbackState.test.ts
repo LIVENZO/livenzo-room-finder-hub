@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, it } from 'node:test';
+import { strict as assert } from 'node:assert';
 import { destinationIsReady, type PendingNavigation } from './navigationFeedbackState';
 
 describe('bottom navigation readiness', () => {
@@ -9,12 +10,12 @@ describe('bottom navigation readiness', () => {
       originKey: 'before-tap',
     };
     it(`${label} stays loading until its destination is ready`, () => {
-      expect(destinationIsReady(pending, pending.destination, 'after-tap', true)).toBe(false);
-      expect(destinationIsReady(pending, pending.destination, 'after-tap', false)).toBe(true);
+      assert.equal(destinationIsReady(pending, pending.destination, 'after-tap', true), false);
+      assert.equal(destinationIsReady(pending, pending.destination, 'after-tap', false), true);
     });
     it(`${label} ignores readiness from the previous navigation`, () => {
-      expect(destinationIsReady(pending, pending.destination, 'before-tap', false)).toBe(false);
-      expect(destinationIsReady(pending, '/other-page', 'after-tap', false)).toBe(false);
+      assert.equal(destinationIsReady(pending, pending.destination, 'before-tap', false), false);
+      assert.equal(destinationIsReady(pending, '/other-page', 'after-tap', false), false);
     });
   }
 });
