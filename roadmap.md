@@ -3,7 +3,8 @@
 - [x] Reuse search, near-me, share, and profile flows
 - [x] Verify active states and mobile layout
 - [x] Add and verify immediate feedback for every bottom-navigation tap without changing actions
-- [ ] Replace timed tap feedback with destination-ready loading and prevent duplicate taps for all five buttons
+- [x] Replace timed tap feedback with destination-ready loading and prevent duplicate taps for all five buttons
+- [ ] Verify signed-in Profile loading end-to-end (blocked: authenticated browser checks unavailable for external Supabase)
 
 ## Restaurant discount offer
 - [x] Add secure one-redemption-per-device storage and redemption endpoint
