@@ -6,7 +6,8 @@
 ## Bottom navigation loading
 - [x] Show immediate tap feedback and preserve existing navigation actions
 - [x] Keep destination loading visible until room, location, or profile loading finishes
-- [ ] Verify loading completion, duplicate taps, redirects, and referral popup
+- [x] Verify slow room loading completion, duplicate taps, Search, Near Me, redirects, and referral popup
+- [ ] Verify signed-in Profile-to-Home flow (blocked: external authentication cannot supply a test session)
 
 ## Restaurant discount offer
 - [x] Add secure one-redemption-per-device storage and redemption endpoint
