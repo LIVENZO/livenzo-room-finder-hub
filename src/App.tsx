@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import AndroidBackHandler from "@/components/AndroidBackHandler";
-import { NavigationLoadingProvider } from "@/context/NavigationLoadingContext";
 import { AuthProvider } from "./context/auth";
 import { RoomProvider } from "./context/RoomContext";
 import { OwnerPropertyProvider } from "./context/OwnerPropertyContext";
@@ -99,7 +98,6 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <NavigationLoadingProvider>
             <AndroidBackHandler />
             <FCMWrapper />
             <RenterLaunchRedirect />
@@ -131,7 +129,6 @@ const App = () => {
               <Route path="/add-property" element={<AddProperty />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            </NavigationLoadingProvider>
           </BrowserRouter>
           </OwnerPropertyProvider>
         </RoomProvider>

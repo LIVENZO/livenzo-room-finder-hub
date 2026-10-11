@@ -3,12 +3,6 @@
 - [x] Reuse search, near-me, share, and profile flows
 - [x] Verify active states and mobile layout
 
-## Bottom navigation loading
-- [x] Show immediate tap feedback and preserve existing navigation actions
-- [x] Keep destination loading visible until room, location, or profile loading finishes
-- [x] Verify slow room loading completion, duplicate taps, Search, Near Me, redirects, and referral popup
-- [ ] Verify signed-in Profile-to-Home flow (blocked: external authentication cannot supply a test session)
-
 ## Restaurant discount offer
 - [x] Add secure one-redemption-per-device storage and redemption endpoint
 - [x] Add renter profile banner and redemption screen

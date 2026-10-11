@@ -12,7 +12,6 @@ import {
 import { cn } from '@/lib/utils';
 import { useRooms } from '@/context/RoomContext';
 import { useReferral } from '@/hooks/useReferral';
-import { useNavigationLoading } from '@/context/NavigationLoadingContext';
 
 type NavigationAction = 'search' | 'near-me';
 
@@ -26,13 +25,10 @@ const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const { nearMeActive } = useRooms();
   const { shareOnWhatsApp, isLoading } = useReferral();
-  const { pending, beginNavigation } = useNavigationLoading();
   const [referralOpen, setReferralOpen] = useState(false);
   const state = location.state as NavigationState | null;
 
   const openListings = (action?: NavigationAction) => {
-    const destination = action === 'search' ? 'Search' : action === 'near-me' ? 'Near Me' : 'Home';
-    if (!beginNavigation(destination, '/find-room')) return;
     navigate('/find-room', {
       state: action ? { bottomNavAction: action, requestId: Date.now() } : null,
     });
@@ -75,9 +71,7 @@ const BottomNavigation: React.FC = () => {
       label: 'Profile',
       icon: User,
       active: location.pathname === '/profile',
-      onClick: () => {
-        if (beginNavigation('Profile', '/profile')) navigate('/profile');
-      },
+      onClick: () => navigate('/profile'),
     },
   ];
 
@@ -96,21 +90,15 @@ const BottomNavigation: React.FC = () => {
               variant="ghost"
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              aria-busy={pending?.destination === label || (label === 'Share' && isLoading)}
-              disabled={pending?.destination === label}
               onClick={onClick}
               className={cn(
                 'h-16 min-w-0 flex-col gap-1 rounded-none px-1 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
-                'hover:bg-primary/5 hover:text-primary active:bg-primary/10 active:text-primary disabled:opacity-100',
-                (active || pending?.destination === label) && 'bg-primary/5 text-primary'
+                'hover:bg-primary/5 hover:text-primary',
+                active && 'bg-primary/5 text-primary'
               )}
             >
               <span className={cn('flex h-7 w-10 items-center justify-center rounded-full transition-colors', active && 'bg-primary/10')}>
-                {pending?.destination === label || (label === 'Share' && isLoading) ? (
-                  <Loader2 className="h-[21px] w-[21px] animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                ) : (
-                  <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.4 : 2} />
-                )}
+                <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.4 : 2} />
               </span>
               <span className="w-full truncate">{label}</span>
             </Button>
