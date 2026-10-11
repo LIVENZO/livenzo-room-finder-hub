@@ -18,6 +18,7 @@ import { useLocation } from 'react-router-dom';
 import { logSearch } from '@/services/SearchAnalyticsService';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
+import { useNavigationReady } from '@/context/NavigationLoadingContext';
 
 const FindRoom: React.FC = () => {
   const location = useLocation();
@@ -44,6 +45,10 @@ const FindRoom: React.FC = () => {
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<PropertyTypeFilterValue>('all');
+  const navigationAction = (location.state as { bottomNavAction?: string } | null)?.bottomNavAction;
+  useNavigationReady(!isLoading && !nearMeLoading && (
+    navigationAction !== 'near-me' || nearMeActive || !!nearMeError
+  ));
 
   useEffect(() => {
     const state = location.state as { bottomNavAction?: 'search' | 'near-me'; requestId?: number } | null;
