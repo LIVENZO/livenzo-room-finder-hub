@@ -34,7 +34,6 @@ import PendingRenters from "./pages/PendingRenters";
 import FirebaseTest from "./pages/FirebaseTest";
 import NotificationTest from "./pages/NotificationTest";
 import AddProperty from "./pages/AddProperty";
-import { NavigationFeedbackProvider } from './components/navigation/NavigationFeedback';
 
 const FCMWrapper = () => {
   useFCMRegistration();
@@ -99,7 +98,6 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <NavigationFeedbackProvider>
             <AndroidBackHandler />
             <FCMWrapper />
             <RenterLaunchRedirect />
@@ -131,7 +129,6 @@ const App = () => {
               <Route path="/add-property" element={<AddProperty />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            </NavigationFeedbackProvider>
           </BrowserRouter>
           </OwnerPropertyProvider>
         </RoomProvider>
