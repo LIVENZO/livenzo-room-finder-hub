@@ -9,7 +9,6 @@ import { Filter } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -50,9 +49,6 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
-          <SheetDescription>
-            Narrow down your search with these options.
-          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-6">
           <div className="space-y-2">
