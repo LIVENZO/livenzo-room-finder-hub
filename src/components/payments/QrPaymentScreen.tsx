@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import QRCode from "qrcode";
+import { isOfferDiscountActive } from "@/hooks/useOfferStatus";
 
 interface QrPaymentScreenProps {
   isOpen: boolean;
@@ -35,7 +36,9 @@ export const QrPaymentScreen = ({ isOpen, onClose, amount, returnPath }: QrPayme
         <div className="flex flex-col items-center gap-4 py-2">
           <div className="text-center">
             <span className="text-3xl font-bold text-foreground">₹{amount.toLocaleString()}</span>
-            <p className="text-xs text-green-600 mt-1">First month price · 25% discount applied</p>
+            {isOfferDiscountActive() && (
+              <p className="text-xs text-green-600 mt-1">First month price · 25% discount applied</p>
+            )}
           </div>
 
           {qrDataUrl && (
