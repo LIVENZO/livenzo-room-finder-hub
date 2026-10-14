@@ -26,7 +26,7 @@ const normalizeText = (value: string) => value
   .normalize('NFKD')
   .replace(/[^a-z0-9₹\s-]/g, ' ')
   .replace(/\bhostle\b|\bhostal\b|\bhostels\b/g, 'hostel')
-  .replace(/\bp[.\s-]*g[.\s-]*s?\b/g, 'pg')
+  .replace(/\bp(?:[.\s-]*g)(?:[.\s-]*s)?\b/g, 'pg')
   .replace(/\bboy'?s?\b|\bladka\b|\bladke\b|\bladko\b|\bmale\b/g, 'boys')
   .replace(/\bgirl'?s?\b|\bladki\b|\bladkiyo\b|\bfemale\b/g, 'girls')
   .replace(/\bflats?\b|\bapartments?\b/g, 'bhk')
