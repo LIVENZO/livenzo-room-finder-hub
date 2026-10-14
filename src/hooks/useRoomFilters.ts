@@ -81,7 +81,6 @@ export const useRoomFilters = (
   rooms: Room[],
   activeHotspot: Hotspot | null = null,
   hotspots: Hotspot[] = [],
-  structuredSearchActive = false,
 ) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
@@ -134,11 +133,6 @@ export const useRoomFilters = (
           } else {
             return false;
           }
-        } else if (textSearch.trim() && !structuredSearchActive) {
-          const searchLower = textSearch.toLowerCase().trim();
-          const locationMatch = room.location?.toLowerCase().includes(searchLower);
-          const titleMatch = room.title?.toLowerCase().includes(searchLower);
-          if (!locationMatch && !titleMatch) return false;
         }
         
         if (filters.maxPrice && room.price > filters.maxPrice) return false;
@@ -219,7 +213,7 @@ export const useRoomFilters = (
     }
 
     return result;
-  }, [rooms, filters, searchText, activeHotspot, hotspots, structuredSearchActive]);
+  }, [rooms, filters, searchText, activeHotspot, hotspots]);
 
   return { 
     filters, 

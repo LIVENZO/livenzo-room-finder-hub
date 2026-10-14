@@ -72,7 +72,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [searchScopeRooms, nearMeActive, calculateRoomDistances]),
     activeHotspot,
     hotspots,
-    searchText.trim().length > 0,
   );
 
   const syncRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all', showSuccessToast = false) => {
@@ -113,11 +112,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const query = searchText.trim();
-    if (!query) return;
+    if (!query) {
+      searchRequestRef.current += 1;
+      setSearchFeedback({ mode: 'strict' });
+      void syncRooms(filters.propertyType ?? 'all');
+      return;
+    }
 
     const requestId = ++searchRequestRef.current;
+    setIsLoading(true);
     const timer = window.setTimeout(async () => {
-      setIsLoading(true);
       try {
         const result = await searchRoomsService(query, filters, hotspots);
         if (requestId !== searchRequestRef.current) return;
