@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { Room, RoomFilters, PropertyTypeFilter } from "@/types/room";
+import { Room, RoomFilters, PropertyTypeFilter, SearchFeedback } from "@/types/room";
 import { fetchRooms as fetchRoomsService } from "@/services/roomService";
+import { searchRooms as searchRoomsService } from "@/services/roomFetchService";
 import { useRoomFilters } from "@/hooks/useRoomFilters";
 import { useNearMe } from "@/hooks/useNearMe";
 import { useHotspotSearch } from "@/hooks/useHotspotSearch";
@@ -31,6 +32,7 @@ interface RoomContextType {
   selectHotspot: (hotspot: Hotspot) => void;
   clearHotspot: () => void;
   allHotspots: Hotspot[];
+  searchFeedback: SearchFeedback;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -40,6 +42,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [searchScopeRooms, setSearchScopeRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const fetchRequestRef = useRef(0);
+  const searchRequestRef = useRef(0);
+  const [searchFeedback, setSearchFeedback] = useState<SearchFeedback>({ mode: 'strict' });
 
   const {
     isActive: nearMeActive,
@@ -68,6 +72,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [searchScopeRooms, nearMeActive, calculateRoomDistances]),
     activeHotspot,
     hotspots,
+    searchText.trim().length > 0,
   );
 
   const syncRooms = async (propertyType: PropertyTypeFilter = filters.propertyType ?? 'all', showSuccessToast = false) => {
@@ -100,8 +105,39 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    void syncRooms(filters.propertyType ?? 'all');
+    if (!searchText.trim()) {
+      setSearchFeedback({ mode: 'strict' });
+      void syncRooms(filters.propertyType ?? 'all');
+    }
   }, [filters.propertyType]);
+
+  useEffect(() => {
+    const query = searchText.trim();
+    if (!query) return;
+
+    const requestId = ++searchRequestRef.current;
+    const timer = window.setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const result = await searchRoomsService(query, filters, hotspots);
+        if (requestId !== searchRequestRef.current) return;
+        setSearchScopeRooms(result.rooms);
+        setSearchFeedback(result.feedback);
+      } catch {
+        if (requestId === searchRequestRef.current) {
+          setSearchScopeRooms([]);
+          setSearchFeedback({
+            mode: 'none',
+            message: 'Search is temporarily unavailable. Please try again.',
+          });
+        }
+      } finally {
+        if (requestId === searchRequestRef.current) setIsLoading(false);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchText, filters, hotspots]);
 
   const refreshRooms = async () => {
     await syncRooms(filters.propertyType ?? 'all', true);
@@ -135,6 +171,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectHotspot,
         clearHotspot,
         allHotspots: hotspots,
+        searchFeedback,
       }}
     >
       {children}

@@ -39,7 +39,8 @@ const FindRoom: React.FC = () => {
     updateHotspotSuggestions,
     selectHotspot,
     clearHotspot,
-    allHotspots
+    allHotspots,
+    searchFeedback,
   } = useRooms();
   const [tempFilters, setTempFilters] = useState<RoomFilters>(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -330,6 +331,11 @@ const FindRoom: React.FC = () => {
         {activeHotspot &&
         <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center text-sm text-primary font-medium">
             📍 Showing rooms near {activeHotspot.name}
+          </div>
+        }
+        {searchFeedback.mode === 'nearby' && searchFeedback.message &&
+        <div className="mb-4 p-3 bg-muted rounded-lg text-center text-sm text-muted-foreground">
+            {searchFeedback.message}
           </div>
         }
         {nearMeError &&

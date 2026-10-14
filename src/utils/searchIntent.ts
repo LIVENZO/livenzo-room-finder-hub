@@ -98,7 +98,8 @@ export const parseSearchIntent = (rawQuery: string, hotspots: Hotspot[] = []): S
     : phraseIncludes(normalizedQuery, ['cooler'])
       ? 'cooler'
       : undefined;
-  const locationQuery = hotspot?.name ?? removeIntentTerms(normalizedQuery, hotspot) || undefined;
+  const remainingLocation = removeIntentTerms(normalizedQuery, hotspot);
+  const locationQuery = hotspot?.name ?? (remainingLocation || undefined);
 
   return {
     normalizedQuery,

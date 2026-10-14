@@ -77,7 +77,12 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
 
 const HOTSPOT_RADIUS_KM = 2;
 
-export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = null, hotspots: Hotspot[] = []) => {
+export const useRoomFilters = (
+  rooms: Room[],
+  activeHotspot: Hotspot | null = null,
+  hotspots: Hotspot[] = [],
+  structuredSearchActive = false,
+) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
   
@@ -129,7 +134,7 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
           } else {
             return false;
           }
-        } else if (textSearch.trim()) {
+        } else if (textSearch.trim() && !structuredSearchActive) {
           const searchLower = textSearch.toLowerCase().trim();
           const locationMatch = room.location?.toLowerCase().includes(searchLower);
           const titleMatch = room.title?.toLowerCase().includes(searchLower);
@@ -214,7 +219,7 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
     }
 
     return result;
-  }, [rooms, filters, searchText, activeHotspot, hotspots]);
+  }, [rooms, filters, searchText, activeHotspot, hotspots, structuredSearchActive]);
 
   return { 
     filters, 
