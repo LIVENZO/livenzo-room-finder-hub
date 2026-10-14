@@ -299,8 +299,15 @@ const FindRoom: React.FC = () => {
                     No rooms found
                   </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Our team can help you find the right room on WhatsApp.
+                    {searchFeedback.message ?? 'Our team can help you find the right room on WhatsApp.'}
                   </p>
+                  {searchFeedback.suggestions && searchFeedback.suggestions.length > 0 &&
+                    <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      {searchFeedback.suggestions.map((suggestion) =>
+                        <li key={suggestion}>• {suggestion}</li>
+                      )}
+                    </ul>
+                  }
                 </div>
                 <Button
                   onClick={() => {

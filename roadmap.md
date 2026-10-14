@@ -22,4 +22,4 @@
 - [x] Parse natural hostel, PG, flat, suitability, budget, amenity, and location intent
 - [x] Add structured public database search with hard filters and relevance ranking
 - [x] Add safe nearby-area fallback and helpful result messages
-- [ ] Verify required queries against real listings and the Find Room screen
+- [x] Verify required queries against real listings and the Find Room screen
