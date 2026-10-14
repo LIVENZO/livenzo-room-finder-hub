@@ -77,7 +77,11 @@ const applyStrategy = (rooms: Room[], strategy: SortStrategy): Room[] => {
 
 const HOTSPOT_RADIUS_KM = 2;
 
-export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = null, hotspots: Hotspot[] = []) => {
+export const useRoomFilters = (
+  rooms: Room[],
+  activeHotspot: Hotspot | null = null,
+  hotspots: Hotspot[] = [],
+) => {
   const [filters, setFilters] = useState<RoomFilters>({});
   const [searchText, setSearchText] = useState('');
   
@@ -101,7 +105,11 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
     const activePropertyFilter = filters.propertyType && filters.propertyType !== 'all' ? filters.propertyType : null;
 
     const applyFilters = (roomList: Room[], hotspot: Hotspot | null, textSearch: string) => {
-      return roomList.filter(room => {
+      return roomList
+        .map((room) => activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel'
+          ? applyPgHostelPricing(room, activePropertyFilter)
+          : room)
+        .filter(room => {
         if (room.available === false) return false;
 
         // Property type filter
@@ -129,11 +137,6 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
           } else {
             return false;
           }
-        } else if (textSearch.trim()) {
-          const searchLower = textSearch.toLowerCase().trim();
-          const locationMatch = room.location?.toLowerCase().includes(searchLower);
-          const titleMatch = room.title?.toLowerCase().includes(searchLower);
-          if (!locationMatch && !titleMatch) return false;
         }
         
         if (filters.maxPrice && room.price > filters.maxPrice) return false;
@@ -144,7 +147,7 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
         if (filters.coolingType && room.facilities.coolingType !== filters.coolingType) return false;
         
         return true;
-      });
+        });
     };
 
     let result = applyFilters(rooms, activeHotspot, searchText);
@@ -171,10 +174,6 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
         ...room,
         distance: calculateDistance(effectiveHotspot!.latitude, effectiveHotspot!.longitude, room.latitude!, room.longitude!),
       }));
-      // Apply PG_HOSTEL pricing overrides for hotspot results too
-      if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
-        result = result.map(room => applyPgHostelPricing(room, activePropertyFilter));
-      }
       return result;
     }
 
@@ -206,11 +205,6 @@ export const useRoomFilters = (rooms: Room[], activeHotspot: Hotspot | null = nu
       result = [...orderedTop, ...orderedRemaining];
     } else {
       result = applyStrategy(result, strategyRef.current);
-    }
-
-    // Override price for PG_HOSTEL rooms based on active property type filter
-    if (activePropertyFilter === 'PG' || activePropertyFilter === 'Hostel') {
-      result = result.map(room => applyPgHostelPricing(room, activePropertyFilter));
     }
 
     return result;

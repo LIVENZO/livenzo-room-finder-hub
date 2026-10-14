@@ -2214,6 +2214,52 @@ export type Database = {
           public_id: string
         }[]
       }
+      search_public_room_listings: {
+        Args: {
+          p_bathroom?: boolean
+          p_cooling_type?: string
+          p_food?: string
+          p_gender?: string
+          p_hotspot_latitude?: number
+          p_hotspot_longitude?: number
+          p_limit?: number
+          p_location_query?: string
+          p_max_price?: number
+          p_offset?: number
+          p_property_type?: string
+          p_query?: string
+          p_relax_location?: boolean
+          p_room_type?: string
+          p_wifi?: boolean
+        }
+        Returns: {
+          available: boolean
+          created_at: string
+          description: string
+          distance_km: number
+          facilities: Json
+          hostel_rent: number
+          house_name: string
+          house_no: string
+          id: string
+          images: string[]
+          is_top_room: boolean
+          location: string
+          location_latitude: number
+          location_longitude: number
+          maximum_price: number
+          minimum_price: number
+          owner_id: string
+          owner_phone: string
+          pg_rent: number
+          price: number
+          property_type: string
+          search_score: number
+          title: string
+          updated_at: string
+          videos: string[]
+        }[]
+      }
       search_user_by_public_id: {
         Args: { search_public_id: string }
         Returns: {

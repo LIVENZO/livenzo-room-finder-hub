@@ -55,3 +55,9 @@ export interface RoomFilters {
   food?: 'included' | 'not_included';
   propertyType?: PropertyTypeFilter;
 }
+
+export interface SearchFeedback {
+  mode: 'strict' | 'nearby' | 'none';
+  message?: string;
+  suggestions?: string[];
+}
