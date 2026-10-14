@@ -36,18 +36,21 @@ export const applyPgHostelPricing = (room: Room, activeFilter?: PropertyTypeFilt
   if (room.property_type !== 'PG_HOSTEL' || !activeFilter) return room;
 
   if (activeFilter === 'PG') {
+    const price = room.pg_rent ?? room.price;
     return {
       ...room,
-      price: room.pg_rent ?? room.price,
+      price,
+      minimum_price: price,
       facilities: { ...room.facilities, food: 'not_included' as const },
     };
   }
 
   if (activeFilter === 'Hostel') {
+    const price = room.hostel_rent ?? room.price;
     return {
       ...room,
-      price: room.hostel_rent ?? room.price,
-      minimum_price: room.maximum_price ?? null,
+      price,
+      minimum_price: price,
       facilities: { ...room.facilities, food: 'included' as const },
     };
   }

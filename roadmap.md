@@ -17,3 +17,9 @@
 - [x] Open a referral popup from the mobile Share button
 - [x] Reuse the existing WhatsApp referral link and message from the popup
 - [x] Standardize referral rewards at ₹500
+
+## Professional room search
+- [x] Parse natural hostel, PG, flat, suitability, budget, amenity, and location intent
+- [x] Add structured public database search with hard filters and relevance ranking
+- [x] Add safe nearby-area fallback and helpful result messages
+- [ ] Verify required queries against real listings and the Find Room screen

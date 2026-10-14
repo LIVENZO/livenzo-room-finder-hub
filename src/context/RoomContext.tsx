@@ -104,13 +104,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    if (!searchText.trim()) {
-      setSearchFeedback({ mode: 'strict' });
-      void syncRooms(filters.propertyType ?? 'all');
-    }
-  }, [filters.propertyType]);
-
-  useEffect(() => {
     const query = searchText.trim();
     if (!query) {
       searchRequestRef.current += 1;
