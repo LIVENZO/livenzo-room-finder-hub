@@ -22,6 +22,7 @@ describe('evidence-based search suggestions', () => {
   });
   it('preserves explicit type, suitability and budget when correcting a hotspot', () => {
     expect(getSearchSuggestions('hostel for boys near Allen Safalye under 5000', catalog)[0]).toMatchObject({ query: 'hostel for boys near Allen Safalya under 5000', correction: true });
+    expect(getSearchSuggestions('Allen Safalye', [...catalog, { name: 'Allen safalya', kind: 'location' }])[0]).toMatchObject({ correction: true });
   });
   it('does not correct canonical spelling or casing and whitespace', () => {
     expect(getSearchSuggestions('  JAWAHAR   NAGAR ', catalog)[0]).toMatchObject({ correction: false });

@@ -28,8 +28,13 @@ const FindRoom: React.FC = () => {
   const openSearch = () => {
     if (searchOpen || searchOpeningRef.current) return;
     searchOpeningRef.current = true;
+    // Consume bottom-navigation commands on the underlying history entry so Back cannot replay them.
+    const baseState = { ...location.state, bottomNavAction: undefined };
+    if (location.state?.bottomNavAction) {
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: baseState, preventScrollReset: true });
+    }
     navigate(`${location.pathname}${location.search}`, {
-      state: { ...location.state, fullScreenSearch: true, bottomNavAction: undefined },
+      state: { ...baseState, fullScreenSearch: true },
       preventScrollReset: true,
     });
   };

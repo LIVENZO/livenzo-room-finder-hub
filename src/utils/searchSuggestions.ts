@@ -78,7 +78,7 @@ export function getSearchSuggestions(raw: string, catalog: SearchTerm[]): Search
   }
   const ordered = results.sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
   const bestCorrection = ordered.find(s => s.correction);
-  const ambiguous = bestCorrection && ordered.some(s => s.correction && s.label !== bestCorrection.label
+  const ambiguous = bestCorrection && ordered.some(s => s.correction && normalizeSuggestionText(s.label) !== normalizeSuggestionText(bestCorrection.label)
     && Math.abs(s.score - bestCorrection.score) < 2);
   const seen = new Set<string>();
   return ordered.filter(s => {
