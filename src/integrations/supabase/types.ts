@@ -2102,6 +2102,14 @@ export type Database = {
           videos: string[]
         }[]
       }
+      get_search_suggestion_catalog: {
+        Args: never
+        Returns: {
+          kind: string
+          listing_count: number
+          name: string
+        }[]
+      }
       get_top_room_images: {
         Args: { p_limit?: number }
         Returns: {

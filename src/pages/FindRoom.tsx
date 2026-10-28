@@ -4,6 +4,7 @@ import { useRooms } from '@/context/RoomContext';
 import { RoomFilters, PropertyTypeFilter as PropertyTypeFilterValue } from '@/types/room';
 import Layout from '@/components/Layout';
 import SearchBar from '@/components/room/SearchBar';
+import FullScreenSearch from '@/components/room/FullScreenSearch';
 import FilterSidebar from '@/components/room/FilterSidebar';
 import MobileFilterSheet from '@/components/room/MobileFilterSheet';
 import RoomResults from '@/components/room/RoomResults';
@@ -14,13 +15,34 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SlidersHorizontal, RotateCcw, MessageCircle } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { cn } from '@/lib/utils';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { logSearch } from '@/services/SearchAnalyticsService';
 import Seo, { OG_ROOMS } from '@/components/seo/Seo';
 import { buildRoomJsonLd } from '@/utils/roomSchema';
 
 const FindRoom: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const searchOpeningRef = useRef(false);
+  const searchOpen = Boolean((location.state as { fullScreenSearch?: boolean } | null)?.fullScreenSearch);
+  const openSearch = () => {
+    if (searchOpen || searchOpeningRef.current) return;
+    searchOpeningRef.current = true;
+    // Consume bottom-navigation commands on the underlying history entry so Back cannot replay them.
+    const baseState = { ...location.state, bottomNavAction: undefined };
+    if (location.state?.bottomNavAction) {
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: baseState, preventScrollReset: true });
+    }
+    navigate(`${location.pathname}${location.search}`, {
+      state: { ...baseState, fullScreenSearch: true },
+      preventScrollReset: true,
+    });
+  };
+  const closeSearch = () => {
+    searchOpeningRef.current = false;
+    navigate(-1);
+  };
+  useEffect(() => { searchOpeningRef.current = false; }, [location.key]);
   const {
     filteredRooms,
     filters,
@@ -49,9 +71,7 @@ const FindRoom: React.FC = () => {
   useEffect(() => {
     const state = location.state as { bottomNavAction?: 'search' | 'near-me'; requestId?: number } | null;
     if (state?.bottomNavAction === 'search') {
-      window.requestAnimationFrame(() => {
-        document.getElementById('room-search-input')?.focus();
-      });
+      openSearch();
     } else if (state?.bottomNavAction === 'near-me' && !nearMeActive && !nearMeLoading) {
       handleNearMeActivate();
     }
@@ -200,6 +220,7 @@ const FindRoom: React.FC = () => {
           {/* Search Row */}
           <div className="flex gap-2">
             <SearchBar
+              onOpenSearch={openSearch}
               searchText={searchText}
               onSearchChange={handleSearchChange}
               nearMeActive={nearMeActive}
@@ -246,6 +267,7 @@ const FindRoom: React.FC = () => {
         {/* Search and Filter Bar */}
         <div ref={originalBarRef} className="flex gap-2 mb-4">
           <SearchBar
+            onOpenSearch={openSearch}
             inputId="room-search-input"
             searchText={searchText}
             onSearchChange={handleSearchChange}
@@ -373,6 +395,12 @@ const FindRoom: React.FC = () => {
           </div>
         </div>
       </div>
+      <FullScreenSearch open={searchOpen} initialQuery={activeHotspot?.name ?? searchText} hotspots={allHotspots}
+        onClose={closeSearch} onSearch={query => {
+          clearHotspot();
+          handleSearchChange(query);
+          closeSearch();
+        }} />
     </Layout>);
 
 };

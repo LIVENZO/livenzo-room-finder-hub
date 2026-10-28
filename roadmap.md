@@ -25,7 +25,7 @@
 - [x] Verify required queries against real listings and the Find Room screen
 
 ## Full-screen search and suggestions
-- [ ] Inspect live location records and existing search integration
-- [ ] Add full-screen search with local recent history and keyboard-aware layout
-- [ ] Add confidence-ranked real-location and accommodation suggestions
-- [ ] Verify suggestion selection, back state, filters, and mobile layout
+- [x] Inspect live location records and existing search integration
+- [x] Add full-screen search with local recent history and keyboard-aware layout
+- [x] Add confidence-ranked real-location and accommodation suggestions
+- [x] Verify suggestion selection, back state, filters, and mobile layout (physical Android keyboard and authenticated booking remain unverified)

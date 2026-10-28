@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Hotspot } from '@/services/HotspotService';
 
 interface SearchBarProps {
+  onOpenSearch?: () => void;
   inputId?: string;
   searchText: string;
   onSearchChange: (text: string) => void;
@@ -23,6 +24,7 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ 
+  onOpenSearch,
   inputId,
   searchText, 
   onSearchChange,
@@ -43,6 +45,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
+  useEffect(() => { setInputValue(activeHotspot?.name ?? searchText); }, [searchText, activeHotspot]);
 
   // Rotate placeholder hotspot names
   useEffect(() => {
@@ -144,14 +148,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
         <Input
           id={inputId}
+          aria-label="Search rooms in Kota"
+          readOnly={Boolean(onOpenSearch)}
           type="text"
           placeholder=""
           className={cn("pl-10", showClearButton && "pr-8")}
           value={inputValue}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => {
+            if (onOpenSearch) { onOpenSearch(); return; }
             if (hotspotSuggestions.length > 0) setShowSuggestions(true);
           }}
+          onClick={() => onOpenSearch?.()}
         />
         {showClearButton && (
           <Button
