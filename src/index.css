@@ -152,6 +152,14 @@
   }
 }
 
+.full-screen-search {
+  top: var(--search-visible-top, 0px);
+  height: var(--search-visible-height, 100dvh);
+}
+.full-screen-search input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
