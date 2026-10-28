@@ -28,4 +28,4 @@
 - [x] Inspect live location records and existing search integration
 - [x] Add full-screen search with local recent history and keyboard-aware layout
 - [x] Add confidence-ranked real-location and accommodation suggestions
-- [ ] Verify suggestion selection, back state, filters, and mobile layout
+- [x] Verify suggestion selection, back state, filters, and mobile layout (physical Android keyboard and authenticated booking remain unverified)
