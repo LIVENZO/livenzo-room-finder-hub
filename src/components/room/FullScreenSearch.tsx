@@ -117,8 +117,8 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch }: P
                 <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Recent searches</h2><Button variant="ghost" size="sm" onClick={clearHistory}>Clear history</Button></div>
                 {history.map(query => <Button key={query} variant="ghost" className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-1 py-3 text-left font-normal" onClick={() => submit(query)}><Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="whitespace-normal break-words">{query}</span></Button>)}
               </section>}
-              <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Accommodation</h2>{accommodationTerms.slice(0, 3).map(term => row(term.name, term.name, term.kind))}</section>
-              <section><h2 className="mb-2 text-sm font-semibold">Popular Kota locations</h2>{terms.filter(t => t.kind === 'location' || t.kind === 'hotspot').slice(0, 6).map(term => row(term.name, term.name, term.kind))}</section>
+              <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Popular Kota locations</h2>{terms.filter(t => t.kind === 'location' || t.kind === 'hotspot').slice(0, 6).map(term => row(term.name, term.name, term.kind))}</section>
+              <section><h2 className="mb-2 text-sm font-semibold">Accommodation</h2>{accommodationTerms.slice(0, 3).map(term => row(term.name, term.name, term.kind))}</section>
             </> : <>
               {draft === debounced && corrections.length > 0 && <section className="mb-4 border-b border-border pb-3"><h2 className="mb-1 text-sm font-semibold text-primary">Did you mean?</h2>{corrections.map(s => row(s.label, s.query, s.kind, `correction:${s.query}`))}</section>}
               <section><h2 className="mb-1 text-sm font-semibold">Search suggestions</h2>
