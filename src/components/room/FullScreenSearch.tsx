@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowUpLeft, Clock3, MapPin, Search, X, Loader2, Building2 } from 'lucide-react';
 import { fetchSearchSuggestionCatalog } from '@/services/searchSuggestionService';
-import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY, normalizeSuggestionText } from '@/utils/searchSuggestions';
+import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY, normalizeSuggestionText, rankCategoryMatches } from '@/utils/searchSuggestions';
 import { Hotspot, getHotspotSuggestions } from '@/services/HotspotService';
 
 interface Props {
@@ -69,9 +69,29 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
   const terms = useMemo(() => catalog.length ? catalog : hotspots.map(h => ({ name: h.name, kind: 'hotspot' as const })), [catalog, hotspots]);
   const suggestions = useMemo(() => getSearchSuggestions(debounced, terms), [debounced, terms]);
   const corrections = suggestions.filter(s => s.correction);
-  const hotspotMatches = useMemo(() => (debounced.trim() ? getHotspotSuggestions(debounced, hotspots) : hotspots), [debounced, hotspots]);
-  const listedHotspotNames = useMemo(() => new Set(hotspotMatches.map(hotspot => normalizeSuggestionText(hotspot.name))), [hotspotMatches]);
+  type HotspotItem = { name: string; hotspot?: Hotspot; weight: number };
+  const hotspotMatches = useMemo(() => {
+    const items: HotspotItem[] = [
+      ...hotspots.map(h => ({ name: h.name, hotspot: h, weight: 0 })),
+      ...catalog.filter(t => t.kind === 'building').map(t => ({ name: t.name, weight: Number(t.listing_count ?? 0) })),
+    ];
+    const legacy = debounced.trim() ? new Set(getHotspotSuggestions(debounced, hotspots).map(h => h.id)) : new Set<string>();
+    return rankCategoryMatches(debounced, items, i => i.name, 4, i => (i.hotspot && legacy.has(i.hotspot.id) ? 60 : i.weight));
+  }, [debounced, hotspots, catalog]);
+  const locationMatches = useMemo(() => rankCategoryMatches(debounced, catalog.filter(t => t.kind === 'location'), t => t.name, 4, t => Number(t.listing_count ?? 0)), [debounced, catalog]);
+  const listedHotspotNames = useMemo(() => new Set([...hotspotMatches, ...locationMatches].map(i => normalizeSuggestionText(i.name))), [hotspotMatches, locationMatches]);
   const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)));
+  const box = (tag: string, children: React.ReactNode) => (
+    <section className="mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex items-center border-b border-border bg-muted/40 px-3 py-2"><h2 className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-wider text-primary">{tag}</h2></div>
+      <div className="divide-y divide-border">{children}</div>
+    </section>
+  );
+  const boxRow = (key: string, label: string, Icon: typeof MapPin, onClick: () => void) => (
+    <Button key={key} variant="ghost" className="h-auto min-h-11 w-full justify-start gap-3 rounded-none px-3 py-2.5 text-left font-normal" onClick={onClick}>
+      <Icon className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 flex-1 whitespace-normal break-words">{label}</span>
+    </Button>
+  );
   const submit = (query: string) => {
     if (submittedRef.current || !query.trim()) return;
     submittedRef.current = true;
@@ -115,7 +135,8 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))]" aria-live="polite">
           <div className="mx-auto max-w-3xl py-4">
-            {hotspotMatches.length > 0 && <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Hotspot</h2>{hotspotMatches.map(hotspot => <Button key={hotspot.id} variant="ghost" className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-1 py-3 text-left font-normal" onClick={() => onHotspotSelect?.(hotspot)}><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 flex-1 whitespace-normal break-words">{hotspot.name}</span></Button>)}</section>}
+            {hotspotMatches.length > 0 && box('HOTSPOT', hotspotMatches.map(item => boxRow(`h:${item.name}`, item.name, item.hotspot ? MapPin : Building2, () => { if (item.hotspot) onHotspotSelect?.(item.hotspot); else submit(item.name); })))}
+            {locationMatches.length > 0 && box('LOCATION', locationMatches.map(term => boxRow(`l:${term.name}`, term.name, MapPin, () => submit(term.name))))}
             {!draft.trim() ? <>
               {history.length > 0 && <section className="mb-6">
                 <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Recent searches</h2><Button variant="ghost" size="sm" onClick={clearHistory}>Clear history</Button></div>
@@ -124,7 +145,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
               <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Popular Kota locations</h2>{terms.filter(t => t.kind === 'location' || t.kind === 'hotspot').slice(0, 6).map(term => row(term.name, term.name, term.kind))}</section>
               <section><h2 className="mb-2 text-sm font-semibold">Accommodation</h2>{accommodationTerms.slice(0, 3).map(term => row(term.name, term.name, term.kind))}</section>
             </> : <>
-              {draft === debounced && corrections.length > 0 && <section className="mb-4 border-b border-border pb-3"><h2 className="mb-1 text-sm font-semibold text-primary">Did you mean?</h2>{corrections.map(s => row(s.label, s.query, s.kind, `correction:${s.query}`))}</section>}
+              {draft === debounced && corrections.some(s => !listedHotspotNames.has(normalizeSuggestionText(s.label))) && <section className="mb-4 border-b border-border pb-3"><h2 className="mb-1 text-sm font-semibold text-primary">Did you mean?</h2>{corrections.filter(s => !listedHotspotNames.has(normalizeSuggestionText(s.label))).map(s => row(s.label, s.query, s.kind, `correction:${s.query}`))}</section>}
               <section><h2 className="mb-1 text-sm font-semibold">Search suggestions</h2>
                 {row(`Search for “${draft}”`, draft, 'category', 'original-query')}
                 {draft === debounced && ordinary.map(s => row(s.label, s.query, s.kind))}
