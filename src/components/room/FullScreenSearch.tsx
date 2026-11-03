@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowUpLeft, Clock3, MapPin, Search, X, Loader2, Building2 } from 'lucide-react';
 import { fetchSearchSuggestionCatalog } from '@/services/searchSuggestionService';
-import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY } from '@/utils/searchSuggestions';
-import { Hotspot } from '@/services/HotspotService';
+import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY, normalizeSuggestionText } from '@/utils/searchSuggestions';
+import { Hotspot, getHotspotSuggestions } from '@/services/HotspotService';
 
 interface Props {
   open: boolean;
@@ -14,9 +14,10 @@ interface Props {
   hotspots: Hotspot[];
   onClose: () => void;
   onSearch: (query: string) => void;
+  onHotspotSelect?: (hotspot: Hotspot) => void;
 }
 
-const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch }: Props) => {
+const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onHotspotSelect }: Props) => {
   const [draft, setDraft] = useState(initialQuery);
   const [debounced, setDebounced] = useState(initialQuery);
   const [history, setHistory] = useState<string[]>([]);
@@ -68,7 +69,9 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch }: P
   const terms = useMemo(() => catalog.length ? catalog : hotspots.map(h => ({ name: h.name, kind: 'hotspot' as const })), [catalog, hotspots]);
   const suggestions = useMemo(() => getSearchSuggestions(debounced, terms), [debounced, terms]);
   const corrections = suggestions.filter(s => s.correction);
-  const ordinary = suggestions.filter(s => !s.correction);
+  const hotspotMatches = useMemo(() => (debounced.trim() ? getHotspotSuggestions(debounced, hotspots) : hotspots), [debounced, hotspots]);
+  const listedHotspotNames = useMemo(() => new Set(hotspotMatches.map(hotspot => normalizeSuggestionText(hotspot.name))), [hotspotMatches]);
+  const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)));
   const submit = (query: string) => {
     if (submittedRef.current || !query.trim()) return;
     submittedRef.current = true;
