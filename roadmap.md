@@ -28,4 +28,9 @@
 - [x] Inspect live location records and existing search integration
 - [x] Add full-screen search with local recent history and keyboard-aware layout
 - [x] Add confidence-ranked real-location and accommodation suggestions
+
+## Full-screen search hotspot option
+- [x] Show the hotspot list directly below the full-screen search input
+- [x] Reuse the existing hotspot selection and proximity results
+- [x] Verify selection, typing filter, and normal text search on mobile
 - [x] Verify suggestion selection, back state, filters, and mobile layout (physical Android keyboard and authenticated booking remain unverified)
