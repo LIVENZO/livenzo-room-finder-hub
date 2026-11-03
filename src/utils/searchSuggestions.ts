@@ -102,3 +102,44 @@ export function rememberSearch(query: string, history: string[]): string[] {
   if (!trimmed) return history;
   return [trimmed, ...history.filter(s => normalizeSuggestionText(s) !== normalizeSuggestionText(trimmed))].slice(0, 8);
 }
+// Ranks real names for one suggestion category; returns at most `limit` deduplicated relevant items.
+export function rankCategoryMatches<T>(raw: string, items: T[], getName: (item: T) => string, limit = 4, getWeight: (item: T) => number = () => 0): T[] {
+  const needle = normalizeSuggestionText(parseSearchIntent(raw).locationQuery ?? raw) || normalizeSuggestionText(raw);
+  const seen = new Set<string>();
+  const scored: { item: T; score: number }[] = [];
+  for (const item of items) {
+    const name = normalizeSuggestionText(getName(item));
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    const weight = getWeight(item);
+    if (!needle) { scored.push({ item, score: weight }); continue; }
+    if (needle.length < 2) continue;
+    const words = name.split(' ');
+    const needleWords = needle.split(' ').filter(Boolean);
+    let score = 0;
+    if (name === needle) score = 1000;
+    else if (name.startsWith(needle)) score = 900;
+    else if (needleWords.every(w => words.some(n => n.startsWith(w)))) score = 800;
+    else if (name.includes(needle)) score = 700;
+    else {
+      // Fuzzy: every typed word must closely match some word (or prefix) of the name.
+      let total = 0;
+      const ok = needleWords.every(w => {
+        if (w.length < 3) return words.some(n => n.startsWith(w));
+        const best = Math.max(...words.map(n => {
+          const target = n.length > w.length + 1 ? n.slice(0, w.length) : n;
+          const d = spellingDistance(w, target);
+          const ratio = 1 - d / Math.max(w.length, target.length);
+          const allowed = w.length >= 7 ? 2 : 1;
+          const phonetic = w.length >= 4 && phoneticKey(w) === phoneticKey(target);
+          return d <= allowed && (ratio >= 0.7 || phonetic) ? ratio + (phonetic ? 0.05 : 0) : 0;
+        }));
+        total += best;
+        return best > 0;
+      });
+      if (ok) score = 400 + (total / needleWords.length) * 200;
+    }
+    if (score > 0) scored.push({ item, score: score + Math.min(weight, 50) });
+  }
+  return scored.sort((a, b) => b.score - a.score || getName(a.item).localeCompare(getName(b.item))).slice(0, limit).map(s => s.item);
+}
