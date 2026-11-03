@@ -145,7 +145,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
               <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Popular Kota locations</h2>{terms.filter(t => t.kind === 'location' || t.kind === 'hotspot').slice(0, 6).map(term => row(term.name, term.name, term.kind))}</section>
               <section><h2 className="mb-2 text-sm font-semibold">Accommodation</h2>{accommodationTerms.slice(0, 3).map(term => row(term.name, term.name, term.kind))}</section>
             </> : <>
-              {draft === debounced && corrections.length > 0 && <section className="mb-4 border-b border-border pb-3"><h2 className="mb-1 text-sm font-semibold text-primary">Did you mean?</h2>{corrections.map(s => row(s.label, s.query, s.kind, `correction:${s.query}`))}</section>}
+              {draft === debounced && corrections.some(s => !listedHotspotNames.has(normalizeSuggestionText(s.label))) && <section className="mb-4 border-b border-border pb-3"><h2 className="mb-1 text-sm font-semibold text-primary">Did you mean?</h2>{corrections.filter(s => !listedHotspotNames.has(normalizeSuggestionText(s.label))).map(s => row(s.label, s.query, s.kind, `correction:${s.query}`))}</section>}
               <section><h2 className="mb-1 text-sm font-semibold">Search suggestions</h2>
                 {row(`Search for “${draft}”`, draft, 'category', 'original-query')}
                 {draft === debounced && ordinary.map(s => row(s.label, s.query, s.kind))}
