@@ -396,6 +396,11 @@ const FindRoom: React.FC = () => {
         </div>
       </div>
       <FullScreenSearch open={searchOpen} initialQuery={activeHotspot?.name ?? searchText} hotspots={allHotspots}
+        onHotspotSelect={hotspot => {
+          handleHotspotSelect(hotspot);
+          setSearchText('');
+          closeSearch();
+        }}
         onClose={closeSearch} onSearch={query => {
           clearHotspot();
           handleSearchChange(query);

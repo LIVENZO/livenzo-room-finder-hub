@@ -115,6 +115,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))]" aria-live="polite">
           <div className="mx-auto max-w-3xl py-4">
+            {hotspotMatches.length > 0 && <section className="mb-6"><h2 className="mb-2 text-sm font-semibold">Hotspot</h2>{hotspotMatches.map(hotspot => <Button key={hotspot.id} variant="ghost" className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-1 py-3 text-left font-normal" onClick={() => onHotspotSelect?.(hotspot)}><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 flex-1 whitespace-normal break-words">{hotspot.name}</span></Button>)}</section>}
             {!draft.trim() ? <>
               {history.length > 0 && <section className="mb-6">
                 <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Recent searches</h2><Button variant="ghost" size="sm" onClick={clearHistory}>Clear history</Button></div>
