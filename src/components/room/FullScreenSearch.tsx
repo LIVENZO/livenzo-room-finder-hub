@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowUpLeft, Clock3, MapPin, Search, X, Loader2, Building2 } from 'lucide-react';
 import { fetchSearchSuggestionCatalog } from '@/services/searchSuggestionService';
-import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY, normalizeSuggestionText } from '@/utils/searchSuggestions';
+import { SearchTerm, getSearchSuggestions, accommodationTerms, readRecentSearches, rememberSearch, RECENT_SEARCH_KEY, normalizeSuggestionText, rankCategoryMatches } from '@/utils/searchSuggestions';
 import { Hotspot, getHotspotSuggestions } from '@/services/HotspotService';
 
 interface Props {
