@@ -73,14 +73,17 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
   const hotspotMatches = useMemo(() => {
     const items: HotspotItem[] = [
       ...hotspots.map(h => ({ name: h.name, hotspot: h, weight: 0 })),
-      ...catalog.filter(t => t.kind === 'building').map(t => ({ name: t.name, weight: Number(t.listing_count ?? 0) })),
     ];
     const legacy = debounced.trim() ? new Set(getHotspotSuggestions(debounced, hotspots).map(h => h.id)) : new Set<string>();
     return rankCategoryMatches(debounced, items, i => i.name, 4, i => (i.hotspot && legacy.has(i.hotspot.id) ? 60 : i.weight));
   }, [debounced, hotspots, catalog]);
   const locationMatches = useMemo(() => rankCategoryMatches(debounced, catalog.filter(t => t.kind === 'location'), t => t.name, 4, t => Number(t.listing_count ?? 0)), [debounced, catalog]);
-  const listedHotspotNames = useMemo(() => new Set([...hotspotMatches, ...locationMatches].map(i => normalizeSuggestionText(i.name))), [hotspotMatches, locationMatches]);
-  const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)));
+  const propertyMatches = useMemo(() => {
+    const taken = new Set([...hotspotMatches, ...locationMatches].map(i => normalizeSuggestionText(i.name)));
+    return rankCategoryMatches(debounced, catalog.filter(t => t.kind === 'building' && !taken.has(normalizeSuggestionText(t.name))), t => t.name, 4, t => Number(t.listing_count ?? 0), true);
+  }, [debounced, catalog, hotspotMatches, locationMatches]);
+  const listedHotspotNames = useMemo(() => new Set([...hotspotMatches, ...locationMatches, ...propertyMatches].map(i => normalizeSuggestionText(i.name))), [hotspotMatches, locationMatches, propertyMatches]);
+  const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)) && !listedHotspotNames.has(normalizeSuggestionText(s.label)));
   const box = (tag: string, children: React.ReactNode) => (
     <section className="mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex items-center border-b border-border bg-muted/40 px-3 py-2"><h2 className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-wider text-primary">{tag}</h2></div>
@@ -137,6 +140,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
           <div className="mx-auto max-w-3xl py-4">
             {hotspotMatches.length > 0 && box('HOTSPOT', hotspotMatches.map(item => boxRow(`h:${item.name}`, item.name, item.hotspot ? MapPin : Building2, () => { if (item.hotspot) onHotspotSelect?.(item.hotspot); else submit(item.name); })))}
             {locationMatches.length > 0 && box('LOCATION', locationMatches.map(term => boxRow(`l:${term.name}`, term.name, MapPin, () => submit(term.name))))}
+            {propertyMatches.length > 0 && box('HOSTEL / PROPERTY', propertyMatches.map(term => boxRow(`p:${term.name}`, term.name, Building2, () => submit(term.name))))}
             {!draft.trim() ? <>
               {history.length > 0 && <section className="mb-6">
                 <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Recent searches</h2><Button variant="ghost" size="sm" onClick={clearHistory}>Clear history</Button></div>

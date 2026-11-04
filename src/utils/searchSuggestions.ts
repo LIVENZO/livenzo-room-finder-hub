@@ -103,8 +103,8 @@ export function rememberSearch(query: string, history: string[]): string[] {
   return [trimmed, ...history.filter(s => normalizeSuggestionText(s) !== normalizeSuggestionText(trimmed))].slice(0, 8);
 }
 // Ranks real names for one suggestion category; returns at most `limit` deduplicated relevant items.
-export function rankCategoryMatches<T>(raw: string, items: T[], getName: (item: T) => string, limit = 4, getWeight: (item: T) => number = () => 0): T[] {
-  const needle = normalizeSuggestionText(parseSearchIntent(raw).locationQuery ?? raw) || normalizeSuggestionText(raw);
+export function rankCategoryMatches<T>(raw: string, items: T[], getName: (item: T) => string, limit = 4, getWeight: (item: T) => number = () => 0, keepIntentWords = false): T[] {
+  const needle = (keepIntentWords ? '' : normalizeSuggestionText(parseSearchIntent(raw).locationQuery ?? raw)) || normalizeSuggestionText(raw);
   const seen = new Set<string>();
   const scored: { item: T; score: number }[] = [];
   for (const item of items) {
