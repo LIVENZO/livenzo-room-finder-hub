@@ -138,7 +138,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))]" aria-live="polite">
           <div className="mx-auto max-w-3xl py-4">
-            {hotspotMatches.length > 0 && box('HOTSPOT', hotspotMatches.map(item => boxRow(`h:${item.name}`, item.name, item.hotspot ? MapPin : Building2, () => { if (item.hotspot) onHotspotSelect?.(item.hotspot); else submit(item.name); })))}
+            {hotspotMatches.length > 0 && box('NEARBY', hotspotMatches.map(item => boxRow(`h:${item.name}`, item.name, item.hotspot ? MapPin : Building2, () => { if (item.hotspot) onHotspotSelect?.(item.hotspot); else submit(item.name); })))}
             {locationMatches.length > 0 && box('LOCATION', locationMatches.map(term => boxRow(`l:${term.name}`, term.name, MapPin, () => submit(term.name))))}
             {propertyMatches.length > 0 && box('HOSTEL / PROPERTY', propertyMatches.map(term => boxRow(`p:${term.name}`, term.name, Building2, () => submit(term.name))))}
             {!draft.trim() ? <>
