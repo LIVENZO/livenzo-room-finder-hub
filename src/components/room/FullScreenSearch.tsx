@@ -83,7 +83,7 @@ const FullScreenSearch = ({ open, initialQuery, hotspots, onClose, onSearch, onH
     return rankCategoryMatches(debounced, catalog.filter(t => t.kind === 'building' && !taken.has(normalizeSuggestionText(t.name))), t => t.name, 4, t => Number(t.listing_count ?? 0), true);
   }, [debounced, catalog, hotspotMatches, locationMatches]);
   const listedHotspotNames = useMemo(() => new Set([...hotspotMatches, ...locationMatches, ...propertyMatches].map(i => normalizeSuggestionText(i.name))), [hotspotMatches, locationMatches, propertyMatches]);
-  const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)));
+  const ordinary = suggestions.filter(s => !s.correction && !listedHotspotNames.has(normalizeSuggestionText(s.query)) && !listedHotspotNames.has(normalizeSuggestionText(s.label)));
   const box = (tag: string, children: React.ReactNode) => (
     <section className="mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex items-center border-b border-border bg-muted/40 px-3 py-2"><h2 className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-wider text-primary">{tag}</h2></div>
