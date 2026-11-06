@@ -36,11 +36,15 @@ const LandingCard: React.FC<LandingCardProps> = ({
     // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
 
+    // Strip country code / trunk prefix added by autofill (e.g. +91, 91, 0)
+    // so the fixed +91 section is never duplicated in the input
+    const withoutPrefix = cleaned.replace(/^(91|0)(?=\d{10}$)/, '');
+
     // Limit to 10 digits for Indian numbers
-    if (cleaned.length > 10) {
-      return cleaned.substring(0, 10);
+    if (withoutPrefix.length > 10) {
+      return withoutPrefix.substring(0, 10);
     }
-    return cleaned;
+    return withoutPrefix;
   };
 
   const validatePhoneNumber = (phone: string) => {
