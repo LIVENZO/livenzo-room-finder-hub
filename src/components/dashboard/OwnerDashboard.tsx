@@ -6,8 +6,7 @@ import { useAuth } from "@/context/auth";
 import { fetchOwnerRelationships } from "@/services/relationship";
 import { fetchMyCollaborations } from "@/services/collaborationService";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
-import { fetchUserProfile } from "@/services/UserProfileService";
-import { toast } from "sonner";
+import { useListRoomFlow } from "@/hooks/useListRoomFlow";
 import WelcomeHeader from "./components/WelcomeHeader";
 import OwnerDashboardTabs from "./components/OwnerDashboardTabs";
 import OwnerHeroCarousel from "./OwnerHeroCarousel";
@@ -17,7 +16,8 @@ const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { requireOwnerComplete } = useProfileCompletion();
-  const { propertyId, isPrimary, effectiveOwnerId, activeProperty } = usePropertyScope();
+  const { propertyId, isPrimary, effectiveOwnerId } = usePropertyScope();
+  const { openListRoom: handleListRoomClick } = useListRoomFlow();
 
   const [listingsCount, setListingsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,49 +83,6 @@ const OwnerDashboard: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [user, propertyId, isPrimary, effectiveOwnerId]);
-
-  const handleListRoomClick = async () => {
-    if (!user) return;
-
-    // Step 1: Check if user has any property
-    if (!activeProperty) {
-      toast.info("Please add a property first.");
-      navigate("/add-property");
-      return;
-    }
-
-    try {
-      // Step 2: Check if the active property has a live location set
-      const propLat = activeProperty?.location_latitude;
-      const propLng = activeProperty?.location_longitude;
-      const propertyHasLocation =
-        propLat !== null && propLat !== undefined &&
-        propLng !== null && propLng !== undefined &&
-        Number(propLat) !== 0 && Number(propLng) !== 0;
-
-      let hasValidLocation = propertyHasLocation;
-      if (!hasValidLocation) {
-        const profile = await fetchUserProfile(user.id);
-        hasValidLocation =
-          !!profile?.location_latitude &&
-          !!profile?.location_longitude &&
-          typeof profile.location_latitude === "number" &&
-          typeof profile.location_longitude === "number";
-      }
-
-      if (!hasValidLocation) {
-        toast.info("Please set your property location before listing rooms.");
-        navigate("/set-location", { replace: true, state: { backTo: "/list-room" } });
-        return;
-      }
-
-      // Step 3: Property and location are both set — proceed to listing
-      navigate("/list-room");
-    } catch (error) {
-      console.error("Error checking prerequisites:", error);
-      toast.error("Failed to check prerequisites. Please try again.");
-    }
-  };
 
   const handleViewListingsClick = () => {
     navigate("/my-listings");
