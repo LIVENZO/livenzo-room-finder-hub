@@ -23,17 +23,13 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
-
-    // Strip country code / trunk prefix added by autofill (e.g. +91, 91, 0)
-    // so the fixed +91 section is never duplicated in the input
-    const withoutPrefix = cleaned.replace(/^(91|0)(?=\d{10}$)/, '');
-
+    
     // Limit to 10 digits for Indian numbers
-    if (withoutPrefix.length > 10) {
-      return withoutPrefix.substring(0, 10);
+    if (cleaned.length > 10) {
+      return cleaned.substring(0, 10);
     }
-
-    return withoutPrefix;
+    
+    return cleaned;
   };
 
   const validatePhoneNumber = (phone: string) => {
@@ -110,9 +106,6 @@ const PhoneOTPForm: React.FC<PhoneOTPFormProps> = ({
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="tel"
-              aria-label="Phone number"
-              inputMode="numeric"
-              autoComplete="tel"
               placeholder="Enter 10-digit phone number"
               value={phoneNumber}
               onChange={handlePhoneChange}
