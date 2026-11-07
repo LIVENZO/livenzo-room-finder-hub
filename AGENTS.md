@@ -6,3 +6,4 @@
 - Shared bottom-sheet, drawer, and dialog primitives reserve the mobile bottom-navigation height so every popup action remains visible and clickable.
 - Natural-language room search uses one public ranked database function with explicit type, suitability, and budget constraints applied before relevance scoring, so hard requirements cannot be overridden by text matches.
 - Full-screen search keeps Find Room mounted using a router-history overlay; drafts submit once to the existing search flow, hotspot rows under the input reuse the existing hotspot-selection action, and name-only suggestions are cached from an invoker-RLS catalog with local device history to avoid per-keystroke property requests and personal-data collection.
+- Mobile bottom-navigation tabs are resolved from the signed-in role in one place, so owner Home always opens the owner dashboard and the owner List Room action reuses the shared prerequisite hook instead of duplicating that flow.

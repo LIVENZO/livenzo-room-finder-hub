@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Loader2, MapPin, Search, Share2, User, Users } from 'lucide-react';
+import { Home, Loader2, MapPin, Plus, Search, Share2, User, Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useRooms } from '@/context/RoomContext';
+import { useAuth } from '@/context/auth';
 import { useReferral } from '@/hooks/useReferral';
+import { useListRoomFlow } from '@/hooks/useListRoomFlow';
 
 type NavigationAction = 'search' | 'near-me';
 
@@ -24,7 +26,9 @@ const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { nearMeActive } = useRooms();
+  const { isOwner } = useAuth();
   const { shareOnWhatsApp, isLoading } = useReferral();
+  const { openListRoom } = useListRoomFlow();
   const [referralOpen, setReferralOpen] = useState(false);
   const state = location.state as NavigationState | null;
 
@@ -41,13 +45,23 @@ const BottomNavigation: React.FC = () => {
 
   const searchAction = location.pathname === '/find-room' ? state?.bottomNavAction : undefined;
   const listingsActive = location.pathname === '/find-room' || location.pathname.startsWith('/room/');
+  const listRoomActive =
+    ['/list-room', '/add-property', '/set-location'].includes(location.pathname) ||
+    location.pathname.startsWith('/edit-room/');
+
+  const shareItem = {
+    label: 'Share',
+    icon: Share2,
+    active: referralOpen,
+    onClick: () => setReferralOpen(true),
+  };
 
   const items = [
     {
       label: 'Home',
       icon: Home,
-      active: listingsActive && !searchAction && !nearMeActive,
-      onClick: () => openListings(),
+      active: isOwner ? location.pathname === '/dashboard' : listingsActive && !searchAction && !nearMeActive,
+      onClick: () => (isOwner ? navigate('/dashboard') : openListings()),
     },
     {
       label: 'Search',
@@ -55,18 +69,24 @@ const BottomNavigation: React.FC = () => {
       active: searchAction === 'search',
       onClick: () => openListings('search'),
     },
-    {
-      label: 'Share',
-      icon: Share2,
-      active: referralOpen,
-      onClick: () => setReferralOpen(true),
-    },
-    {
-      label: 'Near Me',
-      icon: MapPin,
-      active: searchAction === 'near-me' || (location.pathname === '/find-room' && nearMeActive),
-      onClick: () => openListings('near-me'),
-    },
+    isOwner
+      ? {
+          label: 'List Room',
+          icon: Plus,
+          active: listRoomActive,
+          onClick: () => {
+            void openListRoom();
+          },
+        }
+      : shareItem,
+    isOwner
+      ? shareItem
+      : {
+          label: 'Near Me',
+          icon: MapPin,
+          active: searchAction === 'near-me' || (location.pathname === '/find-room' && nearMeActive),
+          onClick: () => openListings('near-me'),
+        },
     {
       label: 'Profile',
       icon: User,
