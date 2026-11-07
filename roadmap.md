@@ -34,3 +34,8 @@
 - [x] Show the hotspot list directly below the full-screen search input
 - [x] Reuse the existing hotspot selection and proximity results
 - [x] Verify selection, typing filter, and normal text search on mobile
+
+## Owner bottom navigation actions
+- [x] Swap Near Me for Share and Share for List Room on the owner bar only
+- [x] Make owner Home always open the owner dashboard
+- [x] Verify owner and renter bars, Home, List Room prerequisite flow, and Share popup on mobile
